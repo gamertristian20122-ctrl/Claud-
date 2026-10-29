@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Halden Mobile Detailing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Professional mobile car detailing across the Omaha metro. Hand washes, interior detailing, paint correction and ceramic coating at your home or office.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+/* Layout: dark photographic hero and header, then alternating white and light-grey bands on a 1240px container; one orange accent for actions. */
+:root {
+  --bg: #ffffff;
+  --surface: #f4f5f7;
+  --surface-2: #eceef2;
+  --ink: #0d1014;
+  --muted: #59616d;
+  --line: #e1e4e9;
+  --dark: #0a0c0f;
+  --dark-2: #15191e;
+  --dark-line: #262b33;
+  --on-dark: #f4f6f8;
+  --on-dark-muted: #a4acb7;
+  --accent: #ff5a1f;
+  --accent-hover: #ff7440;
+  --on-accent: #0d1014;
+  --ok: #1f9d55;
+
+  --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.9375rem;
+  --fs-base: 1.0625rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: clamp(1.875rem, 1.2rem + 1.9vw, 2.75rem);
+  --fs-hero: clamp(2.5rem, 1.3rem + 4.4vw, 4.75rem);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --container: 1240px;
+  --gutter: max(20px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(20px, env(safe-area-inset-right, 0px));
+  --section: clamp(72px, 8vw, 120px);
+  --header-h: 72px;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 16px); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font); font-size: var(--fs-base); line-height: 1.6;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--dark); }
+img { display: block; max-width: 100%; height: auto; }
+h1, h2, h3, h4, p, ul, ol, figure, dl, dd { margin: 0; }
+h1, h2, h3 { font-stretch: 112%; font-weight: 750; letter-spacing: -0.02em; line-height: 1.08; text-wrap: balance; }
+p { text-wrap: pretty; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+::selection { background: var(--accent); color: var(--on-accent); }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.icon { width: 1.25em; height: 1.25em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+.container { max-width: calc(var(--container) + var(--gutter) + var(--gutter-r)); margin-inline: auto; padding-left: var(--gutter); padding-right: var(--gutter-r); }
+.section { padding-block: var(--section); }
+.section--alt { background: var(--surface); }
+.section-head { max-width: 720px; margin-bottom: clamp(36px, 4vw, 56px); }
+.section-head h2 { font-size: var(--fs-xl); }
+.section-head p { margin-top: 14px; font-size: var(--fs-lg); color: var(--muted); line-height: 1.5; }
+.kicker { display: block; margin-bottom: 12px; font-size: var(--fs-sm); font-weight: 650; color: var(--accent); letter-spacing: 0.01em; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 14px 26px; border-radius: var(--radius-sm); border: 2px solid transparent;
+  font: 650 var(--fs-base)/1 var(--font); text-decoration: none; cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 140ms var(--ease);
+}
+.btn:active { transform: translateY(1px); }
+.btn--primary { background: var(--accent); color: var(--on-accent); }
+.btn--outline { border-color: currentColor; color: inherit; background: transparent; }
+.btn--dark { background: var(--ink); color: #fff; }
+.btn--block { width: 100%; }
+.btn--sm { min-height: 44px; padding: 10px 18px; font-size: var(--fs-sm); }
+@media (hover: hover) and (pointer: fine) {
+  .btn--primary:hover { background: var(--accent-hover); }
+  .btn--outline:hover { background: rgba(255,255,255,0.08); }
+  .btn--dark:hover { background: #262b33; }
+}
+
+/* ---------- Header ---------- */
+.header {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
+  background: var(--dark); color: var(--on-dark);
+  border-bottom: 1px solid var(--dark-line);
+}
+.header__inner { height: var(--header-h); display: flex; align-items: center; gap: 32px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--on-dark); }
+.logo__mark { width: 34px; height: 34px; border-radius: 8px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-weight: 850; font-stretch: 120%; font-size: 18px; }
+.logo__text { display: grid; line-height: 1.05; }
+.logo__name { font-weight: 800; font-stretch: 118%; font-size: 19px; letter-spacing: 0.02em; }
+.logo__sub { font-size: 12px; color: var(--on-dark-muted); letter-spacing: 0.02em; }
+.nav { display: flex; gap: 28px; margin-left: auto; }
+.nav a { text-decoration: none; font-size: var(--fs-sm); font-weight: 550; color: var(--on-dark-muted); transition: color 160ms ease; }
+.nav a:hover { color: var(--on-dark); }
+.header__actions { display: flex; align-items: center; gap: 18px; }
+.header__phone { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 650; font-size: var(--fs-sm); white-space: nowrap; }
+.menu-btn { display: none; background: none; border: 0; color: var(--on-dark); padding: 10px; margin-right: -10px; cursor: pointer; }
+.menu-btn .icon { width: 26px; height: 26px; }
+.mobile-nav { display: none; }
+
+/* ---------- Hero ---------- */
+.hero { position: relative; background: var(--dark); color: var(--on-dark); overflow: hidden; }
+.hero__img { position: absolute; top: 0; bottom: 0; right: 0; width: 74%; height: 100%; object-fit: cover; object-position: 50% 82%; }
+.hero__shade { position: absolute; inset: 0; background: linear-gradient(90deg, var(--dark) 26%, rgba(10, 12, 15, 0.82) 44%, rgba(10, 12, 15, 0.2) 70%, rgba(10, 12, 15, 0) 100%); }
+.hero__inner { position: relative; padding-block: clamp(88px, 10vw, 150px) clamp(110px, 12vw, 180px); }
+.hero__content { max-width: 680px; }
+.hero h1 { font-size: var(--fs-hero); }
+.hero__lead { margin-top: 22px; font-size: var(--fs-lg); line-height: 1.55; color: #d6dbe2; max-width: 56ch; }
+.hero__ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 34px; }
+.trust { position: relative; background: var(--dark-2); border-top: 1px solid var(--dark-line); color: var(--on-dark); }
+.trust ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.trust li { display: flex; align-items: center; gap: 12px; padding: 22px 0; font-weight: 600; font-size: var(--fs-sm); }
+.trust li + li { padding-left: 24px; border-left: 1px solid var(--dark-line); }
+.trust .icon { width: 24px; height: 24px; color: var(--accent); }
+
+/* ---------- Services ---------- */
+.services { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+.service { display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.service img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.service__body { display: flex; flex-direction: column; gap: 10px; padding: 22px 22px 24px; flex: 1; }
+.service h3 { font-size: 1.3125rem; }
+.service p { color: var(--muted); font-size: var(--fs-sm); line-height: 1.55; }
+.service__foot { margin-top: auto; padding-top: 8px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.service__price { font-weight: 700; }
+.service__price span { color: var(--muted); font-weight: 500; font-size: var(--fs-sm); }
+.text-link { display: inline-flex; align-items: center; gap: 6px; font-weight: 650; font-size: var(--fs-sm); text-decoration: none; color: var(--ink); }
+.text-link .icon { width: 1em; height: 1em; transition: transform 180ms var(--ease); }
+.text-link:hover .icon { transform: translateX(3px); }
+
+/* ---------- Pricing ---------- */
+.pricing-top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 36px; }
+.pricing-top .section-head { margin-bottom: 0; }
+.segmented { display: inline-grid; grid-auto-flow: column; gap: 4px; padding: 4px; background: var(--surface-2); border-radius: 10px; border: 0; margin: 0; }
+.segmented legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.segmented label { position: relative; }
+.segmented input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.segmented span { display: block; padding: 10px 18px; border-radius: 7px; font-weight: 650; font-size: var(--fs-sm); color: var(--muted); cursor: pointer; transition: background-color 160ms ease, color 160ms ease; white-space: nowrap; }
+.segmented input:checked + span { background: var(--bg); color: var(--ink); box-shadow: 0 1px 2px rgba(13,16,20,0.12); }
+.segmented input:focus-visible + span { outline: 3px solid var(--accent); outline-offset: 2px; }
+.plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: stretch; }
+.plan { position: relative; display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 30px 28px; }
+.plan--featured { border: 2px solid var(--ink); box-shadow: 0 18px 40px -24px rgba(13,16,20,0.45); }
+.plan__badge { position: absolute; top: -14px; left: 28px; background: var(--ink); color: #fff; font-size: var(--fs-xs); font-weight: 700; padding: 5px 12px; border-radius: 999px; letter-spacing: 0.02em; }
+.plan h3 { font-size: 1.375rem; }
+.plan__desc { margin-top: 8px; color: var(--muted); font-size: var(--fs-sm); }
+.plan__price { margin-top: 22px; display: flex; align-items: baseline; gap: 8px; }
+.plan__amount { font-size: 2.75rem; font-weight: 800; font-stretch: 110%; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.plan__per { color: var(--muted); font-size: var(--fs-sm); }
+.plan__time { margin-top: 8px; display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: var(--fs-sm); }
+.plan__time .icon { width: 18px; height: 18px; }
+.plan ul { list-style: none; padding: 0; margin: 24px 0 28px; display: grid; gap: 12px; border-top: 1px solid var(--line); padding-top: 24px; }
+.plan li { display: flex; gap: 10px; font-size: var(--fs-sm); line-height: 1.45; }
+.plan li .icon { width: 20px; height: 20px; color: var(--ok); margin-top: 1px; }
+.plan .btn { margin-top: auto; }
+.extras { margin-top: 24px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; }
+.ceramic { position: relative; display: flex; flex-direction: column; justify-content: end; min-height: 300px; border-radius: var(--radius); overflow: hidden; color: var(--on-dark); background: var(--dark); }
+.ceramic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ceramic__shade { position: absolute; inset: 0; background: rgba(10,12,15,0.55); }
+.ceramic__body { position: relative; padding: 30px 28px; display: grid; gap: 10px; max-width: 520px; }
+.ceramic h3 { font-size: 1.5rem; }
+.ceramic p { color: #d6dbe2; font-size: var(--fs-sm); }
+.ceramic .btn { justify-self: start; margin-top: 8px; }
+.addons { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; }
+.addons h3 { font-size: 1.25rem; }
+.addons p { color: var(--muted); font-size: var(--fs-sm); margin-top: 6px; }
+.addons dl { margin-top: 18px; display: grid; }
+.addons dl div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); font-size: var(--fs-sm); }
+.addons dt { font-weight: 550; }
+.addons dd { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- Steps ---------- */
+.steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; counter-reset: step; }
+.step { position: relative; padding: 30px 28px 32px; border-radius: var(--radius); background: var(--surface); }
+.step__num { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--ink); color: #fff; font-weight: 800; font-size: var(--fs-lg); }
+.step h3 { margin-top: 22px; font-size: 1.25rem; }
+.step p { margin-top: 10px; color: var(--muted); font-size: var(--fs-sm); }
+
+/* ---------- Why ---------- */
+.why { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(32px, 5vw, 72px); align-items: center; }
+.why__img { border-radius: var(--radius); overflow: hidden; }
+.why__img img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 30% 50%; }
+.features { list-style: none; padding: 0; display: grid; gap: 26px; margin-top: 32px; }
+.feature { display: grid; grid-template-columns: 48px 1fr; gap: 18px; }
+.feature__icon { width: 48px; height: 48px; border-radius: 12px; background: var(--ink); color: var(--accent); display: grid; place-items: center; }
+.feature__icon .icon { width: 24px; height: 24px; }
+.feature h3 { font-size: 1.125rem; font-stretch: 108%; }
+.feature p { margin-top: 4px; color: var(--muted); font-size: var(--fs-sm); }
+
+/* ---------- Area ---------- */
+.area { display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(32px, 5vw, 72px); align-items: start; }
+.area .section-head { margin-bottom: 0; }
+.towns { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.towns li { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); font-weight: 600; font-size: var(--fs-sm); }
+.towns .icon { width: 18px; height: 18px; color: var(--accent); }
+.area__note { margin-top: 18px; color: var(--muted); font-size: var(--fs-sm); }
+
+/* ---------- FAQ ---------- */
+.faq { display: grid; grid-template-columns: 1fr 1.6fr; gap: clamp(32px, 5vw, 72px); align-items: start; }
+.faq .section-head { position: sticky; top: calc(var(--header-h) + 32px); margin-bottom: 0; }
+.faq__list { border-top: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 22px 0; cursor: pointer; font-weight: 650; font-size: 1.125rem; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary .icon { width: 22px; height: 22px; transition: transform 220ms var(--ease); color: var(--muted); }
+.faq details[open] summary .icon { transform: rotate(45deg); }
+.faq details p { padding: 0 48px 24px 0; color: var(--muted); }
+
+/* ---------- Booking ---------- */
+.book { background: var(--dark); color: var(--on-dark); }
+.book__grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: clamp(32px, 5vw, 72px); align-items: start; }
+.book .section-head p { color: var(--on-dark-muted); }
+.contact-list { list-style: none; padding: 0; display: grid; gap: 22px; margin-top: 8px; }
+.contact-list li { display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start; }
+.contact-list .feature__icon { width: 44px; height: 44px; background: var(--dark-2); border: 1px solid var(--dark-line); }
+.contact-list strong { display: block; font-weight: 650; }
+.contact-list span, .contact-list a { color: var(--on-dark-muted); font-size: var(--fs-sm); text-decoration: none; }
+.contact-list a.big { color: var(--on-dark); font-size: var(--fs-lg); font-weight: 700; }
+.form { background: var(--bg); color: var(--ink); border-radius: var(--radius); padding: clamp(24px, 3vw, 36px); }
+.form h3 { font-size: 1.5rem; }
+.form > p { margin-top: 6px; color: var(--muted); font-size: var(--fs-sm); }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; margin-top: 24px; }
+.field { display: grid; gap: 7px; min-width: 0; }
+.field--full { grid-column: 1 / -1; }
+.field label { font-size: var(--fs-sm); font-weight: 600; }
+.field input, .field select, .field textarea {
+  width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid #cfd4db; border-radius: var(--radius-sm);
+  font: 400 var(--fs-base)/1.4 var(--font); color: var(--ink); background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.field textarea { min-height: 96px; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px rgba(255,90,31,0.35); }
+.estimate { margin-top: 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 16px 18px; background: var(--surface); border-radius: var(--radius-sm); }
+.estimate span { color: var(--muted); font-size: var(--fs-sm); }
+.estimate strong { font-size: 1.75rem; font-weight: 800; font-stretch: 110%; font-variant-numeric: tabular-nums; }
+.form .btn { margin-top: 18px; }
+.form__fine { margin-top: 12px; color: var(--muted); font-size: var(--fs-xs); text-align: center; }
+.form__done { display: grid; gap: 10px; padding: 8px 0; }
+.form__done .feature__icon { background: var(--ok); color: #fff; }
+.form__done h3 { margin-top: 6px; }
+.form__done p { color: var(--muted); }
+
+/* ---------- Footer ---------- */
+.footer { background: var(--dark); color: var(--on-dark-muted); border-top: 1px solid var(--dark-line); padding-top: 64px; font-size: var(--fs-sm); }
+.footer__grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 40px; }
+.footer h4 { margin: 0 0 14px; color: var(--on-dark); font-size: var(--fs-sm); font-weight: 700; }
+.footer ul { list-style: none; padding: 0; display: grid; gap: 10px; }
+.footer a { text-decoration: none; transition: color 160ms ease; }
+.footer a:hover { color: var(--on-dark); }
+.footer__about p { margin-top: 16px; max-width: 34ch; }
+.footer__bottom { margin-top: 56px; padding-block: 24px; border-top: 1px solid var(--dark-line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px; font-size: var(--fs-xs); }
+.footer__credits a { text-decoration: underline; text-underline-offset: 0.2em; }
+
+/* ---------- Reveal ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity 600ms var(--ease), transform 700ms var(--ease); transition-delay: var(--d, 0ms); }
+  .js .reveal.is-in { opacity: 1; transform: none; }
+}
+
+/* ---------- Tablet ---------- */
+@media (max-width: 1080px) {
+  .nav { display: none; }
+  .header__actions { margin-left: auto; }
+  .menu-btn { display: inline-flex; }
+  .mobile-nav { position: absolute; top: 100%; left: 0; right: 0; background: var(--dark); border-bottom: 1px solid var(--dark-line); }
+  .mobile-nav:not([hidden]) { display: block; }
+  .mobile-nav ul { list-style: none; padding: 8px var(--gutter-r) 20px var(--gutter); margin: 0; display: grid; }
+  .mobile-nav a { display: block; padding: 14px 0; text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--dark-line); }
+  .services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plans { grid-template-columns: 1fr; max-width: 560px; }
+  .plan--featured { order: -1; }
+  .extras { grid-template-columns: 1fr; }
+  .trust ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trust li:nth-child(3) { border-left: 0; padding-left: 0; }
+  .trust li:nth-child(n+3) { border-top: 1px solid var(--dark-line); }
+  .area, .faq, .book__grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .hero { display: flex; flex-direction: column; }
+  .hero__inner { order: 1; padding-block: 56px 8px; }
+  .hero__img { order: 2; position: relative; width: 100%; height: auto; aspect-ratio: 16 / 9; object-position: 50% 88%; }
+  .hero__shade { display: none; }
+  .trust { order: 3; }
+  .faq .section-head { position: static; }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 640px) {
+  :root { --header-h: 64px; }
+  .header__phone { display: none; }
+  .header .btn { min-height: 40px; padding: 9px 14px; font-size: var(--fs-sm); }
+  .logo__sub { display: none; }
+  .hero__img { aspect-ratio: 4 / 3; object-position: 58% 92%; }
+  .hero__ctas .btn { width: 100%; }
+  .trust ul { grid-template-columns: 1fr; }
+  .trust li, .trust li + li { padding: 16px 0; border-left: 0; }
+  .trust li + li { border-top: 1px solid var(--dark-line); }
+  .services { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; }
+  .why { grid-template-columns: 1fr; }
+  .why__img img { aspect-ratio: 4 / 3; }
+  .towns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fields { grid-template-columns: 1fr; }
+  .faq details p { padding-right: 0; }
+  .footer__grid { grid-template-columns: 1fr 1fr; }
+  .footer__about { grid-column: 1 / -1; }
+  .segmented span { padding: 10px 14px; }
+}
+</style>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-thumb" viewBox="0 0 24 24"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5S5 13 5 15a7 7 0 0 0 7 7Z"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 2v7.31"/><path d="M14 9.3V2"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/><path d="M5.52 16h12.96"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+</svg>
+
+<header class="header">
+  <div class="container header__inner">
+    <a class="logo" href="#top" aria-label="Halden Mobile Detailing, home">
+      <span class="logo__mark" aria-hidden="true">H</span>
+      <span class="logo__text"><span class="logo__name">HALDEN</span><span class="logo__sub">Mobile Detailing</span></span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#services">Services</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#how">How it works</a>
+      <a href="#area">Service area</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="header__actions">
+      <a class="header__phone" href="tel:+14025550148"><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg>(402) 555-0148</a>
+      <a class="btn btn--primary btn--sm" href="#book">Book now</a>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="Open menu"><svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
+    <ul>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#area">Service area</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="tel:+14025550148">Call (402) 555-0148</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="hero-h">
+    <img class="hero__img" src="img/sedan.jpg" alt="A freshly detailed black sedan under studio lights" width="2000" height="1250" fetchpriority="high">
+    <div class="hero__shade"></div>
+    <div class="container hero__inner">
+      <div class="hero__content">
+        <span class="kicker">Mobile car detailing in Omaha, NE</span>
+        <h1 id="hero-h">Showroom clean, right in your driveway.</h1>
+        <p class="hero__lead">Professional detailing at your home or office anywhere in the Omaha metro. We bring our own water and power. You just hand us the keys.</p>
+        <div class="hero__ctas">
+          <a class="btn btn--primary" href="#book">Get a free quote <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <a class="btn btn--outline" href="#pricing">See pricing</a>
+        </div>
+      </div>
+    </div>
+    <div class="trust">
+      <div class="container">
+        <ul>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Fully insured</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-thumb"/></svg>Satisfaction guaranteed</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-card"/></svg>Pay after the job</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-drop"/></svg>Water and power on board</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="services" aria-labelledby="services-h">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="kicker">Services</span>
+        <h2 id="services-h">Detailing for every part of your car</h2>
+        <p>Every job is done by hand with professional-grade products, at your home, office or anywhere you park.</p>
+      </div>
+      <div class="services">
+        <article class="service reveal">
+          <img src="img/wash.jpg" alt="A detailer hand-washing a car door with a soapy sponge" width="1200" height="800" loading="lazy">
+          <div class="service__body">
+            <h3>Exterior detail</h3>
+            <p>Foam pre-wash, two-bucket hand wash, wheels and tires, spot-free rinse and a protective sealant.</p>
+            <div class="service__foot"><span class="service__price"><span>From</span> $79</span><a class="text-link" href="#pricing">Pricing <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+          </div>
+        </article>
+        <article class="service reveal" style="--d:80ms">
+          <img src="img/interior.jpg" alt="A gloved hand wiping a dashboard with a microfiber cloth" width="1000" height="1250" loading="lazy">
+          <div class="service__body">
+            <h3>Interior detail</h3>
+            <p>Deep vacuum, carpet and seat shampoo, leather cleaning and conditioning, vents, jambs and glass.</p>
+            <div class="service__foot"><span class="service__price"><span>From</span> $149</span><a class="text-link" href="#pricing">Pricing <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+          </div>
+        </article>
+        <article class="service reveal" style="--d:160ms">
+          <img src="img/polish.jpg" alt="A detailer machine-polishing the hood of a blue car" width="1600" height="698" loading="lazy">
+          <div class="service__body">
+            <h3>Paint correction</h3>
+            <p>Machine polishing that removes swirl marks, light scratches and dullness to bring back a deep, clear gloss.</p>
+            <div class="service__foot"><span class="service__price"><span>From</span> $399</span><a class="text-link" href="#pricing">Pricing <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+          </div>
+        </article>
+        <article class="service reveal" style="--d:240ms">
+          <img src="img/beads.jpg" alt="Water beading on the glossy door of a black car" width="1600" height="1066" loading="lazy">
+          <div class="service__body">
+            <h3>Ceramic coating</h3>
+            <p>Long-lasting protection that keeps paint glossy, repels water and makes every wash easier.</p>
+            <div class="service__foot"><span class="service__price"><span>From</span> $749</span><a class="text-link" href="#ceramic">Details <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" id="pricing" aria-labelledby="pricing-h">
+    <div class="container">
+      <div class="pricing-top">
+        <div class="section-head reveal">
+          <span class="kicker">Pricing</span>
+          <h2 id="pricing-h">Simple, upfront pricing</h2>
+          <p>No hidden fees. Choose your vehicle size to see your price.</p>
+        </div>
+        <fieldset class="segmented reveal" id="size-picker">
+          <legend>Vehicle size</legend>
+          <label><input type="radio" name="size" value="0" checked><span>Car</span></label>
+          <label><input type="radio" name="size" value="1"><span>SUV</span></label>
+          <label><input type="radio" name="size" value="2"><span>Truck or van</span></label>
+        </fieldset>
+      </div>
+
+      <div class="plans">
+        <article class="plan reveal">
+          <h3>Express Wash</h3>
+          <p class="plan__desc">A thorough maintenance wash, inside and out.</p>
+          <div class="plan__price"><span class="plan__amount" data-plan="express">$79</span><span class="plan__per" data-size-label>car</span></div>
+          <span class="plan__time"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>About 1.5 hours</span>
+          <ul>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Foam pre-wash and hand wash</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Wheels, tires and tire shine</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Spot-free rinse and hand dry</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Interior vacuum and wipe-down</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Windows inside and out</li>
+          </ul>
+          <a class="btn btn--outline btn--block" href="#book" data-book="express" style="color: var(--ink)">Book Express Wash</a>
+        </article>
+        <article class="plan plan--featured reveal" style="--d:80ms">
+          <span class="plan__badge">Most popular</span>
+          <h3>Full Detail</h3>
+          <p class="plan__desc">A complete reset for the interior and exterior.</p>
+          <div class="plan__price"><span class="plan__amount" data-plan="full">$249</span><span class="plan__per" data-size-label>car</span></div>
+          <span class="plan__time"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>About 4 hours</span>
+          <ul>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Everything in Express Wash</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Clay bar decontamination</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Spray sealant, about 3 months of protection</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Carpet and floor mat shampoo</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Seats shampooed or leather conditioned</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Door jambs, vents and cup holders</li>
+          </ul>
+          <a class="btn btn--primary btn--block" href="#book" data-book="full">Book Full Detail</a>
+        </article>
+        <article class="plan reveal" style="--d:160ms">
+          <h3>Showroom Detail</h3>
+          <p class="plan__desc">Our most complete detail, with paint correction.</p>
+          <div class="plan__price"><span class="plan__amount" data-plan="showroom">$399</span><span class="plan__per" data-size-label>car</span></div>
+          <span class="plan__time"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>About 7 hours</span>
+          <ul>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Everything in Full Detail</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>One-step machine polish for light swirls</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Paint sealant, about 6 months of protection</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Engine bay clean and dress</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Headlight restoration</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Odor treatment</li>
+          </ul>
+          <a class="btn btn--outline btn--block" href="#book" data-book="showroom" style="color: var(--ink)">Book Showroom Detail</a>
+        </article>
+      </div>
+
+      <div class="extras">
+        <article class="ceramic reveal" id="ceramic">
+          <img src="img/beads.jpg" alt="" width="1600" height="1066" loading="lazy">
+          <div class="ceramic__shade"></div>
+          <div class="ceramic__body">
+            <h3>Ceramic coating from $749</h3>
+            <p>Multi-year protection with a professional-grade ceramic coating. Includes full decontamination and a one-step paint correction. Final price depends on paint condition, so we quote after a quick inspection.</p>
+            <a class="btn btn--primary btn--sm" href="#book" data-book="ceramic">Request a ceramic quote</a>
+          </div>
+        </article>
+        <div class="addons reveal" style="--d:80ms">
+          <h3>Add-ons</h3>
+          <p>Add any of these to a package.</p>
+          <dl>
+            <div><dt>Pet hair removal</dt><dd>+$40</dd></div>
+            <div><dt>Engine bay clean</dt><dd>+$45</dd></div>
+            <div><dt>Odor elimination</dt><dd>+$59</dd></div>
+            <div><dt>Headlight restoration</dt><dd>+$69</dd></div>
+            <div><dt>Bug and tar removal</dt><dd>+$25</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how" aria-labelledby="how-h">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="kicker">How it works</span>
+        <h2 id="how-h">Booked in minutes, detailed where you park</h2>
+      </div>
+      <ol class="steps">
+        <li class="step reveal">
+          <span class="step__num" aria-hidden="true">1</span>
+          <h3>Book online or by text</h3>
+          <p>Pick a package, a date and a time. We confirm your appointment within one business hour.</p>
+        </li>
+        <li class="step reveal" style="--d:80ms">
+          <span class="step__num" aria-hidden="true">2</span>
+          <h3>We arrive fully equipped</h3>
+          <p>Our van carries water, power and every product we use. All we need is a parking spot.</p>
+        </li>
+        <li class="step reveal" style="--d:160ms">
+          <span class="step__num" aria-hidden="true">3</span>
+          <h3>Inspect it and drive away</h3>
+          <p>We walk around the car with you when we finish. You pay by card or cash once you’re happy.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="why-h">
+    <div class="container why">
+      <div class="why__img reveal">
+        <img src="img/spray.jpg" alt="A black sports car being rinsed during a detail" width="1800" height="1012" loading="lazy">
+      </div>
+      <div>
+        <div class="section-head reveal" style="margin-bottom:0">
+          <span class="kicker">Why Halden</span>
+          <h2 id="why-h">Detailing done properly, without the trip</h2>
+        </div>
+        <ul class="features">
+          <li class="feature reveal">
+            <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-plug"/></svg></span>
+            <div><h3>Fully self-contained</h3><p>We bring a 100-gallon water tank and our own generator, so we never use your water or power.</p></div>
+          </li>
+          <li class="feature reveal" style="--d:60ms">
+            <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-drop"/></svg></span>
+            <div><h3>Spot-free rinse</h3><p>Every car gets a final rinse with filtered, deionized water, so it dries without water spots.</p></div>
+          </li>
+          <li class="feature reveal" style="--d:120ms">
+            <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-flask"/></svg></span>
+            <div><h3>Professional-grade products</h3><p>pH-neutral soaps and coatings that are safe for ceramic coatings, paint protection film and leather.</p></div>
+          </li>
+          <li class="feature reveal" style="--d:180ms">
+            <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-cloud"/></svg></span>
+            <div><h3>Weather guarantee</h3><p>If rain or freezing temperatures get in the way, we move your appointment for free or work in your garage.</p></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="area" aria-labelledby="area-h">
+    <div class="container area">
+      <div class="section-head reveal">
+        <span class="kicker">Service area</span>
+        <h2 id="area-h">Serving the whole Omaha metro</h2>
+        <p>We come to homes, apartments and offices across the area, with no travel fee inside these neighborhoods and towns.</p>
+      </div>
+      <div class="reveal" style="--d:80ms">
+        <ul class="towns">
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Downtown Omaha</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Midtown</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Dundee</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Benson</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Aksarben</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>West Omaha</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Millard</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Elkhorn</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Papillion</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>La Vista</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Bellevue</li>
+          <li><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>Council Bluffs</li>
+        </ul>
+        <p class="area__note">Outside these areas? Send us a text. We can often still come to you for a small travel fee.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" id="faq" aria-labelledby="faq-h">
+    <div class="container faq">
+      <div class="section-head reveal">
+        <span class="kicker">FAQ</span>
+        <h2 id="faq-h">Common questions</h2>
+        <p>Can’t find your answer? Call or text <a href="tel:+14025550148">(402) 555-0148</a>.</p>
+      </div>
+      <div class="faq__list reveal" style="--d:80ms">
+        <details open>
+          <summary>Do I need to provide water or electricity?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>No. Our van carries a 100-gallon water tank and its own generator. We only need a parking spot with a few feet of room around the car.</p>
+        </details>
+        <details>
+          <summary>How long does a detail take?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>An Express Wash takes about 1.5 hours, a Full Detail about 4 hours, and a Showroom Detail most of a day. Larger vehicles and very dirty interiors can take longer.</p>
+        </details>
+        <details>
+          <summary>Do I need to be home during the appointment?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Only at the start and the end. Many customers leave the keys with us and keep working. We text you when the car is ready for a walk-around.</p>
+        </details>
+        <details>
+          <summary>Can you detail my car at work?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Yes, as long as your building or parking lot allows it. Since we bring everything, most office lots only need to let us park.</p>
+        </details>
+        <details>
+          <summary>What happens if the weather is bad?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>We don’t wash outside in rain or below 35°F. If you have a garage, we can work inside it. Otherwise we reschedule you for free.</p>
+        </details>
+        <details>
+          <summary>How do I pay?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Card or cash when the job is finished and you’re happy with it. Ceramic coating appointments need a $100 deposit to hold the day.</p>
+        </details>
+        <details>
+          <summary>What if I’m not satisfied?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Tell us during the walk-around and we’ll fix it on the spot. If you notice something within 48 hours, we’ll come back and make it right at no charge.</p>
+        </details>
+        <details>
+          <summary>Can you remove pet hair and odors?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary>
+          <p>Yes. Pet hair removal and odor elimination are available as add-ons to any package.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="section book" id="book" aria-labelledby="book-h">
+    <div class="container book__grid">
+      <div>
+        <div class="section-head reveal">
+          <span class="kicker">Book now</span>
+          <h2 id="book-h">Book your detail</h2>
+          <p>Send a request and we’ll confirm your appointment within one business hour. Prefer to talk? Call or text anytime during business hours.</p>
+        </div>
+        <ul class="contact-list reveal" style="--d:80ms">
+          <li><span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-phone"/></svg></span><div><strong>Call or text</strong><a class="big" href="tel:+14025550148">(402) 555-0148</a></div></li>
+          <li><span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></span><div><strong>Hours</strong><span>Monday to Saturday, 7 am to 6 pm</span></div></li>
+          <li><span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg></span><div><strong>Service area</strong><span>Omaha, Council Bluffs and surrounding towns</span></div></li>
+        </ul>
+      </div>
+
+      <form class="form reveal" id="booking" name="booking" method="POST" action="/thank-you" data-netlify="true" netlify-honeypot="bot-field" data-mode="live" style="--d:120ms">
+        <div class="form__main">
+          <h3>Request an appointment</h3>
+          <p>Takes about a minute. No payment needed now.</p>
+          <input type="hidden" name="form-name" value="booking">
+          <p hidden><label>Leave this empty <input name="bot-field"></label></p>
+          <div class="fields">
+            <div class="field"><label for="f-name">Full name</label><input id="f-name" name="name" autocomplete="name" required></div>
+            <div class="field"><label for="f-phone">Phone</label><input id="f-phone" name="phone" type="tel" autocomplete="tel" required></div>
+            <div class="field field--full"><label for="f-email">Email</label><input id="f-email" name="email" type="email" autocomplete="email"></div>
+            <div class="field field--full"><label for="f-address">Address or ZIP code</label><input id="f-address" name="address" autocomplete="street-address" required></div>
+            <div class="field"><label for="f-size">Vehicle</label>
+              <select id="f-size" name="vehicle"><option value="0">Car</option><option value="1">SUV</option><option value="2">Truck or van</option></select>
+            </div>
+            <div class="field"><label for="f-package">Package</label>
+              <select id="f-package" name="package">
+                <option value="express">Express Wash</option>
+                <option value="full" selected>Full Detail</option>
+                <option value="showroom">Showroom Detail</option>
+                <option value="ceramic">Ceramic coating</option>
+              </select>
+            </div>
+            <div class="field"><label for="f-date">Preferred date</label><input id="f-date" name="date" type="date" required></div>
+            <div class="field"><label for="f-time">Preferred time</label>
+              <select id="f-time" name="time"><option>Morning (8 am to noon)</option><option>Afternoon (noon to 4 pm)</option><option>Flexible</option></select>
+            </div>
+            <div class="field field--full"><label for="f-notes">Anything we should know? <span style="color:var(--muted);font-weight:400">(optional)</span></label><textarea id="f-notes" name="notes" placeholder="Pet hair, stains, parking details…"></textarea></div>
+          </div>
+          <div class="estimate" aria-live="polite"><span id="estimate-label">Estimated price, Full Detail for a car</span><strong id="estimate">$249</strong></div>
+          <button class="btn btn--primary btn--block" type="submit">Request appointment</button>
+          <p class="form__fine">We’ll confirm by text. Final price is confirmed before we start.</p>
+        </div>
+        <div class="form__done" hidden tabindex="-1">
+          <span class="feature__icon"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
+          <h3>Request received</h3>
+          <p id="done-text">Thanks! We’ll text you within one business hour to confirm your appointment.</p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div class="footer__about">
+      <a class="logo" href="#top" aria-label="Halden Mobile Detailing, home">
+        <span class="logo__mark" aria-hidden="true">H</span>
+        <span class="logo__text"><span class="logo__name">HALDEN</span><span class="logo__sub">Mobile Detailing</span></span>
+      </a>
+      <p>Professional mobile car detailing for Omaha, Council Bluffs and the surrounding area.</p>
+    </div>
+    <div>
+      <h4>Services</h4>
+      <ul>
+        <li><a href="#services">Exterior detail</a></li>
+        <li><a href="#services">Interior detail</a></li>
+        <li><a href="#services">Paint correction</a></li>
+        <li><a href="#ceramic">Ceramic coating</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#area">Service area</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="tel:+14025550148">(402) 555-0148</a></li>
+        <li>Monday to Saturday, 7 am to 6 pm</li>
+        <li>Omaha, Nebraska</li>
+        <li><a href="#book">Book online</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="container">
+    <div class="footer__bottom">
+      <span>© <span id="year">2026</span> Halden Mobile Detailing. Demo website: sample business, prices and phone number.</span>
+      <span class="footer__credits">Photos from Unsplash by <a href="https://unsplash.com/photos/FMbWFDiVRPs">Samuele Errico Piccarini</a>, <a href="https://unsplash.com/photos/phP5Qa0CauQ">Nik</a>, <a href="https://unsplash.com/photos/_vmBjTG5L1g">Muhammad Saad</a>, <a href="https://unsplash.com/photos/iXpjQNP__EQ">Luay Barani</a>, <a href="https://unsplash.com/photos/fi9zsbf3f5Y">Tuomas Nylund</a> and <a href="https://unsplash.com/photos/Ng3xrviPrhk">Clément M.</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const PRICES = {
+    express:  { name: 'Express Wash',     price: [79, 89, 99] },
+    full:     { name: 'Full Detail',      price: [249, 279, 309] },
+    showroom: { name: 'Showroom Detail',  price: [399, 449, 499] },
+    ceramic:  { name: 'Ceramic coating',  price: [749, 849, 949], from: true }
+  };
+  const SIZES = ['car', 'SUV', 'truck or van'];
+  const ARTICLE = ['a car', 'an SUV', 'a truck or van'];
+  const $ = (s, r = document) => r.querySelector(s);
+
+  /* Mobile menu */
+  const menuBtn = $('.menu-btn'), mobileNav = $('#mobile-nav');
+  const setMenu = (open) => {
+    mobileNav.hidden = !open;
+    menuBtn.setAttribute('aria-expanded', String(open));
+    menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    menuBtn.querySelector('use').setAttribute('href', open ? '#i-close' : '#i-menu');
+  };
+  menuBtn.addEventListener('click', () => setMenu(mobileNav.hidden));
+  mobileNav.addEventListener('click', (e) => { if (e.target.closest('a')) setMenu(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape' && !mobileNav.hidden) { setMenu(false); menuBtn.focus(); } });
+
+  /* Pricing size picker */
+  const form = $('#booking');
+  const sizeSelect = $('#f-size'), pkgSelect = $('#f-package');
+  const renderPlans = (size) => {
+    document.querySelectorAll('[data-plan]').forEach((el) => { el.textContent = '$' + PRICES[el.dataset.plan].price[size]; });
+    document.querySelectorAll('[data-size-label]').forEach((el) => { el.textContent = SIZES[size]; });
+  };
+  document.querySelectorAll('input[name="size"]').forEach((r) => r.addEventListener('change', () => {
+    const size = Number(r.value); renderPlans(size); sizeSelect.value = String(size); renderEstimate();
+  }));
+
+  /* Booking estimate */
+  const renderEstimate = () => {
+    const size = Number(sizeSelect.value), p = PRICES[pkgSelect.value];
+    $('#estimate').textContent = (p.from ? 'From $' : '$') + p.price[size];
+    $('#estimate-label').textContent = 'Estimated price, ' + p.name + ' for ' + ARTICLE[size];
+  };
+  sizeSelect.addEventListener('change', () => {
+    const size = Number(sizeSelect.value); renderPlans(size);
+    const radio = document.querySelector('input[name="size"][value="' + size + '"]'); if (radio) radio.checked = true;
+    renderEstimate();
+  });
+  pkgSelect.addEventListener('change', renderEstimate);
+  document.querySelectorAll('[data-book]').forEach((a) => a.addEventListener('click', () => { pkgSelect.value = a.dataset.book; renderEstimate(); }));
+
+  /* Dates: earliest is tomorrow */
+  const d = new Date(); d.setDate(d.getDate() + 1);
+  $('#f-date').min = d.toISOString().slice(0, 10);
+  $('#year').textContent = new Date().getFullYear();
+
+  /* Submit: on a live Netlify site the form posts normally; in preview it shows the confirmation only. */
+  form.addEventListener('submit', (e) => {
+    if (form.dataset.mode === 'live' && location.protocol.startsWith('http')) return;
+    e.preventDefault();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    const name = (form.elements.name.value || '').trim().split(' ')[0];
+    $('#done-text').textContent = 'Thanks' + (name ? ', ' + name : '') + '! This is a preview, so nothing was sent. On the live site, this request goes straight to the business.';
+    $('.form__main', form).hidden = true;
+    const done = $('.form__done', form); done.hidden = false; done.focus();
+  });
+
+  renderPlans(0); renderEstimate();
+
+  /* Reveal on scroll, once */
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const en of entries) if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); }
+    }, { rootMargin: '0px 0px -8% 0px' });
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+  } else {
+    document.querySelectorAll('.reveal').forEach((el) => el.classList.add('is-in'));
+  }
+})();
+</script>
+</body>
+</html>
