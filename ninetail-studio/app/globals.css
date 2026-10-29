@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: #040409;
+  --glass-bg: rgba(18, 16, 32, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-strong: rgba(196, 181, 253, 0.22);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: #f6f4ff;
+}
+
+body {
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(167, 139, 250, 0.35);
+  color: #fff;
+}
+
+@layer components {
+  /* Frosted glass panel. Pair with rounded-* and padding at the call site. */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 60px -20px rgba(0, 0, 0, 0.7);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    backdrop-filter: blur(20px) saturate(140%);
+  }
+
+  .glass-strong {
+    background: rgba(22, 19, 40, 0.72);
+    border: 1px solid var(--glass-border-strong);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 30px 80px -24px rgba(0, 0, 0, 0.85);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+    backdrop-filter: blur(28px) saturate(150%);
+  }
+
+  /* White to violet to cyan gradient text. */
+  .text-spirit {
+    background-image: linear-gradient(120deg, #f6f4ff 0%, #c4b5fd 40%, #a78bfa 62%, #67e8f9 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Small uppercase mono label used for section eyebrows. */
+  .eyebrow {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #9a96b8;
+  }
+
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-spirit-violet/70 focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian-950;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(167, 139, 250, 0.3) transparent;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
