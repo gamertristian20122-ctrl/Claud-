@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Saltline Mobile Detailing</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Mobile car detailing anywhere in Omaha. We bring the water and the power, and wash winter off your car in your driveway.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* Layout: a type-only first screen of two flat fields meeting at the salt line; below it, typographic set pieces on one 12-column grid with one pair of margins. */
+:root {
+  --bg: #ffffff;
+  --surface: #f3f2ee;
+  --ink: #000000;
+  --muted: #55534f;
+  --paper: #ffffff;
+  --salt: #e3e4e2;
+  --night: #000000;
+  --night-ink: #f4f4f2;
+  --night-muted: #bdbab3;
+  --accent: #ff6a1f;
+  --accent-strong: #ff8645;
+  --accent-ink: #000000;
+
+  --font-display: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+  --font-text: "Source Serif 4", Georgia, "Times New Roman", serif;
+
+  --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --step-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+  --step-display: clamp(72px, 9vw, 140px);
+
+  --margin: clamp(16px, 2vw, 28px);
+  --gutter: clamp(16px, 2vw, 28px);
+  --section-gap: clamp(112px, 12vw, 200px);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --t-press: 140ms;
+  --t-hover: 180ms;
+  --t-ui: 240ms;
+  --stagger-line: 90ms;
+  --stagger-item: 70ms;
+
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-text);
+  font-size: var(--step-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img { display: block; max-width: 100%; height: auto; }
+h1, h2, h3, h4, p, figure, ol, ul, dl, dd, fieldset { margin: 0; }
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.035em; line-height: 1; text-wrap: balance; }
+p { text-wrap: pretty; }
+a { color: inherit; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+:focus-visible { outline: 3px solid var(--focus, var(--accent)); outline-offset: 3px; }
+
+.wrap {
+  padding-left: max(var(--margin), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--margin), env(safe-area-inset-right, 0px));
+}
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
+
+.button {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 48px; padding: 12px 22px;
+  background: var(--accent); color: var(--accent-ink);
+  font: 700 var(--step-small)/1.1 var(--font-display); letter-spacing: -0.01em;
+  text-decoration: none; border: 0; border-radius: 0; cursor: pointer;
+  --focus: var(--ink);
+  transition: transform var(--t-press) var(--ease-out), background-color var(--t-hover) ease;
+}
+.button:active { transform: scale(0.97); }
+.link {
+  text-decoration: underline; text-decoration-thickness: 0.07em; text-underline-offset: 0.2em;
+  text-decoration-color: currentColor;
+  transition: text-decoration-color var(--t-hover) ease, color var(--t-hover) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .button:hover { background-color: var(--accent-strong); }
+  .link:hover { text-decoration-color: var(--accent); }
+}
+
+/* ---------- Hero: the salt line ---------- */
+.hero {
+  --seam: 50%;
+  --seam-rest: 50%;
+  --fs: var(--step-display);
+  position: relative; isolation: isolate;
+  height: 100svh; min-height: 620px; max-height: 1100px;
+  background: var(--salt);
+  overflow: clip;
+}
+/* The paint field above the salt line. One white headline set with `difference` reads white on the paint and near-black on the salt. */
+.hero__paint {
+  position: absolute; inset: 0; z-index: 0;
+  background: var(--night);
+  clip-path: inset(0 0 calc(100% - var(--seam)) 0);
+}
+.hero__bar {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 3;
+  padding-top: max(24px, env(safe-area-inset-top, 0px));
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.wordmark {
+  font: 700 var(--step-lead)/1 var(--font-display); letter-spacing: -0.035em;
+  text-decoration: none; color: var(--night-ink);
+}
+.hero__title {
+  position: absolute; left: 0; right: 0; z-index: 2;
+  top: calc(var(--seam-rest) - 1.28 * var(--fs));
+  margin: 0 auto; width: max-content; max-width: calc(100% - 2 * var(--margin));
+  font: 700 var(--fs)/0.86 var(--font-display); letter-spacing: -0.035em;
+  text-transform: uppercase; text-align: center;
+  color: #ffffff; mix-blend-mode: difference;
+}
+.lines .line { display: block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.lines [data-line] { display: block; }
+.hero__support {
+  position: absolute; left: 0; right: 0; bottom: max(40px, env(safe-area-inset-bottom, 0px));
+  z-index: 3; margin: 0 auto; max-width: calc(34ch + 2 * var(--margin));
+  font-size: var(--step-lead); line-height: 1.35; text-align: center; color: var(--ink);
+}
+
+/* ---------- Opening window: the clean door ---------- */
+.opening { margin: 0; }
+.opening__stage { height: 100svh; overflow: clip; }
+.opening__stage img { width: 100%; height: 100%; object-fit: cover; object-position: 30% 50%; }
+.opening__caption { padding-top: 14px; font-size: var(--step-small); color: var(--muted); }
+
+/* ---------- The Omaha year ---------- */
+.year { padding-block: var(--section-gap) 0; }
+.year__head { grid-column: 1 / span 7; font-size: var(--step-head); }
+.year__lede { grid-column: 9 / span 4; align-self: end; font-size: var(--step-body); }
+.poster { list-style: none; padding: 80px 0 0; }
+.poster li {
+  display: flex; justify-content: space-between; align-items: last baseline; gap: var(--gutter);
+}
+.poster__word {
+  font: 700 var(--step-display)/0.92 var(--font-display); letter-spacing: -0.035em;
+  text-transform: uppercase; transition: color var(--t-hover) ease;
+}
+.poster__fact {
+  display: flex; flex-direction: column; align-items: flex-end; text-align: right;
+  max-width: 30ch; font-size: var(--step-body); line-height: 1.35; padding-bottom: 0.2em;
+}
+.poster__fact b { font: 700 var(--step-body)/1.3 var(--font-display); letter-spacing: -0.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.poster__fact span { text-wrap: balance; }
+.poster li.is-now .poster__word { color: var(--accent); }
+@media (hover: hover) and (pointer: fine) {
+  .poster li:hover .poster__word { color: var(--accent); }
+}
+
+.band { row-gap: clamp(32px, 4vw, 56px); padding-top: var(--section-gap); }
+.band figure img { display: block; width: 100%; height: auto; object-fit: cover; }
+.band figcaption { padding-top: 12px; font-size: var(--step-small); line-height: 1.45; max-width: 46ch; }
+.shutter { overflow: clip; }
+.band__a { grid-column: 1 / span 8; }
+.band__a video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; background: var(--salt); }
+.band__b { grid-column: 9 / span 4; }
+.band__b img { aspect-ratio: 8 / 9; object-position: 52% 40%; }
+.band__c { grid-column: 2 / span 5; }
+.band__d { grid-column: 8 / span 5; }
+.band__c img, .band__d img { aspect-ratio: 3 / 2; }
+
+/* ---------- A visit, on a slip ---------- */
+.visit {
+  margin-top: var(--section-gap);
+  background: var(--night); color: var(--night-ink);
+  padding-block: var(--section-gap);
+}
+.visit__text { grid-column: 1 / span 5; display: flex; flex-direction: column; gap: 28px; }
+.visit__text h2 { font-size: var(--step-head); }
+.visit__text p { max-width: 34ch; }
+.visit__pic img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+.visit__pic figcaption { padding-top: 12px; font-size: var(--step-small); color: var(--night-muted); }
+.slip {
+  grid-column: 7 / span 5; align-self: start;
+  background: var(--paper); color: var(--ink);
+  padding: 36px clamp(20px, 2.4vw, 36px) 56px;
+  font-size: 17px; line-height: 1.4; font-variant-numeric: tabular-nums;
+  clip-path: polygon(0% 0%, 100% 0%, 100% calc(100% - 12px), 97.917% 100%, 95.833% calc(100% - 12px), 93.750% 100%, 91.667% calc(100% - 12px), 89.583% 100%, 87.500% calc(100% - 12px), 85.417% 100%, 83.333% calc(100% - 12px), 81.250% 100%, 79.167% calc(100% - 12px), 77.083% 100%, 75.000% calc(100% - 12px), 72.917% 100%, 70.833% calc(100% - 12px), 68.750% 100%, 66.667% calc(100% - 12px), 64.583% 100%, 62.500% calc(100% - 12px), 60.417% 100%, 58.333% calc(100% - 12px), 56.250% 100%, 54.167% calc(100% - 12px), 52.083% 100%, 50.000% calc(100% - 12px), 47.917% 100%, 45.833% calc(100% - 12px), 43.750% 100%, 41.667% calc(100% - 12px), 39.583% 100%, 37.500% calc(100% - 12px), 35.417% 100%, 33.333% calc(100% - 12px), 31.250% 100%, 29.167% calc(100% - 12px), 27.083% 100%, 25.000% calc(100% - 12px), 22.917% 100%, 20.833% calc(100% - 12px), 18.750% 100%, 16.667% calc(100% - 12px), 14.583% 100%, 12.500% calc(100% - 12px), 10.417% 100%, 8.333% calc(100% - 12px), 6.250% 100%, 4.167% calc(100% - 12px), 2.083% 100%, 0.000% calc(100% - 12px));
+}
+.slip h3 { font-size: var(--step-lead); letter-spacing: -0.02em; line-height: 1.15; }
+.slip h4 { font: 700 1em/1.3 var(--font-text); letter-spacing: 0; margin-top: 28px; margin-bottom: 8px; }
+.slip ul { list-style: none; padding: 0; display: grid; gap: 8px; }
+.slip li { display: flex; align-items: baseline; gap: 8px; }
+.slip li .what { min-width: 0; }
+.slip li .dots { flex: 1 1 24px; min-width: 24px; border-bottom: 4px dotted var(--ink); opacity: 0.35; transform: translateY(-4px); }
+.slip li .when { white-space: nowrap; }
+.slip__total {
+  margin: 32px calc(-1 * clamp(20px, 2.4vw, 36px)) 0;
+  min-height: 44px; padding: 10px clamp(20px, 2.4vw, 36px);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: var(--ink); color: var(--paper); font-weight: 600;
+}
+.slip__total span:last-child { white-space: nowrap; }
+
+/* ---------- Price ---------- */
+.price { background: var(--salt); padding-block: var(--section-gap); }
+.price__line { font-size: var(--step-display); line-height: 0.95; letter-spacing: -0.035em; }
+.price__line .line { display: block; }
+.price__tag { display: inline-block; background: var(--accent); padding: 0 0.15em; font-variant-numeric: tabular-nums; }
+.price__foot { margin-top: 64px; align-items: end; }
+.price__incl { grid-column: 1 / span 6; font-size: var(--step-lead); line-height: 1.4; }
+.price__more { grid-column: 10 / span 3; justify-self: end; font: 700 var(--step-body)/1.2 var(--font-display); letter-spacing: -0.01em; }
+
+.quote { margin-top: clamp(80px, 9vw, 140px); row-gap: 40px; align-items: start; }
+.quote__head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 40px; }
+.quote__head h3 { font-size: var(--step-head); }
+.quote__month { max-width: 46ch; font-size: var(--step-body); }
+.quote__month b { font-family: var(--font-display); letter-spacing: -0.01em; }
+.quote__controls { grid-column: 1 / span 7; display: grid; gap: 36px; }
+.quote fieldset { border: 0; padding: 0; min-width: 0; }
+.quote legend { padding: 0; margin-bottom: 12px; font: 700 var(--step-body)/1.2 var(--font-display); letter-spacing: -0.01em; }
+.choice { position: relative; display: block; cursor: pointer; }
+.choice input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.choice__face {
+  display: block; background: var(--paper); color: var(--ink);
+  transition: background-color var(--t-hover) ease, color var(--t-hover) ease;
+}
+.choice input:checked + .choice__face { background: var(--ink); color: var(--paper); }
+.choice input:focus-visible + .choice__face { outline: 3px solid var(--ink); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  .choice:hover input:not(:checked) + .choice__face { background: var(--surface); }
+}
+.vehicles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.vehicles .choice__face { padding: 14px 12px; text-align: center; font: 700 var(--step-body)/1.2 var(--font-display); letter-spacing: -0.01em; }
+.packages { display: grid; gap: 6px; }
+.packages .choice__face { padding: 16px 20px 18px; display: grid; grid-template-columns: 1fr auto; column-gap: 16px; row-gap: 4px; }
+.pkg__name { font: 700 var(--step-lead)/1.15 var(--font-display); letter-spacing: -0.02em; }
+.pkg__price { font: 700 var(--step-lead)/1.15 var(--font-display); font-variant-numeric: tabular-nums; }
+.pkg__desc { grid-column: 1 / -1; font-size: var(--step-small); line-height: 1.45; max-width: 60ch; }
+.pkg__rec { grid-column: 1 / -1; font-size: var(--step-small); font-weight: 600; }
+.addons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.addons .choice__face { padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; font-size: var(--step-small); font-weight: 600; }
+.addons .choice__face span:last-child { font-variant-numeric: tabular-nums; }
+
+.quote__out {
+  grid-column: 8 / span 5; position: sticky; top: max(24px, env(safe-area-inset-top, 0px));
+  background: var(--night); color: var(--night-ink); --focus: var(--accent);
+}
+.quote__out img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; transition: opacity var(--t-ui) ease; }
+.quote__body { padding: 28px clamp(20px, 2.4vw, 32px) 32px; display: grid; gap: 14px; }
+.quote__total { font: 700 var(--step-head)/1 var(--font-display); letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
+.quote__what { font-size: var(--step-body); }
+.quote__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 8px; }
+.quote__status { min-height: 1.4em; font-size: var(--step-small); color: var(--night-muted); }
+.price-table { width: 100%; border-collapse: collapse; margin-top: 24px; font-variant-numeric: tabular-nums; }
+.price-table th, .price-table td { text-align: left; padding: 8px 12px 8px 0; }
+
+/* ---------- Questions ---------- */
+.faq { padding-block: var(--section-gap); }
+.faq__side { grid-column: 1 / span 3; align-self: start; position: sticky; top: max(32px, env(safe-area-inset-top, 0px)); display: flex; flex-direction: column; gap: 32px; }
+.faq__side h2 { font-size: var(--step-head); }
+.faq__side figcaption { padding-top: 10px; font-size: var(--step-small); line-height: 1.45; }
+.faq__text { grid-column: 5 / span 8; columns: 2; column-gap: 56px; }
+.faq__text p { break-inside: avoid; margin-bottom: 20px; line-height: 1.55; }
+.faq__text b { font-weight: 600; }
+
+/* ---------- Book ---------- */
+.book { background: var(--accent); color: var(--accent-ink); --focus: var(--ink); }
+.book__inner {
+  min-height: 86svh; padding-block: clamp(40px, 6vw, 72px) clamp(28px, 4vw, 48px);
+  display: grid; grid-template-rows: auto 1fr auto; row-gap: 40px;
+}
+.book__top { display: grid; gap: 10px; max-width: 30ch; }
+.book__top h2 { font-size: var(--step-lead); letter-spacing: -0.02em; }
+.book__top p { font-size: var(--step-lead); line-height: 1.35; }
+.book__number { align-self: end; padding-bottom: 6vh; font: 700 var(--step-display)/0.9 var(--font-display); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.book__number a { text-decoration: none; transition: color var(--t-hover) ease; }
+.book__copy { display: block; margin-top: 18px; }
+.book__foot { display: flex; justify-content: space-between; align-items: end; gap: 24px 48px; font-size: var(--step-small); line-height: 1.45; }
+.book__foot p { max-width: 52ch; }
+.book__foot p:last-child { text-align: right; }
+@media (hover: hover) and (pointer: fine) {
+  .book__number a:hover { color: var(--paper); }
+}
+.ghost {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 10px 18px;
+  background: var(--ink); color: var(--paper); border: 0; border-radius: 0; cursor: pointer;
+  font: 700 var(--step-small)/1.1 var(--font-display); letter-spacing: -0.01em;
+  transition: transform var(--t-press) var(--ease-out), background-color var(--t-hover) ease;
+}
+.ghost:active { transform: scale(0.97); }
+.quote__out .ghost { background: var(--night-ink); color: var(--ink); }
+
+/* ---------- Footer ---------- */
+.foot { background: var(--night); color: var(--night-ink); --focus: var(--accent); }
+.foot__inner { min-height: 100svh; display: grid; grid-template-rows: auto 1fr auto auto; padding-block: 40px 20px; }
+.foot__cols { row-gap: 32px; font-size: var(--step-small); line-height: 1.5; }
+.foot__cols > * { grid-column: span 3; color: var(--night-muted); }
+.foot__cols ul { list-style: none; padding: 0; }
+.foot__cols a { text-decoration-color: transparent; text-underline-offset: 0.2em; transition: text-decoration-color var(--t-hover) ease, color var(--t-hover) ease; }
+.foot__first { color: var(--night-ink); font-weight: 600; }
+.foot__credits a { text-decoration-color: currentColor; }
+@media (hover: hover) and (pointer: fine) {
+  .foot__cols a:hover { color: var(--night-ink); text-decoration-color: currentColor; }
+}
+.foot__mark { display: block; width: 100%; height: auto; margin-top: 40px; }
+.foot__mark text { font-family: var(--font-display); font-weight: 700; fill: var(--night-ink); }
+.foot__legal { padding-top: 20px; font-size: var(--step-small); color: var(--night-muted); }
+
+/* ---------- Tablet ---------- */
+@media (max-width: 1024px) {
+  .year__head { grid-column: 1 / -1; }
+  .year__lede { grid-column: 1 / span 8; margin-top: 20px; }
+  .poster li { display: block; margin-bottom: 52px; }
+  .poster__fact { align-items: flex-start; text-align: left; max-width: none; padding: 6px 0 0; flex-direction: column-reverse; }
+  .visit__text { grid-column: 1 / span 6; }
+  .slip { grid-column: 7 / span 6; }
+  .quote__controls { grid-column: 1 / -1; }
+  .quote__out { grid-column: 1 / -1; position: static; display: grid; grid-template-columns: 1fr 1fr; }
+  .quote__out img { height: 100%; aspect-ratio: auto; }
+  .faq__side { grid-column: 1 / span 4; }
+  .faq__text { grid-column: 5 / span 8; columns: 1; }
+  .price__incl { grid-column: 1 / span 8; }
+  .price__more { grid-column: 9 / span 4; }
+  .foot__cols > * { grid-column: span 6; }
+  .book__inner { min-height: auto; }
+  .book__number { padding-block: 10vh 4vh; }
+  .foot__inner { min-height: auto; grid-template-rows: auto auto auto; }
+  .foot__mark { margin-top: 120px; }
+}
+
+/* ---------- Phone ---------- */
+@media (max-width: 700px) {
+  .hero { --seam-rest: 46%; --fs: 15.5vw; min-height: 560px; }
+  .hero:not(.is-washing) { --seam: 46%; }
+  .hero__title { max-width: none; width: auto; padding-inline: 16px; }
+  .hero__support { left: 0; right: 0; margin: 0; text-align: left; font-size: var(--step-body); max-width: none; padding-right: 20%; }
+  .hero .button { min-height: 40px; padding: 10px 14px; }
+  .year__lede { grid-column: 1 / -1; }
+  .poster { padding-top: 56px; }
+  .poster__word { display: block; font-size: 12vw; }
+  .band__a, .band__b { grid-column: 1 / -1; }
+  .band__b img { aspect-ratio: 4 / 5; }
+  .band__c { grid-column: 1 / span 6; }
+  .band__d { grid-column: 7 / span 6; }
+  .visit__text, .slip { grid-column: 1 / -1; }
+  .slip { margin-top: 48px; }
+  .price__line { font-size: 12vw; }
+  .price__line .line:last-child { display: block; }
+  .price__incl, .price__more { grid-column: 1 / -1; justify-self: start; }
+  .price__more { margin-top: 24px; }
+  .price__incl { font-size: var(--step-body); }
+  .quote__out { display: block; }
+  .quote__out img { aspect-ratio: 4 / 3; height: auto; }
+  .addons { grid-template-columns: 1fr; }
+  .faq__side, .faq__text { grid-column: 1 / -1; }
+  .faq__side { margin-bottom: 40px; position: static; }
+  .faq__text p { margin-bottom: 18px; }
+  .book__number { font-size: 12vw; padding-block: 24px 0; }
+  .book__foot { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .book__foot p:last-child { text-align: left; }
+  .foot__mark { margin-top: 20svh; }
+}
+
+/* ---------- Motion ---------- */
+@keyframes line-up { to { transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .js .hero [data-line] { transform: translateY(105%); animation: line-up 900ms var(--ease-expo) forwards; animation-delay: calc(var(--i) * 110ms + 150ms); }
+  .js .hero [data-load] { opacity: 0; animation: rise 520ms var(--ease-out) forwards; animation-delay: var(--d); }
+
+  .js [data-reveal] > * { opacity: 0; transform: translateY(24px); transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-expo); transition-delay: calc(var(--i, 0) * var(--stagger-item)); }
+  .js [data-reveal].is-in > * { opacity: 1; transform: none; }
+
+  .js .poster li { opacity: 0; transform: translateY(32px); transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-expo); transition-delay: calc(var(--i, 0) * var(--stagger-line)); }
+  .js .poster.is-in li { opacity: 1; transform: none; }
+
+  .js .shutter img, .js .shutter video { transform: scale(1.1); transition: transform 1600ms var(--ease-soft); }
+  .js .shutter.is-in img, .js .shutter.is-in video { transform: none; }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .opening { height: 200svh; view-timeline-name: --opening; --inset-y: 20%; --inset-x: 28%; }
+    .opening__stage { position: sticky; top: 0; animation: opening-window linear both; animation-timeline: --opening; animation-range: contain 0% contain 75%; }
+    .opening__stage img { animation: opening-settle linear both; animation-timeline: --opening; animation-range: contain 0% contain 75%; }
+  }
+  @media (prefers-reduced-motion: no-preference) and (max-width: 700px) {
+    .opening { --inset-y: 18%; --inset-x: 8%; }
+  }
+}
+@keyframes opening-window { from { clip-path: inset(var(--inset-y) var(--inset-x)); } to { clip-path: inset(0); } }
+@keyframes opening-settle { from { transform: scale(1.15); } to { transform: none; } }
+</style>
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+
+<header class="hero" id="top">
+  <div class="hero__paint"></div>
+  <div class="hero__bar wrap">
+    <a class="wordmark" href="#top" data-load style="--d:520ms">Saltline</a>
+    <a class="button" href="#quote" data-load style="--d:560ms">Price your detail</a>
+  </div>
+  <h1 class="hero__title lines">
+    <span class="line"><span data-line style="--i:0">Lose the</span></span>
+    <span class="line"><span data-line style="--i:1">salt line</span></span>
+  </h1>
+  <p class="hero__support wrap" data-load style="--d:560ms">Mobile car detailing anywhere in Omaha. We bring the water and the power, and wash winter off your car in your driveway.</p>
+</header>
+
+<main>
+  <figure class="opening">
+    <div class="opening__stage">
+      <img src="img/beads.jpg" alt="Water beading on the door of a black car" width="2000" height="1333">
+    </div>
+    <figcaption class="opening__caption wrap">Water beading on sealed black paint.</figcaption>
+  </figure>
+
+  <section class="year wrap" id="year" aria-labelledby="year-h">
+    <div class="grid" data-reveal>
+      <h2 class="year__head" id="year-h" style="--i:0">What Omaha does to a car</h2>
+      <p class="year__lede" style="--i:1">Every season here leaves something on the paint. This is the calendar we work to, and the line in orange is the one outside right now.</p>
+    </div>
+    <ol class="poster" id="poster">
+      <li style="--i:0" data-months="11 12 1 2 3"><span class="poster__word">Salt</span><span class="poster__fact"><span>Brine in every seam and under every mat</span><b>November–March</b></span></li>
+      <li style="--i:1" data-months="4"><span class="poster__word">Pollen</span><span class="poster__fact"><span>A yellow film on anything parked outside</span><b>April</b></span></li>
+      <li style="--i:2" data-months="5"><span class="poster__word">Hail</span><span class="poster__fact"><span>Pitted glass and paint worth protecting</span><b>May–June</b></span></li>
+      <li style="--i:3" data-months="6"><span class="poster__word">Cottonwood</span><span class="poster__fact"><span>Fluff packed into grilles and air intakes</span><b>June</b></span></li>
+      <li style="--i:4" data-months="7 8"><span class="poster__word">Bugs</span><span class="poster__fact"><span>I-80 splatter that etches in the heat</span><b>July–August</b></span></li>
+      <li style="--i:5" data-months="9 10"><span class="poster__word">Sap</span><span class="poster__fact"><span>Maple sap and wet leaves that stain</span><b>September–October</b></span></li>
+    </ol>
+
+    <div class="band grid">
+      <figure class="band__a">
+        <div class="shutter"><video autoplay muted loop playsinline preload="metadata" poster="img/plow-poster.jpg" width="854" height="480" aria-label="A plow truck clearing a snowy city street, seen from above">
+          <source src="img/plow.webm" type="video/webm">
+          <source src="img/plow.mp4" type="video/mp4">
+        </video></div>
+        <figcaption>A plow clearing a city street. Whatever it spreads ends up in every seam of a car by February.</figcaption>
+      </figure>
+      <figure class="band__b">
+        <div class="shutter"><img src="img/i80-sign.jpg" alt="An overhead sign on a snowy interstate reads Hazardous travel conditions, travel not advised" width="1600" height="1200" loading="lazy"></div>
+        <figcaption>Interstate 80 in Omaha, mile 451, during the January 2024 storm.</figcaption>
+      </figure>
+      <figure class="band__c">
+        <div class="shutter"><img src="img/cottonwood.jpg" alt="A cottonwood seed pod splitting open into white fluff" width="1400" height="932" loading="lazy"></div>
+        <figcaption>Cottonwood seed, the fluff that fills the air every June.</figcaption>
+      </figure>
+      <figure class="band__d">
+        <div class="shutter"><img src="img/hail.jpg" alt="Hailstones melting on a green surface" width="1400" height="934" loading="lazy"></div>
+        <figcaption>Hailstones, May through June.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="visit" id="visit" aria-labelledby="visit-h">
+    <div class="wrap grid">
+      <div class="visit__text" data-reveal>
+        <h2 id="visit-h" style="--i:0">We come to you</h2>
+        <p style="--i:1">All you need is a parking spot. The van carries a 100-gallon tank of deionized water, its own generator and everything else. Below 35°F we work inside your garage, or move the booking to the next warm day for free.</p>
+        <figure class="visit__pic" style="--i:2">
+          <img src="img/foam-garage.jpg" alt="A black sports car covered in white foam inside a garage" width="1200" height="1200" loading="lazy">
+          <figcaption>A foam pre-wash inside a garage, the way winter jobs are done.</figcaption>
+        </figure>
+      </div>
+      <div class="slip" data-reveal>
+        <h3 style="--i:0">A Saturday salt reset</h3>
+        <div style="--i:1">
+          <h4>The day before</h4>
+          <ul>
+            <li><span class="what">Text with your arrival window</span><span class="dots" aria-hidden="true"></span><span class="when">6:00 pm</span></li>
+            <li><span class="what">Temperature check: driveway or garage</span><span class="dots" aria-hidden="true"></span><span class="when">6:05 pm</span></li>
+          </ul>
+          <h4>Saturday morning</h4>
+          <ul>
+            <li><span class="what">Van parks at the curb</span><span class="dots" aria-hidden="true"></span><span class="when">8:00 am</span></li>
+            <li><span class="what">Foam pre-wash and two-bucket hand wash</span><span class="dots" aria-hidden="true"></span><span class="when">8:10 am</span></li>
+            <li><span class="what">Undercarriage and wheel-well flush</span><span class="dots" aria-hidden="true"></span><span class="when">8:50 am</span></li>
+            <li><span class="what">Deionized rinse, blown dry</span><span class="dots" aria-hidden="true"></span><span class="when">9:30 am</span></li>
+            <li><span class="what">Salt stains pulled from carpets and mats</span><span class="dots" aria-hidden="true"></span><span class="when">9:50 am</span></li>
+            <li><span class="what">Door jambs, glass, interior wipe-down</span><span class="dots" aria-hidden="true"></span><span class="when">10:40 am</span></li>
+            <li><span class="what">Spray sealant on paint and wheels</span><span class="dots" aria-hidden="true"></span><span class="when">11:10 am</span></li>
+          </ul>
+          <h4>Before we leave</h4>
+          <ul>
+            <li><span class="what">Walk-around with you</span><span class="dots" aria-hidden="true"></span><span class="when">11:40 am</span></li>
+            <li><span class="what">Pay by card or cash</span><span class="dots" aria-hidden="true"></span><span class="when">11:45 am</span></li>
+          </ul>
+          <p class="slip__total"><span>A clean car. You never left the house.</span><span>3 h 45 min</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="price" id="price" aria-labelledby="price-h">
+    <div class="wrap">
+      <div data-reveal>
+        <h2 class="price__line" id="price-h" style="--i:0"><span class="line">The salt reset</span> <span class="line">is <span class="price__tag">$189</span></span></h2>
+      </div>
+      <div class="grid price__foot" data-reveal>
+        <p class="price__incl" style="--i:0">That’s for a car: undercarriage and wheel-well flush, salt stains pulled from carpets and mats, door jambs, glass and a spray sealant. About three and a half hours in your driveway.</p>
+        <a class="price__more link" href="#quote" style="--i:1">Every package and price</a>
+      </div>
+
+      <form class="quote grid" id="quote" aria-labelledby="quote-h">
+        <div class="quote__head" data-reveal>
+          <h3 id="quote-h" style="--i:0">Price your detail</h3>
+          <p class="quote__month" id="month-note" style="--i:1"><b>This month in Omaha:</b> salt season runs November to March, and the salt reset is the package for it.</p>
+        </div>
+
+        <div class="quote__controls">
+          <fieldset>
+            <legend>Your vehicle</legend>
+            <div class="vehicles">
+              <label class="choice"><input type="radio" name="vehicle" value="0" id="v-car" checked><span class="choice__face">Car</span></label>
+              <label class="choice"><input type="radio" name="vehicle" value="1" id="v-suv"><span class="choice__face">SUV</span></label>
+              <label class="choice"><input type="radio" name="vehicle" value="2" id="v-truck"><span class="choice__face">Truck or van</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Package</legend>
+            <div class="packages">
+              <label class="choice"><input type="radio" name="package" value="wash" id="p-wash"><span class="choice__face"><span class="pkg__name">Maintenance wash</span><span class="pkg__price" data-price="wash">$79</span><span class="pkg__desc">Foam pre-wash, two-bucket hand wash, wheels and tires, deionized rinse, interior vacuum and wipe-down, glass.</span><span class="pkg__rec" data-rec="wash" hidden></span></span></label>
+              <label class="choice"><input type="radio" name="package" value="reset" id="p-reset" checked><span class="choice__face"><span class="pkg__name">Salt reset</span><span class="pkg__price" data-price="reset">$189</span><span class="pkg__desc">The wash, plus undercarriage and wheel-well flush, salt stains pulled from carpets and mats, door jambs and a spray sealant.</span><span class="pkg__rec" data-rec="reset" hidden></span></span></label>
+              <label class="choice"><input type="radio" name="package" value="full" id="p-full"><span class="choice__face"><span class="pkg__name">Full detail</span><span class="pkg__price" data-price="full">$279</span><span class="pkg__desc">The salt reset, plus clay bar, a one-step machine polish, and seats shampooed or leather cleaned and conditioned.</span><span class="pkg__rec" data-rec="full" hidden></span></span></label>
+              <label class="choice"><input type="radio" name="package" value="ceramic" id="p-ceramic"><span class="choice__face"><span class="pkg__name">Ceramic coating</span><span class="pkg__price" data-price="ceramic">$749</span><span class="pkg__desc">Full decontamination, a one-step polish and a two-year ceramic coating. Needs a garage or covered spot for the day.</span><span class="pkg__rec" data-rec="ceramic" hidden></span></span></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Add-ons</legend>
+            <div class="addons">
+              <label class="choice"><input type="checkbox" name="addon" value="pet" id="a-pet"><span class="choice__face"><span>Pet hair removal</span><span>+$40</span></span></label>
+              <label class="choice"><input type="checkbox" name="addon" value="bugs" id="a-bugs"><span class="choice__face"><span>Bug and tar removal</span><span>+$25</span></span></label>
+              <label class="choice"><input type="checkbox" name="addon" value="engine" id="a-engine"><span class="choice__face"><span>Engine bay clean</span><span>+$45</span></span></label>
+              <label class="choice"><input type="checkbox" name="addon" value="lights" id="a-lights"><span class="choice__face"><span>Headlight restoration</span><span>+$69</span></span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="quote__out" aria-live="polite">
+          <img id="quote-img" src="img/suds.jpg" alt="A grey SUV covered in soap suds during a hand wash" width="1000" height="1500" loading="lazy">
+          <div class="quote__body">
+            <p class="quote__total" id="quote-total">$189</p>
+            <p class="quote__what"><span id="quote-what">Salt reset for a car</span>. <span id="quote-time">About 3 h 30 min in your driveway</span>.</p>
+            <div class="quote__actions">
+              <button class="button" type="button" id="quote-copy">Copy this quote</button>
+              <a class="link" id="quote-sms" href="sms:+14025550148">Text (402) 555-0148</a>
+            </div>
+            <p class="quote__status" id="quote-status"></p>
+          </div>
+        </div>
+      </form>
+
+      <noscript>
+        <table class="price-table">
+          <caption>Every package and price</caption>
+          <thead><tr><th scope="col">Package</th><th scope="col">Car</th><th scope="col">SUV</th><th scope="col">Truck or van</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Maintenance wash</th><td>$79</td><td>$89</td><td>$99</td></tr>
+            <tr><th scope="row">Salt reset</th><td>$189</td><td>$209</td><td>$229</td></tr>
+            <tr><th scope="row">Full detail</th><td>$279</td><td>$309</td><td>$339</td></tr>
+            <tr><th scope="row">Ceramic coating</th><td>$749</td><td>$849</td><td>$949</td></tr>
+          </tbody>
+        </table>
+      </noscript>
+    </div>
+  </section>
+
+  <section class="faq wrap" id="faq" aria-labelledby="faq-h">
+    <div class="grid">
+      <div class="faq__side" data-reveal>
+        <h2 id="faq-h" style="--i:0">Questions</h2>
+        <figure style="--i:1">
+          <img src="img/omaha-postcard.jpg" alt="A vintage large-letter postcard reading Greetings from Omaha, Nebraska" width="1000" height="634" loading="lazy">
+          <figcaption>Greetings from Omaha, a postcard from about 1940. We drive anywhere in the metro.</figcaption>
+        </figure>
+      </div>
+      <div class="faq__text" data-reveal>
+        <p style="--i:0"><b>Do I need to give you water or power?</b> No. The van carries a 100-gallon tank of deionized water and its own generator. We need a parking spot with about a car’s width of room on each side.</p>
+        <p style="--i:1"><b>What happens when it’s below freezing?</b> Below 35°F we don’t wash outside. If you have a garage, we work in it with the door cracked. If not, we move your booking to the next day above 35°F, at no charge.</p>
+        <p style="--i:2"><b>How long does it take?</b> A maintenance wash takes about an hour and a half, the salt reset about three and a half hours, and a full detail most of a day. The quote above shows the time for your car.</p>
+        <p style="--i:3"><b>Do I need to be home?</b> Only at the start and the end. Leave the keys in a lockbox if you like, and we’ll text you when the car is done.</p>
+        <p style="--i:4"><b>Will you come to my office?</b> Yes, if your building allows it. Ask your property manager first; we bring everything, so the lot only has to let us park.</p>
+        <p style="--i:5"><b>What if it rains?</b> Light rain is fine for an interior or a salt flush. For sealant and coatings we need a dry day or a garage, so we reschedule, free.</p>
+        <p style="--i:6"><b>Why deionized water?</b> Tap water carries minerals that dry into white spots. Deionized water has them taken out, so the car dries without spotting, even in sun.</p>
+        <p style="--i:7"><b>How do I pay?</b> Card or cash when we finish. Nothing up front, except a $100 deposit to hold a ceramic coating day.</p>
+        <p style="--i:8"><b>How far do you drive?</b> Anywhere in the Omaha metro, Council Bluffs included. Past that, text us and ask.</p>
+        <p style="--i:9"><b>Can you get dog hair out?</b> Yes. It’s a $40 add-on, because it takes about half an hour more with rubber brushes and a strong vacuum.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="book" id="book" aria-labelledby="book-h">
+    <div class="wrap book__inner">
+      <div class="book__top">
+        <h2 id="book-h">Book a detail</h2>
+        <p>Text a photo of the car and your ZIP code. We reply the same day.</p>
+      </div>
+      <div class="book__number" data-reveal>
+        <a href="sms:+14025550148" style="--i:0" id="book-number">(402) 555-0148</a>
+        <button class="ghost book__copy" type="button" id="book-copy" style="--i:1">Copy the number</button>
+      </div>
+      <div class="book__foot">
+        <p>Omaha, Nebraska. Monday to Saturday, 7 am to 6 pm.</p>
+        <p>We drive to Dundee, Benson, Midtown, Aksarben, Millard, Elkhorn, West Omaha, Papillion, La Vista, Bellevue, Ralston and Council Bluffs.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot__inner">
+    <div class="grid foot__cols">
+      <div>
+        <p class="foot__first">Saltline Mobile Detailing</p>
+        <p>Mobile, based in Midtown Omaha</p>
+        <p>(402) 555-0148</p>
+      </div>
+      <nav aria-label="Footer">
+        <p class="foot__first">On this page</p>
+        <ul>
+          <li><a href="#year">The Omaha year</a></li>
+          <li><a href="#visit">How a visit works</a></li>
+          <li><a href="#quote">Prices</a></li>
+          <li><a href="#faq">Questions</a></li>
+        </ul>
+      </nav>
+      <div>
+        <p class="foot__first">Hours</p>
+        <p>Monday to Saturday<br>7 am to 6 pm</p>
+        <p>Below 35°F, garage jobs only</p>
+      </div>
+      <div class="foot__credits">
+        <p class="foot__first">Pictures</p>
+        <p>Photos on Unsplash by <a href="https://unsplash.com/photos/fi9zsbf3f5Y">Tuomas Nylund</a>, <a href="https://unsplash.com/photos/pRppMPh4Zho">Andre Tan</a>, <a href="https://unsplash.com/photos/V4b2j7f1dfc">mintosko</a>, <a href="https://unsplash.com/photos/Ce_gQ7Z0eAc">Adrian Dascal</a>, <a href="https://unsplash.com/photos/_vmBjTG5L1g">Muhammad Saad</a> and <a href="https://unsplash.com/photos/CY338gTUSHY">Wolfgang Hasselmann</a>. Via Wikimedia Commons: <a href="https://commons.wikimedia.org/wiki/File:%D0%9F%D0%BB%D1%83%D0%B6%D0%BD%D0%B8%D0%B9_%D1%81%D0%BD%D1%96%D0%B3%D0%BE%D0%BE%D1%87%D0%B8%D1%81%D0%BD%D0%B8%D0%BA_%D0%BD%D0%B0_%D0%B2%D1%83%D0%BB%D0%B8%D1%86%D1%96.webm">plow clip</a> by Роман Рябенко, <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>; <a href="https://commons.wikimedia.org/wiki/File:I-80_changeable_message_sign_January_2024_winter_storm.jpg">“I-80 changeable message sign”</a> by Declan M Martin, public domain; <a href="https://commons.wikimedia.org/wiki/File:Cottonwood_Seeds_(7443443256).jpg">“Cottonwood Seeds”</a> by NPS/Neal Herbert, public domain; <a href="https://commons.wikimedia.org/wiki/File:Greetings_from_Omaha,_Nebraska_-_Large_Letter_Postcard_(9435910320).jpg">“Greetings from Omaha”</a> postcard scan by Steve Shook, <a href="https://creativecommons.org/licenses/by/2.0">CC BY 2.0</a>.</p>
+      </div>
+    </div>
+    <div></div>
+    <svg class="foot__mark" viewBox="0 0 1000 152" role="img" aria-label="Saltline">
+      <text x="0" y="146" font-size="200" textLength="1000" lengthAdjust="spacingAndGlyphs">SALTLINE</text>
+    </svg>
+    <p class="foot__legal">Saltline is a fictional business and this is a demo website. Prices, hours and the 555 phone number are samples.</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* The salt line washes down as the hero scrolls away. */
+  const hero = document.querySelector('.hero');
+  if (hero && !reduce) {
+    const phone = matchMedia('(max-width: 700px)');
+    let queued = false;
+    const update = () => {
+      queued = false;
+      const rest = phone.matches ? 46 : 50;
+      const p = Math.min(1, Math.max(0, scrollY / (hero.offsetHeight * 0.7)));
+      if (p > 0) hero.classList.add('is-washing');
+      hero.style.setProperty('--seam', (rest + (100 - rest) * p).toFixed(2) + '%');
+    };
+    addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(update); } }, { passive: true });
+    update();
+  }
+
+  /* Entrances, once. */
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.1 });
+  document.querySelectorAll('[data-reveal], .poster, .shutter').forEach((el) => io.observe(el));
+
+  /* This month in Omaha. */
+  const month = new Date().getMonth() + 1;
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const SEASON = {
+    1: ['It’s salt season. Brine soaks into carpets and sits in every seam, and below 35°F we wash in your garage.', 'reset'],
+    2: ['It’s salt season. Brine soaks into carpets and sits in every seam, and below 35°F we wash in your garage.', 'reset'],
+    3: ['The last brine runs of the year. Once the streets are swept, a salt reset gets winter out of the car.', 'reset'],
+    4: ['Pollen leaves a yellow film on anything parked outside. Clean and seal the paint before hail season.', 'full'],
+    5: ['Hail season. Clean, sealed paint makes every new chip easy to spot and fix.', 'full'],
+    6: ['Cottonwood fluff packs grilles, door jambs and cabin air intakes. A wash blows it all out.', 'wash'],
+    7: ['Bug season on I-80. Bug remains can etch clear coat in summer heat, so get them off early.', 'wash', 'bugs'],
+    8: ['Bug season on I-80. Bug remains can etch clear coat in summer heat, so get them off early.', 'wash', 'bugs'],
+    9: ['Maple sap and wet leaves stain paint if they sit. Wash them off before they bake in.', 'wash'],
+    10: ['Sap and leaves now, and the salt trucks are usually out by mid-November. Seal the paint before the first brine run.', 'reset'],
+    11: ['Salt season has started. A salt reset now, then a flush every few weeks until March.', 'reset'],
+    12: ['Salt season. A salt reset now, then a flush every few weeks until March.', 'reset']
+  };
+  document.querySelectorAll('#poster li').forEach((li) => {
+    if (li.dataset.months.split(' ').map(Number).includes(month)) {
+      li.classList.add('is-now');
+      li.setAttribute('aria-current', 'date');
+      const b = li.querySelector('.poster__fact b');
+      b.textContent += ', now';
+    }
+  });
+
+  /* Price your detail. */
+  const form = document.getElementById('quote');
+  if (!form) return;
+  const VEHICLES = ['a car', 'an SUV', 'a truck or van'];
+  const PACKAGES = {
+    wash:    { name: 'Maintenance wash', price: [79, 89, 99],    min: 90,  img: 'img/wheel.jpg',    alt: 'A wheel being scrubbed with a brush and soapy water' },
+    reset:   { name: 'Salt reset',       price: [189, 209, 229], min: 210, img: 'img/suds.jpg',     alt: 'A grey SUV covered in soap suds during a hand wash' },
+    full:    { name: 'Full detail',      price: [279, 309, 339], min: 330, img: 'img/interior.jpg', alt: 'A gloved hand wiping a car dashboard with a yellow microfiber cloth' },
+    ceramic: { name: 'Ceramic coating',  price: [749, 849, 949], min: 0,   img: 'img/beads.jpg',    alt: 'Water beading on the door of a black car' }
+  };
+  const ADDONS = {
+    pet:    { name: 'pet hair removal',      price: 40, min: 30 },
+    bugs:   { name: 'bug and tar removal',   price: 25, min: 15 },
+    engine: { name: 'engine bay clean',      price: 45, min: 30 },
+    lights: { name: 'headlight restoration', price: 69, min: 45 }
+  };
+  const $ = (id) => document.getElementById(id);
+  const [season, recPkg, recAddon] = SEASON[month];
+  $('month-note').innerHTML = '<b>This month in Omaha:</b> ' + season;
+  const rec = form.querySelector('[data-rec="' + recPkg + '"]');
+  rec.textContent = 'What we’d book in ' + MONTH_NAMES[month - 1];
+  rec.hidden = false;
+  form.querySelector('#p-' + recPkg).checked = true;
+  if (recAddon) form.querySelector('#a-' + recAddon).checked = true;
+
+  const fmtTime = (m) => {
+    const h = Math.floor(m / 60), r = m % 60;
+    return h ? (r ? h + ' h ' + r + ' min' : h + ' h') : r + ' min';
+  };
+  let summary = '';
+  const render = () => {
+    const v = Number(form.vehicle.value);
+    const pkgKey = form.package.value;
+    const pkg = PACKAGES[pkgKey];
+    const adds = [...form.querySelectorAll('input[name="addon"]:checked')].map((i) => ADDONS[i.value]);
+    form.querySelectorAll('[data-price]').forEach((el) => { el.textContent = '$' + PACKAGES[el.dataset.price].price[v]; });
+    const total = pkg.price[v] + adds.reduce((s, a) => s + a.price, 0);
+    const minutes = pkg.min + adds.reduce((s, a) => s + a.min, 0);
+    const what = pkg.name + ' for ' + VEHICLES[v] + (adds.length ? ', with ' + adds.map((a) => a.name).join(' and ') : '');
+    $('quote-what').textContent = what;
+    $('quote-total').textContent = '$' + total;
+    $('quote-time').textContent = pkgKey === 'ceramic' ? 'A full day, in a garage or covered spot' : 'About ' + fmtTime(minutes) + ' in your driveway';
+    const img = $('quote-img');
+    if (!img.src.endsWith(pkg.img)) { img.src = pkg.img; img.alt = pkg.alt; }
+    summary = 'Hi Saltline, I’d like a quote: ' + what + '. $' + total + ' on your site.';
+    $('quote-sms').href = 'sms:+14025550148?&body=' + encodeURIComponent(summary);
+    $('quote-status').textContent = '';
+  };
+  form.addEventListener('change', render);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  render();
+
+  const copy = (text, statusEl, done) => {
+    const fallback = () => { statusEl.textContent = text; const r = document.createRange(); r.selectNodeContents(statusEl); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+    try {
+      navigator.clipboard.writeText(text).then(() => { statusEl.textContent = done; }, fallback);
+    } catch (err) { fallback(); }
+  };
+  $('quote-copy').addEventListener('click', () => copy(summary, $('quote-status'), 'Copied. Paste it into a text to (402) 555-0148.'));
+  $('book-copy').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    copy('(402) 555-0148', btn, 'Copied');
+  });
+})();
+</script>
+</body>
+</html>
