@@ -152,7 +152,7 @@ function ExportButton({ onExport, disabled, locked, label, tight }: { onExport: 
       transition={SPRING}
       className={`focus-ring group relative inline-flex h-11 shrink-0 items-center rounded-xl border border-white/[0.12] bg-white/[0.05] text-[13px] ${tight ? "gap-1.5 px-3" : "gap-2 px-3.5"} font-medium text-fox-white transition-[background-color,border-color,box-shadow] hover:border-spirit-violet/45 hover:bg-white/[0.08] hover:shadow-[0_0_24px_-6px_rgba(167,139,250,0.6)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/[0.12] disabled:hover:bg-white/[0.05] disabled:hover:shadow-none`}
     >
-      <span className="relative grid h-5 w-5 place-items-center">
+      <span className={`relative grid h-5 w-5 shrink-0 place-items-center ${locked ? "mr-1.5" : ""}`}>
         <FileArchive className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden="true" />
         {locked && (
           <span className="absolute -bottom-1 -right-1.5 grid h-[15px] w-[15px] place-items-center rounded-full bg-obsidian-900 ring-1 ring-spirit-violet/60" aria-hidden="true">

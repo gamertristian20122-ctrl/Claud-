@@ -5,7 +5,6 @@
 // stream when the API route is unreachable (static hosting, offline).
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createDemoStream } from "./demo-stream";
 import { extractStreamError, parseGeneration } from "./parse";
 import type { GenerateErrorBody, GenerateRequestBody, GenMode, GenStatus, ModelId, ParsedGeneration, Target } from "./types";
 
@@ -131,8 +130,10 @@ export function useGenerator(): Generator {
     // ---- Open the stream (or fall back to the in-browser demo) ---------------
     let stream: ReadableStream<Uint8Array> | null = null;
     let mode: GenMode = "live";
-    const demo = () => {
+    // Loaded on demand so the demo outputs (~120 KB of source) stay out of the main bundle.
+    const demo = async () => {
       mode = "demo";
+      const { createDemoStream } = await import("./demo-stream");
       return createDemoStream(opts.prompt, target, { signal: controller.signal });
     };
 
@@ -152,7 +153,7 @@ export function useGenerator(): Generator {
       if (res.status === 404 || res.status === 405 || (res.ok && contentType.includes("text/html"))) {
         // No API route here (static hosting): run the demo in the browser.
         res.body?.cancel().catch(() => {});
-        stream = demo();
+        stream = await demo();
       } else if (!res.ok) {
         const message = await readErrorMessage(res);
         update({ status: "error", error: message });
@@ -169,7 +170,13 @@ export function useGenerator(): Generator {
     } catch {
       if (controller.signal.aborted || !isCurrent()) return false;
       // Network error: the API is unreachable, so show the demo instead.
-      stream = demo();
+      try {
+        stream = await demo();
+      } catch {
+        update({ status: "error", error: "Couldn't reach the studio server. Check your connection and try again." });
+        end();
+        return false;
+      }
     }
 
     update({ mode });
