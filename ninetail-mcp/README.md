@@ -19,7 +19,9 @@ npm start            # tsx src/index.ts
 
 ## Connect it to a client
 
-Claude Code:
+This repository already registers the server for Claude Code in the root `.mcp.json`, using a path relative to the repo root. Build it once (`npm install && npm run build` in this folder). The next time you start `claude` from the repo root, approve the `ninetail` server when Claude Code asks.
+
+Claude Code, from anywhere else:
 
 ```bash
 claude mcp add ninetail -- node /absolute/path/to/ninetail-mcp/dist/index.js

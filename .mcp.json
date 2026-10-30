@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ninetail": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "ninetail-mcp/dist/index.js"
+      ],
+      "env": {}
+    }
+  }
+}
