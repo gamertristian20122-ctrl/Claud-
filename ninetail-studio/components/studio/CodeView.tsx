@@ -160,7 +160,8 @@ export function CodeView({
             <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: LANGUAGE_DOT[language], boxShadow: `0 0 8px ${LANGUAGE_DOT[language]}` }} />
             <span className="truncate font-mono text-[12px] text-fox-white">{filename}</span>
           </div>
-          <span className="shrink-0 font-mono text-[11px] text-fox-muted">
+          {/* Phones: the filename keeps its room; the line count goes first. */}
+          <span className="hidden shrink-0 font-mono text-[11px] text-fox-muted min-[420px]:inline">
             <span className="hidden sm:inline">{LANGUAGE_LABEL[language]} · </span>
             {count.toLocaleString("en-US")} {count === 1 ? "line" : "lines"}
           </span>

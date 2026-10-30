@@ -69,6 +69,10 @@ export async function* streamOpenRouter({
   let buffer = "";
   let finishReason: string | null = null;
   let finished = false;
+  /** "[DONE]" arrived. A body that ends without it or a finish_reason was cut off. */
+  let sawDone = false;
+  /** Something was yielded, so the route has sent its headers. */
+  let started = false;
 
   try {
     while (!finished) {
@@ -95,11 +99,21 @@ export async function* streamOpenRouter({
         if (line.endsWith("\r")) line = line.slice(0, -1);
 
         // Blank lines end an event; ":" lines are comments such as ": OPENROUTER PROCESSING".
-        if (!line || line.startsWith(":")) continue;
+        if (!line) continue;
+        if (line.startsWith(":")) {
+          // OpenRouter accepted the request and is waiting on the model: an empty
+          // chunk lets the route send its headers now instead of after the first token.
+          if (!started) {
+            started = true;
+            yield "";
+          }
+          continue;
+        }
         if (!line.startsWith("data:")) continue;
 
         const data = line.slice(5).trimStart();
         if (data === "[DONE]") {
+          sawDone = true;
           finished = true;
           break;
         }
@@ -115,7 +129,10 @@ export async function* streamOpenRouter({
 
         const choice = payload.choices?.[0];
         const content = choice?.delta?.content;
-        if (typeof content === "string" && content) yield content;
+        if (typeof content === "string" && content) {
+          started = true;
+          yield content;
+        }
 
         if (typeof choice?.finish_reason === "string") {
           finishReason = choice.finish_reason;
@@ -131,6 +148,9 @@ export async function* streamOpenRouter({
     reader.cancel().catch(() => {});
   }
 
+  if (!sawDone && finishReason === null) {
+    throw new ProviderError("UPSTREAM", 502, "The connection to OpenRouter dropped mid-build.");
+  }
   if (finishReason === "content_filter") {
     throw new ProviderError("UPSTREAM", 422, "The model declined this request. Try rephrasing it.");
   }

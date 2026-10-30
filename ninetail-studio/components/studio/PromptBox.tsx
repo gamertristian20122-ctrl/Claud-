@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Flame, Infinity as InfinityIcon, LockOpen, Square } from "lucide-react";
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
-import { FREE_TAILS } from "@/lib/storage";
+import { FREE_TAILS, useHydrated } from "@/lib/storage";
 import type { GenStatus, Target } from "@/lib/types";
 
 export interface PromptBoxProps {
@@ -57,13 +57,19 @@ export function PromptBox({
   const metaId = useId();
   const reduce = useReducedMotion();
   const ref = useRef<HTMLTextAreaElement>(null);
+  const igniteRef = useRef<HTMLButtonElement>(null);
+  const stopRef = useRef<HTMLButtonElement>(null);
+  /** The stored tail count is unknown until hydration; the meter waits blank until then. */
+  const hydrated = useHydrated();
 
   const streaming = status === "streaming";
   const empty = value.trim().length === 0;
   const outOfTails = !unlimited && remaining <= 0;
   const canIgnite = !empty && !streaming;
+  /** At 0 tails the button opens the plans, prompt or not. */
+  const opensPlans = outOfTails && !streaming;
   /** Nothing typed yet: the button waits dark, then "ignites" into the gradient. */
-  const dormant = empty && !streaming;
+  const dormant = empty && !streaming && !outOfTails;
 
   // ---- auto-grow (3 to 8 rows, then scroll with a soft bottom fade) ----
   const [fade, setFade] = useState(false);
@@ -113,8 +119,15 @@ export function PromptBox({
     setPulse((n) => n + 1);
   }, [pulseKey]);
 
+  // Stop unmounts when the build ends. If it had focus, hand it to Ignite rather than <body>.
+  useEffect(() => {
+    if (streaming || !stopRef.current?.contains(document.activeElement)) return;
+    const btn = igniteRef.current;
+    (btn && !btn.disabled ? btn : ref.current)?.focus();
+  }, [streaming]);
+
   const ignite = () => {
-    if (!canIgnite) return;
+    if (!canIgnite && !opensPlans) return;
     onIgnite();
   };
 
@@ -155,7 +168,8 @@ export function PromptBox({
           placeholder={PLACEHOLDERS[target]}
           aria-describedby={metaId}
           spellCheck
-          className="block w-full resize-none bg-transparent px-3.5 pb-1.5 pt-3 text-[14px] leading-[22px] text-fox-white outline-none scrollbar-thin placeholder:text-fox-muted/60"
+          // 16px on touch and small screens: iOS Safari zooms into smaller fields on focus.
+          className="block w-full resize-none bg-transparent px-3.5 pb-1.5 pt-3 text-[14px] max-lg:text-[16px] [@media(pointer:coarse)]:text-[16px] leading-[22px] text-fox-white outline-none scrollbar-thin placeholder:text-fox-muted/60"
           style={{
             minHeight: MIN_H,
             maxHeight: MAX_H,
@@ -198,14 +212,15 @@ export function PromptBox({
             )}
           </AnimatePresence>
           <motion.button
+            ref={igniteRef}
             type="button"
             onClick={ignite}
-            disabled={empty && !streaming}
+            disabled={dormant}
             aria-disabled={streaming || undefined}
             aria-busy={streaming || undefined}
             aria-label={streaming ? "Generating" : outOfTails ? "Unlock more tails" : "Ignite (generate)"}
             animate={pulse > 0 && !reduce ? { scale: [1, 1.025, 1] } : { scale: 1 }}
-            whileTap={canIgnite && !reduce ? { scale: 0.985 } : { scale: 1 }}
+            whileTap={(canIgnite || opensPlans) && !reduce ? { scale: 0.985 } : { scale: 1 }}
             transition={{ duration: 0.45, ease: "easeOut" }}
             className={`focus-ring group relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl px-4 transition-[box-shadow,color,filter] duration-300 disabled:cursor-not-allowed ${
               dormant
@@ -287,6 +302,7 @@ export function PromptBox({
         <AnimatePresence initial={false}>
           {streaming && (
             <motion.button
+              ref={stopRef}
               key="stop"
               type="button"
               onClick={onCancel}
@@ -304,10 +320,12 @@ export function PromptBox({
         </AnimatePresence>
       </div>
 
-      {/* Tails meter */}
-      <div className="mt-3 flex items-center justify-between gap-3 px-0.5" aria-live="polite">
+      {/* Tails meter (not live: Studio announces the count after each build) */}
+      <div className="mt-3 flex items-center justify-between gap-3 px-0.5">
         <p className="font-mono text-[11px] text-fox-muted">
-          {unlimited ? (
+          {!hydrated ? (
+            "\u00a0"
+          ) : unlimited ? (
             "Unlimited tails"
           ) : outOfTails ? (
             <>
@@ -320,7 +338,7 @@ export function PromptBox({
             </>
           )}
         </p>
-        <TailMeter remaining={remaining} unlimited={unlimited} />
+        <TailMeter remaining={hydrated ? remaining : 0} unlimited={hydrated && unlimited} />
       </div>
     </div>
   );

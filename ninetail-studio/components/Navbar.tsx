@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Crown, Infinity as InfinityIcon, KeyRound } from "lucide-react";
 import { KitsuneMascot } from "@/components/KitsuneMascot";
+import { useHydrated } from "@/lib/storage";
 import type { MascotState } from "@/lib/types";
 
 export interface NavbarProps {
@@ -49,7 +50,7 @@ function TailPip({ filled, warn, index }: { filled: boolean; warn: boolean; inde
   );
 }
 
-/** The navbar's "Tails Remaining" pill. Opens the upgrade modal. */
+/** The navbar's "Tails Remaining" pill. Opens the upgrade modal; a plain badge on unlimited plans. */
 function TailsCounter({
   remaining,
   max,
@@ -62,16 +63,36 @@ function TailsCounter({
   onClick: () => void;
 }) {
   const reduce = useReducedMotion();
-  const empty = !unlimited && remaining <= 0;
-  const label = unlimited ? "Unlimited tails" : `Tails remaining: ${remaining} of ${max}`;
+  // The stored count is unknown until hydration (the server renders defaults):
+  // until then show no number and unlit pips. `unlimited` is already right on the
+  // server, since only UNLOCK_ALL can make it true there.
+  const hydrated = useHydrated();
+  const pending = !hydrated && !unlimited;
+  const empty = !pending && !unlimited && remaining <= 0;
+  const pill =
+    "relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-3 text-[12px] font-medium sm:gap-2.5 sm:px-3.5 sm:text-[13px]";
+
+  if (unlimited) {
+    // Nothing left to buy, so not a button into the upsell.
+    return (
+      <span title="Unlimited tails" className={`${pill} border-white/10 bg-white/[0.04] text-fox-mist`}>
+        <InfinityIcon className="h-4 w-4 text-spirit-cyan" strokeWidth={1.75} aria-hidden="true" />
+        <span className="sr-only">Unlimited tails</span>
+        <span aria-hidden="true">
+          <span className="hidden min-[380px]:inline">Unlimited tails</span>
+          <span className="min-[380px]:hidden">Unlimited</span>
+        </span>
+      </span>
+    );
+  }
 
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={label}
-      title={unlimited ? "Unlimited tails" : "View plans"}
-      className={`focus-ring group relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-3 text-[12px] font-medium transition-colors before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] sm:gap-2.5 sm:px-3.5 sm:text-[13px] ${
+      aria-label={pending ? "Tails remaining" : `Tails remaining: ${remaining} of ${max}`}
+      title="View plans"
+      className={`focus-ring group ${pill} transition-colors before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] ${
         empty
           ? "border-spirit-pink/45 bg-spirit-pink/[0.08] text-spirit-pink hover:bg-spirit-pink/[0.14]"
           : "border-white/10 bg-white/[0.04] text-fox-mist hover:border-white/20 hover:bg-white/[0.07]"
@@ -81,41 +102,34 @@ function TailsCounter({
         <span aria-hidden="true" className="pointer-events-none absolute inset-0 animate-soft-pulse rounded-full shadow-[0_0_0_1px_rgba(240,171,252,.35),0_0_18px_rgba(240,171,252,.35)]" />
       )}
 
-      {unlimited ? (
-        <>
-          <InfinityIcon className="h-4 w-4 text-spirit-cyan" strokeWidth={1.75} aria-hidden="true" />
-          <span aria-hidden="true">
-            <span className="hidden min-[380px]:inline">Unlimited tails</span>
-            <span className="min-[380px]:hidden">Unlimited</span>
-          </span>
-        </>
-      ) : (
-        <>
-          <span className="hidden items-center gap-[3px] min-[372px]:flex" aria-hidden="true">
-            {Array.from({ length: max }, (_, i) => (
-              <TailPip key={i} index={i} filled={i < remaining} warn={empty} />
-            ))}
-          </span>
-          <span aria-hidden="true" className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className="hidden sm:inline">Tails Remaining:</span>
-            <span className="sm:hidden">Tails</span>
-            <span className={`relative inline-flex font-mono tabular-nums ${empty ? "text-spirit-pink" : "text-fox-white"}`}>
-              <AnimatePresence mode="popLayout" initial={false}>
-                <motion.span
-                  key={remaining}
-                  initial={reduce ? { opacity: 0 } : { y: -10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={reduce ? { opacity: 0 } : { y: 10, opacity: 0 }}
-                  transition={SPRING}
-                >
-                  {remaining}
-                </motion.span>
-              </AnimatePresence>
-              <span className={empty ? "text-spirit-pink/70" : "text-fox-muted"}>/{max}</span>
-            </span>
-          </span>
-        </>
-      )}
+      <span className={`hidden items-center gap-[3px] min-[372px]:flex ${pending ? "opacity-50" : ""}`} aria-hidden="true">
+        {Array.from({ length: max }, (_, i) => (
+          // Remounted with the stored count, so `initial={false}` shows it without replaying a spend.
+          <TailPip key={`${hydrated}-${i}`} index={i} filled={!pending && i < remaining} warn={empty} />
+        ))}
+      </span>
+      <span aria-hidden="true" className="flex items-center gap-1.5 whitespace-nowrap">
+        <span className="hidden sm:inline">Tails Remaining:</span>
+        <span className="sm:hidden">Tails</span>
+        <span className={`relative inline-flex font-mono tabular-nums ${empty ? "text-spirit-pink" : "text-fox-white"}`}>
+          {pending ? (
+            <span className="text-fox-muted">–</span>
+          ) : (
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.span
+                key={remaining}
+                initial={reduce ? { opacity: 0 } : { y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={reduce ? { opacity: 0 } : { y: 10, opacity: 0 }}
+                transition={SPRING}
+              >
+                {remaining}
+              </motion.span>
+            </AnimatePresence>
+          )}
+          <span className={empty ? "text-spirit-pink/70" : "text-fox-muted"}>/{max}</span>
+        </span>
+      </span>
     </button>
   );
 }

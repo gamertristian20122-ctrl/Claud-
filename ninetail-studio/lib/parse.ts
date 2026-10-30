@@ -20,13 +20,19 @@ export interface ParseOptions {
 
 /**
  * Splits a trailing error sentinel (complete or still arriving) off the raw text.
- * The server only ever appends the sentinel at the very end of a stream.
+ * The server only ever appends the sentinel at the very end of a stream. Anything
+ * that looks like one is kept out of the code, but with a `nonce` only the
+ * server's own marker (STREAM_ERROR_PREFIX + nonce + ":") counts as an error.
  */
-function splitSentinel(raw: string, final: boolean): { body: string; error: string | null } {
+function splitSentinel(raw: string, final: boolean, nonce?: string): { body: string; error: string | null } {
   const idx = raw.lastIndexOf(STREAM_ERROR_PREFIX);
   if (idx !== -1) {
-    const tail = raw.slice(idx + STREAM_ERROR_PREFIX.length).trimEnd();
-    const error = tail.endsWith(STREAM_ERROR_SUFFIX) ? tail.slice(0, -STREAM_ERROR_SUFFIX.length).trim() || "The build failed." : null;
+    let error: string | null = null;
+    const marker = nonce ? `${STREAM_ERROR_PREFIX}${nonce}:` : STREAM_ERROR_PREFIX;
+    if (raw.startsWith(marker, idx)) {
+      const tail = raw.slice(idx + marker.length).trimEnd();
+      if (tail.endsWith(STREAM_ERROR_SUFFIX)) error = tail.slice(0, -STREAM_ERROR_SUFFIX.length).trim() || "The build failed.";
+    }
     return { body: raw.slice(0, idx), error };
   }
   // A sentinel prefix that is still arriving, e.g. "...\n<<NINETA".
@@ -37,10 +43,13 @@ function splitSentinel(raw: string, final: boolean): { body: string; error: stri
   return { body: raw, error: null };
 }
 
-/** The error message the server appended to a failed stream, if any. */
-export function extractStreamError(raw: string): string | null {
+/**
+ * The error message the server appended to a failed stream, if any. Pass the
+ * response's X-Ninetail-Sentinel nonce so a marker written by the model is ignored.
+ */
+export function extractStreamError(raw: string, nonce?: string | null): string | null {
   if (!raw) return null;
-  return splitSentinel(raw, true).error;
+  return splitSentinel(raw, true, nonce || undefined).error;
 }
 
 // ---------------------------------------------------------------------------
@@ -82,9 +91,12 @@ function stripInnerFences(code: string, final: boolean): string {
   if (!open) return code;
   // "```htm" with no newline yet: the fence line is still arriving.
   if (!open[1] && !final) return "";
-  const out = code.slice(open[0].length);
+  const out = code.slice(open[0].length).trimEnd();
   // Closing fence (final) or a closing fence that is still arriving (streaming).
-  return final ? out.replace(/\n?[ \t]*```\s*$/, "") : out.replace(/\n?[ \t]*`{1,3}\s*$/, "");
+  // Only the tail is checked: an end-anchored regex over the whole code is
+  // quadratic on long whitespace runs. normalizeCode trims the end afterwards.
+  const fence = final ? out.endsWith("```") : out.endsWith("`");
+  return fence ? out.replace(/`{1,3}$/, "") : out;
 }
 
 function normalizeCode(code: string, final: boolean): string {
@@ -247,8 +259,10 @@ export function parseGeneration(raw: string, target: Target, opts: ParseOptions 
 
 function parseGuiJson(text: string): GuiSpec | null {
   let t = text.trim();
-  // Accidental ```json fences.
-  t = t.replace(/^```[\w-]*\s*\n?/, "").replace(/\n?\s*```$/, "").trim();
+  // Accidental ```json fences. (endsWith, not /\s*```$/: that regex is quadratic on whitespace runs.)
+  t = t.replace(/^```[\w-]*\s*\n?/, "");
+  if (t.endsWith("```")) t = t.slice(0, -3);
+  t = t.trim();
   if (!t) return null;
   try {
     return sanitizeGuiSpec(JSON.parse(t));
@@ -359,7 +373,11 @@ function widgetType(v: unknown): GuiWidgetType | null {
   if (typeof v !== "string") return null;
   const t = v.trim().toLowerCase();
   if ((WIDGET_TYPES as readonly string[]).includes(t)) return t as GuiWidgetType;
-  return TYPE_ALIASES[t.replace(/[\s-]/g, "")] ?? TYPE_ALIASES[t] ?? null;
+  // Own keys only, so "constructor" or "__proto__" can't resolve through Object.prototype.
+  for (const key of [t.replace(/[\s-]/g, ""), t]) {
+    if (Object.prototype.hasOwnProperty.call(TYPE_ALIASES, key)) return TYPE_ALIASES[key];
+  }
+  return null;
 }
 
 function options(v: unknown): string[] {

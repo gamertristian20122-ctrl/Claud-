@@ -11,7 +11,7 @@ import { ByokModal } from "@/components/studio/ByokModal";
 import { ModelSelector } from "@/components/studio/ModelSelector";
 import { OutputPanel, type OutputTab } from "@/components/studio/OutputPanel";
 import { PromptBox } from "@/components/studio/PromptBox";
-import { SpiritCore } from "@/components/studio/SpiritCore";
+import { STOPPED_MESSAGE, SpiritCore } from "@/components/studio/SpiritCore";
 import { TargetToggle } from "@/components/studio/TargetToggle";
 import { TemplateVault } from "@/components/studio/TemplateVault";
 import { DEFAULT_MODEL, getModel, providerSupportsModel } from "@/lib/models";
@@ -31,6 +31,8 @@ interface RunOptions {
 
 const SPRING = { type: "spring", stiffness: 380, damping: 30 } as const;
 const DONE_MS = 2600;
+/** The dock and IgniteBar buttons flip to Stop at once; ignore Stop this soon after Ignite (double-taps). */
+const STOP_GRACE_MS = 500;
 const DESKTOP_QUERY = "(min-width: 1024px)";
 
 const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -309,6 +311,9 @@ export function Studio() {
   mobileViewRef.current = mobileView;
 
   const lastRunRef = useRef<RunOptions | null>(null);
+  const ignitedAtRef = useRef(0);
+  /** Set when a build starts with focus inside the (soon hidden) mobile build view. */
+  const focusOutputRef = useRef(false);
   const doneTimerRef = useRef<number | null>(null);
   const promptSectionRef = useRef<HTMLElement>(null);
   const buildViewRef = useRef<HTMLDivElement>(null);
@@ -392,6 +397,8 @@ export function Studio() {
     const el = mobileView === "build" ? buildViewRef.current : outputViewRef.current;
     window.scrollTo({ top: mobileView === "build" ? buildScrollRef.current : 0, behavior: "auto" });
     if (mobileView === "output") setUnseen(false);
+    if (mobileView === "output" && focusOutputRef.current) outputViewRef.current?.focus({ preventScroll: true });
+    focusOutputRef.current = false;
     if (!el || reduce) return;
     const dx = mobileView === "output" ? 28 : -28;
     const controls = animate(el, { opacity: [0, 1], x: [dx, 0] }, SPRING);
@@ -418,8 +425,11 @@ export function Studio() {
       // Desktop GUI specs arrive first, so the simulator can show while code streams.
       // Web builds show the code streaming in, then flip to the live preview.
       setOutputTab(opts.target === "web" ? "code" : "preview");
+      // Phones: the build view is about to hide, so focus would drop to <body>. Move it to the output.
+      if (!isDesktop() && buildViewRef.current?.contains(document.activeElement)) focusOutputRef.current = true;
       changeView("output");
 
+      ignitedAtRef.current = performance.now();
       const ok = await generate({ prompt: text, target: opts.target, model: opts.model, byokKey: byokKeyRef.current });
       if (!ok) return;
 
@@ -449,20 +459,35 @@ export function Studio() {
   );
 
   const onIgnite = useCallback(() => {
+    // At 0 tails every Ignite opens the plans, prompt or not.
+    if (!creditsRef.current.canGenerate) {
+      openUpgrade("limit");
+      return;
+    }
     if (!prompt.trim()) {
       changeView("build");
       scrollToPrompt(true);
       return;
     }
     void runBuild({ prompt, target, model });
-  }, [prompt, target, model, runBuild, changeView, scrollToPrompt]);
+  }, [prompt, target, model, runBuild, changeView, scrollToPrompt, openUpgrade]);
 
   const onCancel = useCallback(() => cancelBuild(), [cancelBuild]);
+  /** For the buttons that toggle Ignite/Stop in place: the second tap of a double-tap is not a Stop. */
+  const onToggleCancel = useCallback(() => {
+    if (performance.now() - ignitedAtRef.current < STOP_GRACE_MS) return;
+    cancelBuild();
+  }, [cancelBuild]);
 
   const onRetry = useCallback(() => {
     const last = lastRunRef.current;
-    if (last) void runBuild(last);
-  }, [runBuild]);
+    if (!last) return;
+    // A key swapped since the failed run may not reach its model; the selector has already moved on.
+    const retryModel = byok.provider && !providerSupportsModel(byok.provider, last.model) ? model : last.model;
+    void runBuild({ ...last, model: retryModel });
+    // The Retry button unmounts once the build starts; keep keyboard focus in the output region.
+    requestAnimationFrame(() => document.getElementById("nt-view-output")?.focus({ preventScroll: true }));
+  }, [runBuild, byok.provider, model]);
 
   // ---- templates & prompt ----
   const onTemplate = useCallback(
@@ -499,13 +524,27 @@ export function Studio() {
       target: gen.target ?? target,
       prompt: last?.prompt ?? prompt,
       modelName: getModel(last?.model ?? model).name,
+      mode: gen.mode,
     }).catch((err: unknown) => {
       console.warn("[NineTail] ZIP export failed", err);
     });
-  }, [credits.canExport, gen.parsed, gen.status, gen.target, target, prompt, model, openUpgrade]);
+  }, [credits.canExport, gen.parsed, gen.status, gen.target, gen.mode, target, prompt, model, openUpgrade]);
 
   const modelName = getModel(streaming && runModel ? runModel : model).name;
   const outputTarget = gen.target ?? target;
+
+  // Screen-reader build status. It lives outside both views, since on phones the
+  // build view (and its status card) is display:none while a build runs.
+  const tailsLeft = credits.unlimited ? "" : ` ${credits.remaining} of ${credits.max} tails left.`;
+  const announcement = streaming
+    ? `Building with ${modelName}.`
+    : gen.status === "done"
+      ? `Build complete.${tailsLeft}`
+      : gen.status === "error"
+        ? gen.error?.trim() === STOPPED_MESSAGE
+          ? "Build stopped. No tail spent."
+          : `Build failed${gen.error ? `: ${gen.error}` : "."}`
+        : "";
 
   return (
     <div className="relative isolate min-h-[100dvh] overflow-x-clip" style={LAYOUT_VARS}>
@@ -574,7 +613,7 @@ export function Studio() {
             streaming={streaming}
             onJump={() => scrollToPrompt(true)}
             onIgnite={onIgnite}
-            onCancel={onCancel}
+            onCancel={onToggleCancel}
           />
         </div>
 
@@ -584,7 +623,8 @@ export function Studio() {
           ref={outputViewRef}
           aria-label="Output"
           role="region"
-          className={`${mobileView === "output" ? "block" : "max-lg:hidden lg:block"} px-3 pt-3 max-lg:h-[var(--nt-out-h)] max-lg:box-content sm:px-4 lg:h-full lg:min-h-0 lg:min-w-0 lg:px-0 lg:py-5`}
+          tabIndex={-1}
+          className={`${mobileView === "output" ? "block" : "max-lg:hidden lg:block"} outline-none px-3 pt-3 max-lg:h-[var(--nt-out-h)] max-lg:box-content sm:px-4 lg:h-full lg:min-h-0 lg:min-w-0 lg:px-0 lg:py-5`}
         >
           <OutputPanel
             className="h-full"
@@ -610,8 +650,12 @@ export function Studio() {
         hasPrompt={prompt.trim().length > 0}
         unseen={unseen}
         onIgnite={onIgnite}
-        onCancel={onCancel}
+        onCancel={onToggleCancel}
       />
+
+      <p className="sr-only" role="status" aria-live="polite">
+        {announcement}
+      </p>
 
       <ByokModal open={byokOpen} onClose={closeByok} byok={byok} />
       <UpgradeModal open={upgrade.open} reason={upgrade.reason} onClose={closeUpgrade} onOpenByok={upgradeToByok} onRefill={refillTails} />

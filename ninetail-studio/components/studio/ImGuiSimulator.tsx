@@ -693,6 +693,9 @@ function ImGuiWindow({
   const { toast, show } = useToast();
   const controls = useDragControls();
   const winRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const reopenRef = useRef<HTMLButtonElement>(null);
+  const refocus = useRef(false);
   const [top, setTop] = useState<number | null>(null);
 
   const reserveTop = spec.overlay && (spec.overlay.fps || spec.overlay.watermark) ? 40 : 12;
@@ -708,6 +711,13 @@ function ImGuiWindow({
     setTop(Math.max(reserveTop, Math.round((stage.height - h) / 2)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage.height, reserveTop, closed]);
+
+  // Close and Reopen unmount themselves: hand keyboard focus to the other one.
+  useEffect(() => {
+    if (!refocus.current) return;
+    refocus.current = false;
+    (closed ? reopenRef : closeRef).current?.focus();
+  }, [closed]);
 
   const showTabs = spec.tabs.length > 1 || spec.tabs[0]?.label !== "Main";
   const current = spec.tabs[Math.min(tab, spec.tabs.length - 1)];
@@ -802,8 +812,10 @@ function ImGuiWindow({
               </button>
               <span className="min-w-0 flex-1 truncate text-[#f6f5fb]">{spec.title}</span>
               <button
+                ref={closeRef}
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  refocus.current = document.activeElement === e.currentTarget;
                   setClosed(true);
                   setPopup(null);
                 }}
@@ -863,7 +875,9 @@ function ImGuiWindow({
                       return (
                         <div key={ri} className={multi ? "flex min-w-0 items-center gap-[8px]" : "min-w-0"}>
                           {row.items.map(({ w, index }) => {
-                            const Comp = WIDGETS[w.type];
+                            // Spec types are untrusted: render own WIDGETS keys only ("constructor" must not resolve to Object).
+                            const Comp = Object.prototype.hasOwnProperty.call(WIDGETS, w.type) ? WIDGETS[w.type] : null;
+                            if (!Comp) return null;
                             const key = `${tab}:${index}`;
                             const props: WidgetProps = {
                               w,
@@ -903,8 +917,10 @@ function ImGuiWindow({
         {closed && (
           <motion.button
             key="reopen"
+            ref={reopenRef}
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              refocus.current = document.activeElement === e.currentTarget;
               setClosed(false);
               setCollapsed(false);
             }}

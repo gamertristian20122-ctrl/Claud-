@@ -53,6 +53,21 @@ function useStoredString(key: string): string | null {
   );
 }
 
+const noopSubscribe = () => () => {};
+
+/**
+ * False on the server and during hydration, true once stored values are in use.
+ * Stored values (tails, plan, key) read as defaults until then, so UI that shows
+ * them can render a neutral placeholder instead of a wrong count.
+ */
+export function useHydrated(): boolean {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+}
+
 /** Lets local testing skip the paywall entirely. */
 const UNLOCK_ALL = process.env.NEXT_PUBLIC_UNLOCK_ALL === "true";
 
@@ -66,8 +81,11 @@ export function usePlan() {
 export function useCredits() {
   const { plan } = usePlan();
   const usedRaw = useStoredString(KEYS.used);
+  const key = useStoredString(KEYS.byok);
   const used = Math.max(0, Math.min(FREE_TAILS, Number.parseInt(usedRaw ?? "0", 10) || 0));
-  const unlimited = UNLOCK_ALL || plan !== "free";
+  // Pro is hosted. The BYOK Pass only lifts the limit while a recognised key is
+  // connected; without one, builds would run on the server's keys.
+  const unlimited = UNLOCK_ALL || plan === "pro" || (plan === "byok-pass" && Boolean(key && detectKeyProvider(key)));
   const remaining = FREE_TAILS - used;
 
   /** Spend one tail after a successful build. No-op on unlimited plans. */
@@ -85,8 +103,8 @@ export function useCredits() {
     remaining,
     unlimited,
     canGenerate: unlimited || remaining > 0,
-    /** ZIP export is a paid feature. */
-    canExport: unlimited,
+    /** ZIP export is a paid feature (either plan, key or not). */
+    canExport: UNLOCK_ALL || plan !== "free",
     consume,
     reset,
   };

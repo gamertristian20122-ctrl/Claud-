@@ -31,6 +31,8 @@ There are two ways to make real AI builds:
    - `OPENROUTER_API_KEY` serves every tail, including DeepSeek and GPT-4o.
 
    Builds paid with server keys are limited to 8 per visitor IP per 10 minutes. The limit is kept in memory, so on serverless hosting it's best-effort.
+
+   `/api/generate` only accepts JSON requests from the studio's own origin, so other websites can't spend your key through their visitors. Behind a proxy that rewrites the Host header, set `NEXT_PUBLIC_SITE_URL` to the site's public URL.
 2. **Bring your own key (BYOK)**: visitors paste an Anthropic (`sk-ant-…`) or OpenRouter (`sk-or-…`) key in the studio.
    - The key is saved in their browser's localStorage.
    - It's sent with each build to `/api/generate`, which passes it to the provider and never stores or logs it.
@@ -130,3 +132,5 @@ To switch, change the import in `components/KitsuneMascot.tsx`.
    - Code appears live.
    - Desktop simulators render as soon as the preview JSON arrives.
    - Web previews load in a sandboxed iframe (scripts allowed, no same-origin access) when the page is complete.
+
+The preview iframe runs on the same page as the studio, so a generated page stuck in an endless loop can freeze the tab until it's reloaded. Fully isolating previews needs a separate preview domain.

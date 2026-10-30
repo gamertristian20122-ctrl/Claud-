@@ -2,13 +2,15 @@
 // and downloads it. JSZip is loaded on demand so it never weighs on first paint.
 
 import { getTarget } from "./models";
-import type { ParsedGeneration, Target } from "./types";
+import type { GenMode, ParsedGeneration, Target } from "./types";
 
 export interface ExportProjectOptions {
   parsed: ParsedGeneration;
   target: Target;
   prompt: string;
   modelName: string;
+  /** "demo" builds are prebuilt examples, so the README doesn't credit a model. */
+  mode?: GenMode | null;
 }
 
 /** "My Neon Menu!" -> "my-neon-menu". Falls back to "build". */
@@ -66,7 +68,7 @@ function runSection(target: Target, file: string): string {
       return [
         "## Run it",
         "",
-        "Needs Python 3.9 or newer.",
+        "Needs Python 3.10 or newer.",
         "",
         "```bash",
         "pip install -r requirements.txt",
@@ -76,7 +78,7 @@ function runSection(target: Target, file: string): string {
   }
 }
 
-function buildReadme({ parsed, target, prompt, modelName }: ExportProjectOptions): string {
+function buildReadme({ parsed, target, prompt, modelName, mode }: ExportProjectOptions): string {
   const t = getTarget(target);
   const title = parsed.title.trim() || "NineTail build";
   const date = new Date().toISOString().slice(0, 10);
@@ -94,7 +96,7 @@ function buildReadme({ parsed, target, prompt, modelName }: ExportProjectOptions
   return [
     `# ${title}`,
     "",
-    `Built with NineTail Studio · ${t.label} (${t.sub}) · ${modelName} · ${date}`,
+    `Built with NineTail Studio · ${t.label} (${t.sub}) · ${mode === "demo" ? "Demo build (prebuilt example, no AI model)" : modelName} · ${date}`,
     "",
     "## Prompt",
     "",

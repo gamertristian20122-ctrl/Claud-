@@ -34,16 +34,26 @@ export function Modal({ open, onClose, title, description, widthClass = "sm:max-
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "Tab" && panelRef.current) {
-        const focusable = panelRef.current.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        if (!focusable.length) return;
+        const panel = panelRef.current;
+        // Only what Tab can actually reach: skip tabindex=-1, disabled and hidden controls.
+        const focusable = Array.from(
+          panel.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]'),
+        ).filter((el) => el.tabIndex >= 0 && !el.matches(":disabled") && el.getClientRects().length > 0);
+        if (!focusable.length) {
+          e.preventDefault();
+          return;
+        }
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
+        const active = document.activeElement;
+        // Focus on the panel itself (it is focused on open) or outside it: pull it back in.
+        if (active === panel || !panel.contains(active)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+        } else if (e.shiftKey && active === first) {
           e.preventDefault();
           last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
+        } else if (!e.shiftKey && active === last) {
           e.preventDefault();
           first.focus();
         }

@@ -11,6 +11,7 @@ import { CodeView, CopyButton } from "./CodeView";
 import { CtkSimulator } from "./CtkSimulator";
 import { ImGuiSimulator } from "./ImGuiSimulator";
 import { useElementSize, useLoopMotion } from "./output-kit";
+import { PreviewBoundary } from "./PreviewBoundary";
 import { PageSkeleton, WebPreview } from "./WebPreview";
 
 export type OutputTab = "preview" | "code";
@@ -138,7 +139,8 @@ function Tabs({
   );
 }
 
-function ExportButton({ onExport, disabled, locked, label, tight }: { onExport: () => void; disabled: boolean; locked: boolean; label: string; tight?: boolean }) {
+/** `iconOnly` (narrow header) drops the text label so the build title has room; the aria-label stays. */
+function ExportButton({ onExport, disabled, locked, label, iconOnly }: { onExport: () => void; disabled: boolean; locked: boolean; label: string; iconOnly?: boolean }) {
   const reduce = useReducedMotion();
   return (
     <motion.button
@@ -150,9 +152,9 @@ function ExportButton({ onExport, disabled, locked, label, tight }: { onExport: 
       whileHover={disabled || reduce ? undefined : { y: -1 }}
       whileTap={disabled || reduce ? undefined : { scale: 0.98 }}
       transition={SPRING}
-      className={`focus-ring group relative inline-flex h-11 shrink-0 items-center rounded-xl border border-white/[0.12] bg-white/[0.05] text-[13px] ${tight ? "gap-1.5 px-3" : "gap-2 px-3.5"} font-medium text-fox-white transition-[background-color,border-color,box-shadow] hover:border-spirit-violet/45 hover:bg-white/[0.08] hover:shadow-[0_0_24px_-6px_rgba(167,139,250,0.6)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/[0.12] disabled:hover:bg-white/[0.05] disabled:hover:shadow-none`}
+      className={`focus-ring group relative inline-flex h-11 shrink-0 items-center rounded-xl border border-white/[0.12] bg-white/[0.05] text-[13px] ${iconOnly ? "w-11 justify-center" : "gap-2 px-3.5"} font-medium text-fox-white transition-[background-color,border-color,box-shadow] hover:border-spirit-violet/45 hover:bg-white/[0.08] hover:shadow-[0_0_24px_-6px_rgba(167,139,250,0.6)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-white/[0.12] disabled:hover:bg-white/[0.05] disabled:hover:shadow-none`}
     >
-      <span className={`relative grid h-5 w-5 shrink-0 place-items-center ${locked ? "mr-1.5" : ""}`}>
+      <span className={`relative grid h-5 w-5 shrink-0 place-items-center ${locked && !iconOnly ? "mr-1.5" : ""}`}>
         <FileArchive className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden="true" />
         {locked && (
           <span className="absolute -bottom-1 -right-1.5 grid h-[15px] w-[15px] place-items-center rounded-full bg-obsidian-900 ring-1 ring-spirit-violet/60" aria-hidden="true">
@@ -160,7 +162,7 @@ function ExportButton({ onExport, disabled, locked, label, tight }: { onExport: 
           </span>
         )}
       </span>
-      <span>{label}</span>
+      {!iconOnly && <span>{label}</span>}
     </motion.button>
   );
 }
@@ -191,7 +193,7 @@ function TitleBlock({
 
   return (
     <div className="min-w-0 flex-1">
-      <h2 className="truncate text-[14px] font-semibold leading-5 tracking-tight text-fox-white" title={title}>
+      <h2 className={`${compact ? "line-clamp-2 break-words" : "truncate"} text-[14px] font-semibold leading-5 tracking-tight text-fox-white`} title={title}>
         {title}
       </h2>
       <div className="mt-1 flex min-w-0 items-center gap-1.5 font-mono text-[11px] leading-none text-fox-muted">
@@ -321,7 +323,11 @@ function EmptyState({ target }: { target: Target }) {
 
 function Materializing({ chars, lastLine, dense }: { chars: number; lastLine: string; dense: boolean }) {
   return (
-    <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-obsidian-950/60" role="status" aria-live="polite">
+    <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.06] bg-obsidian-950/60">
+      {/* Static on purpose: the counter and code line below change on every chunk. */}
+      <p className="sr-only" role="status">
+        Preview will appear when the page finishes generating.
+      </p>
       <div className="flex h-10 shrink-0 items-center gap-2 border-b border-white/[0.05] px-3">
         <span className="flex gap-1.5" aria-hidden="true">
           <span className="h-2.5 w-2.5 rounded-full bg-white/10" />
@@ -344,8 +350,12 @@ function Materializing({ chars, lastLine, dense }: { chars: number; lastLine: st
       </div>
       <div className="flex shrink-0 items-center gap-2.5 border-t border-white/[0.05] px-3 py-3 font-mono text-[12px]">
         <span className="h-1.5 w-1.5 shrink-0 animate-soft-pulse rounded-full bg-spirit-cyan shadow-[0_0_8px_rgba(103,232,249,0.9)]" aria-hidden="true" />
-        <span className="shrink-0 text-spirit-cyan">Weaving {chars.toLocaleString("en-US")} characters…</span>
-        <span className="min-w-0 truncate text-fox-dim">{lastLine}</span>
+        <span className="shrink-0 text-spirit-cyan" aria-hidden="true">
+          Weaving {chars.toLocaleString("en-US")} characters…
+        </span>
+        <span className="min-w-0 truncate text-fox-dim" aria-hidden="true">
+          {lastLine}
+        </span>
       </div>
     </div>
   );
@@ -536,6 +546,10 @@ export function OutputPanel({
   else if (target === "web") view = code && (parsed?.complete || !streaming) ? "web" : streaming ? "web-wait" : "empty";
   else view = "desktop";
 
+  // A changed spec or document clears a caught preview error.
+  const gui = parsed?.gui ?? null;
+  const specKey = useMemo(() => (gui ? JSON.stringify(gui) : ""), [gui]);
+
   // Partial code from a failed build is not exportable.
   const exportDisabled = !code || streaming || status === "error";
 
@@ -589,11 +603,18 @@ export function OutputPanel({
       content = <Materializing chars={code.length} lastLine={lastLine} dense={tier === "narrow"} />;
       break;
     case "web":
-      content = <WebPreview html={code} streaming={streaming} />;
+      content = (
+        <PreviewBoundary resetKey={code}>
+          <WebPreview html={code} streaming={streaming} />
+        </PreviewBoundary>
+      );
       break;
     case "desktop": {
-      const sim =
-        target === "imgui" ? <ImGuiSimulator spec={parsed?.gui ?? null} streaming={streaming} /> : <CtkSimulator spec={parsed?.gui ?? null} streaming={streaming} />;
+      const sim = (
+        <PreviewBoundary resetKey={specKey}>
+          {target === "imgui" ? <ImGuiSimulator spec={gui} streaming={streaming} /> : <CtkSimulator spec={gui} streaming={streaming} />}
+        </PreviewBoundary>
+      );
       content = split ? (
         <div className="flex h-full min-h-0 gap-3">
           <div className="relative min-w-0 flex-[1.35] overflow-hidden rounded-2xl border border-white/[0.06]">{sim}</div>
@@ -628,7 +649,7 @@ export function OutputPanel({
   const mascot = <KitsuneMascot state={mascotState} size={tier === "narrow" ? 38 : 40} className="shrink-0" />;
   const tabs = <Tabs tab={tab} onChange={onTabChange} short={tier !== "wide"} streaming={streaming} fill={tier === "narrow"} uid={uid} />;
   const titleBlock = <TitleBlock title={title} target={target} mode={mode} status={status} chars={code.length} lines={lines} compact={tier === "narrow"} />;
-  const exportBtn = <ExportButton onExport={onExport} disabled={exportDisabled} locked={exportLocked} label={tier === "wide" ? "1-Click ZIP Export" : "ZIP Export"} tight={tier === "narrow"} />;
+  const exportBtn = <ExportButton onExport={onExport} disabled={exportDisabled} locked={exportLocked} label={tier === "wide" ? "1-Click ZIP Export" : "ZIP Export"} iconOnly={tier === "narrow"} />;
 
   return (
     <section ref={rootRef} aria-label="Build output" className={`glass relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-3xl ${className}`}>

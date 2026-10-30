@@ -6,7 +6,7 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { AppWindow, Check } from "lucide-react";
-import { useCallback, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { GuiSpec, GuiWidget } from "@/lib/types";
 import { BLIP_COLORS, NoPreviewNote } from "./ImGuiSimulator";
 import {
@@ -435,9 +435,15 @@ function CStat({ w }: WidgetProps) {
   const down = !!d && (d.startsWith("-") || d.startsWith("−"));
   const up = !!d && d.startsWith("+");
   return (
-    <Card className="h-full">
+    <Card className="h-full [container-type:inline-size]">
       <div className="truncate text-[12px] text-[var(--ck-muted)]">{w.label ?? "Metric"}</div>
-      <div className="mt-1 truncate text-[22px] font-semibold leading-tight tracking-tight tabular-nums text-white">{value}</div>
+      {/* Long values shrink with the card (cqw) before wrapping; 22px stays the cap and the fallback. */}
+      <div
+        className="mt-1 line-clamp-2 break-words text-[22px] font-semibold leading-tight tracking-tight tabular-nums text-white"
+        style={{ fontSize: `clamp(14px, ${(170 / Math.max(value.length, 1)).toFixed(1)}cqw, 22px)` }}
+      >
+        {value}
+      </div>
       {d && (
         <span
           className="mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums"
@@ -548,6 +554,16 @@ function CtkWindow({ spec, stage, stageRef }: { spec: GuiSpec; stage: { width: n
   const [values, setValues] = useState(() => initValues(spec));
   const [popup, setPopup] = useState<PopupPlacement | null>(null);
   const { toast, show } = useToast();
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const reopenRef = useRef<HTMLButtonElement>(null);
+  const refocus = useRef(false);
+
+  // Close and Reopen unmount themselves: hand keyboard focus to the other one.
+  useEffect(() => {
+    if (!refocus.current) return;
+    refocus.current = false;
+    (closed ? reopenRef : closeRef).current?.focus();
+  }, [closed]);
 
   const width = maximized ? stage.width - 16 : Math.round(Math.max(240, Math.min(spec.width ?? 480, stage.width - 24)));
   const maxH = maximized ? stage.height - 16 : Math.max(160, Math.min(spec.height ?? Infinity, stage.height - 24));
@@ -624,9 +640,11 @@ function CtkWindow({ spec, stage, stageRef }: { spec: GuiSpec; stage: { width: n
                 </svg>
               </button>
               <button
+                ref={closeRef}
                 type="button"
                 aria-label="Close window"
-                onClick={() => {
+                onClick={(e) => {
+                  refocus.current = document.activeElement === e.currentTarget;
                   setClosed(true);
                   setPopup(null);
                 }}
@@ -687,7 +705,9 @@ function CtkWindow({ spec, stage, stageRef }: { spec: GuiSpec; stage: { width: n
                         style={multi && allCards ? { gridTemplateColumns: `repeat(${Math.min(row.items.length, width < 380 ? 2 : 4)}, minmax(0, 1fr))` } : undefined}
                       >
                         {row.items.map(({ w, index }) => {
-                          const Comp = WIDGETS[w.type];
+                          // Spec types are untrusted: render own WIDGETS keys only ("constructor" must not resolve to Object).
+                          const Comp = Object.prototype.hasOwnProperty.call(WIDGETS, w.type) ? WIDGETS[w.type] : null;
+                          if (!Comp) return null;
                           const key = `${tab}:${index}`;
                           const props: WidgetProps = {
                             w,
@@ -722,8 +742,10 @@ function CtkWindow({ spec, stage, stageRef }: { spec: GuiSpec; stage: { width: n
         {closed && (
           <motion.button
             key="reopen"
+            ref={reopenRef}
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              refocus.current = document.activeElement === e.currentTarget;
               setClosed(false);
               setMinimized(false);
             }}

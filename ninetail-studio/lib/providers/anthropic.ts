@@ -17,8 +17,9 @@ export interface AnthropicStreamArgs {
 const MAX_TOKENS = 32000;
 
 /**
- * Yields text deltas as they arrive. Returns `{ truncated }` when the output hit
- * the token cap, and throws a ProviderError for refusals and API failures.
+ * Yields text deltas as they arrive, starting with an empty chunk once the
+ * request is accepted. Returns `{ truncated }` when the output hit the token
+ * cap, and throws a ProviderError for refusals and API failures.
  */
 export async function* streamAnthropic({
   apiKey,
@@ -56,6 +57,9 @@ export async function* streamAnthropic({
     );
 
     for await (const event of stream) {
+      // The request was accepted (auth and validation errors come before this):
+      // an empty chunk lets the route send its headers now, not after thinking.
+      if (event.type === "message_start") yield "";
       // Only visible text. Thinking deltas and non-text blocks (including the
       // `fallback` marker block) are skipped.
       if (event.type === "content_block_delta" && event.delta.type === "text_delta" && event.delta.text) {

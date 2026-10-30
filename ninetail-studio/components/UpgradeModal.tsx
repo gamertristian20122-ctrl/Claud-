@@ -147,7 +147,6 @@ function CheckoutCta({
 
 function BillingToggle({ value, onChange }: { value: Billing; onChange: (b: Billing) => void }) {
   const reduce = useReducedMotion();
-  const uid = useId().replace(/:/g, "");
   const options: { id: Billing; label: string }[] = [
     { id: "lifetime", label: "Lifetime" },
     { id: "monthly", label: "Monthly" },
@@ -162,6 +161,15 @@ function BillingToggle({ value, onChange }: { value: Billing; onChange: (b: Bill
   };
   return (
     <div role="radiogroup" aria-label="Billing" className="relative inline-grid grid-cols-2 rounded-full border border-white/10 bg-obsidian-950/60 p-1">
+      {/* One always-mounted pill moved by x. A layoutId pill inside the Modal's
+          AnimatePresence would keep the dialog from finishing its exit. */}
+      <motion.span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-spirit-violet-soft"
+        initial={false}
+        animate={{ x: value === "monthly" ? "100%" : "0%" }}
+        transition={reduce ? { duration: 0 } : SPRING}
+      />
       {options.map((o) => {
         const active = o.id === value;
         return (
@@ -176,14 +184,6 @@ function BillingToggle({ value, onChange }: { value: Billing; onChange: (b: Bill
             onKeyDown={onKeyDown}
             className={`focus-ring relative h-8 rounded-full px-3.5 text-[12px] font-medium transition-colors ${active ? "text-obsidian-950" : "text-fox-muted hover:text-fox-white"}`}
           >
-            {active && (
-              <motion.span
-                layoutId={`billing-pill-${uid}`}
-                className="absolute inset-0 rounded-full bg-spirit-violet-soft"
-                transition={reduce ? { duration: 0 } : SPRING}
-                aria-hidden="true"
-              />
-            )}
             <span className="relative">{o.label}</span>
           </button>
         );

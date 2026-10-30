@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { KitsuneMascot } from "@/components/KitsuneMascot";
 import type { GenStatus, MascotState } from "@/lib/types";
+import { STOPPED_MESSAGE } from "@/lib/useGenerator";
 
 export interface SpiritCoreProps {
   state: MascotState;
@@ -18,7 +19,7 @@ export interface SpiritCoreProps {
 type Phase = "idle" | "thinking" | "done" | "error" | "stopped";
 
 /** useGenerator's error message when the visitor stops a build themselves. */
-const STOPPED_MESSAGE = "Build stopped.";
+export { STOPPED_MESSAGE };
 
 const SPRING = { type: "spring", stiffness: 380, damping: 30 } as const;
 
@@ -130,17 +131,8 @@ export function SpiritCore({ state, status, charCount, modelName, error, classNa
           ? "done"
           : "idle";
 
-  const announce =
-    phase === "thinking"
-      ? `Building with ${modelName}`
-      : phase === "done"
-        ? "Build complete"
-        : phase === "error"
-          ? `Build failed${error ? `: ${error}` : ""}`
-          : phase === "stopped"
-            ? "Build stopped"
-            : "Ready to build";
-
+  // Nothing here is a live region: Studio announces build status from outside
+  // the views, because this card is display:none on phones during a build.
   return (
     <section
       aria-label="Spirit core"
@@ -248,9 +240,6 @@ export function SpiritCore({ state, status, charCount, modelName, error, classNa
             )}
           </motion.p>
         </AnimatePresence>
-        <span className="sr-only" role="status" aria-live="polite">
-          {announce}
-        </span>
       </div>
     </section>
   );

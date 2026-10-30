@@ -208,7 +208,7 @@ export function WebPreview({ html, streaming = false, defaultDevice, className =
       key={`${device}-${reloadKey}`}
       title="Live preview"
       srcDoc={srcDoc}
-      sandbox="allow-scripts allow-forms allow-modals"
+      sandbox="allow-scripts allow-forms"
       referrerPolicy="no-referrer"
       loading="eager"
       onLoad={() => setLoaded(true)}
@@ -245,8 +245,17 @@ export function WebPreview({ html, streaming = false, defaultDevice, className =
           role="radiogroup"
           aria-label="Preview device"
           onKeyDown={onRadioKey}
-          className="flex items-center rounded-xl border border-white/[0.08] bg-obsidian-950/50 p-0.5"
+          className="relative flex items-center rounded-xl border border-white/[0.08] bg-obsidian-950/50 p-0.5"
         >
+          {/* One always-mounted pill moved by x. A layoutId pill here would never finish
+              exiting inside OutputPanel's AnimatePresence mode="wait" and blank the panel. */}
+          <motion.span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1 top-1 h-9 w-10 rounded-lg border border-white/[0.12] bg-white/[0.08] shadow-[0_0_18px_-4px_rgba(167,139,250,0.55)]"
+            initial={false}
+            animate={{ x: DEVICES.findIndex((d) => d.id === device) * 44 }}
+            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 30 }}
+          />
           {DEVICES.map(({ id, label, Icon }) => {
             const active = device === id;
             return (
@@ -263,13 +272,6 @@ export function WebPreview({ html, streaming = false, defaultDevice, className =
                   active ? "text-fox-white" : "text-fox-muted hover:text-fox-white"
                 }`}
               >
-                {active && (
-                  <motion.span
-                    layoutId="webpreview-device"
-                    className="absolute inset-0.5 rounded-lg border border-white/[0.12] bg-white/[0.08] shadow-[0_0_18px_-4px_rgba(167,139,250,0.55)]"
-                    transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 30 }}
-                  />
-                )}
                 <Icon className="relative h-4 w-4" strokeWidth={1.75} />
               </button>
             );

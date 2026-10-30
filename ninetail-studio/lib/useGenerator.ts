@@ -2,11 +2,16 @@
 
 // Client side of a build: POSTs to /api/generate, reads the text stream, and
 // exposes a throttled, parsed view of it. Falls back to an in-browser demo
-// stream when the API route is unreachable (static hosting, offline).
+// stream when the API route is unreachable (static hosting, offline), except
+// for builds with the visitor's own key, which never get canned output.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { STREAM_SENTINEL_HEADER } from "./format";
 import { extractStreamError, parseGeneration } from "./parse";
 import type { GenerateErrorBody, GenerateRequestBody, GenMode, GenStatus, ModelId, ParsedGeneration, Target } from "./types";
+
+/** The error text a user-stopped build ends with. UI compares against it to say "stopped" rather than "failed". */
+export const STOPPED_MESSAGE = "Build stopped.";
 
 export interface GenerateOptions {
   prompt: string;
@@ -130,6 +135,8 @@ export function useGenerator(): Generator {
     // ---- Open the stream (or fall back to the in-browser demo) ---------------
     let stream: ReadableStream<Uint8Array> | null = null;
     let mode: GenMode = "live";
+    /** Marks the server's own error trailer (see lib/format.ts). */
+    let nonce: string | null = null;
     // Loaded on demand so the demo outputs (~120 KB of source) stay out of the main bundle.
     const demo = async () => {
       mode = "demo";
@@ -166,13 +173,18 @@ export function useGenerator(): Generator {
       } else {
         stream = res.body;
         mode = res.headers.get("x-ninetail-mode") === "demo" ? "demo" : "live";
+        nonce = res.headers.get(STREAM_SENTINEL_HEADER);
       }
     } catch {
       if (controller.signal.aborted || !isCurrent()) return false;
-      // Network error: the API is unreachable, so show the demo instead.
+      // Network error: the API is unreachable, so show the demo instead. Not for
+      // a build with the visitor's own key: canned output would pass as their result.
       try {
-        stream = await demo();
+        stream = key ? null : await demo();
       } catch {
+        stream = null;
+      }
+      if (!stream) {
         update({ status: "error", error: "Couldn't reach the studio server. Check your connection and try again." });
         end();
         return false;
@@ -232,7 +244,7 @@ export function useGenerator(): Generator {
     if (!isCurrent()) return false;
     end();
 
-    const streamError = extractStreamError(raw);
+    const streamError = extractStreamError(raw, nonce);
     if (streamError) {
       update({ status: "error", raw, parsed: parseGeneration(raw, target), error: streamError });
       return false;
@@ -260,7 +272,7 @@ export function useGenerator(): Generator {
     setState((s) => ({
       ...s,
       status: "error",
-      error: "Build stopped.",
+      error: STOPPED_MESSAGE,
       raw,
       parsed: raw && target ? parseGeneration(raw, target) : s.parsed,
     }));

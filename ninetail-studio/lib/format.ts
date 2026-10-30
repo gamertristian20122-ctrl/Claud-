@@ -21,9 +21,21 @@ export const TAGS = {
   codeClose: "</nt-code>",
 } as const;
 
-/** Appended to a stream when generation fails after the response has started. */
+/**
+ * Appended to a stream when generation fails after the response has started:
+ * STREAM_ERROR_PREFIX + nonce + ":" + message + STREAM_ERROR_SUFFIX. The nonce is
+ * random per request and sent in the STREAM_SENTINEL_HEADER response header, so
+ * model text (which streams through verbatim) can't forge a studio error.
+ */
 export const STREAM_ERROR_PREFIX = "\n<<NINETAIL_ERROR:";
 export const STREAM_ERROR_SUFFIX = ">>";
+export const STREAM_SENTINEL_HEADER = "X-Ninetail-Sentinel";
+
+/** The error trailer for a failed stream. The message is kept on one line and can't close the marker early. */
+export function formatStreamError(message: string, nonce: string): string {
+  const text = message.replace(/>>/g, "> >").replace(/\s+/g, " ").trim();
+  return `${STREAM_ERROR_PREFIX}${nonce}:${text}${STREAM_ERROR_SUFFIX}`;
+}
 
 export function formatOutput(parts: {
   title: string;

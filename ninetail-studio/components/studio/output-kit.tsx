@@ -118,7 +118,9 @@ export function formatNumber(format: string | undefined, value: number, integer 
     else if (conv === "g" || conv === "G") s = String(Number(value.toPrecision(prec ? Math.max(1, Math.min(Number(prec), 12)) : 6)));
     else s = value.toFixed(prec !== undefined ? Math.min(Number(prec), 10) : 6);
     if (flags.includes("+") && value >= 0) s = `+${s}`;
-    if (width && s.length < Number(width)) s = s.padStart(Number(width), flags.includes("0") ? "0" : " ");
+    // The format comes from model output: cap the width so "%999999999d" can't build a giant string.
+    const pad = width ? Math.min(Number(width), 32) : 0;
+    if (s.length < pad) s = s.padStart(pad, flags.includes("0") ? "0" : " ");
     return s;
   });
   return out.trim() || String(value);

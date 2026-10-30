@@ -101,7 +101,11 @@ export function ByokModal({ open, onClose, byok }: ByokModalProps) {
           </p>
           <button
             type="button"
-            onClick={() => byok.clear()}
+            onClick={() => {
+              byok.clear();
+              // This button unmounts with the key; keep focus in the dialog, on the field that replaces it.
+              inputRef.current?.focus();
+            }}
             className="focus-ring flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-xl px-3 text-[13px] font-medium text-fox-mist transition-colors hover:bg-white/[0.06] hover:text-fox-white"
           >
             <Trash2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
@@ -141,7 +145,8 @@ export function ByokModal({ open, onClose, byok }: ByokModalProps) {
             data-lpignore="true"
             aria-describedby={hintId}
             aria-invalid={trimmed.length > 0 && !detected ? true : undefined}
-            className="h-12 w-full rounded-xl border border-white/10 bg-obsidian-950/70 pl-10 pr-12 font-mono text-[13px] text-fox-white outline-none transition placeholder:text-fox-dim focus:border-spirit-cyan/45 focus:shadow-[0_0_0_3px_rgba(103,232,249,.10)]"
+            // 16px on touch and small screens: iOS Safari zooms into smaller fields on focus.
+            className="h-12 w-full rounded-xl border border-white/10 bg-obsidian-950/70 pl-10 pr-12 font-mono text-[13px] max-lg:text-[16px] [@media(pointer:coarse)]:text-[16px] text-fox-white outline-none transition placeholder:text-fox-dim focus:border-spirit-cyan/45 focus:shadow-[0_0_0_3px_rgba(103,232,249,.10)]"
           />
           <button
             type="button"
