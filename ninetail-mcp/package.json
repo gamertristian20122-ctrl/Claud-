@@ -1,0 +1,40 @@
+{
+  "name": "ninetail-mcp",
+  "version": "1.0.0",
+  "description": "The 9 Tails of the Kitsune social suite: a local MCP server for publishing, pinned comments and analytics across YouTube, TikTok, Instagram and X.",
+  "type": "module",
+  "bin": {
+    "ninetail-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "start": "tsx src/index.ts"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "kitsune",
+    "social-media",
+    "youtube",
+    "tiktok",
+    "instagram",
+    "x"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
