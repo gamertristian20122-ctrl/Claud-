@@ -10,6 +10,9 @@ import { STREAM_SENTINEL_HEADER } from "./format";
 import { extractStreamError, parseGeneration } from "./parse";
 import type { GenerateErrorBody, GenerateRequestBody, GenMode, GenStatus, ModelId, ParsedGeneration, Target } from "./types";
 
+/** Static hosting with no API route (NEXT_PUBLIC_STATIC_DEMO=true): every build streams a demo. */
+export const STATIC_DEMO = process.env.NEXT_PUBLIC_STATIC_DEMO === "true";
+
 /** The error text a user-stopped build ends with. UI compares against it to say "stopped" rather than "failed". */
 export const STOPPED_MESSAGE = "Build stopped.";
 
@@ -144,51 +147,56 @@ export function useGenerator(): Generator {
       return createDemoStream(opts.prompt, target, { signal: controller.signal });
     };
 
-    try {
-      const res = await fetch(opts.endpoint ?? "/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-        cache: "no-store",
-      });
-      if (!isCurrent()) {
-        res.body?.cancel().catch(() => {});
-        return false;
-      }
-      const contentType = res.headers.get("content-type") ?? "";
-      if (res.status === 404 || res.status === 405 || (res.ok && contentType.includes("text/html"))) {
-        // No API route here (static hosting): run the demo in the browser.
-        res.body?.cancel().catch(() => {});
-        stream = await demo();
-      } else if (!res.ok) {
-        const message = await readErrorMessage(res);
-        update({ status: "error", error: message });
-        end();
-        return false;
-      } else if (!res.body) {
-        update({ status: "error", error: "The server sent an empty response. Try again." });
-        end();
-        return false;
-      } else {
-        stream = res.body;
-        mode = res.headers.get("x-ninetail-mode") === "demo" ? "demo" : "live";
-        nonce = res.headers.get(STREAM_SENTINEL_HEADER);
-      }
-    } catch {
-      if (controller.signal.aborted || !isCurrent()) return false;
-      // Network error: the API is unreachable, so show the demo instead. Not for
-      // a build with the visitor's own key: canned output would pass as their result.
+    if (STATIC_DEMO) {
+      stream = await demo();
+    } else {
       try {
-        stream = key ? null : await demo();
+        const res = await fetch(opts.endpoint ?? "/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        if (!isCurrent()) {
+          res.body?.cancel().catch(() => {});
+          return false;
+        }
+        const contentType = res.headers.get("content-type") ?? "";
+        if (res.status === 404 || res.status === 405 || (res.ok && contentType.includes("text/html"))) {
+          // No API route here (static hosting): run the demo in the browser.
+          res.body?.cancel().catch(() => {});
+          stream = await demo();
+        } else if (!res.ok) {
+          const message = await readErrorMessage(res);
+          update({ status: "error", error: message });
+          end();
+          return false;
+        } else if (!res.body) {
+          update({ status: "error", error: "The server sent an empty response. Try again." });
+          end();
+          return false;
+        } else {
+          stream = res.body;
+          mode = res.headers.get("x-ninetail-mode") === "demo" ? "demo" : "live";
+          nonce = res.headers.get(STREAM_SENTINEL_HEADER);
+        }
       } catch {
-        stream = null;
+        if (controller.signal.aborted || !isCurrent()) return false;
+        // Network error: the API is unreachable, so show the demo instead. Not for
+        // a build with the visitor's own key: canned output would pass as their result.
+        try {
+          stream = key ? null : await demo();
+        } catch {
+          stream = null;
+        }
+        if (!stream) {
+          update({ status: "error", error: "Couldn't reach the studio server. Check your connection and try again." });
+          end();
+          return false;
+        }
       }
-      if (!stream) {
-        update({ status: "error", error: "Couldn't reach the studio server. Check your connection and try again." });
-        end();
-        return false;
-      }
+
     }
 
     update({ mode });

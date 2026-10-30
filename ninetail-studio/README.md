@@ -91,6 +91,16 @@ Deploy to Vercel (or any Node host): import the repo, set the root directory to 
 
 `/api/generate` sets `maxDuration = 300` seconds. If your plan has a lower limit, lower it in `app/api/generate/route.ts`.
 
+### Static demo (no server)
+
+To host only the demo on a static host such as GitHub Pages:
+1. Set `NEXT_PUBLIC_STATIC_DEMO=true`.
+2. Add `output: "export"` to `next.config.mjs`.
+3. Delete `app/api`.
+4. Run `npm run build`; the site is in `out/`.
+
+Every build then streams a demo build in the browser.
+
 ## Project layout
 
 ```

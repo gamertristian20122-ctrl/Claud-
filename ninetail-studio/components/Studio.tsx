@@ -18,7 +18,7 @@ import { DEFAULT_MODEL, getModel, providerSupportsModel } from "@/lib/models";
 import { useByok, useCredits } from "@/lib/storage";
 import { getTemplate } from "@/lib/templates";
 import type { MascotState, ModelId, ServerStatus, Target, Template, UpgradeReason } from "@/lib/types";
-import { useGenerator } from "@/lib/useGenerator";
+import { STATIC_DEMO, useGenerator } from "@/lib/useGenerator";
 import { exportProjectZip } from "@/lib/zip";
 
 type MobileView = "build" | "output";
@@ -322,6 +322,10 @@ export function Studio() {
 
   // ---- server keys (which tails the house can serve) ----
   useEffect(() => {
+    if (STATIC_DEMO) {
+      setServer({ anthropic: false, openrouter: false });
+      return;
+    }
     let alive = true;
     fetch("/api/generate", { method: "GET", cache: "no-store" })
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
