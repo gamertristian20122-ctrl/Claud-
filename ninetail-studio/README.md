@@ -8,9 +8,11 @@ A dark-mode builder that turns a prompt into one of three things, with a live pr
 
 The mascot is a white nine-tailed fox. Its tails sway while idle, flare and pulse one after another while a build is generating, and it flashes a celebration aura when the build is done.
 
-Built with Next.js 14 (App Router), Tailwind CSS, Framer Motion and Lucide icons.
+Built with Next.js 16 (App Router, Turbopack), React 19, Tailwind CSS, Framer Motion and Lucide icons.
 
 ## Run it
+
+Needs Node.js 20.9 or later.
 
 ```bash
 npm install

@@ -591,7 +591,7 @@ function ImStat({ w }: WidgetProps) {
   );
 }
 
-const WIDGETS: Record<GuiWidget["type"], (p: WidgetProps) => JSX.Element | null> = {
+const WIDGETS: Record<GuiWidget["type"], (p: WidgetProps) => React.JSX.Element | null> = {
   text: ImText,
   separator: ImSeparator,
   checkbox: ImCheckbox,
@@ -678,7 +678,7 @@ function ImGuiWindow({
 }: {
   spec: GuiSpec;
   stage: { width: number; height: number };
-  stageRef: React.RefObject<HTMLDivElement>;
+  stageRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const reduce = useReducedMotion();
   const uid = useId().replace(/:/g, "");
@@ -709,7 +709,6 @@ function ImGuiWindow({
     if (!winRef.current) return;
     const h = winRef.current.offsetHeight;
     setTop(Math.max(reserveTop, Math.round((stage.height - h) / 2)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage.height, reserveTop, closed]);
 
   // Close and Reopen unmount themselves: hand keyboard focus to the other one.
@@ -1014,7 +1013,7 @@ export function ImGuiSimulator({ spec, streaming = false, className = "" }: ImGu
   const stageRef = useRef<HTMLDivElement>(null);
   const setStage = useCallback(
     (node: HTMLDivElement | null) => {
-      (stageRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      stageRef.current = node;
       sizeRef(node);
     },
     [sizeRef],

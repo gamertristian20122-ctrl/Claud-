@@ -338,7 +338,6 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 function str(v: unknown, max: number = LIMITS.str): string | undefined {
   if (typeof v === "number" && Number.isFinite(v)) v = String(v);
   if (typeof v !== "string") return undefined;
-  // eslint-disable-next-line no-control-regex
   const s = v.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim();
   return s ? s.slice(0, max) : undefined;
 }

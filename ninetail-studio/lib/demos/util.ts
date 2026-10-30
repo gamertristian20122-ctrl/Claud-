@@ -38,7 +38,6 @@ export function cleanPrompt(prompt: string): string {
     if (next === s) break;
     s = next;
   }
-  // eslint-disable-next-line no-control-regex
   s = s.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, " ");
   s = s.replace(/\s+/g, " ").trim();
   if (s.length > MAX_EMBED) {
@@ -124,7 +123,6 @@ export function escapeCpp(text: string): string {
       .replace(/\\/g, "\\\\")
       .replace(/"/g, '\\"')
       .replace(/\n/g, "\\n")
-      // eslint-disable-next-line no-control-regex
       .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "")
       // Never let "??x" read as a trigraph on old compilers: escape runs of "?".
       .replace(/\?{2,}/g, (run) => "\\?".repeat(run.length))
@@ -138,7 +136,6 @@ export function escapePython(text: string): string {
       .replace(/\\/g, "\\\\")
       .replace(/"/g, '\\"')
       .replace(/\n/g, "\\n")
-      // eslint-disable-next-line no-control-regex
       .replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "")
   );
 }

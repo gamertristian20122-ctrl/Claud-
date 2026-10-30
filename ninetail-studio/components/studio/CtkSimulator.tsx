@@ -459,7 +459,7 @@ function CStat({ w }: WidgetProps) {
   );
 }
 
-const WIDGETS: Record<GuiWidget["type"], (p: WidgetProps) => JSX.Element | null> = {
+const WIDGETS: Record<GuiWidget["type"], (p: WidgetProps) => React.JSX.Element | null> = {
   text: CText,
   separator: CSeparator,
   checkbox: CCheckbox,
@@ -542,7 +542,7 @@ function initValues(spec: GuiSpec): Record<string, WidgetValue> {
 
 const CARD_TYPES = new Set<GuiWidget["type"]>(["stat", "plot", "radar"]);
 
-function CtkWindow({ spec, stage, stageRef }: { spec: GuiSpec; stage: { width: number; height: number }; stageRef: React.RefObject<HTMLDivElement> }) {
+function CtkWindow({ spec, stage, stageRef }: { spec: GuiSpec; stage: { width: number; height: number }; stageRef: React.RefObject<HTMLDivElement | null> }) {
   const reduce = useReducedMotion();
   const uid = useId().replace(/:/g, "");
   const accent = spec.accent ?? DEFAULT_ACCENT;
@@ -843,7 +843,7 @@ export function CtkSimulator({ spec, streaming = false, className = "" }: CtkSim
   const stageRef = useRef<HTMLDivElement>(null);
   const setStage = useCallback(
     (node: HTMLDivElement | null) => {
-      (stageRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      stageRef.current = node;
       sizeRef(node);
     },
     [sizeRef],
