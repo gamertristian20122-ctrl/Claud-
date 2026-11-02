@@ -98,10 +98,32 @@ Deploy to Vercel (or any Node host): import the repo, set the root directory to 
 To host only the demo on a static host such as GitHub Pages:
 1. Set `NEXT_PUBLIC_STATIC_DEMO=true`.
 2. Add `output: "export"` to `next.config.mjs`.
-3. Delete `app/api`.
+3. Delete `app/api` (this also removes the MCP server).
 4. Run `npm run build`; the site is in `out/`.
 
 Every build then streams a demo build in the browser.
+
+## Connect an AI (MCP)
+
+`/api/mcp` is an MCP server, so AI assistants such as Claude, ChatGPT and Cursor can build in NineTail's format.
+
+- The assistant's own AI writes the build. The server never calls a model, so it can't spend your API keys and it needs no sign-in.
+- Every tool is read-only.
+- Requests over 2 MB are refused.
+
+| Tool | What it does |
+|---|---|
+| `list_targets` | The three build types, with the language and file name of each |
+| `list_templates` | The Template Vault starters |
+| `get_template_build` | A starter's finished example build, in the tagged format |
+| `get_build_guide` | NineTail's format, preview JSON and design rules for one target |
+| `check_build` | Reads a finished build the way the studio would and lists errors and warnings |
+
+There is also one prompt, `build_app`. Give it a target and an idea, and it loads the build guide with your idea, ready for the AI to write the build.
+
+To connect an assistant:
+1. Deploy the site.
+2. In the assistant's settings, add a custom connector (a remote MCP server) with the URL `https://<your-site>/api/mcp`.
 
 ## Project layout
 
@@ -109,6 +131,7 @@ Every build then streams a demo build in the browser.
 app/
   page.tsx                 studio page
   api/generate/route.ts    streaming generation endpoint (GET = which server keys exist)
+  api/mcp/route.ts         MCP server endpoint for AI assistants
 components/
   Studio.tsx               state and layout (desktop split screen, mobile dock)
   KitsuneMascot.tsx        the mascot used everywhere (switch designs here)
@@ -124,6 +147,8 @@ lib/
   demos/, demo-stream.ts   demo mode output
   storage.ts               tails, key and plan in localStorage
   zip.ts                   1-Click ZIP export
+  mcp/server.ts            MCP tools and the build_app prompt
+  mcp/check-build.ts       checks a finished build the way the studio reads it
 ```
 
 ### Mascot designs

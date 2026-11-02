@@ -19,6 +19,7 @@ import { streamAnthropic, toAnthropicError } from "@/lib/providers/anthropic";
 import { ProviderError, type ProviderStreamResult } from "@/lib/providers/errors";
 import { streamOpenRouter } from "@/lib/providers/openrouter";
 import { checkRateLimit, getClientIp } from "@/lib/ratelimit";
+import { readBody } from "@/lib/read-body";
 import type { GenerateErrorBody, KeyProvider, ServerStatus, Target } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -89,30 +90,6 @@ function isCrossSite(req: Request): boolean {
     }
   }
   return !own.some((h) => h?.trim().toLowerCase() === host);
-}
-
-/**
- * Reads the body as UTF-8 text, or returns null as soon as it passes `limit`
- * bytes. Counting bytes as they arrive also covers chunked uploads, which have
- * no Content-Length.
- */
-async function readBody(req: Request, limit: number): Promise<string | null> {
-  if (!req.body) return "";
-  const reader = req.body.getReader();
-  const decoder = new TextDecoder();
-  let size = 0;
-  let text = "";
-  for (;;) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > limit) {
-      reader.cancel().catch(() => {});
-      return null;
-    }
-    text += decoder.decode(value, { stream: true });
-  }
-  return text + decoder.decode();
 }
 
 interface ValidBody {
