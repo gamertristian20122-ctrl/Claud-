@@ -1,0 +1,644 @@
+{
+	"systeminfo": "WHISPER : VITISAI = 0 | COREML = 0 | OPENVINO = 0 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | AVX512 = 1 | AVX512_VBMI = 1 | AVX512_VNNI = 1 | AVX512_BF16 = 1 | AMX_INT8 = 1 | OPENMP = 1 | REPACK = 1 | ",
+	"model": {
+		"type": "small",
+		"multilingual": false,
+		"vocab": 51864,
+		"audio": {
+			"ctx": 1500,
+			"state": 768,
+			"head": 12,
+			"layer": 12
+		},
+		"text": {
+			"ctx": 448,
+			"state": 768,
+			"head": 12,
+			"layer": 12
+		},
+		"mels": 80,
+		"ftype": 1
+	},
+	"params": {
+		"model": "/root/.cache/hyperframes/whisper/models/ggml-small.en.bin",
+		"language": "en",
+		"translate": false
+	},
+	"result": {
+		"language": "en"
+	},
+	"transcription": [
+		{
+			"timestamps": {
+				"from": "00:00:00,000",
+				"to": "00:00:02,540"
+			},
+			"offsets": {
+				"from": 0,
+				"to": 2540
+			},
+			"text": " If your friend puts ketchup on everything,",
+			"tokens": [
+				{
+					"text": "[_BEG_]",
+					"timestamps": {
+						"from": "00:00:00,000",
+						"to": "00:00:00,000"
+					},
+					"offsets": {
+						"from": 0,
+						"to": 0
+					},
+					"id": 50363,
+					"p": 0.994227,
+					"t_dtw": -1
+				},
+				{
+					"text": " If",
+					"timestamps": {
+						"from": "00:00:00,040",
+						"to": "00:00:00,130"
+					},
+					"offsets": {
+						"from": 40,
+						"to": 130
+					},
+					"id": 1002,
+					"p": 0.84485,
+					"t_dtw": -1
+				},
+				{
+					"text": " your",
+					"timestamps": {
+						"from": "00:00:00,150",
+						"to": "00:00:00,420"
+					},
+					"offsets": {
+						"from": 150,
+						"to": 420
+					},
+					"id": 534,
+					"p": 0.991094,
+					"t_dtw": -1
+				},
+				{
+					"text": " friend",
+					"timestamps": {
+						"from": "00:00:00,420",
+						"to": "00:00:00,850"
+					},
+					"offsets": {
+						"from": 420,
+						"to": 850
+					},
+					"id": 1545,
+					"p": 0.992778,
+					"t_dtw": -1
+				},
+				{
+					"text": " puts",
+					"timestamps": {
+						"from": "00:00:00,850",
+						"to": "00:00:01,080"
+					},
+					"offsets": {
+						"from": 850,
+						"to": 1080
+					},
+					"id": 7584,
+					"p": 0.994199,
+					"t_dtw": -1
+				},
+				{
+					"text": " k",
+					"timestamps": {
+						"from": "00:00:01,140",
+						"to": "00:00:01,190"
+					},
+					"offsets": {
+						"from": 1140,
+						"to": 1190
+					},
+					"id": 479,
+					"p": 0.959149,
+					"t_dtw": -1
+				},
+				{
+					"text": "etchup",
+					"timestamps": {
+						"from": "00:00:01,200",
+						"to": "00:00:01,630"
+					},
+					"offsets": {
+						"from": 1200,
+						"to": 1630
+					},
+					"id": 47132,
+					"p": 0.996082,
+					"t_dtw": -1
+				},
+				{
+					"text": " on",
+					"timestamps": {
+						"from": "00:00:01,630",
+						"to": "00:00:01,770"
+					},
+					"offsets": {
+						"from": 1630,
+						"to": 1770
+					},
+					"id": 319,
+					"p": 0.997253,
+					"t_dtw": -1
+				},
+				{
+					"text": " everything",
+					"timestamps": {
+						"from": "00:00:01,770",
+						"to": "00:00:02,020"
+					},
+					"offsets": {
+						"from": 1770,
+						"to": 2020
+					},
+					"id": 2279,
+					"p": 0.995412,
+					"t_dtw": -1
+				},
+				{
+					"text": ",",
+					"timestamps": {
+						"from": "00:00:02,540",
+						"to": "00:00:02,540"
+					},
+					"offsets": {
+						"from": 2540,
+						"to": 2540
+					},
+					"id": 11,
+					"p": 0.882836,
+					"t_dtw": -1
+				},
+				{
+					"text": "[_TT_127]",
+					"timestamps": {
+						"from": "00:00:02,540",
+						"to": "00:00:02,540"
+					},
+					"offsets": {
+						"from": 2540,
+						"to": 2540
+					},
+					"id": 50490,
+					"p": 0.191607,
+					"t_dtw": -1
+				}
+			]
+		},
+		{
+			"timestamps": {
+				"from": "00:00:02,540",
+				"to": "00:00:04,660"
+			},
+			"offsets": {
+				"from": 2540,
+				"to": 4660
+			},
+			"text": " they're basically taking medicine.",
+			"tokens": [
+				{
+					"text": " they",
+					"timestamps": {
+						"from": "00:00:02,580",
+						"to": "00:00:02,820"
+					},
+					"offsets": {
+						"from": 2580,
+						"to": 2820
+					},
+					"id": 484,
+					"p": 0.996565,
+					"t_dtw": -1
+				},
+				{
+					"text": "'re",
+					"timestamps": {
+						"from": "00:00:02,920",
+						"to": "00:00:03,030"
+					},
+					"offsets": {
+						"from": 2920,
+						"to": 3030
+					},
+					"id": 821,
+					"p": 0.992237,
+					"t_dtw": -1
+				},
+				{
+					"text": " basically",
+					"timestamps": {
+						"from": "00:00:03,030",
+						"to": "00:00:03,610"
+					},
+					"offsets": {
+						"from": 3030,
+						"to": 3610
+					},
+					"id": 6209,
+					"p": 0.999218,
+					"t_dtw": -1
+				},
+				{
+					"text": " taking",
+					"timestamps": {
+						"from": "00:00:03,680",
+						"to": "00:00:04,000"
+					},
+					"offsets": {
+						"from": 3680,
+						"to": 4000
+					},
+					"id": 2263,
+					"p": 0.999561,
+					"t_dtw": -1
+				},
+				{
+					"text": " medicine",
+					"timestamps": {
+						"from": "00:00:04,070",
+						"to": "00:00:04,470"
+					},
+					"offsets": {
+						"from": 4070,
+						"to": 4470
+					},
+					"id": 9007,
+					"p": 0.998967,
+					"t_dtw": -1
+				},
+				{
+					"text": ".",
+					"timestamps": {
+						"from": "00:00:04,660",
+						"to": "00:00:04,660"
+					},
+					"offsets": {
+						"from": 4660,
+						"to": 4660
+					},
+					"id": 13,
+					"p": 0.27772,
+					"t_dtw": -1
+				},
+				{
+					"text": "[_TT_233]",
+					"timestamps": {
+						"from": "00:00:04,660",
+						"to": "00:00:04,660"
+					},
+					"offsets": {
+						"from": 4660,
+						"to": 4660
+					},
+					"id": 50596,
+					"p": 0.442048,
+					"t_dtw": -1
+				}
+			]
+		},
+		{
+			"timestamps": {
+				"from": "00:00:04,660",
+				"to": "00:00:07,860"
+			},
+			"offsets": {
+				"from": 4660,
+				"to": 7860
+			},
+			"text": " Because in the 1830s, a doctor sold ketchup",
+			"tokens": [
+				{
+					"text": " Because",
+					"timestamps": {
+						"from": "00:00:04,700",
+						"to": "00:00:05,130"
+					},
+					"offsets": {
+						"from": 4700,
+						"to": 5130
+					},
+					"id": 4362,
+					"p": 0.998224,
+					"t_dtw": -1
+				},
+				{
+					"text": " in",
+					"timestamps": {
+						"from": "00:00:05,130",
+						"to": "00:00:05,250"
+					},
+					"offsets": {
+						"from": 5130,
+						"to": 5250
+					},
+					"id": 287,
+					"p": 0.980307,
+					"t_dtw": -1
+				},
+				{
+					"text": " the",
+					"timestamps": {
+						"from": "00:00:05,250",
+						"to": "00:00:05,450"
+					},
+					"offsets": {
+						"from": 5250,
+						"to": 5450
+					},
+					"id": 262,
+					"p": 0.99939,
+					"t_dtw": -1
+				},
+				{
+					"text": " 1830",
+					"timestamps": {
+						"from": "00:00:05,480",
+						"to": "00:00:06,260"
+					},
+					"offsets": {
+						"from": 5480,
+						"to": 6260
+					},
+					"id": 45440,
+					"p": 0.992142,
+					"t_dtw": -1
+				},
+				{
+					"text": "s",
+					"timestamps": {
+						"from": "00:00:06,260",
+						"to": "00:00:06,340"
+					},
+					"offsets": {
+						"from": 6260,
+						"to": 6340
+					},
+					"id": 82,
+					"p": 0.910312,
+					"t_dtw": -1
+				},
+				{
+					"text": ",",
+					"timestamps": {
+						"from": "00:00:06,340",
+						"to": "00:00:06,430"
+					},
+					"offsets": {
+						"from": 6340,
+						"to": 6430
+					},
+					"id": 11,
+					"p": 0.865449,
+					"t_dtw": -1
+				},
+				{
+					"text": " a",
+					"timestamps": {
+						"from": "00:00:06,520",
+						"to": "00:00:06,530"
+					},
+					"offsets": {
+						"from": 6520,
+						"to": 6530
+					},
+					"id": 257,
+					"p": 0.716546,
+					"t_dtw": -1
+				},
+				{
+					"text": " doctor",
+					"timestamps": {
+						"from": "00:00:06,530",
+						"to": "00:00:06,720"
+					},
+					"offsets": {
+						"from": 6530,
+						"to": 6720
+					},
+					"id": 6253,
+					"p": 0.997906,
+					"t_dtw": -1
+				},
+				{
+					"text": " sold",
+					"timestamps": {
+						"from": "00:00:07,240",
+						"to": "00:00:07,270"
+					},
+					"offsets": {
+						"from": 7240,
+						"to": 7270
+					},
+					"id": 2702,
+					"p": 0.983626,
+					"t_dtw": -1
+				},
+				{
+					"text": " k",
+					"timestamps": {
+						"from": "00:00:07,270",
+						"to": "00:00:07,350"
+					},
+					"offsets": {
+						"from": 7270,
+						"to": 7350
+					},
+					"id": 479,
+					"p": 0.984366,
+					"t_dtw": -1
+				},
+				{
+					"text": "etchup",
+					"timestamps": {
+						"from": "00:00:07,350",
+						"to": "00:00:07,750"
+					},
+					"offsets": {
+						"from": 7350,
+						"to": 7750
+					},
+					"id": 47132,
+					"p": 0.999245,
+					"t_dtw": -1
+				},
+				{
+					"text": "[_TT_393]",
+					"timestamps": {
+						"from": "00:00:07,860",
+						"to": "00:00:07,860"
+					},
+					"offsets": {
+						"from": 7860,
+						"to": 7860
+					},
+					"id": 50756,
+					"p": 0.436553,
+					"t_dtw": -1
+				}
+			]
+		},
+		{
+			"timestamps": {
+				"from": "00:00:07,860",
+				"to": "00:00:09,700"
+			},
+			"offsets": {
+				"from": 7860,
+				"to": 9700
+			},
+			"text": " as a cure for indigestion.",
+			"tokens": [
+				{
+					"text": " as",
+					"timestamps": {
+						"from": "00:00:07,900",
+						"to": "00:00:08,000"
+					},
+					"offsets": {
+						"from": 7900,
+						"to": 8000
+					},
+					"id": 355,
+					"p": 0.999645,
+					"t_dtw": -1
+				},
+				{
+					"text": " a",
+					"timestamps": {
+						"from": "00:00:08,000",
+						"to": "00:00:08,080"
+					},
+					"offsets": {
+						"from": 8000,
+						"to": 8080
+					},
+					"id": 257,
+					"p": 0.999203,
+					"t_dtw": -1
+				},
+				{
+					"text": " cure",
+					"timestamps": {
+						"from": "00:00:08,080",
+						"to": "00:00:08,380"
+					},
+					"offsets": {
+						"from": 8080,
+						"to": 8380
+					},
+					"id": 13996,
+					"p": 0.999878,
+					"t_dtw": -1
+				},
+				{
+					"text": " for",
+					"timestamps": {
+						"from": "00:00:08,380",
+						"to": "00:00:08,610"
+					},
+					"offsets": {
+						"from": 8380,
+						"to": 8610
+					},
+					"id": 329,
+					"p": 0.999302,
+					"t_dtw": -1
+				},
+				{
+					"text": " ind",
+					"timestamps": {
+						"from": "00:00:08,610",
+						"to": "00:00:08,830"
+					},
+					"offsets": {
+						"from": 8610,
+						"to": 8830
+					},
+					"id": 773,
+					"p": 0.999038,
+					"t_dtw": -1
+				},
+				{
+					"text": "ig",
+					"timestamps": {
+						"from": "00:00:08,840",
+						"to": "00:00:08,940"
+					},
+					"offsets": {
+						"from": 8840,
+						"to": 8940
+					},
+					"id": 328,
+					"p": 0.997462,
+					"t_dtw": -1
+				},
+				{
+					"text": "est",
+					"timestamps": {
+						"from": "00:00:09,000",
+						"to": "00:00:09,210"
+					},
+					"offsets": {
+						"from": 9000,
+						"to": 9210
+					},
+					"id": 395,
+					"p": 0.998133,
+					"t_dtw": -1
+				},
+				{
+					"text": "ion",
+					"timestamps": {
+						"from": "00:00:09,210",
+						"to": "00:00:09,430"
+					},
+					"offsets": {
+						"from": 9210,
+						"to": 9430
+					},
+					"id": 295,
+					"p": 0.999985,
+					"t_dtw": -1
+				},
+				{
+					"text": ".",
+					"timestamps": {
+						"from": "00:00:09,430",
+						"to": "00:00:09,640"
+					},
+					"offsets": {
+						"from": 9430,
+						"to": 9640
+					},
+					"id": 13,
+					"p": 0.996789,
+					"t_dtw": -1
+				},
+				{
+					"text": "[_TT_485]",
+					"timestamps": {
+						"from": "00:00:09,700",
+						"to": "00:00:09,700"
+					},
+					"offsets": {
+						"from": 9700,
+						"to": 9700
+					},
+					"id": 50848,
+					"p": 0.219039,
+					"t_dtw": -1
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,70 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    .cap-group {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 1150px;
+      padding: 0 110px;
+      text-align: center;
+      font-family: "Archivo Black", sans-serif;
+      font-size: 82px;
+      line-height: 1.08;
+      letter-spacing: 1px;
+      color: #ffffff;
+      overflow: visible;
+    }
+    .cap-w {
+      display: inline-block;
+      opacity: 0;
+      text-shadow: 6px 0px 0 #1d1712, 5.54px 2.3px 0 #1d1712, 4.24px 4.24px 0 #1d1712, 2.3px 5.54px 0 #1d1712, 0px 6px 0 #1d1712, -2.3px 5.54px 0 #1d1712, -4.24px 4.24px 0 #1d1712, -5.54px 2.3px 0 #1d1712, -6px 0px 0 #1d1712, -5.54px -2.3px 0 #1d1712, -4.24px -4.24px 0 #1d1712, -2.3px -5.54px 0 #1d1712, -0px -6px 0 #1d1712, 2.3px -5.54px 0 #1d1712, 4.24px -4.24px 0 #1d1712, 5.54px -2.3px 0 #1d1712, 0 10px 0 #1d1712;
+    }
+    .cap-w.red {
+      color: #ff4d3a;
+    }
+  </style>
+  <div id="root" data-composition-id="captions" data-width="1080" data-height="1920">
+        <div id="c-g0" class="clip cap-group" data-start="0.1" data-duration="0.75" data-track-index="0"><span id="c-g0-w0" class="cap-w">IF</span> <span id="c-g0-w1" class="cap-w">YOUR</span> <span id="c-g0-w2" class="cap-w">FRIEND</span></div>
+    <div id="c-g1" class="clip cap-group" data-start="0.85" data-duration="1.71" data-track-index="1"><span id="c-g1-w0" class="cap-w">PUTS</span> <span id="c-g1-w1" class="cap-w">KETCHUP</span> <span id="c-g1-w2" class="cap-w">ON</span> <span id="c-g1-w3" class="cap-w">EVERYTHING</span></div>
+    <div id="c-g2" class="clip cap-group" data-start="2.58" data-duration="1.1" data-track-index="0"><span id="c-g2-w0" class="cap-w">THEY'RE</span> <span id="c-g2-w1" class="cap-w">BASICALLY</span></div>
+    <div id="c-g3" class="clip cap-group" data-start="3.68" data-duration="1.02" data-track-index="1"><span id="c-g3-w0" class="cap-w">TAKING</span> <span id="c-g3-w1" class="cap-w red">MEDICINE</span></div>
+    <div id="c-g4" class="clip cap-group" data-start="4.7" data-duration="1.78" data-track-index="0"><span id="c-g4-w0" class="cap-w">BECAUSE</span> <span id="c-g4-w1" class="cap-w">IN</span> <span id="c-g4-w2" class="cap-w">THE</span> <span id="c-g4-w3" class="cap-w">1830S</span></div>
+    <div id="c-g5" class="clip cap-group" data-start="6.52" data-duration="1.36" data-track-index="1"><span id="c-g5-w0" class="cap-w">A</span> <span id="c-g5-w1" class="cap-w">DOCTOR</span> <span id="c-g5-w2" class="cap-w">SOLD</span> <span id="c-g5-w3" class="cap-w">KETCHUP</span></div>
+    <div id="c-g6" class="clip cap-group" data-start="7.9" data-duration="2.1" data-track-index="0"><span id="c-g6-w0" class="cap-w">AS</span> <span id="c-g6-w1" class="cap-w">A</span> <span id="c-g6-w2" class="cap-w red">CURE</span> <span id="c-g6-w3" class="cap-w">FOR</span> <span id="c-g6-w4" class="cap-w">INDIGESTION</span></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      
+            tl.fromTo("#c-g0-w0", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 0.1);
+      tl.fromTo("#c-g0-w1", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 0.15);
+      tl.fromTo("#c-g0-w2", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 0.42);
+      tl.fromTo("#c-g1-w0", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 0.85);
+      tl.fromTo("#c-g1-w1", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 1.14);
+      tl.fromTo("#c-g1-w2", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 1.63);
+      tl.fromTo("#c-g1-w3", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 1.77);
+      tl.fromTo("#c-g2-w0", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 2.58);
+      tl.fromTo("#c-g2-w1", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 3.03);
+      tl.fromTo("#c-g3-w0", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 3.68);
+      tl.fromTo("#c-g3-w1", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 4.07);
+      tl.fromTo("#c-g4-w0", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 4.7);
+      tl.fromTo("#c-g4-w1", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 5.13);
+      tl.fromTo("#c-g4-w2", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 5.25);
+      tl.fromTo("#c-g4-w3", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 5.48);
+      tl.fromTo("#c-g5-w0", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 6.52);
+      tl.fromTo("#c-g5-w1", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 6.56);
+      tl.fromTo("#c-g5-w2", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 7);
+      tl.fromTo("#c-g5-w3", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 7.27);
+      tl.fromTo("#c-g6-w0", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 7.9);
+      tl.fromTo("#c-g6-w1", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 8);
+      tl.fromTo("#c-g6-w2", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 8.08);
+      tl.fromTo("#c-g6-w3", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 8.38);
+      tl.fromTo("#c-g6-w4", {opacity: 0, scale: 0.6}, {opacity: 1, scale: 1, duration: 0.1, ease: "back.out(3)", immediateRender: false}, 8.61);
+      window.__timelines["captions"] = tl;
+    })();
+  </script>
+</template>
