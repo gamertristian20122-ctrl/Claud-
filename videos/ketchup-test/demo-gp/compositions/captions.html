@@ -1,0 +1,27 @@
+<template>
+  <style>
+    @font-face { font-family: "Lilita One"; src: url("assets/fonts/LilitaOne-Regular.ttf"); }
+    #root { position: absolute; inset: 0; }
+    .cgroup { position: absolute; left: 0; right: 0; top: 1130px; padding: 0 90px; text-align: center;
+      font-family: "Lilita One", sans-serif; font-size: 100px; line-height: 1.04; color: #fff8ec; overflow: visible; }
+    .cw { display: inline-block; opacity: 0; -webkit-text-stroke: 15px #2a1a14; paint-order: stroke fill; text-shadow: 0 10px 0 #2a1a14; }
+    .cw.key { color: #ffcf3f; }
+  </style>
+  <div id="root" data-composition-id="captions" data-width="1080" data-height="1920">
+    <div id="cg0" class="clip cgroup" data-start="0.1" data-duration="0.75" data-track-index="0"><span id="cg0w0" class="cw">IF</span> <span id="cg0w1" class="cw">YOUR</span> <span id="cg0w2" class="cw key">FRIEND</span></div>
+<div id="cg1" class="clip cgroup" data-start="0.85" data-duration="1.75" data-track-index="1"><span id="cg1w0" class="cw">PUTS</span> <span id="cg1w1" class="cw key">KETCHUP</span> <span id="cg1w2" class="cw">ON</span> <span id="cg1w3" class="cw">EVERYTHING</span></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#cg0w0", {opacity: 0, scale: 0.4, rotation: -9}, {opacity: 1, scale: 1, rotation: -3, duration: 0.14, ease: "back.out(3)", immediateRender: false}, 0.1);
+tl.fromTo("#cg0w1", {opacity: 0, scale: 0.4, rotation: 6}, {opacity: 1, scale: 1, rotation: 2, duration: 0.14, ease: "back.out(3)", immediateRender: false}, 0.15);
+tl.fromTo("#cg0w2", {opacity: 0, scale: 0.4, rotation: -6}, {opacity: 1, scale: 1, rotation: -2, duration: 0.14, ease: "back.out(3)", immediateRender: false}, 0.42);
+tl.fromTo("#cg1w0", {opacity: 0, scale: 0.4, rotation: -9}, {opacity: 1, scale: 1, rotation: -3, duration: 0.14, ease: "back.out(3)", immediateRender: false}, 0.85);
+tl.fromTo("#cg1w1", {opacity: 0, scale: 0.4, rotation: 6}, {opacity: 1, scale: 1, rotation: 2, duration: 0.14, ease: "back.out(3)", immediateRender: false}, 1.14);
+tl.fromTo("#cg1w2", {opacity: 0, scale: 0.4, rotation: -6}, {opacity: 1, scale: 1, rotation: -2, duration: 0.14, ease: "back.out(3)", immediateRender: false}, 1.63);
+tl.fromTo("#cg1w3", {opacity: 0, scale: 0.4, rotation: 9}, {opacity: 1, scale: 1, rotation: 3, duration: 0.14, ease: "back.out(3)", immediateRender: false}, 1.77);
+      window.__timelines["captions"] = tl;
+    })();
+  </script>
+</template>

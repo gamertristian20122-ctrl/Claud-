@@ -1,0 +1,36 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #e2a377; }
+    #sh-cam { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+    #sh-cam img, #sh-cam video, .sh-fx { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+    #sh-key { mix-blend-mode: screen; }
+    .sh-grain { mix-blend-mode: overlay; }
+  </style>
+  <div id="root" data-composition-id="shot" data-width="1080" data-height="1920">
+    <div id="sh-cam">
+      <img id="sh-bg" src="assets/plate_bg.png" alt="" />
+      <video id="sh-char" class="clip" src="assets/char.webm" data-start="0" data-duration="2.6" data-track-index="1" muted playsinline></video>
+      <img id="sh-fg" src="assets/plate_fg.png" alt="" />
+    </div>
+    <img id="sh-key" class="sh-fx" src="assets/keylight.png" alt="" />
+    <img id="sh-vig" class="sh-fx" src="assets/vignette.png" alt="" />
+    <img id="sh-g0" class="sh-fx sh-grain" src="assets/grain_0.png" alt="" />
+    <img id="sh-g1" class="sh-fx sh-grain" src="assets/grain_1.png" alt="" style="opacity: 0" />
+    <img id="sh-g2" class="sh-fx sh-grain" src="assets/grain_2.png" alt="" style="opacity: 0" />
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // camera: a slow push, a punch on "everything", then settle
+      tl.fromTo("#sh-cam", { scale: 1.0, transformOrigin: "62% 38%" }, { scale: 1.05, transformOrigin: "62% 38%", duration: 1.7, ease: "sine.inOut" }, 0);
+      tl.fromTo("#sh-cam", { scale: 1.05, transformOrigin: "62% 38%" }, { scale: 1.11, transformOrigin: "62% 38%", duration: 0.12, ease: "power3.out", immediateRender: false }, 1.74);
+      tl.fromTo("#sh-cam", { scale: 1.11, transformOrigin: "62% 38%" }, { scale: 1.13, transformOrigin: "62% 38%", duration: 0.7, ease: "sine.out", immediateRender: false }, 1.86);
+      // film grain changes 12 times a second, like the drawings
+      for (let k = 0; k < 32; k++) {
+        const t = k / 12;
+        ["#sh-g0", "#sh-g1", "#sh-g2"].forEach((id, i) => tl.set(id, { opacity: k % 3 === i ? 1 : 0 }, t));
+      }
+      window.__timelines["shot"] = tl;
+    })();
+  </script>
+</template>

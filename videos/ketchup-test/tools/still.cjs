@@ -8,6 +8,6 @@ const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, de
 await page.goto('file://' + path.resolve(src));
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(300);
-await page.screenshot({ path: out });
+await page.screenshot({ path: out, omitBackground: process.argv.includes('--transparent') });
 await browser.close();
 })();

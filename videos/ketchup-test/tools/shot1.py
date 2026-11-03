@@ -271,7 +271,7 @@ def foreground():
     """
 
 
-def frame_svg():
+def frame_svg(bg=True, char=True, fg=True, fx=True):
     return f"""
     <svg id="s1-svg" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -287,13 +287,13 @@ def frame_svg():
         </radialGradient>
       </defs>
       <g id="s1-cam" transform="rotate(-4 540 900)">
-        {background()}
-        {friend_bg()}
-        {rudy()}
-        {foreground()}
+        {background() if bg else ""}
+        {friend_bg() if bg else ""}
+        {rudy() if char else ""}
+        {foreground() if fg else ""}
       </g>
-      <rect width="1080" height="1920" fill="url(#s1-vig)"/>
-      <rect width="1080" height="1920" filter="url(#grain)" opacity="0.55" style="mix-blend-mode:multiply"/>
+      {'<rect width="1080" height="1920" fill="url(#s1-vig)"/>' if fx else ""}
+      {'<rect width="1080" height="1920" filter="url(#grain)" opacity="0.55" style="mix-blend-mode:multiply"/>' if fx else ""}
     </svg>"""
 
 
