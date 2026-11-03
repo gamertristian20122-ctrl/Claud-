@@ -7,6 +7,12 @@
       "skillPath": "skills/production/creative-direction/2d-character-rig-animation/SKILL.md",
       "computedHash": "dc0e649feb58bbe2579d92a1898bf80479577176cbdec012b53ba256734b3912"
     },
+    "animation-principles": {
+      "source": "iart-ai/motion-design-skills",
+      "sourceType": "github",
+      "skillPath": "skills/animation-principles/SKILL.md",
+      "computedHash": "140b00a44e08aa7649fb1cce1c48670ff2e76f3889fbac0b5311cc5bb818d7b7"
+    },
     "build-awwwards-quality-sites": {
       "source": "mengto/skills",
       "sourceType": "github",
@@ -61,6 +67,12 @@
       "skillPath": "skills/gsap-scrolltrigger/SKILL.md",
       "computedHash": "1cdc5647693783cb7a662d84a5de434c88a051ed56b4d33597c9b5782b5973e6"
     },
+    "humanizer": {
+      "source": "blader/humanizer",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "1e67c3a4a675bd0c961b1fd8ebb718174f9a61a547d9bedad2ade5eb99cce831"
+    },
     "hyperframes": {
       "source": "heygen-com/hyperframes",
       "sourceType": "github",
@@ -84,6 +96,24 @@
       "sourceType": "github",
       "skillPath": "skills/media-use/SKILL.md",
       "computedHash": "567aad60b05712cdaacf878e4316d186d19e0c3dea4717b889cda07ca226ade7"
+    },
+    "scenario-blender-expert": {
+      "source": "scenario-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dcc/blender/scenario-blender-expert/SKILL.md",
+      "computedHash": "2c5f39e78d97e7b22d7d4d36bb2a182e690198a3925fda0e71fc4b72ebbb9bd0"
+    },
+    "scenario-blender-grease-pencil": {
+      "source": "scenario-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dcc/blender/scenario-blender-grease-pencil/SKILL.md",
+      "computedHash": "c94d33bcda9118e55c278f4c9fcc9075ba1a850991b8a43a870f4d290f7d37ae"
+    },
+    "scenario-blender-previs-storyboard": {
+      "source": "scenario-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dcc/blender/scenario-blender-previs-storyboard/SKILL.md",
+      "computedHash": "ee49ac8bb6275d21e16c4b46585d09ca9cf46f90e63806cceafd3fe75c8a3634"
     },
     "scroll-world": {
       "source": "oso95/scroll-world",
