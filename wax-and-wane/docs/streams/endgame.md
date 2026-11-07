@@ -45,8 +45,9 @@ Branch `revamp/endgame`.
    - **Phase 3 (33%) - desperate.** The hour hand turns for good (slowly: you can walk round it), the minute hand
      sweeps faster with a shorter warning, and every 4.2 s the Keeper chimes: a ring of sound waves with a gap
      where you stand (keep still and it passes you by), and on every other chime a Cog Sentry (at most 2).
-   - Every phase is seen, even by a run that melts it: damage past the next threshold waits until the Keeper
-     has changed phase (a new phase breaks off whatever its hands were doing).
+   - Every phase is seen, even by a run that melts it: damage past the next threshold is held until the Keeper
+     has changed phase, and phases 1 and 2 last at least 6 and 8 s (`Keeper.MIN_PHASE`); held hits make the dial
+     flash pale and ring like metal. Stopped time comes 1.6 s into phase 2. A new phase breaks off its hands.
    - Versus card via `Juice.of(world).boss_card` (it uses `Enemy.frames_for("keeper")`), music `final_boss`.
 4. **True ending** (`scripts/ui/ending.gd`, a CanvasLayer over the world): "THE KEEPER OF HOURS IS STILLED",
    then four scenes (192x96 art at x2, moving parts drawn in code): the quiet house under the moon (twinkling
