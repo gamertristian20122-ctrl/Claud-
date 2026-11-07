@@ -42,7 +42,7 @@ const LIST := {
 		"name": "Moonwick", "line": "Lit by the moon. Quick and thin; its sparks pass through.",
 		"wax": 108.0, "drain": 1.0, "speed": 1.08, "damage": 1.0, "fire_delay": 1.0, "shots": 1,
 		"body_w": 10, "colours": ["#fdf7ed", "#cae6f5", "#b6cbcf", "#7b8994"],
-		"pierce": 1, "holder": "tower/holder_silver",
+		"pierce": 1, "holder": "tower/holder_silver", "moon": true,
 		"unlock_text": "Be done by one, then climb",
 	},
 }
