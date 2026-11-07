@@ -237,6 +237,27 @@ AoPPPPPPPPPPPPHA
 ..xxxxxxxxxxxx..
 """)
 
+# a kneeler (prie-dieu): book rest on two posts and a red cushion to kneel on
+KNEELER = G("""
+................
+................
+................
+................
+...AAAAAAAAAA...
+..AooooooooooA..
+..APPPPPPPPPHA..
+..AAAAAAAAAAAA..
+...AoHA..AoHA...
+...AoIA..AoIA...
+..AAAAAAAAAAAA..
+..ARRRRRRRRRrA..
+..ArrrrrrrrrpA..
+..AAAAAAAAAAAA..
+..AHIIIIIIIIJA..
+..AAAAAAAAAAAA..
+.xxxxxxxxxxxxxx.
+""")
+
 BEAM_M = G("""
 ................
 ................
@@ -1441,7 +1462,8 @@ def build():
     out["prop_pew_l"] = img(recolor(PEW_L, PEW_WOOD))
     out["prop_pew_m"] = img(recolor(PEW_M, PEW_WOOD))
     out["prop_pew_r"] = img(recolor(PEW_R, PEW_WOOD))
-    out["prop_lectern"] = img(LECTERN)
+    out["prop_lectern"] = img(recolor(LECTERN, PEW_WOOD))
+    out["prop_kneeler"] = img(recolor(KNEELER, PEW_WOOD))
     out["prop_beam_l"] = img(BEAM_L)
     out["prop_beam_m"] = img(BEAM_M)
     out["prop_beam_r"] = img(BEAM_R)

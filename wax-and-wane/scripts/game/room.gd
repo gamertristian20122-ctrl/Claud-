@@ -243,7 +243,8 @@ func _furniture_tex(c: Vector2i) -> Texture2D:
 		"crypt":
 			nm = "decor/prop_coffin_b" if alt else "decor/prop_coffin"
 		"chapel":
-			nm = "decor/prop_pew_m" if l and r else ("decor/prop_pew_l" if r else ("decor/prop_pew_r" if l else "decor/prop_lectern"))
+			var lone := "decor/prop_lectern" if posmod(c.x * 5 + c.y * 3 + int(data["seed"]), 4) == 0 else "decor/prop_kneeler"
+			nm = "decor/prop_pew_m" if l and r else ("decor/prop_pew_l" if r else ("decor/prop_pew_r" if l else lone))
 		"belfry":
 			nm = "decor/prop_beam_m" if l and r else ("decor/prop_beam_l" if r else ("decor/prop_beam_r" if l else "decor/prop_bell"))
 	return Art.tex(nm) if Art.has(nm) else Art.tex("0x72/crate")
