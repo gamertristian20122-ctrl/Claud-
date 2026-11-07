@@ -7,7 +7,7 @@ const FLOORS := {
 	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.28, 0.24, 0.34), "music": "floor_3", "boss": "necro_boss", "bosses": ["necro_boss", "choir"]},
 	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "boss": "big_demon", "bosses": ["big_demon", "pendulum"]},
 	# the secret fifth floor (scripts/game/tower.gd): beat the Belfry by 1:00 AM to climb to it
-	5: {"name": "The Clock Tower", "theme": "tower", "dark": Color(0.22, 0.25, 0.36), "music": "floor_5", "boss": "keeper", "bosses": ["keeper"]},
+	5: {"name": "The Clock Tower", "theme": "tower", "dark": Color(0.27, 0.29, 0.40), "music": "floor_5", "boss": "keeper", "bosses": ["keeper"]},
 }
 ## Who lives where. e = ordinary slot, h = heavy slot, f = flyer slot. Each floor has its own lodgers
 ## (cellar: wax, rats and slugs; crypt: graves and soot; chapel: hymns, ghosts and waxworks;
@@ -229,7 +229,7 @@ func _start_floor(n: int) -> void:
 	rng.seed = hash("%d:loot:%d" % [run_seed, n])
 	var last := omen
 	omen = ""
-	if n >= 2 and frng.randf() < 0.4:
+	if n >= 2 and n <= LAST_FLOOR and frng.randf() < 0.4:   # no omens above the bells
 		var keys: Array = OMENS.keys().filter(func(k): return k != last)
 		omen = keys[frng.randi() % keys.size()]
 	if omen == "long_night":

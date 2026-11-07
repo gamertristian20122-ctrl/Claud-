@@ -48,6 +48,17 @@ static func ai() -> Keeper:
 	return _host
 
 
+## How far a hand pointing at angle `a` can reach from the dial centre before it meets a wall.
+static func reach(a: float) -> float:
+	var d := Vector2.from_angle(a)
+	var t := 999.0
+	if absf(d.x) > 0.001:
+		t = minf(t, ((256.0 if d.x > 0 else 16.0) - PIVOT.x) / d.x)
+	if absf(d.y) > 0.001:
+		t = minf(t, ((176.0 if d.y > 0 else 32.0) - PIVOT.y) / d.y)
+	return t
+
+
 # ================================================================= THE KEEPER OF HOURS
 func init_tower_keeper(e: Enemy) -> void:
 	e.global_position = e.world.room.position + PIVOT + Vector2(0, 6)
@@ -70,6 +81,14 @@ func init_tower_keeper(e: Enemy) -> void:
 	f.e = e
 	f.position = FACE
 	e.add_child(f)
+	# its dial catches the moonlight: the Keeper is always easy to find in the dark
+	var l := PointLight2D.new()
+	l.texture = Art.light_tex
+	l.color = Color(0.72, 0.8, 1.0)
+	l.energy = 0.7
+	l.texture_scale = 0.45
+	l.position = FACE
+	e.add_child(l)
 
 
 ## Tours and tests: start a pattern now.
@@ -189,10 +208,12 @@ func _start_sweep(e: Enemy, which: int, _to_p: Vector2) -> void:
 	var r: float = h["len"] - 5.0
 	var steps := int(absf(a1 - a0) * r / 7.0)
 	for i in steps + 1:
-		pts.append(c + Vector2.from_angle(lerpf(a0, a1, i / float(maxi(1, steps)))) * r)
+		var a := lerpf(a0, a1, i / float(maxi(1, steps)))
+		if reach(a) > r + 2.0:   # only the part of the arc inside the room
+			pts.append(c + Vector2.from_angle(a) * r)
 	var dur: float = h["tele"] + h["dur"]
 	e.tele().path(pts, dur, WARN)
-	e.tele().line(c + Vector2.from_angle(a1) * 18.0, c + Vector2.from_angle(a1) * h["len"], dur, WARN)
+	e.tele().line(c + Vector2.from_angle(a1) * 18.0, c + Vector2.from_angle(a1) * minf(h["len"], reach(a1) - 2.0), dur, WARN)
 	Audio.play("charge_up" if which == 0 else "tick", -4.0, 0.0, 1.0 if which == 0 else 1.5)
 
 
@@ -292,6 +313,17 @@ func _start_stop(e: Enemy) -> void:
 	var mat: ShaderMaterial = _grey(w).material
 	var tw := _grey(w).create_tween()
 	tw.tween_method(func(v: float): mat.set_shader_parameter("amount", v), 0.0, 1.0, 0.3)
+	# every bolt already in the air freezes too: mark which way each one will go
+	var marks: Array = []
+	for s in w.enemy_shots:
+		if is_instance_valid(s) and s.vel.length() > 1.0:
+			marks.append([s, s.vel.normalized()])
+	e.mem["marks"] = marks
+	if not e.mem.has("marks_node") or not is_instance_valid(e.mem["marks_node"]):
+		var mk := Marks.new()
+		mk.e = e
+		w.fx_layer.add_child(mk)
+		e.mem["marks_node"] = mk
 	if Game.tip("stopped_time", 1):
 		w.hud.show_hint("Time stands still. Read the marks and find a gap before it ticks on.", 3.5)
 
@@ -339,8 +371,8 @@ func _stop_bolt(e: Enemy, i: int, total: int) -> void:
 	if lp.x < 18 or lp.x > 254 or lp.y < 34 or lp.y > 174 or room.blocked(pos + Vector2(0, 6), 2.0, true):
 		return
 	w.enemy_shot(pos, vel, "bolt_cog")
-	var left: float = STOP_TIME - float(e.mem["stop_t"]) + 0.15
-	e.tele().line(pos, pos + vel.normalized() * 11.0, left, PALE)
+	if not w.enemy_shots.is_empty():
+		(e.mem["marks"] as Array).append([w.enemy_shots.back(), vel.normalized()])
 	w.fx_poof(pos, false, 0.6)
 	if i % 3 == 0:
 		Audio.play("tick", -8.0, 0.1, 1.8)
@@ -353,6 +385,7 @@ func _end_stop(e: Enemy) -> void:
 	e.state = "idle"
 	e.cd = 1.0
 	e.mem["pips"] = -1
+	e.mem["marks"] = []
 	w.player.z_index = 0
 	Audio.play("bell_toll", -2.0, 0.0, 1.35)
 	Audio.play("thud_heavy", -4.0)
@@ -476,12 +509,12 @@ class Hands extends Node2D:
 			if st == "off":
 				continue
 			var d := Vector2.from_angle(h["a"])
-			var tip: Vector2 = Keeper.PIVOT + d * float(h["len"])
+			var tip: Vector2 = Keeper.PIVOT + d * minf(float(h["len"]), Keeper.reach(h["a"]) - 3.0)
 			var tail: Vector2 = Keeper.PIVOT - d * 14.0
 			var w: float = h["w"]
 			if st == "ghost":
 				if fmod(t, 0.24) < 0.14:
-					var n := int(float(h["len"]) / 3.0)
+					var n := int((minf(float(h["len"]), Keeper.reach(h["a"]) - 3.0) - 14.0) / 3.0)
 					for i in n:
 						var p: Vector2 = Keeper.PIVOT + d * (14.0 + i * 3.0)
 						draw_rect(Rect2(p.round(), Vector2.ONE * (2.0 if w > 4.0 else 1.0)), GHOST)
@@ -500,17 +533,46 @@ class Hands extends Node2D:
 			draw_colored_polygon(pts, OUT)
 			var pts2 := PackedVector2Array([tip + d * (s - 1.5), tip + d.orthogonal() * (s - 1.5), tip - d * (s * 0.6 - 1.0), tip - d.orthogonal() * (s - 1.5)])
 			draw_colored_polygon(pts2, BRASS)
-		# stopped time: three pips over the Keeper that go out with each tick
+
+
+# ---- stopped time's marks: which way each frozen bolt will fly, and three pips over the Keeper that go
+# out one per tick. Drawn above the grey (in the effects layer), so they keep their colour.
+class Marks extends Node2D:
+	var e: Enemy
+
+	func _ready() -> void:
+		material = Art.unshaded
+
+	func _process(_dt: float) -> void:
+		if e == null or not is_instance_valid(e) or not e.alive:
+			queue_free()
+			return
+		queue_redraw()
+
+	func _draw() -> void:
+		if e.state != "stop":
+			return
+		var st: float = e.mem.get("stop_t", 0.0)
+		var late := st > Keeper.STOP_TIME - 0.6
+		var t := Time.get_ticks_msec() / 1000.0
+		if not late or fmod(t, 0.16) < 0.1:
+			for m in e.mem.get("marks", []):
+				var s: Variant = m[0]
+				if not is_instance_valid(s):
+					continue
+				var p: Vector2 = (s as Node2D).global_position - global_position
+				var d: Vector2 = m[1]
+				for k in 3:
+					draw_rect(Rect2((p + d * (6.0 + 2.5 * k)).round(), Vector2.ONE), Keeper.PALE if k < 2 else Color("#72d6ce"))
 		var pips: int = e.mem.get("pips", -1)
-		if pips >= 0 and e.state == "stop":
-			var base: Vector2 = e.global_position - e.world.room.position + Vector2(-9, -66)
-			for i in 3:
-				var on := i < pips
-				var p2 := base + Vector2(i * 8, 0)
-				draw_rect(Rect2(p2 - Vector2(1, 1), Vector2(5, 5)), OUT)
-				draw_rect(Rect2(p2, Vector2(3, 3)), BRASS if on else Color("#483b3a"))
-				if on:
-					draw_rect(Rect2(p2, Vector2(1, 1)), BRASS_HI)
+		var base: Vector2 = e.global_position - global_position + Vector2(-11, -68)
+		for i in 3:
+			var on := i < pips
+			var p2 := base + Vector2(i * 9, 0)
+			draw_rect(Rect2(p2 - Vector2(1, 1), Vector2(6, 6)), Color("#21141b"))
+			draw_rect(Rect2(p2, Vector2(4, 4)), Color("#facb3e") if on else Color("#483b3a"))
+			if on:
+				draw_rect(Rect2(p2, Vector2(2, 1)), Color("#ffcc68"))
 
 
 # ---- the hands on the Keeper's own face: they show the house clock (and run backwards in stopped time)

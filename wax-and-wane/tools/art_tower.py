@@ -818,10 +818,19 @@ SW, SH = 192, 96
 
 
 def sky_bands(cv, rows, cols):
+    """Flat bands of night sky, each seam softened by a two-row checker dither (no gradients)."""
     y = 0
+    seams = []
     for n, c in zip(rows, cols):
         rect(cv, 0, y, cv.w, n, c)
         y += n
+        seams.append(y)
+    for k, yb in enumerate(seams[:-1]):
+        for x in range(cv.w):
+            if x % 2 == 0:
+                cv.put(x, yb - 1, cols[k + 1])
+            else:
+                cv.put(x, yb, cols[k])
 
 
 def build_end_house():

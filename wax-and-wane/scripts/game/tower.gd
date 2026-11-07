@@ -159,7 +159,7 @@ static func dress(d: RoomDecor, free_top: Array, budget: int) -> int:
 			g.z_index = -18
 			r.add_child(g)
 			var pool := Art.tex("tower/light/moon_slats") if Art.has("tower/light/moon_slats") else null
-			var l := d._light(pos + Vector2(20, 58), MOON, 0.75, 1.0, 0.03, pool)
+			var l := d._light(pos + Vector2(20, 58), MOON, 1.5, 1.0, 0.03, pool)
 			if pool == null:
 				l.texture_scale = 0.35
 			free_top.erase(t)
@@ -432,7 +432,7 @@ static func tour(at: Node) -> void:
 			break
 		w.layout["cells"][c]["cleared"] = n != 1
 		at._jump(w, c)
-		w.player.position = w.room.center() + Vector2(0, 30)
+		w.player.position = w.free_spot_near(w.room.center() + Vector2(0, 30), 6.0)
 		w.player.wax = 80.0
 		await at._wait(1.6 if n != 1 else 2.4)
 		await at._shot("tower_room_%d" % n)
@@ -477,14 +477,28 @@ static func tour(at: Node) -> void:
 		k._die()
 	await at._wait(2.0)
 	await at._shot("keeper_down")
-	await at._wait(2.0)
+	# the ending starts ~4.4 s after the killing blow; each card lasts Ending.CARD seconds
+	await at._wait(5.2)
 	for i in 4:
-		await at._wait(2.2)
 		await at._shot("ending_card_%d" % (i + 1))
-		await at._wait(2.4)
-	await at._wait(6.0)
+		await at._wait(Ending.CARD)
+	await at._wait(3.0)
 	await at._shot("ending_credits")
-	await at._wait(9.0)
+	await at._wait(10.0)
 	await at._shot("ending_credits_b")
-	await at._wait(14.0)
+	for i in 80:
+		if main.current and main.current.name == "Results" and not main._busy:
+			break
+		await at._wait(0.5)
+	await at._wait(0.6)
 	await at._shot("results_true_ending")
+	# a run that died in the tower, and the hint a first win leaves on the results screen
+	main.goto("results", {"won": false, "floor": FLOOR, "clock": 101.0, "kills": 120, "rooms": 30, "relics": ["sharp_wick"], "time": 1900.0})
+	await at._wait(1.4)
+	await at._shot("results_tower_death")
+	var seen: bool = Game.records.get("tower_seen", false)
+	Game.records["tower_seen"] = false
+	main.goto("results", {"won": true, "floor": 4, "clock": 74.0, "kills": 150, "rooms": 36, "relics": ["sharp_wick", "bellows"], "time": 2400.0})
+	await at._wait(1.4)
+	await at._shot("results_tower_hint")
+	Game.records["tower_seen"] = seen

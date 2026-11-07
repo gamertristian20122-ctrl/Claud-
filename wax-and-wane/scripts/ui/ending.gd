@@ -11,7 +11,7 @@ extends CanvasLayer
 
 const CARD := 5.0
 const FADE := 0.6
-const ROLL_SPEED := 22.0
+const ROLL_SPEED := 26.0
 const SKY_NIGHT := ["#1f1833", "#2a2a3a", "#2a2a3a", "#323e4f", "#414859"]
 const SKY_STEPS := [
 	["#1f1833", "#2a2a3a", "#2a2a3a", "#323e4f", "#414859"],
@@ -261,6 +261,13 @@ func _draw_card() -> void:
 	var cols: Array = SKY_STEPS[_sky] if _card == 3 else SKY_NIGHT
 	for b in 5:
 		_px(Vector2(58, 8 + 12 * b), cols[b], Vector2(76, 12))
+	for b in range(1, 5):   # a two-row checker dither on each seam (stepped, never a gradient)
+		var y := 8 + 12 * b
+		for x in range(58, 134):
+			if x % 2 == 0:
+				_px(Vector2(x, y - 1), cols[b])
+			else:
+				_px(Vector2(x, y), cols[b - 1])
 	if _card == 2 or _sky <= 1:
 		for i in STARS.size():
 			var s2: Vector2 = STARS[i]
@@ -288,19 +295,7 @@ func _draw_front() -> void:
 		1:
 			_clock_hands(Vector2(96, 48), 29.0, 19.0, "#222222", _dial_a, true)
 		2, 3:
-			if _hero and _hero.flame.visible:
-				var c := Vector2(96, 60)
-				_ring(c, 15.0, "#483b3a")
-				_ring(c, 10.0, "#775c55")
 			_draw_smoke("#b6cbcf", "#7b8994")
-
-
-func _ring(c: Vector2, r: float, col: String) -> void:
-	for y in range(int(c.y - r), int(c.y + r) + 1):
-		for x in range(int(c.x - r), int(c.x + r) + 1):
-			var d := Vector2(x + 0.5, y + 0.5).distance_to(c)
-			if d <= r and d > r - 1.0 and (x + y) % 2 == 0 and not (x >= 58 and x < 134 and y >= 8 and y < 68):
-				_px(Vector2(x, y), col)
 
 
 func _disc(c: Vector2, r: float, col: String, core: String) -> void:
