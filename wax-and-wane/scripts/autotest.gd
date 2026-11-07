@@ -132,8 +132,11 @@ func drive(w: Node) -> Array:
 		_wander_t -= dt
 		var tgt0: Enemy = w.nearest_enemy(pos)
 		return [_wander, (tgt0.global_position - pos).normalized() if tgt0 else Vector2.ZERO]
-	var tgt: Enemy = w.nearest_enemy(pos)
+	var tgt: Enemy = w.nearest_enemy(pos) if _room_t_total < 25.0 else _toughest(w)   # summoners first when a room drags on
 	if tgt:
+		if _room_t_total > 30.0 and p.bombs > 0 and _bomb_cd <= 0 and pos.distance_to(tgt.global_position) < 40:
+			_bomb_cd = 4.0
+			w.place_bomb()
 		var to: Vector2 = tgt.global_position + Vector2(0, -tgt.half_h) - (pos + Vector2(0, -6))
 		var d := to.length()
 		var mv := Vector2.ZERO
@@ -203,6 +206,15 @@ func drive(w: Node) -> Array:
 	var wp := _path_next(room, my_cell, door_cell)
 	var goal: Vector2 = room.cell_center(wp) + Vector2(0, 2)
 	return [(goal - pos).normalized(), Vector2.ZERO]
+
+
+## The living foe with the most max HP (a summoner that keeps a room from ever clearing).
+func _toughest(w: Node) -> Enemy:
+	var best: Enemy = null
+	for e in w.enemies:
+		if is_instance_valid(e) and e.alive and e.active and (best == null or e.max_hp > best.max_hp):
+			best = e
+	return best if best else w.nearest_enemy(w.player.global_position)
 
 
 ## BFS over the room grid; returns the next cell to walk to (or the goal itself).
