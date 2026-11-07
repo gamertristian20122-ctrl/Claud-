@@ -122,6 +122,7 @@ func _save_cycle() -> void:
 		waited += 0.1
 	await get_tree().create_timer(0.5).timeout
 	w = main.current
+	_stress_cell = w.cur_cell   # the restored run must match its snapshot exactly (no stress relic yet)
 	print("[savecycle] floor %d: %s -> %s (floor %d)" % [_cycled, before, "relics %d wax %.0f" % [w.player.relics.size(), w.player.wax], w.floor_num])
 	_cycling = false
 
@@ -132,7 +133,7 @@ func _process(dt: float) -> void:
 	var cur: Node = main.current
 	_status_t += dt
 	# --stress: a random relic in every new room, so every combination gets played
-	if args.has("stress") and cur and cur.name == "Game" and cur.get("player") and not cur.finished and cur.cur_cell != _stress_cell:
+	if args.has("stress") and not _cycling and cur and cur.name == "Game" and cur.get("player") and not cur.finished and cur.cur_cell != _stress_cell:
 		_stress_cell = cur.cur_cell
 		var left: Array = Items.RELICS.keys().filter(func(k): return not k in cur.player.relics)
 		if not left.is_empty():
