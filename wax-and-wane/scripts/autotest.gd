@@ -5,6 +5,7 @@ extends Node
 ##   -- --autotest --audiotest                                     audio catalogue + live-mix check (audio_check.gd)
 ##   -- --autotest --herosheet --shots=/abs/dir                    Tallow in every juice state (pixel check)
 ##   -- --autotest --tour --rooms --shots=/abs/dir                 three dressed rooms on every floor
+##   -- --autotest --bench [--secs=6] [--seed=N]                   busiest rooms: frame times, nodes, lights, leaks
 
 var main: Node
 var args := {}
@@ -38,6 +39,8 @@ func _ready() -> void:
 			Controls.set_device(Controls.TOUCH)   # the main tour shows the phone HUD
 	if args.has("audiotest"):
 		mode = "audiotest"
+	if args.has("bench"):
+		mode = "bench"
 	runs_left = int(args.get("runs", "1"))
 	_shots_dir = str(args.get("shots", ""))
 	Game.base_time_scale = float(args.get("speed", "1"))
@@ -52,6 +55,8 @@ func _ready() -> void:
 		_tour()
 	elif mode == "audiotest":
 		add_child(load("res://scripts/audio_check.gd").new())
+	elif mode == "bench":
+		_bench()
 	else:
 		_next_run()
 
@@ -935,3 +940,164 @@ func _relic_tour() -> void:
 	await _wait(6.0)
 	await _shot("relic_results")
 	get_tree().quit()
+
+
+# ---------------------------------------------------------------- bench (--bench)
+# The busiest room of every floor (most static lights, every candelabra lit), a crowd of foes kept
+# at 20+, a moth swarm, Blowlamp + Tinderbox + Twin Wick + Candelabra + helpers, and the floor stain
+# image filled to its cap; the bot fights in god mode. Per room: average / worst process and physics
+# frame times (Performance monitors), node / light / particle counts. Then two full trips through the
+# four floors with node and object counts after each floor: a leak shows up as growth on trip 2.
+
+var _bench_rows: Array = []
+
+
+func _bench() -> void:
+	args["god"] = true
+	var secs := float(args.get("secs", "6"))
+	main.goto("game", {"seed": int(args.get("seed", "5"))})
+	await _wait(1.6)
+	var w: Node = main.current
+	_give(w, ["blowlamp", "tinderbox", "twin_wick", "candelabra", "matchling", "warming_pan", "paper_lantern", "moth_friend", "dust_bunny"])
+	await _wait(1.2)
+	print("[bench] physics %d Hz, relics %s" % [Engine.physics_ticks_per_second, w.player.relics])
+	for n in [1, 2, 3, 4]:
+		w._start_floor(n)
+		await _wait(0.4)
+		var best := _bench_busiest(w)
+		w.layout["cells"][best]["cleared"] = false
+		_jump(w, best)
+		w.room.light_candles(true)
+		await _wait(0.6)
+		_bench_crowd(w, 20)
+		var st: Stains = Juice.of(w).stains_here()
+		var mats := ["goo", "ash", "blood", "wax", "soot", "red"]
+		var k := 0
+		while st and st.stamps < Stains.MAX_STAMPS and k < 2000:
+			k += 1
+			st.splat(w.room.position + Vector2(randf_range(20, 252), randf_range(36, 172)), mats[k % mats.size()], k % 3 == 0)
+		await _bench_measure(w, "floor %d %s %s" % [n, w.FLOORS[n]["theme"], w.room.data.get("tpl", best)], secs)
+	print("[bench] ---- leak check: two trips through the four floors (counts after each floor start)")
+	var first := {}
+	for trip in [1, 2]:
+		for n in [1, 2, 3, 4]:
+			w._start_floor(n)
+			for i in 3:   # walk through a few rooms so they get built, stained and disposed
+				var cells := _normal_cells(w)
+				_jump(w, cells[i % cells.size()])
+				await _wait(0.5)
+				_bench_crowd(w, 8)
+				await _wait(1.0)
+			await _wait(0.5)
+			var nodes := int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+			var objs := int(Performance.get_monitor(Performance.OBJECT_COUNT))
+			var orphans := int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
+			var res := int(Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT))
+			var line := "[bench] trip %d floor %d: nodes=%d objects=%d orphans=%d resources=%d fx=%d enemies=%d hazards=%d" % [
+				trip, n, nodes, objs, orphans, res, w.fx_layer.get_child_count(), w.enemies.size(), w.hazards.size()]
+			if trip == 1:
+				first[n] = [nodes, objs]
+			else:
+				line += "  (trip 1: nodes %+d, objects %+d)" % [nodes - first[n][0], objs - first[n][1]]
+			print(line)
+	print("[bench] SUMMARY")
+	for r in _bench_rows:
+		print("[bench]   ", r)
+	Audio.stop_all()
+	await _wait(0.3)
+	get_tree().quit()
+
+
+## The normal room of this floor with the most static lights (decor + candelabras + hearths).
+func _bench_busiest(w: Node) -> Vector2i:
+	var best: Vector2i = w.cur_cell
+	var most := -1
+	for c in _normal_cells(w):
+		var r: Room = w._build_room(c)
+		var n: int = r.decor.lights.size() + r.candles.size() + r._fires.size()
+		r.dispose()
+		if n > most:
+			most = n
+			best = c
+	return best
+
+
+## Top the room up to `n` live foes (a moth swarm included).
+func _bench_crowd(w: Node, n: int) -> void:
+	var pool: Dictionary = w.POOLS[w.floor_num]
+	var have: int = w.count_enemies()
+	var i := 0
+	while have < n and i < 40:
+		i += 1
+		var list: Array = pool["f"] if i % 4 == 0 else (pool["h"] if i % 3 == 0 else pool["e"])
+		var e: Enemy = w.spawn_enemy(list[randi() % list.size()], w.random_free_spot(w.player.global_position, 60.0), ["", "", "", "ember"][i % 4])
+		if e:
+			e.active = true
+			have += 1
+	if not w.enemies.any(func(e): return is_instance_valid(e) and e.kind == "moth"):
+		for j in 3:
+			w.spawn_enemy("moth", w.random_free_spot(w.player.global_position, 60.0))
+
+
+func _bench_lights(n: Node, out: Array) -> void:
+	for c in n.get_children():
+		if c is PointLight2D and c.enabled and c.is_visible_in_tree():
+			out[0] += 1
+			if c.shadow_enabled:
+				out[1] += 1
+		if c is CPUParticles2D and c.emitting:
+			out[2] += c.amount
+		_bench_lights(c, out)
+
+
+func _bench_measure(w: Node, label: String, secs: float) -> void:
+	var t := 0.0
+	var frames := 0
+	var proc_sum := 0.0
+	var proc_max := 0.0
+	var phys_sum := 0.0
+	var phys_max := 0.0
+	var lights_max := 0
+	var shadows_max := 0
+	var cpu_parts_max := 0
+	var parts_max := 0
+	var nodes_max := 0
+	var shots_max := 0
+	var enemies_min := 999
+	var refill := 0.0
+	var j: Juice = Juice.of(w)
+	while t < secs:
+		await get_tree().process_frame
+		var dt := get_process_delta_time()
+		t += dt / maxf(Engine.time_scale, 0.01)
+		frames += 1
+		var pr := Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+		var ph := Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
+		proc_sum += pr
+		phys_sum += ph
+		proc_max = maxf(proc_max, pr)
+		phys_max = maxf(phys_max, ph)
+		if frames % 10 == 0:
+			var o := [0, 0, 0]
+			_bench_lights(w, o)
+			lights_max = maxi(lights_max, o[0])
+			shadows_max = maxi(shadows_max, o[1])
+			cpu_parts_max = maxi(cpu_parts_max, o[2])
+			parts_max = maxi(parts_max, j.hot.count() + j.lit.count())
+			nodes_max = maxi(nodes_max, int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)))
+			var shots := 0
+			for s in w.fx_layer.get_children():
+				if s is Shot:
+					shots += 1
+			shots_max = maxi(shots_max, shots)
+			enemies_min = mini(enemies_min, w.count_enemies())
+		refill -= dt
+		if refill <= 0.0:
+			refill = 1.0
+			_bench_crowd(w, 20)
+	var static_l: int = w.room.decor.lights.size() + w.room.candles.size() + w.room._fires.size()
+	var row := "%s: %d frames  process avg %.2f ms max %.2f ms  physics avg %.2f ms max %.2f ms  static lights %d (budget %d)  lights max %d (shadowed %d)  particles max %d (+%d cpu)  shots max %d  nodes max %d  foes min %d" % [
+		label, frames, proc_sum / maxi(frames, 1), proc_max, phys_sum / maxi(frames, 1), phys_max, static_l, RoomDecor.LIGHT_BUDGET,
+		lights_max, shadows_max, parts_max, cpu_parts_max, shots_max, nodes_max, enemies_min]
+	_bench_rows.append(row)
+	print("[bench] ", row)
