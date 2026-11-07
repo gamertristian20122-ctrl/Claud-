@@ -55,8 +55,20 @@ records so the daily is identical for everyone.
 - Contact hits: 6 on floors 1-2 (as v1.1), 7 from the chapel up (`touch` default in `Enemy._physics_process`).
 - `small_fry` creatures (Lamp Moths, Melt Drops) do not feed Kindling (one line in `world.on_enemy_killed`),
   otherwise swarms made the streak heal free.
-- The bot numbers are in the stream report; with the stronger relics/juice streams merged, re-check
-  `--playtest` and tune here (health scaling in `Enemy.setup`, `touch` default, boss `hp`).
+- With the other streams merged (stronger relics especially), re-check `--playtest` and tune here:
+  `Enemy.FLOOR_HP`, the `touch` default, boss `hp`.
+
+### Bot results (`--playtest --speed=4`, this branch alone)
+| Build | Runs | Wins | Winners finished | Notes |
+|---|---|---|---|---|
+| main before this stream | 4 | 4 | 11:52 PM - 12:28 AM | baseline on this machine |
+| 2.0 bestiary, first balance (+ small fry, x1.32/floor) | 6 | 6 | 12:02 - 12:42 AM | swarms fed Kindling at first |
+| + harder linear scaling (x1.4/floor, contact 7) | 3 | 0 | - | all three died on floor 2: too harsh early |
+| floor curve x1/1.28/1.65/2.05, contact 6 | 4 | 4 | 12:02 - 12:50 AM | |
+| + contact 7 from the chapel up | 4 | 1 | 12:03 AM | two deaths at the floor-2 Sexton, one on floor 3 |
+| + softer floor-2 guardians (`830d882`) | 6 | 6 | 12:10 - 1:24 AM | god mode 2/2 reach the end |
+| final: chapel x1.75, belfry x2.25, late guardians +5% (`2be8473` + bot fix `671bcf1`) | 8 | 5 | 12:21 - 1:37 AM (median ~1:13) | losses: two on floor 2, one bot idling after an early boss (fixed); god mode 2/2 reach the end |
+
 
 ## Hooks for other streams
 - **Journal (round 2):** `Enemy.DEFS[kind]` has `name` (Title Case; bosses UPPER CASE as on the boss bar),
@@ -82,7 +94,8 @@ records so the daily is identical for everyone.
   `boss_ai.gd`, `telegraph.gd`, `soot_patch.gd`, `gallery.gd`.
 - `scripts/game/world.gd`: `FLOORS` / `POOLS`, `boss_kind` + the pick in `_start_floor`, `_start_boss`
   (title line), one line in `_victory` (boss's own victory banner).
-- `scripts/autotest.gd`: 4 lines (gallery / bosses tour hook).
+- `scripts/autotest.gd`: 4 lines (gallery / bosses tour hook) + 7 lines so the bot walks back to a cleared
+  boss room's trapdoor when it beat the boss early and has explored everything (it used to idle forever).
 - `tools/art_monsters.py` + `tools/art_monsters_bosses.py` -> `assets/art/monsters/*` and `assets/art/fx/bolt_*`.
 
 ## Art notes
