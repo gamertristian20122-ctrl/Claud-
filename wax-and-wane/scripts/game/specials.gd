@@ -51,6 +51,7 @@ const ROOM := [
 ]
 const WAVES := 3
 const WAVE_SIZE := [5, 5, 5]
+const WAVE_SIZE_CELLAR := [3, 4, 4]
 const MIRROR_TOLL := 1.0
 const MIRROR_COST := 15
 const CRANK_COST := 3
@@ -522,16 +523,19 @@ func _spawn_wave(d: Dictionary) -> void:
 	var n: int = world.floor_num
 	var here: Dictionary = world.POOLS.get(n, world.POOLS[1])
 	var next: Dictionary = world.POOLS.get(n + 1, here)
-	# wave 1: four from this floor and a heavy; wave 2: five, half from below, a flyer;
-	# wave 3: five from below with two heavies, and one of them is marked
+	# from the Crypt up: five a wave. Wave 1 this floor with a heavy; wave 2 half from below, a flyer
+	# and a heavy; wave 3 all from below with two heavies, the last one marked. The Cellar's seance is
+	# gentler (3 / 4 / 4, only half of the last wave from below, one heavy) so a new candle can win it.
 	var picks: Array = []
-	var count: int = WAVE_SIZE[wave - 1]
+	var gentle: bool = n <= 1
+	var count: int = (WAVE_SIZE_CELLAR if gentle else WAVE_SIZE)[wave - 1]
 	for i in count:
-		var pool: Dictionary = next if (wave == 3 or (wave == 2 and i % 2 == 1)) else here
+		var below: bool = (wave == 3 and (not gentle or i % 2 == 1)) or (wave == 2 and i % 2 == 1 and not gentle)
+		var pool: Dictionary = next if below else here
 		var lst: Array = pool["e"]
 		if i == 0 and wave == 2:
-			lst = pool["f"]
-		elif i >= count - (2 if wave == 3 else 1):
+			lst = here["f"]
+		elif (not gentle or wave == 3) and i >= count - (2 if wave == 3 and not gentle else 1):
 			lst = pool["h"]
 		picks.append(lst[world.rng.randi() % lst.size()])
 	Audio.play("summon", -2.0)
@@ -970,7 +974,7 @@ func _mini_down() -> void:
 # ================================================================ the play-test bot
 
 ## Where the bot should walk to use this room's prop, or null to leave it alone. It rings the bell
-## when it has wax to spare, winds the box twice when rich, feeds the font twice when healthy,
+## above 65 wax, winds the box twice when rich, feeds the font twice when healthy,
 ## and only in the first moments in the room, so it never dawdles.
 static func bot_target(w: Node) -> Variant:
 	if not w.has_meta("specials") or w.room == null:
@@ -983,7 +987,7 @@ static func bot_target(w: Node) -> Variant:
 	var p: Player = w.player
 	var go := false
 	match t:
-		"seance": go = not d.get("rung", false) and p.wax > 50.0
+		"seance": go = not d.get("rung", false) and p.wax > 65.0
 		"musicbox": go = not d.get("box_broken", false) and p.coins >= CRANK_COST * 3 and int(d.get("cranks", 0)) < 2
 		"font": go = not d.get("font_spent", false) and p.wax > 75.0 and int(d.get("fed", 0)) < 2
 	if not go:
