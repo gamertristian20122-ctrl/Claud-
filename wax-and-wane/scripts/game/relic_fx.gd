@@ -222,6 +222,7 @@ func on_relic(id: String) -> void:
 		var f := 1.0 + 0.04 * p.relics.size()
 		p.damage = p.damage / magpie_f * f
 		magpie_f = f
+		world.fx_text(p.global_position + Vector2(0, -46), "the nest grows: +%d%%" % int(round((f - 1.0) * 100.0)), UI.GOLD)
 
 
 func on_rite(r: String) -> void:
@@ -587,8 +588,11 @@ func _tick_status(dt: float) -> void:
 					m.set_shader_parameter("flash", e.get("_flash"))
 		if feared:
 			_flee(e, dt)
-		elif e.spr and not e.boss:
-			e.spr.position.x = 0.0
+			st["shook"] = true
+		elif st.get("shook", false):
+			st.erase("shook")
+			if e.spr:
+				e.spr.position.x = 0.0
 		if float(st.get("charm", 0.0)) > 0.0:
 			_charm_step(e, st, dt)
 		elif st.get("was_charmed", false):
@@ -653,7 +657,7 @@ func _flee(e: Enemy, dt: float) -> void:
 		if e.kvel.length() > 1.0:
 			e._move(e.kvel * dt)
 			e.kvel = e.kvel.move_toward(Vector2.ZERO, 500.0 * dt)
-	if e.spr:
+	if e.spr and not e.boss:
 		e.spr.position.x = 1.0 if (_frame / 3) % 2 == 0 else 0.0
 
 
@@ -806,6 +810,7 @@ static func on_kill(w: Node, e: Enemy) -> void:
 func _killed(e: Enemy) -> void:
 	if has.has("minute_hand"):
 		p.heal(0.1)
+		world.fx_text(e.global_position + Vector2(0, -e.half_h * 2.5 - 4), "+6s", UI.CREAM)
 	if has.has("bell_rope") and e.boss:
 		p.heal(8.0)
 		world.fx_text(p.global_position + Vector2(0, -44), "THE BELL ROPE: +8 min", UI.GOLD)
@@ -1276,7 +1281,8 @@ func _release() -> void:
 	var dir: Vector2 = world.assist_aim(p.global_position, _charge_dir)
 	var k := charge
 	charge = 0.0
-	var dmg := _shot_dmg() * (1.2 + 4.0 * k) * (1.0 + 0.6 * (p.shots - 1))
+	# a full flame is worth far more than taps: damage grows with the square of the charge
+	var dmg := _shot_dmg() * (0.5 + 5.5 * k * k) * (1.0 + 0.6 * (p.shots - 1))
 	_primary = true
 	_big = k >= 0.99
 	world.shoot_player(p.global_position + Vector2(0, -6) + dir * 5, dir, p, dmg)
@@ -1500,10 +1506,21 @@ func _draw() -> void:
 
 # ================================================================ save / continue hooks
 
-## For a future "save and continue": everything RelicFx needs to restore a run.
+## For "save and continue": what RelicFx needs on top of the relic list. To restore a run, apply
+## the saved relics again with Items.apply (helpers, maps and stats rebuild), then call from_dict().
 func to_dict() -> Dictionary:
 	return {"known": known.keys(), "fog_floor": fog_floor, "fog_mult": fog_mult, "chimney": chimney_ready,
-		"cuckoo": cuckoo_max, "magpie": magpie_f, "helper": helper_mult}
+		"cuckoo": cuckoo_max, "brooch": brooch}
+
+
+func from_dict(d: Dictionary) -> void:
+	for k in d.get("known", []):
+		known[k] = true
+	fog_floor = int(d.get("fog_floor", -1))
+	fog_mult = float(d.get("fog_mult", 1.0))
+	chimney_ready = bool(d.get("chimney", true))
+	cuckoo_max = maxi(cuckoo_max, int(d.get("cuckoo", 0)))
+	brooch = int(d.get("brooch", 0))
 
 
 # ================================================================ little drawn things
