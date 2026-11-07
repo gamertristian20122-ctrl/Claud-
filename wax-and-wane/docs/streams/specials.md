@@ -9,7 +9,7 @@ can always walk in, look, and leave.
 
 | Room | Floors | Chance | What it does |
 |---|---|---|---|
-| **The Seance** | 1-4 | 60% | A brass bell on a frame inside a chalk ring with five candles. Walk into it or shoot it: the doors lock and 3 waves of five lodgers arrive (this floor with a heavy; then half from the floor below with a flyer and a heavy; then all from below with two heavies, the last one marked), a chime and "2 of 3" between waves. Clearing pays a relic from the **boss** pool and 4-6 coins. Leaving before ringing is free. |
+| **The Seance** | 1-4 | 60% | A brass bell on a frame inside a chalk ring with five candles. Walk into it or shoot it: the doors lock and 3 waves of five lodgers arrive (this floor with a heavy; then half from the floor below with a flyer and a heavy; then all from below with two heavies, the last one marked; called-up lodgers are pale half-spirits that leave no drippings), a chime and "2 of 3" between waves. Clearing pays a relic from the **boss** pool and 4-6 coins. Leaving before ringing is free. |
 | **The Cracked Mirror** | 2-4 | 45% | A dark door with a "1 [wax]" toll mark in front of it; the first step through costs 1 minute. Inside, a pier glass offers a tier 3-4 relic for **15 max minutes, for good** (the Smoke Altar's `cost_wax` code in `pickup.gd`, reused), or "Leave It" (veil the glass, +2 min). Taking one crumbles the other. The mirror shatters or is veiled. |
 | **The Music Box** | 1-4 | 40% | Walk into it: 3 coins a crank, the key turns and the dancer spins for ~1 s with ticking, then a tune: nothing 28 / coins back x2 22 / wax 16 / a bomb 12 / a tonic 9 / a lodger climbs out (doors lock until it is gone) 7 / a relic 6 (tier 0-2, the spring then breaks). Each result has its own line of text and sound. |
 | **The Study** | 2-4 | 35% | A lectern; take one of three, the others crumble: a keepsake (never the one you hold), two unlabelled tonics, or "Read the Map" (every room of the floor, hollows too, and what each special room is). |
@@ -20,7 +20,7 @@ You must step away from a prop before using it again, so walking past never spen
 ## Mini-bosses
 Floors 2-4, 50%: one ordinary room at distance 2+ from the start is a champion's room, with an open
 layout (`open` tag, no spikes, no `hard`). On entry the doors lock and a lodger of the floor appears at
-**twice the size** (a real 2x redraw, see Art), 6x health, heavy, collision radius x1.5 (max 8), a red glow, a
+**twice the size** (a real 2x redraw, see Art), 6x health, heavy, contact damage 9 (lodgers 6-7, guardians 8), collision radius x1.5 (max 8), a red glow, a
 name banner (no versus card) and the boss bar with its name. It keeps its own AI and adds one attack:
 
 | Floor | Champion | From | Extra attack (telegraphed) |
@@ -32,7 +32,7 @@ name banner (no versus card) and the boss bar with its name. It keeps its own AI
 | 4 | THE DEATHWATCH QUEEN | Deathwatch Beetle | double ring of 8 ticks |
 | 4 | THE ICEBOX GIANT | Icebox Corpse | aimed 3-shot water fan (and its death burst) |
 
-Guaranteed reward on top of the normal room reward: a tier 1-2 relic or a chest (50/50).
+Guaranteed reward on top of the normal room reward: a tier 1-2 relic (40%) or a chest (60%).
 
 ## Minimap
 Special rooms show as **"?"** once seen (next to a visited room) until you step in. The Dowsing Rod and

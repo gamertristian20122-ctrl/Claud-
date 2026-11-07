@@ -35,6 +35,7 @@ const MINIS := {
 }
 const MINI_CHANCE := 0.5
 const MINI_HP := 6.0
+const MINI_TOUCH := 9.0
 ## The prop stands on this cell of a special room (an unbreakable "X" for collision and shots).
 const PROP_CELL := Vector2i(7, 4)
 const ROOM := [
@@ -540,7 +541,12 @@ func _spawn_wave(d: Dictionary) -> void:
 		var champ := ""
 		if wave == WAVES and i == picks.size() - 1:
 			champ = ["ember", "gilded", "sooty", "chilled"][world.rng.randi() % 4]
-		world.spawn_enemy(picks[i], pos, champ)
+		var e: Enemy = world.spawn_enemy(picks[i], pos, champ)
+		if e and champ == "":
+			# called-up lodgers are half spirit: pale, and they leave no drippings behind
+			# (an unknown mark after _ready: no extra health, no glow, no drop in world.on_enemy_killed)
+			e.champ = "spirit"
+			e.spr.modulate = Color(0.74, 0.82, 1.0, e.spr.modulate.a)
 	world.room_t0 = world.run_time
 
 
@@ -768,7 +774,7 @@ func _cleared() -> void:
 		Achievements.unlock("seance")
 	if d.has("mini") and not d.get("mini_paid", false) and (_mini == null or not is_instance_valid(_mini) or not _mini.alive):
 		d["mini_paid"] = true
-		if world.rng.randf() < 0.5:
+		if world.rng.randf() < 0.4:
 			world.add_pickup("relic", c + Vector2(0, 8), pick_relic(world, ["treasure", "shop"], 1, 2))
 		else:
 			world.add_pickup("chest", world.free_spot_near(c + Vector2(0, 8), 8.0))
@@ -811,6 +817,8 @@ func spawn_mini(kind: String, pos: Vector2) -> Enemy:
 	e.hp = e.max_hp
 	e.radius = minf(e.radius * 1.5, 8.0)
 	e.heavy = true
+	e.def = e.def.duplicate()   # our own copy: a champion hits harder than its kin (and than a guardian)
+	e.def["touch"] = MINI_TOUCH
 	var sf := _mini_frames(kind)
 	if sf:
 		e.spr.sprite_frames = sf
@@ -829,7 +837,7 @@ func spawn_mini(kind: String, pos: Vector2) -> Enemy:
 	e.add_child(gl)
 	_mini = e
 	_mini_room = r.data
-	_mini_t = 3.2
+	_mini_t = 2.6
 	_mini_air = false
 	world.hud.show_banner(info["name"], info["sub"], 1.8)
 	world.hud.set_boss(info["name"], true)
@@ -880,7 +888,7 @@ func _tick_mini(dt: float) -> void:
 		return
 	_mini_t -= dt * world.time_scale_enemies()
 	if _mini_t <= 0.0:
-		_mini_t = randf_range(3.0, 4.0) * (0.8 if e.hp < e.max_hp * 0.5 else 1.0)
+		_mini_t = randf_range(2.5, 3.3) * (0.8 if e.hp < e.max_hp * 0.5 else 1.0)
 		_mini_attack(e, info["extra"])
 
 
