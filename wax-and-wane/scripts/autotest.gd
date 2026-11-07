@@ -168,6 +168,8 @@ func drive(w: Node) -> Array:
 		_room_t = 0.0
 		_room_t_total = 0.0
 	_room_t_total += dt
+	if _room_t_total > 120.0 and _room_t_total - dt <= 120.0:   # a soft-lock shows up in the log
+		print("[stuck] 120 s in floor %d room %s (%s, cleared=%s, enemies %d)" % [w.floor_num, w.cur_cell, w.room.data["type"], w.room.data["cleared"], w.count_enemies()])
 	if w.count_enemies() > 0:
 		_room_t = 0.0
 	_room_t += dt
