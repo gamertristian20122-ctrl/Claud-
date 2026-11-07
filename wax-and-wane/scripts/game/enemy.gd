@@ -130,7 +130,7 @@ const DEFS := {
 }
 
 ## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
-const FLOOR_HP := [1.0, 1.28, 1.65, 2.05]
+const FLOOR_HP := [1.0, 1.28, 1.65, 2.1]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
 
@@ -408,7 +408,7 @@ func _physics_process(dt: float) -> void:
 	elif absf(to_p.x) > 2 and state != "charge" and state != "still":
 		spr.flip_h = to_p.x < 0
 	# contact damage
-	var touch: float = def.get("touch", 8.0 if boss else 6.0)
+	var touch: float = def.get("touch", 8.0 if boss else (6.0 if world.floor_num <= 2 else 7.0))
 	if touch > 0.0 and not buried and not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
 		if champ == "chilled" and not p.dead:
 			if p.chill_t <= 0.0:

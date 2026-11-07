@@ -130,12 +130,13 @@ func boss_sexton(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 			e._walk(ddt, want, e.speed * (1.0 + 0.15 * e.phase))
 			if e.cd <= 0:
 				e._pattern += 1
-				var opts := ["toss", "dig"]
+				# he shows himself first, and spends most of the fight above ground
+				var opts := ["toss", "toss", "dig"]
 				if e.phase >= 2:
-					opts = ["toss", "dig", "raise", "toss", "dig"]
+					opts = ["toss", "dig", "raise", "toss"]
 				if e.phase >= 3:
-					opts = ["dig", "toss", "dig", "raise"]
-				e.state = opts[e._pattern % opts.size()]
+					opts = ["dig", "toss", "raise", "toss", "dig"]
+				e.state = opts[(e._pattern - 1) % opts.size()]
 				match e.state:
 					"toss":
 						e.t = 0.55
