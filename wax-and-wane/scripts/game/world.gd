@@ -649,7 +649,8 @@ func on_enemy_killed(e: Enemy) -> void:
 	kills += 1
 	Audio.play("enemy_die")
 	fx_poof(e.global_position + Vector2(0, -6), false, 1.4)
-	_kindle(e.global_position)
+	if not e.def.get("small_fry", false):   # swarm moths and melt drops do not feed Kindling
+		_kindle(e.global_position)
 	if e.boss:
 		_boss_down(e)
 		return

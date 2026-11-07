@@ -28,7 +28,8 @@ void fragment() {
 
 ## Every creature: stats, behaviour (`ai`), and for the Journal a `name`, a one-line `lore` and the colour
 ## its remains `stain` the floor (Color). Optional: `fly`, `heavy`, `touch` (contact damage), `swarm` (arrives
-## in a group of N), `split` ([kind, n] on death), `glow` (unshaded), `face_dir` (faces where it goes),
+## in a group of N), `split` ([kind, n] on death), `small_fry` (kills do not feed Kindling), `glow` (unshaded),
+## `face_dir` (faces where it goes), `no_flip`,
 ## `sprite` (shared art), `tint`, `cd` (attack cooldown). Bosses add `title`, `phase_lines`, `victory`.
 const DEFS := {
 	# ---- the 0x72 lodgers
@@ -75,9 +76,9 @@ const DEFS := {
 	# ---- the house's own
 	"wax_blob": {"hp": 6.0, "speed": 18.0, "ai": "blob", "r": 6.0, "split": ["wax_bit", 2], "name": "Rose Melt",
 		"lore": "A chapel candle that melted into a puddle and kept the wick.", "stain": Color("#9f294e")},
-	"wax_bit": {"hp": 2.0, "speed": 40.0, "ai": "chase", "jitter": true, "r": 4.0, "touch": 4.0, "name": "Melt Drop",
+	"wax_bit": {"hp": 2.0, "speed": 40.0, "ai": "chase", "jitter": true, "r": 4.0, "touch": 4.0, "small_fry": true, "name": "Melt Drop",
 		"lore": "Half a Rose Melt. It wants the other half back.", "stain": Color("#9f294e")},
-	"moth": {"hp": 2.0, "speed": 48.0, "ai": "moth", "r": 4.0, "fly": true, "touch": 3.0, "swarm": 3, "name": "Lamp Moth",
+	"moth": {"hp": 2.0, "speed": 48.0, "ai": "moth", "r": 4.0, "fly": true, "touch": 3.0, "swarm": 3, "small_fry": true, "name": "Lamp Moth",
 		"lore": "They come for the brightest flame in the house. Tonight that is you.", "stain": Color("#aa8d7a")},
 	"snuffer": {"hp": 12.0, "speed": 20.0, "ai": "snuffer", "r": 6.0, "cd": 1.6, "name": "Iron Snuffer",
 		"lore": "Its whole purpose is to put candles out. It takes the job seriously.", "stain": Color("#314152")},
@@ -100,29 +101,29 @@ const DEFS := {
 	"gutterspout": {"hp": 18.0, "speed": 0.0, "ai": "turret", "r": 6.0, "heavy": true, "cd": 1.2, "name": "Gutterspout",
 		"lore": "Spat rain off the belfry roof for centuries. It aims better now.", "stain": Color("#7b8994")},
 	# ---- bosses
-	"big_zombie": {"hp": 70.0, "speed": 20.0, "ai": "boss_rot", "r": 11.0, "boss": true, "heavy": true, "name": "OLD ROT",
+	"big_zombie": {"hp": 78.0, "speed": 20.0, "ai": "boss_rot", "r": 11.0, "boss": true, "heavy": true, "name": "OLD ROT",
 		"title": "It sleeps under the cellar stairs", "lore": "The first lodger. It has been rotting down there since the house was built.",
 		"stain": Color("#3d734f")},
-	"ogre": {"hp": 100.0, "speed": 26.0, "ai": "boss_gaoler", "r": 11.0, "boss": true, "heavy": true, "name": "THE GAOLER",
+	"ogre": {"hp": 110.0, "speed": 26.0, "ai": "boss_gaoler", "r": 11.0, "boss": true, "heavy": true, "name": "THE GAOLER",
 		"title": "Keeper of the crypt keys", "lore": "Locked the crypt every night for a hundred years. Tonight it locks you in.",
 		"stain": Color("#3d734f")},
-	"necro_boss": {"hp": 120.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW WARDEN",
+	"necro_boss": {"hp": 132.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW WARDEN",
 		"sprite": "ogre", "tint": Color(0.78, 0.74, 1.0), "title": "It watches the empty pews",
 		"lore": "Nothing is left inside its robes but the habit of keeping watch.", "stain": Color("#5f2d56")},
-	"big_demon": {"hp": 190.0, "speed": 30.0, "ai": "boss_fiend", "r": 12.0, "boss": true, "heavy": true, "name": "THE HOUR FIEND",
+	"big_demon": {"hp": 205.0, "speed": 30.0, "ai": "boss_fiend", "r": 12.0, "boss": true, "heavy": true, "name": "THE HOUR FIEND",
 		"title": "It wants the clock to strike two", "victory": "THE HOUR FIEND IS SNUFFED",
 		"lore": "It lives in the gap between the ticks and eats the minutes you waste.", "stain": Color("#62232f")},
-	"wax_mother": {"hp": 85.0, "speed": 14.0, "ai": "boss_mother", "r": 13.0, "boss": true, "heavy": true, "name": "THE WAX MOTHER",
+	"wax_mother": {"hp": 92.0, "speed": 14.0, "ai": "boss_mother", "r": 13.0, "boss": true, "heavy": true, "name": "THE WAX MOTHER",
 		"title": "Every drip in the cellar is her child",
 		"phase_lines": ["", "She weeps harder...", "Her candles gutter and rage!"],
 		"lore": "All the candles ever burnt in this house ran down to her. She wants you back.", "stain": Color("#9f294e")},
-	"sexton": {"hp": 115.0, "speed": 26.0, "ai": "boss_sexton", "r": 10.0, "boss": true, "heavy": true, "name": "THE SEXTON",
+	"sexton": {"hp": 122.0, "speed": 26.0, "ai": "boss_sexton", "r": 10.0, "boss": true, "heavy": true, "name": "THE SEXTON",
 		"title": "He digs for the house", "phase_lines": ["", "The dead hear his spade...", "He digs faster!"],
 		"lore": "He dug every grave in the crypt, and he has measured you for one.", "stain": Color("#8a503e")},
-	"choir": {"hp": 135.0, "speed": 14.0, "ai": "boss_choir", "r": 14.0, "boss": true, "heavy": true, "name": "THE MELTED CHOIR",
+	"choir": {"hp": 142.0, "speed": 14.0, "ai": "boss_choir", "r": 14.0, "boss": true, "heavy": true, "name": "THE MELTED CHOIR",
 		"no_flip": true, "title": "Three voices, one hymn", "phase_lines": ["", "They sing in harmony...", "All three at once!"],
 		"lore": "They sang so long by candlelight that their faces ran. They are still singing.", "stain": Color("#da4e38")},
-	"pendulum": {"hp": 200.0, "speed": 0.0, "ai": "boss_pendulum", "r": 14.0, "boss": true, "heavy": true, "name": "THE GREAT PENDULUM",
+	"pendulum": {"hp": 212.0, "speed": 0.0, "ai": "boss_pendulum", "r": 14.0, "boss": true, "heavy": true, "name": "THE GREAT PENDULUM",
 		"title": "The Hour Fiend's heart swings", "phase_lines": ["", "Tick... tock... TICK!", "It is nearly two!"],
 		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
@@ -241,7 +242,7 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 	def = DEFS[k]
 	position = pos
 	var f := float(floor_num - 1)
-	max_hp = float(def["hp"]) * (1.0 + 0.25 * f) if not def.get("boss", false) else float(def["hp"])
+	max_hp = float(def["hp"]) * (1.0 + 0.32 * f) if not def.get("boss", false) else float(def["hp"])
 	hp = max_hp
 	speed = float(def["speed"]) * (1.0 + 0.05 * f)
 	radius = float(def["r"])
