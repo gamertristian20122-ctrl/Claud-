@@ -8,6 +8,8 @@ extends Node
 ##   -- --autotest --tour --rooms --shots=/abs/dir                 three dressed rooms on every floor
 ##   -- --autotest --bench [--secs=6] [--seed=N] [--ablate]        busiest rooms: CPU per physics step / frame, lights, leaks
 ##                                                                 (--ablate: floor 1 again with each script group switched off)
+##   -- --autotest --shots-store --shots=/abs/dir [--phone]        staged store screenshots (scripts/store_shots.gd)
+##   -- --autotest --keyart --shots=/abs/dir                       the key-art scene, no HUD (tools/store_art.py)
 
 var main: Node
 var args := {}
@@ -43,6 +45,8 @@ func _ready() -> void:
 		mode = "audiotest"
 	if args.has("bench"):
 		mode = "bench"
+	if args.has("shots-store") or args.has("keyart"):
+		mode = "tour"   # store art: the bot only plays when the staging asks it to
 	runs_left = int(args.get("runs", "1"))
 	_shots_dir = str(args.get("shots", ""))
 	Game.base_time_scale = float(args.get("speed", "1"))
@@ -51,6 +55,9 @@ func _ready() -> void:
 	await get_tree().create_timer(0.8).timeout
 	if args.has("herosheet"):
 		_hero_sheet()
+	elif args.has("shots-store") or args.has("keyart"):
+		await load("res://scripts/store_shots.gd").run(self)
+		get_tree().quit()
 	elif mode == "tour" and args.has("relictour"):
 		_relic_tour()
 	elif mode == "tour":
