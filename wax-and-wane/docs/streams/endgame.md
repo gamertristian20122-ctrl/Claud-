@@ -90,7 +90,8 @@ Records: `tower_seen`, `true_endings`, `true_best` (earliest true-ending clock m
   "The Keeper kept you." on a tower death, the first-win hint. It finds labels by their text, so it survives a
   restyle as long as the title still starts with "DONE BY" and the line "The house is quiet...".
 - `candles.gd` (Moonwick), `player.gd` (`apply_candle`: `pierce`, `holder_tex`; `_ready` uses `holder_tex`).
-- `achievements.gd`: 10 entries. `autotest.gd`: `--tower`, `--tour --tower`, `Keeper.bot_push` in `drive`.
+- `achievements.gd`: 10 entries. `autotest.gd`: `--tower`, `--tour --tower`, `Keeper.bot_push` in `drive`, and the
+  main tour's final boss now starts at 58 wax (after 1:00 AM) so it still ends on the normal results screen.
 - `tools/import_audio.py`: two `MUSIC` slots (`floor_5`, `ending`).
 
 ## For other streams

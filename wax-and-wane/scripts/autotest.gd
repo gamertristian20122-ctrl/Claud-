@@ -499,7 +499,7 @@ func _tour() -> void:
 		await _room_tour(w)
 	args["drive"] = true
 	# jump straight to the final boss for a look
-	w.player.wax = 60.0
+	w.player.wax = 58.0   # after 1:00 AM, so the Belfry ends in the normal victory (not the Clock Tower)
 	w._start_floor(4)
 	var bcell: Vector2i = w.layout["boss"]
 	await _wait(0.5)
