@@ -50,7 +50,7 @@ func _ready() -> void:
 			spr = _sprite("pickups/wax_small", Vector2(0, -5))
 		"wax_warm":
 			spr = _sprite("pickups/wax_small", Vector2(0, -5))
-			life = 3.0
+			life = 2.5
 		"wax_big":
 			spr = _sprite("pickups/wax_big", Vector2(0, -7))
 		"match":
@@ -139,9 +139,9 @@ func _physics_process(dt: float) -> void:
 			_vz = -_vz * 0.35 if absf(_vz) > 30 else 0.0
 	if kind == "wax_warm":
 		life -= dt
-		var k := clampf(1.0 - life / 3.0, 0.0, 1.0)
+		var k := clampf(1.0 - life / 2.5, 0.0, 1.0)
 		spr.modulate = Color("#ee8e2e").lerp(Color("#775c55"), k)
-		spr.visible = life > 1.2 or fmod(life, 0.2) > 0.08
+		spr.visible = life > 0.9 or fmod(life, 0.2) > 0.08
 		if life <= 0.0 and not taken:
 			taken = true
 			world.fx_smoke(global_position + Vector2(0, -6))

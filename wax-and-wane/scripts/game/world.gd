@@ -695,8 +695,8 @@ func _kindle(pos: Vector2) -> void:
 		gain = 2.0
 	elif streak >= 6:
 		gain = 1.0
-	if gain > 0.0 and room_streak_wax < 6.0:
-		gain = minf(gain, 6.0 - room_streak_wax)
+	if gain > 0.0 and room_streak_wax < 4.0:
+		gain = minf(gain, 4.0 - room_streak_wax)
 		room_streak_wax += gain
 		player.heal(gain)
 		if Game.tip("kindling"):
@@ -1075,7 +1075,7 @@ func on_player_hurt(amount: float) -> void:
 			hud.show_hint("Your wax spilled! Grab the warm drops before they cool", 2.5)
 		var k := 3 if amount >= 8.0 else 2
 		for i in k:
-			add_loose("wax_warm", player.global_position, amount * 0.4 / k, Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(60.0, 85.0))
+			add_loose("wax_warm", player.global_position, amount * 0.3 / k, Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(70.0, 95.0))
 	shake(3.0)
 	hitstop(0.06, 0.05)
 	hud.on_hurt()
