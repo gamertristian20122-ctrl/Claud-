@@ -102,7 +102,7 @@ func _ready() -> void:
 	var line := "Runs %d   Wins %d" % [rec["runs"], rec["wins"]]
 	if rec.get("daily_date", "") == Time.get_date_string_from_system():
 		line += "   Tonight: %d" % int(rec.get("daily_first", 0))
-	if float(rec["best_finish"]) > 0.0:
+	if float(rec["best_finish"]) != 0.0:
 		line += "   Best: done by %s" % Game.clock_text(float(rec["best_finish"]))
 	var stats := UI.label(line, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	stats.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)

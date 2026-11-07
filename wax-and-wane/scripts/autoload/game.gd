@@ -54,6 +54,11 @@ func load_save() -> void:
 		settings[k] = cf.get_value("settings", k, settings[k])
 	for k in records.keys():
 		records[k] = cf.get_value("records", k, records[k])
+	if cf.has_section("records"):
+		# per-candle records (best_finish_<candle>) are not in the defaults above
+		for k in cf.get_section_keys("records"):
+			if not records.has(k):
+				records[k] = cf.get_value("records", k)
 
 
 func save() -> void:

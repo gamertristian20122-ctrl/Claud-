@@ -1124,8 +1124,9 @@ func _end_run(won: bool) -> void:
 		Game.records["wins"] += 1
 		var t := clock_minutes()
 		var key := "best_finish" if candle_id == "tallow" else "best_finish_" + candle_id
-		if not Game.records.has(key) or float(Game.records[key]) <= -999.0 or float(Game.records.get(key, 0.0)) == 0.0 or t < float(Game.records[key]):
-			Game.records[key] = t
+		var best := float(Game.records.get(key, 0.0))
+		if best == 0.0 or t < best:
+			Game.records[key] = t if t != 0.0 else 0.001   # 0 means "never won"
 	Game.save()
 	main.goto("results", {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
 		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins})

@@ -165,7 +165,7 @@ func _physics_process(dt: float) -> void:
 		if price > 0:
 			ds += "   -   %d coins" % int(round(price * world.shop_discount))
 		if record and int(record.get("cost_wax", 0)) > 0:
-			ds += "   -   costs %d minutes, for good" % int(record["cost_wax"])
+			ds += "   -   costs %d minutes for good, and up to %d now" % [int(record["cost_wax"]), int(record["cost_wax"]) / 2]
 		var rite := Items.rite_progress_text(item, p) if kind == "relic" else ""
 		if rite != "":
 			ds += "   [%s]" % rite
@@ -195,9 +195,11 @@ func _collect(p: Player) -> void:
 			return
 		p.wax_max -= wax_cost
 		p.charred += wax_cost
-		p.wax = maxf(1.0, minf(p.wax - wax_cost * 0.5, p.wax_max))   # the clock visibly jumps forward
+		# the clock visibly jumps forward, but never below 15 minutes
+		var cut := minf(wax_cost * 0.5, maxf(0.0, p.wax - 15.0))
+		p.wax = minf(p.wax - cut, p.wax_max)
 		world.pact = "smoke"
-		world.fx_text(global_position + Vector2(0, -30), "-%d max min" % wax_cost, UI.RED)
+		world.fx_text(global_position + Vector2(0, -30), ("-%d max min" % wax_cost) + (("  -%d now" % int(cut)) if cut > 0.0 else ""), UI.RED)
 		Audio.play("snuff_out", 0.0, 0.0, 0.7)
 		record["cost_wax"] = 0
 	if price > 0:
