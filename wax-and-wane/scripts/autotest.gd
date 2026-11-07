@@ -74,7 +74,11 @@ func _next_run() -> void:
 		params["seed"] = int(args["seed"]) + results.size()
 	main.goto("game", params)
 	if args.has("relics") or args.has("keepsake"):
-		await get_tree().create_timer(0.4).timeout
+		# wait for the new run (the screen fade can take longer than a fixed delay)
+		var waited := 0.0
+		while waited < 8.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null and not main._busy):
+			await get_tree().create_timer(0.1).timeout
+			waited += 0.1
 		_grant(main.current)
 
 
@@ -83,8 +87,11 @@ func _grant(w: Node) -> void:
 	if w == null or w.get("player") == null:
 		return
 	for id in str(args.get("relics", "")).split(",", false):
-		if Items.RELICS.has(id) and not id in w.player.relics:
+		if not Items.RELICS.has(id):
+			print("[playtest] unknown relic ", id)
+		elif not id in w.player.relics:
 			w.collect_item(id, w.player.global_position)
+	print("[playtest] granted ", w.player.relics)
 	if args.has("keepsake") and Items.KEEPSAKES.has(str(args["keepsake"])):
 		w.player.keepsake = str(args["keepsake"])
 		w.player.charge = int(Items.KEEPSAKES[w.player.keepsake]["pips"])

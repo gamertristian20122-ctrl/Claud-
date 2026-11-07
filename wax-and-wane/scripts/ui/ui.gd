@@ -170,11 +170,11 @@ static func slider_row(text: String, value: float, cb: Callable) -> HBoxContaine
 	var l := label(text, 16)
 	l.custom_minimum_size = Vector2(52, 0)
 	row.add_child(l)
-	var minus := button("-", func(): pass, 20)
+	var minus := button("-", func(): pass, 24)   # 24 px: a thumb-sized target
 	var val := label("", 16, GOLD)
 	val.custom_minimum_size = Vector2(30, 0)
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var plus := button("+", func(): pass, 20)
+	var plus := button("+", func(): pass, 24)
 	var st := [value]
 	var refresh := func():
 		val.text = "%d" % roundi(st[0] * 10)
