@@ -331,14 +331,14 @@ func _set_cursor(path: String, shape: Input.CursorShape, hot: Vector2, k: int) -
 ## Never open a window bigger than the screen (e.g. a Steam Deck in desktop mode): pick the largest
 ## whole multiple of 384x216 that fits, up to the 1536x864 default.
 func _fit_window() -> void:
-	if DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_WINDOWED or "--resolution" in OS.get_cmdline_args():
+	if DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_WINDOWED:
 		return
 	var scr := DisplayServer.window_get_current_screen()
 	var usable := DisplayServer.screen_get_usable_rect(scr).size
 	if usable.x <= 0 or usable.y <= 0:
 		return
 	var win := DisplayServer.window_get_size()
-	if win.x <= usable.x and win.y <= usable.y - 40:
+	if win.x <= usable.x and win.y <= usable.y:
 		return
 	var k := maxi(1, mini(usable.x / BASE.x, (usable.y - 40) / BASE.y))
 	var size := BASE * k

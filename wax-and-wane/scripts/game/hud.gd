@@ -252,9 +252,16 @@ func safe_insets() -> Vector2:
 	return Vector2(maxf(0.0, safe.position.x * k), maxf(0.0, (win.x - safe.end.x) * k)).floor()
 
 
+## True on 16:9 / 16:10 screens (monitors, Steam Deck: 384 px wide), where the room leaves only a
+## 56 px gutter at each side: the floor name stacks into the gutter, the minimap stays off the floor.
+var _narrow := false
+
+
 func _layout() -> void:
 	var vs := view_size()
 	var ins := safe_insets()
+	_narrow = vs.x - ins.x - ins.y < 432.0
+	minimap.size = Vector2(72, 40 if _narrow else 48)
 	bar.position = Vector2(6 + ins.x, 9)
 	clock_label.position = Vector2(8 + ins.x, 21)
 	streak_box.position = Vector2(66 + ins.x, 22)
@@ -353,7 +360,7 @@ func _process(dt: float) -> void:
 		want = (0.35 + 0.25 * sin(_flame_t * 4.5)) * (1.0 - p.wax / 20.0) + 0.15
 	vignette.modulate.a = move_toward(vignette.modulate.a, want, dt * 2.0)
 	clock_label.add_theme_color_override("font_color", UI.RED if low and fmod(_flame_t, 0.8) < 0.4 else UI.CREAM)
-	floor_label.text = world.floor_title()
+	floor_label.text = world.floor_title().replace("  -  ", "\n") if _narrow else world.floor_title()
 	streak_box.visible = world.streak >= 2
 	if world.streak >= 2:
 		streak_label.text = "x%d" % world.streak
