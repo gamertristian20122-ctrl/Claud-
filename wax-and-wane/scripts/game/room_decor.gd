@@ -191,12 +191,16 @@ func _light(pos: Vector2, col: Color, energy: float, sc: float, flicker := 0.14,
 	return l
 
 
+## `bottom_centre` is in left-wall terms; `mirror` puts the flame on the right wall, pixel-mirrored
+## about the room's centre line (x -> 271 - x) like the mirrored mounts.
 func _flame(kind: String, bottom_centre: Vector2, mirror: bool) -> AnimatedSprite2D:
 	var a := AnimatedSprite2D.new()
 	a.sprite_frames = Art.anim("decor/flame_" + kind, 9.0 if kind == "torch" else 7.0)
 	a.centered = false
 	var t: Texture2D = a.sprite_frames.get_frame_texture("default", 0)
 	a.position = bottom_centre - Vector2(floorf(t.get_width() / 2.0), t.get_height())
+	if mirror:
+		a.position.x = 271.0 - (a.position.x + t.get_width() - 1.0)
 	a.flip_h = mirror
 	a.material = Art.unshaded
 	a.z_index = -11
@@ -234,9 +238,9 @@ func _sconce_side(side: Vector2i, y: int) -> void:
 	_side_piece(tex, side, y)
 	for p in cfg["side"]:
 		var fp: Vector2 = p
-		var x := 15.0 + fp.x if not right else 257.0 - fp.x
-		_flame(cfg["flame"], Vector2(x, y + fp.y), right)
-		_light(Vector2(x + (6.0 if not right else -6.0), y + fp.y + 4.0), cfg["col"], cfg["e"], cfg["s"])
+		_flame(cfg["flame"], Vector2(15.0 + fp.x, y + fp.y), right)
+		var lx := 21.0 + fp.x
+		_light(Vector2(lx if not right else 271.0 - lx, y + fp.y + 4.0), cfg["col"], cfg["e"], cfg["s"])
 
 
 ## Side pieces start on the side wall's inner outline (x 15) and poke over the floor edge.
