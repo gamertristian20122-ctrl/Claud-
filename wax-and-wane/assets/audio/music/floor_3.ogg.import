@@ -12,7 +12,7 @@ dest_files=["res://.godot/imported/floor_3.ogg-a0ccea83b42d33f7759b4a1de29cb382.
 
 [params]
 
-loop=false
+loop=true
 loop_offset=0
 bpm=0
 beat_count=0

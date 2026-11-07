@@ -1,0 +1,29 @@
+Wax & Wane - music credits
+==========================
+
+Built by tools/import_audio.py (re-runnable). Licensed tracks are CC0 1.0 (public domain); credit is
+appreciated, not required. Licence: assets/licenses/Ninja_Adventure_CC0.txt
+
+Processing: 25 Hz high-pass, 4 ms loop-seam cross-fade, EBU R128 loudness -16 LUFS, true peak <= -1 dBTP,
+Ogg Vorbis q4, 44.1 kHz stereo, loop=true.
+
+  title.ogg            "32 - Manor" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  floor_1.ogg          "40 - Crypt" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  floor_2.ogg          "21 - Dungeon" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  floor_3.ogg          "12 - Temple" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  floor_4.ogg          "24 - Final Area" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  shop.ogg             "39 - Boat" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  boss.ogg             "17 - Fight" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  final_boss.ogg       "28 - Tension" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  victory_jingle.ogg   original composition, synthesized for this game (tools/make_audio.py)
+  death_jingle.ogg     original composition, synthesized for this game (tools/make_audio.py)
+
+Why each track (measured; see tools/import_audio.py MUSIC):
+  title: Haunted-manor theme; the most legato track in the pack (percussive share 0.02), slow (90 bpm), opens softly, 107 s so the title screen never audibly loops.
+  floor_1: Cellar: the sparsest dark track (2.0 onsets/s), C minor, lowest register of all candidates (mean pitch MIDI 56), slow breathing swells (15.6 dB dynamic range). Calm but heavy.
+  floor_2: Crypt: a step up (2.5 onsets/s) and the most unsettled harmony in the pack (highest tritone / semitone co-activation, no clear key centre), still low and slow.
+  floor_3: Chapel: sacred-sounding, clearly minor (C# minor, strongest minor third of the shortlist), high register like a choir/organ (mean pitch MIDI 75), denser again (2.7 onsets/s).
+  floor_4: Belfry: the most driven floor track (3.8 onsets/s, percussive share 0.19), C minor and dissonant; the last climb before the Hour Fiend.
+  shop: Tallow Merchant: D minor but consonant (lowest dissonance of the minor candidates), a gentle steady lilt (2.0 onsets/s), 96 s long so browsing never loops; a safe room that still lives in the house.
+  boss: Floor guardians: A minor, dense (3.4 onsets/s) and dissonant, a hard switch up from the floor tracks.
+  final_boss: Hour Fiend: the densest (4.9 onsets/s) and most percussive (0.23) track in the pack - the peak of the tension ramp.
