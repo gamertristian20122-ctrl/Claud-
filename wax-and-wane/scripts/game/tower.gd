@@ -301,6 +301,8 @@ func true_end() -> void:
 		return
 	w.finished = true
 	keeper_clock = w.clock_minutes()
+	if w.main and w.main.autotest and w.boss and is_instance_valid(w.boss):
+		print("[keeper] stilled after %.0f s at %s (hand hits %d)" % [w.boss.mem.get("fight_t", 0.0), Game.clock_text(keeper_clock), w.boss.mem.get("hand_hits", 0)])
 	w.player.frozen = true
 	w.hud.release_sticks()
 	w._clear_shots()

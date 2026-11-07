@@ -6,7 +6,7 @@ extends RefCounted
 ## The Keeper stands on the brass dial inlaid in its floor; its two great hands sweep that dial.
 ##   Phase 1: the hour hand (short, slow) and the minute hand (long, quick) take turns sweeping an arc.
 ##            Before a hand moves, its ghost shows where it starts, a dotted arc shows how far it goes and
-##            a dotted line marks where it stops: step behind the hand, or out past its tip. Aimed cog fans
+##            a dotted line marks where it stops: run the way it goes, past that line, or out past its tip. Cog fans
 ##            and rings in between.
 ##   Phase 2 (66%): STOPPED TIME. The room greys and everything freezes. Cog bolts appear in the air, each
 ##            with a short mark showing which way it will fly; three ticks (three pips over the Keeper),
@@ -101,6 +101,11 @@ func force(e: Enemy, what: String) -> void:
 func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 	var w: Node = e.world
 	var hands: Array = e.mem["hands"]
+	if w.main and w.main.autotest:   # the play-test log: how the fight went
+		e.mem["fight_t"] = e.mem.get("fight_t", 0.0) + e.get_physics_process_delta_time()
+		if w.player.dead and not e.mem.get("logged", false):
+			e.mem["logged"] = true
+			print("[keeper] Tallow fell after %.0f s in phase %d, the Keeper at %d%% (hand hits %d)" % [e.mem["fight_t"], e.phase, int(100.0 * e.hp / e.max_hp), e.mem.get("hand_hits", 0)])
 	if e.state == "stop":
 		_stop_tick(e)
 		return
@@ -109,6 +114,8 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 	if np != e.phase and e.state == "idle" and not _hands_busy(e):
 		e.phase = np
 		e.on_new_phase()
+		if w.main and w.main.autotest:
+			print("[keeper] phase %d after %.0f s, Tallow at %s" % [np, e.mem.get("fight_t", 0.0), Game.clock_text(w.clock_minutes())])
 		if np >= 3:
 			hands[0]["st"] = "spin"
 			hands[0]["a"] = (to_p.angle() + PI)    # starts pointing away from you
@@ -215,6 +222,8 @@ func _start_sweep(e: Enemy, which: int, _to_p: Vector2) -> void:
 	e.tele().path(pts, dur, WARN)
 	e.tele().line(c + Vector2.from_angle(a1) * 18.0, c + Vector2.from_angle(a1) * minf(h["len"], reach(a1) - 2.0), dur, WARN)
 	Audio.play("charge_up" if which == 0 else "tick", -4.0, 0.0, 1.0 if which == 0 else 1.5)
+	if Game.tip("keeper_hands", 1):
+		e.world.hud.show_hint("A hand is coming: run the way the arc goes, past the dotted line, or out past its tip.", 3.5)
 
 
 func _hands_tick(e: Enemy, ddt: float) -> void:
@@ -258,6 +267,8 @@ func _hand_hits(e: Enemy, h: Dictionary) -> void:
 		return
 	var off := absf(rel.dot(d.orthogonal()))
 	if off < h["w"] * 0.5 + 4.0:
+		if p.invuln <= 0.0:
+			e.mem["hand_hits"] = e.mem.get("hand_hits", 0) + 1
 		p.hurt(HAND_HIT * w.enemy_dmg_mult(), d.orthogonal() * signf(rel.dot(d.orthogonal()) + 0.001))
 
 
@@ -475,9 +486,9 @@ static func bot_push(w: Node, pos: Vector2) -> Vector2:
 		var ahead := angle_difference(a, pa) * dirn
 		var left := absf(angle_difference(a, a1))
 		if ahead > -0.15 and ahead < left + 0.2:
-			# in the arc it is about to sweep: before it moves, step behind its ghost; once it moves,
-			# run ahead of it (and out toward its tip)
-			var side := Vector2.from_angle(pa - dirn * PI / 2) if h["st"] == "ghost" else Vector2.from_angle(pa + dirn * PI / 2)
+			# in the arc it is about to sweep: run the way it goes, past the dotted line where it stops
+			# (and out toward its tip)
+			var side := Vector2.from_angle(pa + dirn * PI / 2)
 			push += (side * 1.4 + rel.normalized() * (1.6 if h["len"] < 90.0 else 0.6)) * 1.6
 	return push
 
