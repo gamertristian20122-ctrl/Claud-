@@ -70,9 +70,9 @@ const RELICS := {
 	"sweep_brush": {"name": "Sweep's Brush", "desc": "Clearing a room sweeps every drop to you", "q": 0, "pools": ["shop"]},
 	# ---- v2.0: the clock
 	"pendulum": {"name": "Pendulum", "desc": "Burn low and the house slows down", "q": 2, "pools": ["treasure", "boss"]},
-	"bell_rope": {"name": "Bell Rope", "desc": "Each guardian you fell rings back 8 minutes", "q": 2, "pools": ["boss", "treasure"]},
+	"bell_rope": {"name": "Bell Rope", "desc": "Each guardian you fell rings back 5 minutes", "q": 2, "pools": ["boss", "treasure"]},
 	"cuckoo_clock": {"name": "Cuckoo Clock", "desc": "Each quarter hour: +2 min and a burst of sparks", "q": 3, "pools": ["treasure", "boss"]},
-	"minute_hand": {"name": "Minute Hand", "desc": "Every kill winds back 6 seconds", "q": 2, "pools": ["treasure", "shop"]},
+	"minute_hand": {"name": "Minute Hand", "desc": "Every kill winds back 4 seconds", "q": 2, "pools": ["treasure", "shop"]},
 	"both_ends": {"name": "Lit at Both Ends", "desc": "+50% damage, but you melt faster", "q": 2, "pools": ["treasure", "altar"]},
 	# ---- v2.0: odds and ends
 	"powder_tin": {"name": "Powder Tin", "desc": "+2 bombs; blasts leave burning ground", "q": 1, "pools": ["shop"]},

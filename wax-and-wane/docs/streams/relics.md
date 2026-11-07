@@ -31,8 +31,8 @@
 | Helpers | Matchling (follows and shoots), Paper Lantern (orbits, blocks shots), Dust Bunny (bites foes, fetches coins), Clockwork Mouse (wind-up mice that pop) |
 | Defence | Thimble (20% dodge), Scalding Wax (burns whatever hurts you), Salt Line (2 s safe in a new room), Glass Chimney (a shield that regrows every 20 s), Stopped Clock (a hit freezes the house 1.5 s) |
 | Finding things | House Deed (full map), Dowsing Rod (hollows on the map + a shimmer on the cracked wall), Lodestone (magnet), Pantry Key (more and fuller chests), Collection Plate (coins per room), Sweep's Brush (drops fly to you after a clear) |
-| Clock | Pendulum (the house slows below 30 wax), Bell Rope (+8 min per boss), Cuckoo Clock (+2 min and a spark ring every quarter hour), Minute Hand (+6 s per kill), Lit at Both Ends (+50% damage, melt faster) |
-| Odds and ends | Powder Tin (+2 bombs, blasts leave burning ground), Honeycomb (more wax drops, +25% wax), Magpie's Nest (+4% damage per relic held), Jet Brooch (after a hit, 6 shots at x2) |
+| Clock | Pendulum (the house slows below 30 wax), Bell Rope (+5 min per boss), Cuckoo Clock (+2 min and a spark ring every quarter hour), Minute Hand (+4 s per kill), Lit at Both Ends (+50% damage, melt faster) |
+| Odds and ends | Powder Tin (+2 bombs, blasts leave burning ground), Honeycomb (more wax drops, +15% wax), Magpie's Nest (+4% damage per relic held), Jet Brooch (after a hit, 6 shots at x2) |
 
 ## Safety caps
 No split shards or extra sparks past 80 live player shots; at most 36 Tinderbox sparks; 90 flame-jet

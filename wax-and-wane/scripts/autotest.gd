@@ -502,7 +502,23 @@ func _relic_tour() -> void:
 				await _wait(0.6)
 				await _shot("relic_" + t)
 				break
-	# 7. results with a long relic row
+	# 7. the Dowsing Rod's shimmer on a cracked wall
+	for cc in w.layout["cells"].keys():
+		var found := false
+		for dd in FloorGen.DIRS:
+			var nb: Vector2i = cc + dd
+			if w.layout["cells"].has(nb) and w.layout["cells"][nb]["type"] == "secret" and w.layout["cells"][cc]["type"] != "secret":
+				found = true
+		if found:
+			_jump(w, cc)
+			for e in w.enemies:
+				if is_instance_valid(e):
+					e.queue_free()
+			w.enemies.clear()
+			await _wait(1.0)
+			await _shot("relic_dowsing")
+			break
+	# 8. results with a long relic row
 	w.player.revives = 0
 	w.player.wax = 0.0
 	await _wait(6.0)

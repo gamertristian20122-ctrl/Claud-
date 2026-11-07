@@ -278,6 +278,7 @@ static func on_shot_made(s: Shot, _pl: Player) -> void:
 	if fx == null or fx.world != s.world:
 		return
 	fx._mod_shot(s, _primary and not _spawning)
+	_last_shot = s   # children made inside _mod_shot must not hide the shot that was asked for
 
 
 func _mod_shot(s: Shot, primary: bool) -> void:
@@ -809,13 +810,13 @@ static func on_kill(w: Node, e: Enemy) -> void:
 
 func _killed(e: Enemy) -> void:
 	if has.has("minute_hand"):
-		p.heal(0.1)
-		world.fx_text(e.global_position + Vector2(0, -e.half_h * 2.5 - 4), "+6s", UI.CREAM)
+		p.heal(0.07)
+		world.fx_text(e.global_position + Vector2(0, -e.half_h * 2.5 - 4), "+4s", UI.CREAM)
 	if has.has("bell_rope") and e.boss:
-		p.heal(8.0)
-		world.fx_text(p.global_position + Vector2(0, -44), "THE BELL ROPE: +8 min", UI.GOLD)
+		p.heal(5.0)
+		world.fx_text(p.global_position + Vector2(0, -44), "THE BELL ROPE: +5 min", UI.GOLD)
 		Audio.play("bell_toll", 0.0, 0.0, 1.15)
-	if has.has("honeycomb") and not e.boss and world.rng.randf() < 0.08:
+	if has.has("honeycomb") and not e.boss and world.rng.randf() < 0.06:
 		world.add_pickup("wax_small", e.global_position, "", 0, Vector2.from_angle(world.rng.randf() * TAU) * 20.0)
 	var st: Dictionary = e.get_meta("rfx_st", {})
 	if float(st.get("poison", 0.0)) > 0.0 and has.has("nightshade"):
@@ -891,7 +892,7 @@ static func pull(w: Node) -> Vector2:
 
 static func wax_mult(w: Node) -> float:
 	var fx := _inst()
-	return 1.25 if fx and fx.world == w and fx.has.has("honeycomb") else 1.0
+	return 1.15 if fx and fx.world == w and fx.has.has("honeycomb") else 1.0
 
 
 func _roll_tonics() -> void:
