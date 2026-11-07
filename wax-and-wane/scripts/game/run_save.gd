@@ -87,8 +87,15 @@ func begin(w: Node) -> int:
 func on_floor_start(w: Node) -> void:
 	_world = w
 	if not _restore.is_empty():
+		var shown := Game.clock_text(w.clock_minutes())   # the floor banner was written with this
 		_apply(w, _restore)
 		_restore = {}
+		var hud: Variant = w.hud
+		if hud and "banner_sub" in hud and hud.banner_sub:
+			hud.banner_sub.text = str(hud.banner_sub.text).replace(shown, Game.clock_text(w.clock_minutes()))
+		if hud and "shown_wax" in hud:
+			hud.shown_wax = float(w.player.wax)
+			hud.ghost_wax = float(w.player.wax)
 	_omens[int(w.floor_num)] = str(w.omen)
 	snap = _capture(w)
 	_write(snap)

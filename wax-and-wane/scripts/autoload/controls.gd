@@ -36,10 +36,14 @@ func _ready() -> void:
 	_headless = DisplayServer.get_name() == "headless"
 	_setup_actions()
 	device = TOUCH if OS.has_feature("mobile") else KEYS
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--device="):     # tours / testing: --device=touch|keyboard|mouse|gamepad
+			device = a.get_slice("=", 1)
 	# On desktop the mouse is a mouse (aim, click menus), not a fake finger.
 	if not OS.has_feature("mobile"):
 		Input.emulate_touch_from_mouse = "--touchmouse" in OS.get_cmdline_user_args()
 	get_viewport().gui_focus_changed.connect(_on_focus_changed)
+	Input.joy_connection_changed.connect(_on_joy_connection)
 	get_viewport().size_changed.connect(_refresh_cursors)
 	Game.settings_changed.connect(_refresh_cursors)
 	if not _headless and OS.has_feature("pc"):
@@ -101,11 +105,12 @@ func _setup_actions() -> void:
 	_add("keepsake", [_key(KEY_Q), _key(KEY_SHIFT), _btn(JOY_BUTTON_LEFT_SHOULDER),
 		_axis(JOY_AXIS_TRIGGER_LEFT, 1.0), _mouse(MOUSE_BUTTON_MIDDLE)], TRIGGER_PRESS)
 	_add("pause", [_key(KEY_ESCAPE), _key(KEY_P), _btn(JOY_BUTTON_START), _btn(JOY_BUTTON_BACK)])
-	# menus: WASD and the left stick navigate too; B / Esc go back
-	_add("ui_up", [_key(KEY_W), _btn(JOY_BUTTON_DPAD_UP), _axis(JOY_AXIS_LEFT_Y, -1.0)])
-	_add("ui_down", [_key(KEY_S), _btn(JOY_BUTTON_DPAD_DOWN), _axis(JOY_AXIS_LEFT_Y, 1.0)])
-	_add("ui_left", [_key(KEY_A), _btn(JOY_BUTTON_DPAD_LEFT), _axis(JOY_AXIS_LEFT_X, -1.0)])
-	_add("ui_right", [_key(KEY_D), _btn(JOY_BUTTON_DPAD_RIGHT), _axis(JOY_AXIS_LEFT_X, 1.0)])
+	# menus: WASD and the d-pad navigate too (the left stick is read in _menu_stick, with a
+	# repeat delay, so one flick moves one step); B / Esc go back
+	_add("ui_up", [_key(KEY_W), _btn(JOY_BUTTON_DPAD_UP)])
+	_add("ui_down", [_key(KEY_S), _btn(JOY_BUTTON_DPAD_DOWN)])
+	_add("ui_left", [_key(KEY_A), _btn(JOY_BUTTON_DPAD_LEFT)])
+	_add("ui_right", [_key(KEY_D), _btn(JOY_BUTTON_DPAD_RIGHT)])
 	_add("ui_accept", [_btn(JOY_BUTTON_A)])
 	_add("ui_cancel", [_btn(JOY_BUTTON_B)])
 	_add("ui_page_prev", [_btn(JOY_BUTTON_LEFT_SHOULDER), _key(KEY_Q), _key(KEY_PAGEUP)])
@@ -147,7 +152,7 @@ func _input(event: InputEvent) -> void:
 		if event.device != InputEvent.DEVICE_ID_EMULATION and event.relative.length() > 3.0:
 			dev = MOUSE
 	if dev != "" and dev != device:
-		set_device(dev)
+		set_device(dev, false)
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down") or event.is_action_pressed("ui_left") \
 			or event.is_action_pressed("ui_right") or event.is_action_pressed("ui_focus_next") or event.is_action_pressed("ui_focus_prev"):
 		_nav_ms = Time.get_ticks_msec()
@@ -185,7 +190,8 @@ func _hotkeys(e: InputEventKey) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func set_device(dev: String) -> void:
+## `show_focus`: place / reveal menu focus now (false when the press itself will do it).
+func set_device(dev: String, show_focus := true) -> void:
 	if dev == device:
 		return
 	device = dev
@@ -193,7 +199,22 @@ func set_device(dev: String) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if dev == PAD else Input.MOUSE_MODE_VISIBLE
 	device_changed.emit(dev)
 	if uses_buttons():
-		_ensure_focus()
+		if show_focus:
+			_ensure_focus()
+	else:
+		# pointer players never see the keyboard frame (the button stays focused, quietly)
+		var f := get_viewport().gui_get_focus_owner()
+		if f:
+			f.grab_focus(true)
+
+
+## A gamepad that drops out mid-run pauses the game (the Steam Deck way).
+func _on_joy_connection(_pad: int, connected: bool) -> void:
+	if connected or device != PAD:
+		return
+	var cur := _screen()
+	if cur and cur.name == "Game" and not cur.paused and not cur.finished and cur.has_method("toggle_pause"):
+		cur.toggle_pause()
 
 
 ## True while the player uses keys or a gamepad (menus show a focus frame).
@@ -310,7 +331,7 @@ func _set_cursor(path: String, shape: Input.CursorShape, hot: Vector2, k: int) -
 ## Never open a window bigger than the screen (e.g. a Steam Deck in desktop mode): pick the largest
 ## whole multiple of 384x216 that fits, up to the 1536x864 default.
 func _fit_window() -> void:
-	if DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_WINDOWED:
+	if DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_WINDOWED or "--resolution" in OS.get_cmdline_args():
 		return
 	var scr := DisplayServer.window_get_current_screen()
 	var usable := DisplayServer.screen_get_usable_rect(scr).size
@@ -449,7 +470,41 @@ func _on_focus_changed(c: Control) -> void:
 		Audio.play("ui_move")
 
 
+var _stick_dir := Vector2i.ZERO
+var _stick_t := 0.0
+
+
+## The left stick steps through menus: one step per flick, then repeats while held.
+func _menu_stick(dt: float) -> void:
+	var pads := Input.get_connected_joypads()
+	if pads.is_empty() or menu_root() == null:
+		_stick_dir = Vector2i.ZERO
+		return
+	var v := Vector2(Input.get_joy_axis(pads[0], JOY_AXIS_LEFT_X), Input.get_joy_axis(pads[0], JOY_AXIS_LEFT_Y))
+	var d := Vector2i.ZERO
+	if v.length() > 0.6:
+		d = Vector2i(int(signf(v.x)), 0) if absf(v.x) > absf(v.y) else Vector2i(0, int(signf(v.y)))
+	if d == Vector2i.ZERO:
+		_stick_dir = Vector2i.ZERO
+		return
+	if d != _stick_dir:
+		_stick_dir = d
+		_stick_t = 0.42
+	else:
+		_stick_t -= dt
+		if _stick_t > 0.0:
+			return
+		_stick_t = 0.13
+	var act: String = {Vector2i.UP: "ui_up", Vector2i.DOWN: "ui_down", Vector2i.LEFT: "ui_left", Vector2i.RIGHT: "ui_right"}[d]
+	for pressed in [true, false]:
+		var ev := InputEventAction.new()
+		ev.action = act
+		ev.pressed = pressed
+		Input.parse_input_event(ev)
+
+
 func _process(dt: float) -> void:
+	_menu_stick(dt)
 	_focus_t -= dt
 	if _focus_t <= 0.0:
 		_focus_t = 0.25

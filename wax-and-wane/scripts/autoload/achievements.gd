@@ -105,6 +105,12 @@ func unlock(id: String) -> bool:
 	return true
 
 
+## Shows an achievement's toast without unlocking it (screenshot tours, store trailers).
+func show_toast(id: String) -> void:
+	if _by_id.has(id):
+		_queue.append(id)
+
+
 # ---------------------------------------------------------------- the watcher
 
 func _world() -> Node:

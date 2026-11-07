@@ -1,0 +1,23 @@
+// SteamPipe build script for Wax & Wane (template).
+// 1. Replace 1000000 with the App ID and 1000001 / 1000002 with the Windows / Linux depot IDs
+//    (Steamworks > App Admin > SteamPipe > Depots; set the depots' OS to Windows / Linux and add
+//    both to the Developer Comp package and the store package).
+// 2. ./tools/build_desktop.sh, then unzip build/WaxAndWane_<ver>_windows.zip into content/windows
+//    and the _linux zip into content/linux (next to this file in the SDK's ContentBuilder/scripts,
+//    i.e. ContentBuilder/content/windows and ContentBuilder/content/linux).
+// 3. steamcmd +login <build account> +run_app_build ../scripts/app_build.vdf +quit
+// 4. Set the build live by hand on the Builds page (try a password-protected beta branch first).
+// Launch options: Windows "WaxAndWane.exe", Linux "WaxAndWane.x86_64".
+"AppBuild"
+{
+	"AppID" "1000000"
+	"Desc" "Wax & Wane desktop build"
+	"ContentRoot" "..\content\"
+	"BuildOutput" "..\output\"
+	"Preview" "1"            // remove once the file list in output/ looks right
+	"Depots"
+	{
+		"1000001" "depot_build_windows.vdf"
+		"1000002" "depot_build_linux.vdf"
+	}
+}

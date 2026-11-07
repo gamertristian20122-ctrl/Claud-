@@ -599,6 +599,11 @@ func _input(event: InputEvent) -> void:
 			world.toggle_pause()
 			get_viewport().set_input_as_handled()
 			return
+		if event.pressed and keep_btn.visible and Rect2(keep_btn.position, keep_btn.size).has_point(event.position):
+			_mouse_block = true
+			world.use_keepsake()
+			get_viewport().set_input_as_handled()
+			return
 		if not event.pressed:
 			_mouse_block = false
 	if (event is InputEventScreenTouch or event is InputEventScreenDrag) and not Controls.touch_enabled():
@@ -749,6 +754,7 @@ func open_pause() -> void:
 	if not p.relics.is_empty():
 		var row := HFlowContainer.new()
 		row.custom_minimum_size = Vector2(198, 0)
+		row.alignment = FlowContainer.ALIGNMENT_CENTER
 		row.add_theme_constant_override("h_separation", 1)
 		row.add_theme_constant_override("v_separation", 1)
 		var relic_info := UI.label("Tap a relic to read it" if Controls.device == Controls.TOUCH else "Select a relic to read it",
