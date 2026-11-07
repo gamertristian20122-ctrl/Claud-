@@ -22,10 +22,10 @@ and runs that never finished (a 50-minute `timeout` per batch).
 
 | Batch | Flags | Runs | Script errors / errors | Stuck / timed out |
 |---|---|---|---|---|
-| normal, fresh profile | `--playtest --seed=S` (S = 100, 200, 1000, 2000, 5000-24000) and the plain `--runs=2` | NORMALN | 0 / 0 | 0 / 0 |
+| normal, fresh profile | `--playtest --seed=S` (S = 100, 200, 1000, 2000, 5000-24000) and the plain `--runs=2` | 76 | 0 / 0 | 0 / 0 |
 | stress | `--stress` (a random relic every room), with and without `--god` | 6 | 0 / 0 | 0 / 0 |
-| save cycle | `--stress --savecycle` with and without `--god` (Save & quit + Continue at floors 2, 3, 4; up to 64 relics) | CYCLEN | 0 / 0 | 0 / 0 |
-| every candle | `--unlockall --candle=tea_light / party / pillar / black_taper` | CANDLEN | 0 / 0 | 0 / 0 |
+| save cycle | `--stress --savecycle` with and without `--god` (Save & quit + Continue at floors 2, 3, 4; up to 64 relics) | 4 | 0 / 0 | 0 / 0 |
+| every candle | `--unlockall --candle=tea_light / party / pillar / black_taper` | 34 | 0 / 0 | 0 / 0 |
 | showcase combos | `--god --relics=blowlamp,tinderbox,twin_wick,candelabra`; `pale_taper,sharp_wick` + all six helpers + Moth Friend | 4 | 0 / 0 | 0 / 0 |
 | god | `--god --runs=2` (twice) | 4 | 0 / 0 | 0 / 0 |
 | bench | `--bench` (busiest rooms, 20 foes, Blowlamp + Tinderbox + helpers, full stains) x7 | 7 | 0 / 0 | - |
@@ -69,11 +69,14 @@ the bomb-drop fix.
 | Party Candle | pass 3 | 3 of 3 | 12:20 - 1:01 AM |
 | Altar Pillar | pass 3 | 3 of 3 | 12:27 - 1:11 AM |
 | Black Taper (melt x1.2, damage x1.1) | passes 2, 4, 5 | 8 of 9 | 12:00 - 1:31 AM |
-BLACKROW
+| Black Taper | + melt x1.4, hits x1.3, damage x1.0 | 4 of 7 | 12:24 - 1:08 AM |
+| **Black Taper (final)** | + lit at 12:20 AM (100 wax) | **1 of 6** | 12:19 AM (losses on floors 2-3) |
 The Black Taper is meant to be the hard mode, but with a Smoke Altar after every boss and twice the
 marked foes (coin payouts) the bot ended its runs with 12-14 relics against 8-10 for Tallow, and won more
-often than with Tallow. It now melts x1.4 (was x1.2), takes x1.3 from hits (new candle key `"hit"`, read
-by `Player.apply_candle`) and has no damage bonus (was x1.1); its line says "Melts fast, hurts more".
+often than with Tallow. It is now lit at 12:20 AM (100 wax, was 120), melts x1.4 (was x1.2), takes x1.3
+from hits (new candle key `"hit"`, read by `Player.apply_candle`; Save & Continue restores `hit_mult` with
+the other player numbers) and has no damage bonus (was x1.1). Line: "Hard mode. Lit at 12:20 AM. Melts
+fast; every boss offers a Smoke Altar." (293 px, fits the 300 px title label).
 What the diagnostics showed: almost every loss is a run that reaches the Crypt with little wax and then
 takes 15-27 hits there (floor-2 wax lost to hits 105-150 vs 17-77 gained back). Runs that get through the
 Crypt with a few relics snowball and finish early. So the early contact damage is the strongest knob
@@ -136,6 +139,11 @@ Fixes:
 - Checked: pause 23 px + 4 px grace each side, bomb / keepsake 30 px + 4-6 px grace, menu buttons 24 px
   tall; left/right safe insets are already applied to every HUD corner element (`Hud.safe_insets()`);
   hints and previews lift above the boss bar.
+
+## Known issues / for other streams
+- Title (meta stream): the Candle Box arrows are about 20x23 px; 24 px wide would match the other targets.
+- An achievement toast that pops while the pause menu is open covers the pause header for ~2 s.
+- The bench runs on a shared container; compare its numbers only with runs made on the same machine.
 
 ## Hooks for other streams
 - `UI.outlined(label) -> Label`: 1 px dark outline for any text drawn over the floor.
