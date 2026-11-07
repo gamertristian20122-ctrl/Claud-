@@ -412,7 +412,7 @@ func _physics_process(dt: float) -> void:
 	elif absf(to_p.x) > 2 and state != "charge" and state != "still":
 		spr.flip_h = to_p.x < 0
 	# contact damage
-	var touch: float = def.get("touch", 8.0 if boss else (5.0 if world.floor_num <= 2 else 6.0))
+	var touch: float = def.get("touch", 8.0 if boss else (5.0 if world.floor_num <= 2 else 7.0))
 	if touch > 0.0 and not buried and not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
 		if champ == "chilled" and not p.dead:
 			if p.chill_t <= 0.0:
