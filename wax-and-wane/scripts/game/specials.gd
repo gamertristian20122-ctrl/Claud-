@@ -52,6 +52,8 @@ const ROOM := [
 const WAVES := 3
 const WAVE_SIZE := [5, 5, 5]
 const WAVE_SIZE_CELLAR := [3, 4, 4]
+## The Seance pays a boss-pool relic of tier 0..SEANCE_TIER (it rolls often: the very best stay with the guardians).
+const SEANCE_TIER := 2
 const MIRROR_TOLL := 1.0
 const MIRROR_COST := 15
 const CRANK_COST := 3
@@ -769,8 +771,8 @@ func _cleared() -> void:
 	var c: Vector2 = r.center()
 	if d.get("type", "") == "seance" and d.get("seance_done", false) and not d.get("paid", false):
 		d["paid"] = true
-		world.add_pickup("relic", c + Vector2(0, 28), pick_relic(world, ["boss"], 0, 4))
-		for i in world.rng.randi_range(4, 6):
+		world.add_pickup("relic", c + Vector2(0, 28), pick_relic(world, ["boss"], 0, SEANCE_TIER))
+		for i in world.rng.randi_range(3, 5):
 			world.add_pickup("coin", c + Vector2(0, 18), "", 0, Vector2.from_angle(world.rng.randf() * TAU) * 50.0)
 		world.hud.show_banner("THE SEANCE IS OVER", "The lodgers leave a gift", 1.6)
 		_log("seance done")
