@@ -1079,9 +1079,10 @@ func _bench_busiest(w: Node) -> Vector2i:
 
 
 ## Top the room up to `n` live foes (a moth swarm included), at most `most` new ones per call.
-func _bench_crowd(w: Node, n: int, most := 40) -> void:
+func _bench_crowd(w: Node, n: int, most := 40) -> int:
 	var pool: Dictionary = w.POOLS[w.floor_num]
 	var have: int = w.count_enemies()
+	var made := 0
 	var i := 0
 	while have < n and i < most:
 		i += 1
@@ -1090,9 +1091,12 @@ func _bench_crowd(w: Node, n: int, most := 40) -> void:
 		if e:
 			e.active = true
 			have += 1
+			made += 1
 	if not w.enemies.any(func(e): return is_instance_valid(e) and e.kind == "moth"):
 		for j in 3:
 			w.spawn_enemy("moth", w.random_free_spot(w.player.global_position, 60.0))
+			made += 1
+	return made
 
 
 ## Counts live lights (out[0]), shadowed lights (out[1]) and CPU particles (out[2]); `by` tallies the
@@ -1153,6 +1157,7 @@ func _bench_measure(w: Node, label: String, secs: float) -> void:
 	var game: bool = w.get("player") != null
 	var j: Juice = Juice.of(w) if game else null
 	var frames := 0
+	var spawn_ms: Array[float] = []
 	if not get_tree().physics_frame.is_connected(_bench_ph_begin):
 		get_tree().physics_frame.connect(_bench_ph_begin)
 	await get_tree().process_frame
@@ -1193,14 +1198,18 @@ func _bench_measure(w: Node, label: String, secs: float) -> void:
 		refill -= real / 1000.0
 		if refill <= 0.0 and game:
 			refill = 0.25   # a trickle, like summoners and wave rooms (a big batch would read as a spike)
-			_bench_crowd(w, 20, 2)
+			var t0 := Time.get_ticks_usec()
+			var made := _bench_crowd(w, 20, 2)
+			if made > 0:
+				spawn_ms.append((Time.get_ticks_usec() - t0) / 1000.0 / made)
 			last = Time.get_ticks_usec()
 	get_tree().physics_frame.disconnect(_bench_ph_begin)
 	var pr := _bench_stats(proc)
 	var ph := _bench_stats(phys)
+	var sp := _bench_stats(spawn_ms)
 	var static_l: int = (w.room.decor.lights.size() + w.room.candles.size() + w.room._fires.size()) if game else 0
-	var row := "%s: physics step avg %.2f ms p95 %.2f max %.2f | process frame avg %.2f p95 %.2f max %.2f (%d steps, %d frames; engine worst/s %.1f / %.1f) | static lights %d/%d, live lights max %d (shadowed %d) %s | particles %d (+%d cpu) shots %d nodes %d foes min %d" % [
-		label, ph[0], ph[1], ph[2], pr[0], pr[1], pr[2], phys.size(), proc.size(), phys_max, proc_max, static_l, RoomDecor.LIGHT_BUDGET,
+	var row := "%s: physics step avg %.2f ms p95 %.2f max %.2f | process frame avg %.2f p95 %.2f max %.2f (%d steps, %d frames; engine worst/s %.1f / %.1f) | spawn %.2f ms per foe (max %.2f) | static lights %d/%d, live lights max %d (shadowed %d) %s | particles %d (+%d cpu) shots %d nodes %d foes min %d" % [
+		label, ph[0], ph[1], ph[2], pr[0], pr[1], pr[2], phys.size(), proc.size(), phys_max, proc_max, sp[0], sp[2], static_l, RoomDecor.LIGHT_BUDGET,
 		lights_max, shadows_max, by_max, parts_max, cpu_parts_max, shots_max, nodes_max, enemies_min]
 	_bench_rows.append(row)
 	print("[bench] ", row)
