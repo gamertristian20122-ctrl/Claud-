@@ -263,7 +263,9 @@ def build_room(theme, decor=True, variant=0):
     # ---- walls -------------------------------------------------------------------
     wall = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     # top wall face (y 16..31)
-    faces = wall_faces(theme, rng) if decor else ["wall_mid"] * 15
+    # plain face: banners, holes and slime are placed per room by RoomDecor (tools/art_decor.py), so
+    # they never collide with shelves, windows or wall lights
+    faces = ["wall_mid"] * 15
     for i, name in enumerate(faces):
         paste(wall, tile(name), 16 + 16 * i, 16)
     # top caps (y 12..15)
@@ -341,9 +343,8 @@ def wall_faces(theme, rng):
 
 
 def decorate_floor(theme, floor, lay, rng):
-    if theme == "crypt":
-        # slime dribbling from the goo on the wall (face tile 4) onto the floor tile below
-        paste(floor, tile("wall_goo_base"), FLOOR_X0 + 16 * 4, FLOOR_Y0)
+    """(v2.0: the crypt slime and its floor puddle are decor pieces now, see tools/art_decor.py.)"""
+    return
 
 
 # --------------------------------------------------------------------------- floor variants

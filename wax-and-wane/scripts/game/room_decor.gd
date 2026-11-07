@@ -20,11 +20,13 @@ const SCONCE := {
 ## theme -> top wall pieces: [name, width in tiles, x offset, y]. The first is the theme's signature
 ## piece and is tried first in most rooms.
 const WALL := {
-	"cellar": [["wall_shelf", 2, 0, 16], ["wall_herbs", 1, 0, 16], ["wall_winerack", 2, 0, 16], ["wall_herbs", 1, 0, 16]],
+	"cellar": [["wall_shelf", 2, 0, 16], ["wall_herbs", 1, 0, 16], ["wall_winerack", 2, 0, 16], ["wall_herbs", 1, 0, 16],
+		["wall_hole_1_cellar", 1, 0, 16], ["wall_hole_2_cellar", 1, 0, 16]],
 	"crypt": [["wall_niche_skull", 1, 0, 16], ["wall_niche_urn", 1, 0, 16], ["wall_niche_candle", 1, 0, 16],
-		["wall_chains", 1, 0, 16], ["wall_niche_skull", 1, 0, 16]],
+		["wall_chains", 1, 0, 16], ["wall_niche_skull", 1, 0, 16], ["wall_goo", 1, 0, 16], ["wall_hole_2_crypt", 1, 0, 16]],
 	"chapel": [["wall_banner_torn", 1, 0, 16], ["wall_votives", 2, 0, 16], ["wall_banner_torn", 1, 0, 16]],
-	"belfry": [["wall_clock", 2, 4, 10], ["wall_gear", 1, 0, 16], ["wall_rope", 1, 4, 10], ["wall_gear", 1, 0, 16]],
+	"belfry": [["wall_clock", 2, 4, 10], ["wall_gear", 1, 0, 16], ["wall_rope", 1, 4, 10], ["wall_gear", 1, 0, 16],
+		["wall_hole_1_belfry", 1, 0, 16], ["wall_hole_2_belfry", 1, 0, 16]],
 }
 const SIDE := {"cellar": "side_herbs", "crypt": "side_chains", "chapel": "side_banner", "belfry": "side_rope"}
 const CORNER_WEBS := ["cellar", "crypt"]
@@ -109,6 +111,18 @@ func setup(r: Room, used_lights: int) -> void:
 			_sconce_top(t3)
 			free_top.erase(t3)
 		budget -= 1
+	# ---- the chapel hangs its banners in pairs
+	if th == "chapel" and rng.randf() < 0.65:
+		var pairs := []
+		for t in [1, 2, 3, 4, 5]:
+			if t in free_top and (14 - t) in free_top:
+				pairs.append(t)
+		if not pairs.is_empty():
+			var bt: int = pairs[rng.randi() % pairs.size()]
+			var col: String = ["red", "blue"][rng.randi() % 2]
+			for tt in [bt, 14 - bt]:
+				_add(Art.tex("decor/wall_banner_" + col), Vector2(16 + 16 * tt, 16))
+				free_top.erase(tt)
 	# ---- wall pieces on what is left of the top wall
 	var pool: Array = WALL[th]
 	var tries := 0
@@ -134,6 +148,8 @@ func setup(r: Room, used_lights: int) -> void:
 		if not Art.has(nm):
 			continue
 		_add(Art.tex(nm), Vector2(16 + 16 * t4 + int(it[2]), int(it[3])), rng.randf() < 0.5 and w == 1 and it[0] != "wall_clock")
+		if it[0] == "wall_goo" and Art.has("decor/floor_goo"):
+			_add(Art.tex("decor/floor_goo"), Vector2(16 + 16 * t4, 32))   # it drips onto the floor below
 		if it[0] == "wall_niche_candle":
 			_flame("candle", Vector2(16 + 16 * t4 + 8, 16 + 6), false)
 		if it[0] == "wall_votives" and budget > 0:
