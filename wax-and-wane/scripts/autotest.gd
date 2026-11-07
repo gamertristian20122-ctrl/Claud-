@@ -402,66 +402,108 @@ func _room_of(w: Node, t: String, skip := 0) -> Vector2i:
 	return Vector2i(-99, -99)
 
 
+func _dummy(w: Node, pos: Vector2, relics: Array, rites: Array = []) -> Player:
+	var d := Player.new()
+	d.world = w
+	d.apply_candle("tallow")
+	d.wax = 100.0
+	d.frozen = true
+	d.revives = 1
+	for r in relics:
+		d.relics.append(r)
+	for r in rites:
+		d.rites.append(r)
+	w.actors.add_child(d)
+	d.light.enabled = false
+	d.global_position = pos
+	return d
+
+
 func _relic_tour() -> void:
 	DirAccess.make_dir_recursive_absolute(_shots_dir)
 	main.goto("game", {"seed": 11})
 	await _wait(1.6)
 	var w: Node = main.current
 	w.player.wax = 110.0
-	# 1. Tallow wearing the relics you can see
-	_give(w, ["glass_chimney", "tin_sconce", "old_pipe", "wax_coat", "lace_fan", "stopped_clock", "jet_brooch", "phoenix_feather", "both_ends", "nightshade"])
-	w.player.position = w.room.center() + Vector2(0, 10)
-	await _wait(2.6)
-	await _shot("relic_costumes")
-	# 2. helpers + Tinderbox in a fight
-	_give(w, ["matchling", "paper_lantern", "warming_pan", "dust_bunny", "clockwork_mouse", "tinderbox"])
-	args["drive"] = true
+	RelicFx.of(w)
+	# 1. the costume line-up: one dummy Tallow per piece you can see
+	var looks := [["glass_chimney"], ["tin_sconce"], ["old_pipe"], ["wax_coat"], ["lace_fan"], ["bell_wire"],
+		["scalding_wax"], ["pale_taper"], ["stopped_clock"], ["love_letter"], ["jet_brooch"], ["nightshade"],
+		["phoenix_feather"], ["both_ends"], []]
+	var dummies: Array = []
+	for i in looks.size():
+		var pos: Vector2 = w.room.position + Vector2(40 + (i % 8) * 28, 80 + (i / 8) * 44)
+		dummies.append(_dummy(w, pos, looks[i], ["household", "seance"] if i == looks.size() - 1 else []))
+	w.player.position = w.room.center() + Vector2(0, 60)
+	await _wait(1.2)
+	await _shot("lab_costumes")
+	for d in dummies:
+		d.queue_free()
+	# 2. curses on foes, frozen in place
 	var c := _room_of(w, "normal")
 	if c.x > -99:
 		_jump(w, c)
-	for i in 3:
+	await _wait(1.4)
+	for e in w.enemies:
+		if is_instance_valid(e):
+			e.queue_free()
+	w.enemies.clear()
+	var kinds := ["charm", "fear", "poison", "slow", "stun"]
+	var foes: Array = []
+	for i in kinds.size():
+		foes.append(w.spawn_enemy(["goblin", "skelet", "tiny_zombie", "masked_orc", "imp"][i], w.room.position + Vector2(56 + i * 40, 96)))
+	await _wait(1.0)
+	w.freeze_t = 30.0
+	for i in kinds.size():
+		RelicFx.of(w).status(foes[i], kinds[i], 30.0)
+	w.player.position = w.room.center() + Vector2(0, 50)
+	await _wait(0.5)
+	for e in foes:
+		if is_instance_valid(e):
+			e.take_hit(0.01, Vector2.ZERO)
+	await _wait(0.7)
+	await _shot("lab_curses")
+	w.freeze_t = 0.0
+	for e in foes:
+		if is_instance_valid(e):
+			e.queue_free()
+	w.enemies.clear()
+	# 3. helpers + Tinderbox in a fight
+	_give(w, ["matchling", "paper_lantern", "warming_pan", "dust_bunny", "clockwork_mouse", "tinderbox"])
+	args["drive"] = true
+	c = _room_of(w, "normal")
+	if c.x > -99:
+		_jump(w, c)
+	for i in 2:
 		await _wait(1.4)
 		await _shot("relic_helpers_%d" % i)
-	# 3. curses on foes (the Rite of the Seance doubles them)
-	_give(w, ["cold_wax", "shadow_puppet", "love_letter", "nightshade", "bell_wire", "split_wick"])
+	# 4. the Blowlamp (and every curse)
+	_give(w, ["blowlamp", "cold_wax", "shadow_puppet", "love_letter", "nightshade", "bell_wire", "split_wick"])
 	c = _room_of(w, "normal")
 	if c.x > -99:
 		_jump(w, c)
 	for i in 3:
-		await _wait(1.3)
-		await _shot("relic_curses_%d" % i)
-	# 4. the Blowlamp
-	_give(w, ["blowlamp"])
-	c = _room_of(w, "normal")
-	if c.x > -99:
-		_jump(w, c)
-	for i in 3:
-		await _wait(1.1)
+		await _wait(1.0)
 		await _shot("relic_blowlamp_%d" % i)
 	# 5. the pause menu with a long relic list
-	_give(w, ["bellows", "spare_wick", "house_deed", "dowsing_rod", "lodestone", "pendulum", "cuckoo_clock", "honeycomb", "magpie_nest", "thimble", "salt_line", "scalding_wax", "minute_hand", "bell_rope"])
+	_give(w, ["bellows", "spare_wick", "house_deed", "dowsing_rod", "lodestone", "pendulum", "cuckoo_clock", "honeycomb", "magpie_nest", "thimble", "salt_line", "scalding_wax", "minute_hand", "bell_rope", "glass_chimney", "tin_sconce", "old_pipe", "wax_coat"])
 	w.toggle_pause()
 	await _wait(0.4)
 	await _shot("relic_pause")
 	w.toggle_pause()
-	# 6. a shop with an unlabelled tonic
 	args.erase("drive")
-	c = _room_of(w, "shop")
-	if c.x > -99:
-		_jump(w, c)
-		await _wait(1.0)
-		w.player.position = w.room.center() + Vector2(0, 18)
-		await _wait(0.6)
-		await _shot("relic_shop")
-	# 7. a treasure room
-	c = _room_of(w, "treasure")
-	if c.x > -99:
-		_jump(w, c)
-		await _wait(1.0)
-		w.player.position = w.room.center() + Vector2(-26, 20)
-		await _wait(0.6)
-		await _shot("relic_treasure")
-	# 8. results with every relic
+	# 6. shop and treasure rooms
+	for t in ["shop", "treasure"]:
+		for cc in w.layout["cells"].keys():
+			if w.layout["cells"][cc]["type"] == t:
+				_jump(w, cc)
+				await _wait(1.0)
+				w.player.position = w.room.center() + (Vector2(0, 14) if t == "shop" else Vector2(-26, 20))
+				await _wait(0.6)
+				await _shot("relic_" + t)
+				break
+	# 7. results with a long relic row
+	w.player.revives = 0
 	w.player.wax = 0.0
 	await _wait(6.0)
 	await _shot("relic_results")

@@ -46,10 +46,10 @@ func _process(_dt: float) -> void:
 		if "pale_taper" in p.relics and not _pale_done:
 			_pale_done = true
 			# a ghost-pale taper
-			p.set("c_hi", Color("#fdf7ed"))
-			p.set("c_wax", Color("#cae6f5"))
-			p.set("c_sh", Color("#b6cbcf"))
-			p.set("c_deep", Color("#7b8994"))
+			p.set("c_hi", Color("#cae6f5"))
+			p.set("c_wax", Color("#b6cbcf"))
+			p.set("c_sh", Color("#7b8994"))
+			p.set("c_deep", Color("#417089"))
 		if "seance" in p.rites and p.light:
 			p.light.color = Color(0.8, 0.7, 1.0)
 	var on := not _wear.is_empty() or "household" in p.rites or "seance" in p.rites
@@ -125,15 +125,18 @@ func _draw_mid() -> void:
 			_r(self, L - 1, y - 1, 1, 2, INK)
 	if "scalding_wax" in _wear and h >= 6:
 		# red-hot drips over the rim and a bubble that pops in the pool
-		_r(self, L, top + 2, 1, 2, Color("#ee8e2e"))
-		_r(self, L - 1, top + 3, 1, 1, Color("#da4e38"))
-		_r(self, R - 1, top + 3, 1, 2, Color("#ee8e2e"))
-		_r(self, R, top + 4, 1, 1, Color("#da4e38"))
-		if fmod(t, 0.9) < 0.45:
-			_r(self, -2, top - 1, 1, 1, Color("#ee8e2e"))
-	if "wax_coat" in _wear:
-		# a knitted red scarf (and its tail)
-		var y2 := mini(top + 3, base - 4)
+		_r(self, L, top + 1, 1, 3, Color("#facb3e"))
+		_r(self, L - 1, top + 2, 1, 3, Color("#ee8e2e"))
+		_r(self, L - 1, top + 5, 1, 1, Color("#da4e38"))
+		_r(self, R - 1, top + 1, 1, 4, Color("#ee8e2e"))
+		_r(self, R, top + 3, 1, 3, Color("#da4e38"))
+		_r(self, L + 2, top + 1, R - L - 4, 1, Color("#ee8e2e"))
+		var bub := fmod(t, 0.9)
+		if bub < 0.5:
+			_r(self, -2 + int(t / 0.9) % 3, top - roundf(bub * 4.0), 1, 1, Color("#facb3e"))
+	if "wax_coat" in _wear and fy + 5 <= base - 3:
+		# a knitted red scarf just under the face (and its tail)
+		var y2 := fy + 5
 		_r(self, L - 1, y2 - 1, R - L + 2, 4, INK)
 		_r(self, L, y2, R - L, 2, Color("#da4e38"))
 		_r(self, L, y2, 2, 1, Color("#ee8e2e"))
@@ -154,14 +157,17 @@ func _draw_mid() -> void:
 			_r(self, x2, y3 + 1, 1, 1, Color("#fdf7ed") if (x2 - L) % 2 == 0 else Color("#d3bfa9"))
 			x2 += 1
 	if "household" in p.rites and h >= 8:
-		_put(self, "apron", Vector2(-3, base - 7))
+		_put(self, "apron", Vector2(-4, base - 8))
 	if "jet_brooch" in _wear and h >= 7:
 		var lit: bool = RelicFx._cur != null and is_instance_valid(RelicFx._cur) and RelicFx._cur.brooch > 0
-		_put(self, "brooch", Vector2(-2, mini(fy + 5, base - 5)), 2 if lit else 0, 4.0)
+		var bf := (int(Time.get_ticks_msec() / 250) % 2) if lit else 0
+		var bt := _tex("brooch", bf)
+		if bt:
+			draw_texture(bt, Vector2(-3, mini(fy + 5, base - 6)))
 	if "love_letter" in _wear:
 		_put(self, "bow", Vector2(L - 3, top + 1))
 	if "stopped_clock" in _wear and h >= 5:
-		_put(self, "key", Vector2(L - 5, top + maxi(2, h / 2) - 2), 2, 2.0)
+		_put(self, "key", Vector2(L - 7, top + maxi(2, h / 2) - 3), 2, 2.0)
 	if "nightshade" in _wear:
 		_put(self, "berries", Vector2(-9, -9))
 	if "phoenix_feather" in _wear and p.revives > 0:
@@ -169,10 +175,10 @@ func _draw_mid() -> void:
 	if "both_ends" in _wear:
 		_put(self, "flame_small", Vector2(-10, -11), 2, 8.0)
 	if "old_pipe" in _wear:
-		_put(self, "pipe", Vector2(0, fy + 1))
+		_put(self, "pipe", Vector2(0, fy - 1))
 		var ph := fmod(t, 1.6)
 		if ph < 1.0:
-			_put(self, "puff", Vector2(6, fy - 2 - roundf(ph * 6.0)), 3, 3.0)
+			_put(self, "puff", Vector2(6, fy - 3 - roundf(ph * 6.0)), 3, 3.0)
 	if "seance" in p.rites:
 		for k in 2:
 			var a := t * 2.2 + k * PI

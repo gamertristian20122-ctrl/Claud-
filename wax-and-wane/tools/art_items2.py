@@ -1173,16 +1173,18 @@ P...p
 """,
     # the wind-up key in Tallow's side (two frames: it turns)
     "key_f0": """
-yyy..
-y.y..
-yyyc.
-..cc.
+.yy....
+yoyc...
+.ywcccc
+yoyc...
+.yy....
 """,
     "key_f1": """
-.y...
-yyy..
-.yc..
-..cc.
+.......
+..yc...
+.yycccc
+..yc...
+.......
 """,
     # the jet brooch (f1 = a glint)
     "brooch_f0": """
@@ -1223,12 +1225,12 @@ royo.
 """,
     # Rite of the Household: a little apron
     "apron": """
-A.....A
-.wwwww.
-.wwwww.
-.wAAAw.
-.wwwww.
-..www..
+b.....b
+.hbhbh.
+.bhbhb.
+.hwwwh.
+.bhbhb.
+..hbh..
 """,
 }
 PUFFS = ["""

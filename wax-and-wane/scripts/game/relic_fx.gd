@@ -14,7 +14,7 @@ extends Node2D
 
 const MAX_SHOTS := 80          # no split shards / extra sparks past this many live player shots
 const MAX_SPARKS := 36         # tinderbox sparks alive at once
-const MAX_JET := 70            # flame-jet particles
+const MAX_JET := 90            # flame-jet particles
 const CURSE := {
 	# relic: [status, chance per hit, seconds]
 	"cold_wax": ["slow", 0.3, 2.2],
@@ -300,9 +300,10 @@ func _mod_shot(s: Shot, primary: bool) -> void:
 		s.radius += 1.0
 	if has.has("old_pipe"):
 		var v0 := s.vel.length()
-		var out_t := maxf(0.25, (p.shot_range / p.shot_speed) * 0.55)
+		# slows to a stop at about the normal range, hangs there a moment, then comes home
+		var out_t := maxf(0.3, 1.8 * p.shot_range / maxf(v0, 1.0))
 		s.set_meta("boom", {"dir": s.vel.normalized(), "v0": v0, "decel": v0 / out_t, "back": false})
-		s.life = out_t * 2.6 + 0.4
+		s.life = out_t * 2.4 + 0.5
 		s.pierce += 1
 		if not has.has("pale_taper"):
 			_set_frames(s, "items/fx/ring")
@@ -1311,7 +1312,7 @@ func _tick_jet(dt: float) -> void:
 		var want: Vector2 = world.assist_aim(p.global_position, p.aim_input.normalized())
 		_jet_dir = _jet_dir.slerp(want, minf(1.0, dt * 14.0)).normalized()
 		_jet_origin = p.global_position + Vector2(0, -8) + _jet_dir * 5.0
-		var max_len := clampf(p.shot_range * 0.62, 60.0, 100.0)
+		var max_len := clampf(p.shot_range * 0.75, 70.0, 112.0)
 		_jet_len = max_len
 		var room: Room = world.room
 		if room and not has.has("pale_taper"):
@@ -1332,13 +1333,13 @@ func _tick_jet(dt: float) -> void:
 			_jet_snd = 0.11
 			Audio.play("shoot", -11.0, 0.25, 0.6)
 		var cols: Array = PALE_COLS if has.has("pale_taper") else (BLUE_COLS if p.blue else FIRE_COLS)
-		for k in 3:
+		for k in 5:
 			if _jet_parts.size() >= MAX_JET:
 				break
-			var life := randf_range(0.2, 0.3)
-			var spd := _jet_len / 0.27
-			var v := _jet_dir.rotated(randf_range(-0.16, 0.16) * (1.0 + 0.3 * (p.shots - 1))) * spd * randf_range(0.85, 1.1)
-			_jet_parts.append([_jet_origin + _jet_dir * randf_range(0.0, 4.0), v, life, life])
+			var life := randf_range(0.22, 0.32)
+			var spd := _jet_len / 0.26
+			var v := _jet_dir.rotated(randf_range(-0.14, 0.14) * (1.0 + 0.3 * (p.shots - 1))) * spd * randf_range(0.8, 1.1)
+			_jet_parts.append([_jet_origin + _jet_dir * randf_range(0.0, 3.0), v, life, life])
 		_jet_light.energy = 0.9
 		_jet_light.global_position = _jet_origin + _jet_dir * _jet_len * 0.5
 		_jet_light.color = Color(0.6, 0.8, 1.0) if p.blue else Color(1.0, 0.7, 0.35)
@@ -1361,7 +1362,7 @@ var _jet_cols: Array = FIRE_COLS
 
 func _jet_damage() -> void:
 	var half := deg_to_rad(15.0 + 6.0 * (p.shots - 1))
-	var dmg := _shot_dmg() * 0.34 * (1.0 + 0.35 * (p.shots - 1))
+	var dmg := _shot_dmg() * 0.4 * (1.0 + 0.35 * (p.shots - 1))
 	for e in world.enemies:
 		if not is_instance_valid(e) or not e.alive or not e.active:
 			continue
@@ -1369,6 +1370,8 @@ func _jet_damage() -> void:
 		var dist := to.length()
 		if dist < _jet_len + e.radius and absf(_jet_dir.angle_to(to)) < half + atan2(e.radius, maxf(dist, 1.0)):
 			e.take_hit(dmg, _jet_dir * p.knockback * 0.12, p.burn)
+			if e.get("_flash") != null:
+				e.set("_flash", 0.35)   # ten licks a second: flicker, never a solid white
 			_curse_roll(e, 0.25)
 			if has.has("bell_wire") and randf() < 0.08 and is_instance_valid(e):
 				_chain(e, dmg * 2.0, 2)
@@ -1440,14 +1443,21 @@ var _drew := false
 
 func _draw() -> void:
 	_drew = false
-	# flame jet: chunky pixel puffs that cool as they fly
+	# flame jet: puffs swell and cool as they fly (oldest drawn first, so the hot core sits on top)
 	for pt in _jet_parts:
 		var k: float = 1.0 - pt[2] / pt[3]
-		var ci := clampi(int(k * 5.0), 0, 4)
-		var sz := 3.0 if k < 0.3 else (2.0 if k < 0.8 else 1.0)
+		var ci := 0 if k < 0.12 else (1 if k < 0.34 else (2 if k < 0.6 else (3 if k < 0.86 else 4)))
+		var r := roundf(1.0 + 3.0 * minf(1.0, k * 1.4))
 		var at: Vector2 = (pt[0] as Vector2).round()
-		draw_rect(Rect2(at - Vector2(sz, sz) * 0.5, Vector2(sz, sz)).abs(), _jet_cols[ci])
+		if ci >= 2:
+			draw_circle(at, r + 1.0, _jet_cols[mini(ci + 1, 4)], true, -1.0, false)
+		draw_circle(at, r, _jet_cols[ci], true, -1.0, false)
 		_drew = true
+	if _jet_on and not _jet_parts.is_empty():
+		var a := _jet_origin.round()
+		var b := (_jet_origin + _jet_dir * minf(_jet_len, 18.0)).round()
+		draw_line(a, b, _jet_cols[1], 3.0)
+		draw_line(a, b, _jet_cols[0], 1.0)
 	# Bell Wire sparks: a jagged two-tone line
 	for z in _zaps:
 		var pts: Array = z[0]
@@ -1538,16 +1548,19 @@ class StatusMark extends Node2D:
 				var by := top + 2.0 - ph * 8.0
 				draw_rect(Rect2(bx - 1, by - 1, 3, 3), ink)
 				draw_rect(Rect2(bx, by, 1, 1), Color("#97da3f") if k != 1 else Color("#4ba747"))
-		if float(st.get("slow", 0.0)) > 0.0 or float(st.get("stun", 0.0)) > 0.0:
-			# hard wax crusted round the feet
+		if float(st.get("slow", 0.0)) > 0.0:
+			# hard wax crusted round the feet, with a few drips running up
 			var w := roundf(e.radius * 2.0)
 			var x0 := -roundf(w / 2.0)
 			draw_rect(Rect2(x0 - 1, -4, w + 2, 4), ink)
-			draw_rect(Rect2(x0, -3, w, 2), Color("#d3bfa9"))
-			draw_rect(Rect2(x0, -3, w, 1), Color("#fdf7ed"))
+			draw_rect(Rect2(x0, -3, w, 3), Color("#d3bfa9"))
+			draw_rect(Rect2(x0, -1, w, 1), Color("#aa8d7a"))
 			var k2 := 0
 			while k2 < int(w):
-				draw_rect(Rect2(x0 + k2, -1, 1, 1), Color("#aa8d7a"))
+				draw_rect(Rect2(x0 + k2, -3, 2, 1), Color("#fdf7ed"))
+				if k2 % 4 == 0:
+					draw_rect(Rect2(x0 + k2 - 1, -6, 3, 3), ink)
+					draw_rect(Rect2(x0 + k2, -5, 1, 2), Color("#fdf7ed"))
 				k2 += 3
 		if float(st.get("stun", 0.0)) > 0.0:
 			var a := t * 9.0
