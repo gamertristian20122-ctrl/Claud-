@@ -187,6 +187,8 @@ func drive(w: Node) -> Array:
 			exit_pt = w.room.position + Vector2(268, 106)
 	var room: Room = w.room
 	var my_cell := room.cell_of(pos - room.position)
+	if _room_t_total > 20.0 and Engine.get_physics_frames() % 120 == 0:
+		print("   [nav] cell=%s dir=%s my=%s door=%s next=%s grid=%s" % [w.cur_cell, dir, my_cell, door_cell, _path_next(room, my_cell, door_cell), room.data["grid"]])
 	if my_cell == door_cell or my_cell.x < 0 or my_cell.y < 0 or my_cell.x >= Room.COLS or my_cell.y >= Room.ROWS:
 		return [(exit_pt - pos).normalized(), Vector2.ZERO]
 	var wp := _path_next(room, my_cell, door_cell)

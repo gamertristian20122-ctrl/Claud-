@@ -838,7 +838,7 @@ def master(y, loop, target_rms=-16.0, ceiling=-1.6):
         gtot *= db(target_rms - rms)
         z = limiter(base * gtot, ceiling, loop)
     gr = 20 * np.log10(np.maximum(np.max(np.abs(z), 1), 1e-12) / np.maximum(np.max(np.abs(base * gtot), 1), 1e-12))
-    print(f"    limiter: max {gr.min():.1f} dB, >1 dB on {np.mean(gr < -1) * 100:.2f}% of samples", end="")
+    print(f"    limiter: max {gr.min():.1f} dB, >1 dB on {np.mean(gr < -1) * 100:.2f}% of samples")
     return z
 
 
