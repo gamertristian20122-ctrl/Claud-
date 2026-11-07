@@ -33,7 +33,7 @@ const LIST := {
 	},
 	"black_taper": {
 		"name": "Black Taper", "line": "Hard mode. Melts fast, hurts more; every boss offers a Smoke Altar.",
-		"wax": 120.0, "drain": 1.3, "speed": 1.0, "damage": 1.1, "fire_delay": 1.0, "shots": 1, "hit": 1.2,
+		"wax": 120.0, "drain": 1.4, "speed": 1.0, "damage": 1.0, "fire_delay": 1.0, "shots": 1, "hit": 1.3,
 		"body_w": 8, "colours": ["#775c55", "#483b3a", "#333333", "#2a2a3a"],
 		"unlock_text": "Win a run",
 	},
