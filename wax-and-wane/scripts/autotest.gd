@@ -96,6 +96,8 @@ func _process(dt: float) -> void:
 			for r in results:
 				avg_floor += r["floor"]
 			print("[playtest] SUMMARY runs=%d wins=%d avg_floor=%.2f" % [results.size(), wins, avg_floor / results.size()])
+			Audio.stop_all()   # no playback left running at exit (keeps the log free of leak warnings)
+			await get_tree().create_timer(0.3, true, false, true).timeout
 			get_tree().quit()
 
 
@@ -363,4 +365,6 @@ func _tour() -> void:
 	w.player.wax = 0.0
 	await _wait(7.0)
 	await _shot("results")
+	Audio.stop_all()
+	await _wait(0.3)
 	get_tree().quit()

@@ -798,6 +798,18 @@ def sfx_splash_3():
 # Names other streams call (see docs/streams/audio.md). Same palette as the rest: Kenney foley + the game's own
 # synthesized music box / celesta / bells / organ; a few noise-based Ninja Adventure takes (fire, wings, bubbles).
 N_EL = "ninja:Elemental/"
+
+
+def soft(x, fade=0.12, attack=0.004):
+    """A pack take with a smooth start and a smooth end (some takes stop abruptly)."""
+    n = len(x)
+    e = np.ones(n)
+    a = min(n // 4, secs(attack))
+    if a > 0:
+        e[:a] = np.linspace(0, 1, a)
+    f = min(n // 2, secs(fade))
+    e[n - f:] *= np.cos(np.linspace(0, np.pi / 2, f)) ** 2
+    return x * e
 N_HIT = "ninja:Hit & Impact/"
 N_MAG = "ninja:Magic & Skill/"
 N_CRE = "ninja:Creature/"
@@ -817,7 +829,8 @@ def sfx_match_strike():
     n = secs(0.55)
     flare = band_noise(0.55, 211, lambda t: 2600 * 0.45 ** np.clip(t / 0.4, 0, 1), 1.6) * env_ad(n, 0.02, 0.18)
     return mix((src(UI + "scratch_004.ogg", 0.85), 0, 0), (src(UI + "scratch_001.ogg", 0.7), 0.03, -6),
-               (flare, 0.10, -4), (lp(src(N_EL + "Fire3.wav"), 3000), 0.12, -8), (crackle(0.5, 212, 70), 0.12, -13))
+               (flare, 0.10, -4), (soft(lp(src(N_EL + "Fire3.wav"), 3000), 0.3), 0.12, -8),
+               (crackle(0.5, 212, 70) * env_ar(secs(0.5), 0.01, 0.6), 0.12, -13))
 
 
 def sfx_burn_whoosh():
@@ -825,8 +838,8 @@ def sfx_burn_whoosh():
     n = secs(0.6)
     roar = band_noise(0.6, 221, lambda t: 700 * 2.2 ** np.clip(t / 0.25, 0, 1) * 0.7 ** np.clip((t - 0.25) / 0.3, 0, 1),
                       1.8) * env_ar(n, 0.05, 0.7, 1.5)
-    return mix((src(N_EL + "Fireball2.wav"), 0, -3), (roar, 0, -2), (src(FOLEY + "Woosh/woosh6.ogg", 0.7), 0, -6),
-               (crackle(0.55, 222, 90), 0.05, -12))
+    return mix((soft(src(N_EL + "Fireball2.wav"), 0.25), 0, -3), (roar, 0, -2), (src(FOLEY + "Woosh/woosh6.ogg", 0.7), 0, -6),
+               (crackle(0.55, 222, 90) * env_ar(secs(0.55), 0.01, 0.6), 0.05, -12))
 
 
 def sfx_splat():
@@ -848,8 +861,8 @@ def sfx_gib():
 
 def sfx_sizzle():
     """Hot wax on stone: hiss + crackle that dies away."""
-    return mix((sizzle(0.75, 251, 4800, 0.28), 0, 0), (crackle(0.7, 252, 60, hpf=1800), 0.02, -7),
-               (lp(src(N_EL + "Fire3.wav", 1.2), 5000), 0, -10))
+    return mix((sizzle(0.75, 251, 4800, 0.28), 0, 0), (crackle(0.7, 252, 60, hpf=1800) * env_ar(secs(0.7), 0.01, 0.7), 0.02, -7),
+               (soft(lp(src(N_EL + "Fire3.wav", 1.2), 5000), 0.3), 0, -10))
 
 
 def sfx_relic_fanfare():
@@ -886,10 +899,9 @@ def sfx_fire_crackle():
     """1.4 s of a small fire (braziers, burning floor); fades in and out so it can be retriggered."""
     dur = 1.4
     n = secs(dur)
-    body = lp(src(N_EL + "Fire2.wav"), 6000)
-    body = fit(np.tile(body, 2), n)
+    body = fit(soft(lp(src(N_EL + "Fire2.wav"), 6000), 0.35, 0.05), n)
     x = mix((body, 0, -4), (crackle(dur, 281, 45, hpf=1500), 0, 0), (crackle(dur, 282, 12, tau=0.006, hpf=600), 0, -4),
-            (band_noise(dur, 283, 500, 2.0) * 0.4, 0, -10))
+            (band_noise(dur, 283, 500, 2.0) * 0.4, 0, -10), (band_noise(dur, 284, 1400, 1.5) * 0.25, 0, -12))
     return x[:n] * env_ar(n, 0.12, 0.35, 1.0)
 
 
@@ -932,10 +944,20 @@ def sfx_moth_flutter():
     return mix((hp(src(N_CRE + "Wings2.wav"), 400), 0, 0), (lp(src(FOLEY + "Woosh/woosh5.ogg", 1.5), 5000), 0.02, -10))
 
 
+def _bubble(f0, tau, seed):
+    """One bubble bursting in a thick liquid: a damped tone whose pitch rises as it collapses, plus a soft pop."""
+    n = secs(tau * 6)
+    t = t_(n)
+    fr = f0 * (1 + 1.8 * (t / (tau * 6)))
+    x = np.sin(phase(fr)) * np.exp(-t / tau) * (1 - np.exp(-t / 0.002))
+    pop = lp(rng(seed).standard_normal(n), 1800) * np.exp(-t / 0.004) * 0.3
+    return x + pop
+
+
 def sfx_wax_bubble():
-    """Molten wax bubbling: two low blips and a soft hiss."""
-    b = lp(src(N_EL + "Bubble2.wav", 0.7), 2500)
-    return mix((b, 0, 0), (lp(src(N_EL + "Bubble2.wav", 0.9), 2500), 0.16, -6), (sizzle(0.45, 321, 3500, 0.2), 0.02, -12))
+    """Molten wax bubbling: a few slow, low, viscous bubbles and a soft hiss."""
+    return mix((_bubble(190, 0.035, 321), 0, 0), (_bubble(240, 0.028, 322), 0.13, -3), (_bubble(160, 0.045, 323), 0.27, -1),
+               (_bubble(280, 0.022, 324), 0.36, -6), (sizzle(0.5, 325, 3500, 0.2), 0.0, -16))
 
 
 def sfx_thud_heavy():

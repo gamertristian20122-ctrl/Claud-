@@ -126,6 +126,7 @@ var _lpf: AudioEffectLowPassFilter
 var _lpf_idx := -1
 var _reverb: AudioEffectReverb
 var _reverb_idx := -1
+var _lpf_on := false
 
 
 func _ready() -> void:
@@ -543,8 +544,12 @@ func _process(delta: float) -> void:
 	var tc := 0.12 if music_paused else 0.35
 	_cut = exp(lerpf(log(_cut), log(cut_t), 1.0 - exp(-dt / tc)))
 	if _lpf != null:
-		_lpf.cutoff_hz = _cut
-		AudioServer.set_bus_effect_enabled(_bus_music, _lpf_idx, _cut < 19000.0)
+		var on := _cut < 19000.0
+		if on:
+			_lpf.cutoff_hz = _cut
+		if on != _lpf_on:
+			_lpf_on = on
+			AudioServer.set_bus_effect_enabled(_bus_music, _lpf_idx, on)
 	vol_t += _duck_db(now)
 	var vt := 0.05 if vol_t < _score_db else 0.25   # duck fast, recover slowly
 	_score_db = lerpf(_score_db, vol_t, 1.0 - exp(-dt / vt))
