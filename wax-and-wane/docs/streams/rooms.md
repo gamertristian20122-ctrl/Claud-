@@ -26,7 +26,7 @@ wall lights, and built from one of 69 hand-made layouts that a validator checks.
 - **New template characters** (also in `Room.SOLID` / `SHOT_SOLID`):
   | char | what | blocks | breaks by |
   |---|---|---|---|
-  | `B` | furniture: barrel (Cellar), coffin (Crypt), pew + lectern (Chapel), fallen beam + cracked bell (Belfry). Runs join left to right | walk + shots | 4 shots or a bomb |
+  | `B` | furniture: barrel (Cellar), coffin (Crypt), pew + kneeler or lectern (Chapel), fallen beam + cracked bell (Belfry). Runs join left to right | walk + shots | 4 shots or a bomb |
   | `G` / `g` | hearth: burns on touch (4 wax, like spikes) and sizzles foes; 4 shots douse it (`g`, 50 % wax drop or coin); a bomb smashes it | walk + shots | shots douse, bombs remove |
   | `O` | oil jar: one shot (any shot, enemy shots too) or a blast sets it off. Fireball r 26: 4 + 1.5 × floor damage to foes, 5 wax to Tallow if close; chains to other jars | walk + shots | 1 hit |
   | `W` | cobweb: halves walker speed (player and enemies); player embers and blasts burn it | nothing | embers / blasts |
