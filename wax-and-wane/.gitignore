@@ -5,3 +5,4 @@ build/
 *.tmp
 export_credentials.cfg
 keystore/
+__pycache__/
