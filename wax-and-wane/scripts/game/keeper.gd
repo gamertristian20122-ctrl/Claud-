@@ -106,12 +106,19 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 		if w.player.dead and not e.mem.get("logged", false):
 			e.mem["logged"] = true
 			print("[keeper] Tallow fell after %.0f s in phase %d, the Keeper at %d%% (hand hits %d)" % [e.mem["fight_t"], e.phase, int(100.0 * e.hp / e.max_hp), e.mem.get("hand_hits", 0)])
+	# every phase is seen: damage past the next threshold waits until the Keeper has changed phase
+	if e.phase < 3:
+		var gate: float = [0.0, 0.66, 0.33][e.phase] * e.max_hp - 0.5
+		if e.hp < gate:
+			e.hp = gate
+			w.on_boss_hp(e)
 	if e.state == "stop":
 		_stop_tick(e)
 		return
-	# a new phase waits until no hand is out
-	var np := e._boss_phase()
-	if np != e.phase and e.state == "idle" and not _hands_busy(e):
+	# a new phase (one at a time) breaks off whatever the hands were doing
+	var np := mini(e._boss_phase(), e.phase + 1)
+	if np > e.phase and e.state != "roar":
+		_stop_hands(e)
 		e.phase = np
 		e.on_new_phase()
 		if w.main and w.main.autotest:
