@@ -1228,6 +1228,11 @@ so this file restates Kenney's standard CC0 licence for the pack.
 """
 
 
+# SFX made only from (edited / layered / saturated) pack sounds, without synthesized layers
+PACK_ONLY = {"ui_click", "ui_back", "ui_open", "coin_pickup", "bomb_pickup", "door_open", "door_close", "urn_break",
+             "crate_break", "trapdoor", "step"}
+
+
 def write_credits():
     os.makedirs(LIC_OUT, exist_ok=True)
     packs = sorted({rel.split("/")[0] for rels in USED.values() for rel in rels})
@@ -1251,7 +1256,8 @@ def write_credits():
         "",
         "SOUND EFFECTS (assets/audio/sfx/): layered, trimmed, faded, mono-mixed and loudness-balanced from the",
         "Kenney audio packs below (all CC0 1.0, public domain - credit appreciated, not required) plus original",
-        "numpy synthesis. Licences: " + ", ".join("assets/licenses/" + PACK_INFO[p][1] for p in packs),
+        "numpy synthesis. Licence files:",
+        *["  assets/licenses/" + PACK_INFO[p][1] for p in packs],
         "",
         "Packs used: " + "; ".join(f"Kenney {PACK_INFO[p][0]} (www.kenney.nl, CC0)" for p in packs),
         "",
@@ -1262,7 +1268,8 @@ def write_credits():
         if rels is None:
             continue
         srcs = ", ".join(f"{PACK_INFO[r.split('/')[0]][0]}: {os.path.basename(r)}" for r in rels)
-        lines.append(f"  {name + '.ogg':16s} " + (srcs + " + synthesis" if srcs else "original synthesis (numpy)"))
+        how = " (processed)" if name in PACK_ONLY else " + original synthesis"
+        lines.append(f"  {name + '.ogg':16s} " + (srcs + how if srcs else "original synthesis (numpy)"))
     with open(os.path.join(LIC_OUT, "CREDITS_audio.txt"), "w") as f:
         f.write("\n".join(lines) + "\n")
 

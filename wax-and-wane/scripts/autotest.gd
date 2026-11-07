@@ -94,6 +94,8 @@ func drive(w: Node) -> Array:
 	if mode == "tour" and not args.has("drive"):
 		return []
 	var p: Player = w.player
+	if args.has("god") and p:
+		p.wax = maxf(p.wax, 80.0)
 	if p == null or p.dead or w.transitioning:
 		return [Vector2.ZERO, Vector2.ZERO]
 	var dt := w.get_physics_process_delta_time()
