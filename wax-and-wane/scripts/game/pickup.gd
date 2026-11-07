@@ -19,6 +19,7 @@ var price_label: Label
 var _last_coins := -1
 var value := 0.0          # wax_warm: minutes it gives back
 var life := 0.0           # wax_warm: seconds before it cools and vanishes
+var _wait_leave := false  # after a keepsake swap, wait until the player steps away
 
 
 func setup(w: Node, k: String, pos: Vector2, it := "", pr := 0) -> void:
@@ -49,7 +50,7 @@ func _ready() -> void:
 			spr = _sprite("pickups/wax_small", Vector2(0, -5))
 		"wax_warm":
 			spr = _sprite("pickups/wax_small", Vector2(0, -5))
-			life = 4.0
+			life = 3.0
 		"wax_big":
 			spr = _sprite("pickups/wax_big", Vector2(0, -7))
 		"match":
@@ -138,7 +139,7 @@ func _physics_process(dt: float) -> void:
 			_vz = -_vz * 0.35 if absf(_vz) > 30 else 0.0
 	if kind == "wax_warm":
 		life -= dt
-		var k := clampf(1.0 - life / 4.0, 0.0, 1.0)
+		var k := clampf(1.0 - life / 3.0, 0.0, 1.0)
 		spr.modulate = Color("#ee8e2e").lerp(Color("#775c55"), k)
 		spr.visible = life > 1.2 or fmod(life, 0.2) > 0.08
 		if life <= 0.0 and not taken:
@@ -172,25 +173,29 @@ func _physics_process(dt: float) -> void:
 	var reach := 9.0 if kind in ["relic", "tonic", "chest", "keepsake"] else 8.0
 	if kind == "trapdoor":
 		reach = 7.0
+	if _wait_leave and d > reach + 6.0:
+		_wait_leave = false
 	if d < reach and _t > 0.35:
 		_collect(p)
 	elif kind in ["coin", "wax_small", "wax_big", "bomb"] and d < 22.0 and p.luck > 0.0 and _t > 0.5:
 		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
-	elif kind == "wax_warm" and d < 16.0 and _t > 0.3:
+	elif kind == "wax_warm" and d < 12.0 and _t > 0.3:
 		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
 
 
 func _collect(p: Player) -> void:
+	if kind == "keepsake" and (_t < 1.0 or _wait_leave):
+		return
 	var wax_cost: int = int(record.get("cost_wax", 0)) if record else 0
 	if wax_cost > 0:
-		if p.wax_max - wax_cost < 50.0:
+		if p.wax_max - wax_cost < float(Candles.def_of(world.candle_id)["wax"]) * 0.45:
 			if _t > 1.0:
 				world.fx_text(global_position + Vector2(0, -28), "not enough wax", UI.RED)
 				_t = 0.36
 			return
 		p.wax_max -= wax_cost
 		p.charred += wax_cost
-		p.wax = minf(p.wax, p.wax_max)
+		p.wax = maxf(1.0, minf(p.wax - wax_cost * 0.5, p.wax_max))   # the clock visibly jumps forward
 		world.pact = "smoke"
 		world.fx_text(global_position + Vector2(0, -30), "-%d max min" % wax_cost, UI.RED)
 		Audio.play("snuff_out", 0.0, 0.0, 0.7)
@@ -206,6 +211,8 @@ func _collect(p: Player) -> void:
 			return
 		p.coins -= cost
 		price = 0
+		if record:
+			record["price"] = 0
 		Audio.play("shop_buy")
 	match kind:
 		"coin":
@@ -233,8 +240,6 @@ func _collect(p: Player) -> void:
 			world.collect_item(item, global_position, record if record else {})
 			_take()
 		"keepsake":
-			if _t < 1.0:
-				return
 			var old := p.keepsake
 			var old_charge := p.charge
 			p.keepsake = item
@@ -247,7 +252,7 @@ func _collect(p: Player) -> void:
 				if record:
 					record["item"] = old
 					record["charge"] = old_charge
-				_t = 0.0
+				_wait_leave = true
 			else:
 				_take()
 		"match":

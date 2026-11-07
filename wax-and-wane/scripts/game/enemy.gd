@@ -202,7 +202,7 @@ func _physics_process(dt: float) -> void:
 		if champ == "chilled" and not p.dead:
 			if p.chill_t <= 0.0:
 				world.fx_text(p.global_position + Vector2(0, -30), "chilled", Color("#72d6ce"))
-			p.chill_t = 3.0
+			p.chill_t = 5.0
 		p.hurt((8.0 if boss else 6.0) * world.enemy_dmg_mult(), to_p)
 	# gentle separation
 	for e in world.enemies:

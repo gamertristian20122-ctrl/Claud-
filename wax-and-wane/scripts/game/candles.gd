@@ -25,8 +25,8 @@ const LIST := {
 		"unlock_text": "Reach a x8 Kindling streak",
 	},
 	"pillar": {
-		"name": "Altar Pillar", "line": "Lit at 11:30 PM. Slow, sturdy, hits hard.",
-		"wax": 150.0, "drain": 1.0, "speed": 0.85, "damage": 1.25, "fire_delay": 1.0, "shots": 1,
+		"name": "Altar Pillar", "line": "Lit at 11:45 PM. Slow, sturdy, hits hard.",
+		"wax": 135.0, "drain": 1.15, "speed": 0.85, "damage": 1.15, "fire_delay": 1.0, "shots": 1,
 		"body_w": 14, "colours": ["#fdf7ed", "#f3e6cf", "#d3bfa9", "#aa8d7a"],
 		"start_relic": "wax_coat",
 		"unlock_text": "Snuff the Hollow Warden (floor 3)",

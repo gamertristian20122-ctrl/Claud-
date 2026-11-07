@@ -45,7 +45,7 @@ const RITES := {
 const KEEPSAKES := {
 	"hand_bell": {"name": "Hand Bell", "desc": "Ring it: the house freezes for 3 s", "pips": 3},
 	"flare_match": {"name": "Flare Match", "desc": "A ring of 16 burning embers", "pips": 2},
-	"winding_key": {"name": "Winding Key", "desc": "Turn the clock back 12 minutes", "pips": 4},
+	"winding_key": {"name": "Winding Key", "desc": "Turn the clock back 10 minutes", "pips": 6},
 	"smoke_jar": {"name": "Smoke Jar", "desc": "3 s untouchable in a cloud of smoke", "pips": 3},
 }
 
@@ -66,9 +66,9 @@ static func use_keepsake(id: String, p: Player, world: Node) -> void:
 			Audio.play("explosion", -6.0, 0.05, 1.4)
 			world.fx_ring(p.global_position + Vector2(0, -10), UI.EMBER)
 		"winding_key":
-			p.heal(12.0)
+			p.heal(10.0)
 			Audio.play("tick", 0.0, 0.0, 0.8)
-			world.fx_text(p.global_position + Vector2(0, -34), "+12 min", UI.GOLD)
+			world.fx_text(p.global_position + Vector2(0, -34), "+10 min", UI.GOLD)
 			world.fx_ring(p.global_position + Vector2(0, -10), UI.CREAM)
 		"smoke_jar":
 			p.invuln = 3.0
@@ -233,7 +233,9 @@ static func apply(id: String, p: Player, world: Node) -> void:
 		"spare_wick":
 			p.damage *= 1.3
 		"wax_seal":
-			world.shop_discount = 0.6
+			if not p.relics.has("wax_seal"):
+				p.relics.append("wax_seal")
+			world.recompute_discount()
 		"vigil_candle":
 			p.wax_max += 12.0
 			p.heal(999.0)

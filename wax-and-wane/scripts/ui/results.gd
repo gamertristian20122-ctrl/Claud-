@@ -85,9 +85,9 @@ func _ready() -> void:
 ## Score for the nightly seeded run; only the first try of a date counts as "first".
 func _daily_score() -> int:
 	var won: bool = params.get("won", false)
-	var s := 1000 * int(params.get("floor", 1)) + 60 * int(params.get("rooms", 0)) + 5 * int(params.get("kills", 0)) + 10 * int(params.get("coins", 0)) - 40 * int(params.get("hits", 0))
+	var s := 1000 * int(params.get("floor", 1)) + 60 * int(params.get("rooms", 0)) + 5 * int(params.get("kills", 0)) - 40 * int(params.get("hits", 0))
 	if won:
-		s += int(25.0 * (120.0 - float(params.get("clock", 120.0))))
+		s += 2000 + int(25.0 * (120.0 - float(params.get("clock", 120.0))))
 	s = maxi(s, 0)
 	var today := Time.get_date_string_from_system()
 	if not params.get("scored", false):

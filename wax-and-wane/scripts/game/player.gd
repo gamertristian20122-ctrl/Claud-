@@ -171,6 +171,9 @@ func refresh_rite_look() -> void:
 func set_blue(b: bool) -> void:
 	blue = b
 	_set_flame_frames()
+	if flame2:
+		flame2.sprite_frames = flame.sprite_frames
+		flame2.play("default")
 	flame.play("default")
 	light.color = Color(0.6, 0.8, 1.0) if b else Color(1.0, 0.74, 0.44)
 

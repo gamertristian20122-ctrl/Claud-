@@ -17,7 +17,7 @@ const LAST_FLOOR := 4
 ## Omens of the Hour: floor twists that always pay you back.
 const OMENS := {
 	"draught": {"name": "Cold Draught", "desc": "You melt faster, but drippings are richer"},
-	"tallow_moon": {"name": "Tallow Moon", "desc": "Marked foes everywhere, and they pay double"},
+	"tallow_moon": {"name": "Tallow Moon", "desc": "Marked foes everywhere; gold and bombs pay double"},
 	"long_night": {"name": "Long Night", "desc": "A bigger floor with two treasure rooms"},
 	"smoky_halls": {"name": "Smoky Halls", "desc": "Your light is shorter, but rooms give twice"},
 }
@@ -77,6 +77,8 @@ var _intro_root: Control
 
 var candle_id := "tallow"
 var omen := ""
+var run_seed := 0
+var _bell_paid := {}
 var daily := false
 var unlocked_this_run: Array = []
 
@@ -87,9 +89,10 @@ func setup(params: Dictionary) -> void:
 		candle_id = "tallow"
 	daily = params.get("daily", false)
 	if params.has("seed"):
-		rng.seed = int(params["seed"])
+		run_seed = int(params["seed"])
 	else:
-		rng.randomize()
+		run_seed = randi()
+	rng.seed = run_seed
 
 
 func _ready() -> void:
@@ -124,7 +127,7 @@ func _ready() -> void:
 	player = Player.new()
 	player.world = self
 	player.apply_candle(candle_id)
-	if Game.settings.get("gentle", false):
+	if Game.settings.get("gentle", false) and not daily:
 		player.drain_mult *= 0.75
 	actors.add_child(player)
 	var cd: Dictionary = Candles.def_of(candle_id)
@@ -143,8 +146,11 @@ func _ready() -> void:
 
 func _on_unlock(key: String) -> void:
 	unlocked_this_run.append(key)
-	hud.show_banner("NEW CANDLE: %s" % Candles.def_of(key)["name"].to_upper(), "Find it in the Candle Box on the title screen", 2.6)
-	Audio.play("victory", -4.0)
+	var tw := create_tween()
+	tw.tween_interval(3.0)
+	tw.tween_callback(func():
+		hud.show_banner("NEW CANDLE: %s" % Candles.def_of(key)["name"].to_upper(), "Find it in the Candle Box on the title screen", 2.6)
+		Audio.play("victory", -4.0))
 
 
 func _exit_tree() -> void:
@@ -188,6 +194,10 @@ func floor_title() -> String:
 	return t
 
 
+func recompute_discount() -> void:
+	shop_discount = (0.6 if player.relics.has("wax_seal") else 1.0) * (0.75 if omen == "smoky_halls" else 1.0)
+
+
 ## Wax pickups give more under the Cold Draught.
 func wax_bonus() -> float:
 	return 1.5 if omen == "draught" else 1.0
@@ -199,17 +209,21 @@ func _start_floor(n: int) -> void:
 	if n == 2:
 		Game.unlock("tea_light")
 	player.gutter_used = false
+	# each floor has its own seeded generator, so a seed always builds the same house
+	var frng := RandomNumberGenerator.new()
+	frng.seed = hash("%d:%d" % [run_seed, n])
+	rng.seed = hash("%d:loot:%d" % [run_seed, n])
 	var last := omen
 	omen = ""
-	if n >= 2 and rng.randf() < 0.4:
+	if n >= 2 and frng.randf() < 0.4:
 		var keys: Array = OMENS.keys().filter(func(k): return k != last)
-		omen = keys[rng.randi() % keys.size()]
+		omen = keys[frng.randi() % keys.size()]
 	if omen == "long_night":
-		layout = FloorGen.generate(n, rng, 3, 2)
+		layout = FloorGen.generate(n, frng, 3, 2)
 		player.heal(8.0)
 	else:
-		layout = FloorGen.generate(n, rng)
-	shop_discount = (0.6 if player.relics.has("wax_seal") else 1.0) * (0.75 if omen == "smoky_halls" else 1.0)
+		layout = FloorGen.generate(n, frng)
+	recompute_discount()
 	dark.color = FLOORS[n]["dark"]
 	for c in layout["cells"].keys():
 		layout["cells"][c]["seen"] = false
@@ -256,6 +270,8 @@ func _build_room(c: Vector2i) -> Room:
 	# restore persistent pickups
 	for rec in layout["cells"][c]["pickups"]:
 		_spawn_pickup_node(r, rec)
+	if layout["cells"][c].get("altar", false):
+		_spawn_altar_visual(r)
 	return r
 
 
@@ -334,7 +350,7 @@ func _spawn_room_enemies() -> void:
 			pos = random_free_spot(player.global_position, 72.0)
 		var list: Array = pool[letter]
 		var champ := ""
-		if champs_left > 0 and rng.randf() < champ_chance() * (3.0 if omen == "tallow_moon" else 1.0):
+		if champs_left > 0 and rng.randf() < champ_chance() * (2.0 if omen == "tallow_moon" else 1.0):
 			champs_left -= 1
 			champ = ["ember", "gilded", "sooty", "chilled"][rng.randi() % 4]
 			if Game.tip("marked"):
@@ -557,13 +573,14 @@ func collect_item(id: String, pos: Vector2, rec := {}) -> void:
 				tw.tween_callback(o.queue_free)
 	if id == "":
 		return
+	var was_done := Items.rite_of(id) in player.rites
 	Items.apply(id, player, self)
 	Audio.play("item_get")
 	var rite := Items.check_rite(id, player, self)
-	if rite != "" and not Items.rite_of(id) in player.rites:
-		hud.show_banner(Items.display_name(id).to_upper(), "%s   (%s)" % [Items.desc(id), rite], 2.0)
-	elif rite == "":
+	if rite == "":
 		hud.show_banner(Items.display_name(id).to_upper(), Items.desc(id), 2.0)
+	elif was_done or not Items.rite_of(id) in player.rites:
+		hud.show_banner(Items.display_name(id).to_upper(), "%s   (%s)" % [Items.desc(id), rite], 2.0)
 	fx_ring(pos + Vector2(0, -16), Color(1.0, 0.8, 0.4))
 	player._happy_face = 1.5
 
@@ -627,7 +644,7 @@ func on_enemy_killed(e: Enemy) -> void:
 	if e.boss:
 		_boss_down(e)
 		return
-	for rep in (2 if omen == "tallow_moon" and e.champ != "" else 1):
+	for rep in (2 if omen == "tallow_moon" and e.champ in ["gilded", "sooty"] else 1):
 		_champ_drop(e)
 	if e.champ != "":
 		return
@@ -635,9 +652,13 @@ func on_enemy_killed(e: Enemy) -> void:
 
 
 func _champ_drop(e: Enemy) -> void:
+	if candle_id == "black_taper" and e.champ in ["ember", "chilled"]:
+		for i in 3:
+			add_pickup("coin", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 40.0)
+		return
 	match e.champ:
 		"ember":
-			for i in 2:
+			for i in 1:
 				add_pickup("wax_small", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 30.0)
 		"gilded":
 			for i in 5:
@@ -645,7 +666,7 @@ func _champ_drop(e: Enemy) -> void:
 		"sooty":
 			add_pickup("bomb", e.global_position)
 		"chilled":
-			add_pickup("wax_big", e.global_position)
+			add_pickup("wax_small", e.global_position)
 
 
 func _plain_drop(e: Enemy) -> void:
@@ -697,7 +718,7 @@ func _offer_altar() -> void:
 		chance = 1.0
 	chance = minf(chance, 0.85 if chance < 1.0 else 1.0)
 	var c := room.center()
-	if pact != "smoke" and (declined_smoke or player.wax < 48.0):
+	if candle_id != "black_taper" and pact != "smoke" and (declined_smoke or player.wax < 48.0):
 		if rng.randf() < 0.6:
 			var a := add_pickup("relic", c + Vector2(-44, -34), _next_relic())
 			var gift := "vigil_candle" if rng.randf() < 0.65 or player.relics.has("wax_seal") else "wax_seal"
@@ -709,28 +730,38 @@ func _offer_altar() -> void:
 	if rng.randf() < chance:
 		altar_floor = floor_num
 		var strong := ["twin_wick", "candelabra", "will_o_wisp", "blue_flame", "phoenix_feather"]
+		room.data["altar"] = true
 		for side in [-1, 1]:
 			var id := _next_relic()
+			var tries := 0
+			while id in ["beeswax", "tallow_heart"] and tries < 6:
+				relic_pool.append(id)
+				id = _next_relic()
+				tries += 1
 			var p := add_pickup("relic", c + Vector2(48 * side, -34), id)
 			p.record["cost_wax"] = 25 if id in strong else 15
 			p.queue_free()
 			_spawn_pickup_node(room, p.record)
-		var altar := Sprite2D.new()
-		altar.texture = Art.tex("rooms/candelabra_unlit")
-		altar.offset = Vector2(0, -12)
-		altar.position = c + Vector2(0, -32) - room.position
-		room.objects.add_child(altar)
-		var l := PointLight2D.new()
-		l.texture = Art.light_tex
-		l.color = Color(0.8, 0.3, 0.45)
-		l.energy = 0.9
-		l.texture_scale = 0.6
-		l.position = Vector2(0, -16)
-		altar.add_child(l)
-		var tw := altar.create_tween().set_loops()
-		tw.tween_callback(func(): fx_smoke(altar.global_position + Vector2(0, -26)))
-		tw.tween_interval(0.6)
+		_spawn_altar_visual(room)
 		hud.show_banner("THE SMOKE ALTAR", "Pay in minutes. They never come back.", 2.4)
+
+
+func _spawn_altar_visual(r: Room) -> void:
+	var altar := Sprite2D.new()
+	altar.texture = Art.tex("rooms/candelabra_unlit")
+	altar.offset = Vector2(0, -12)
+	altar.position = r.center() + Vector2(0, -32) - r.position
+	r.objects.add_child(altar)
+	var l := PointLight2D.new()
+	l.texture = Art.light_tex
+	l.color = Color(0.8, 0.3, 0.45)
+	l.energy = 0.9
+	l.texture_scale = 0.6
+	l.position = Vector2(0, -16)
+	altar.add_child(l)
+	var tw := altar.create_tween().set_loops()
+	tw.tween_callback(func(): fx_smoke(altar.global_position + Vector2(0, -26)))
+	tw.tween_interval(0.6)
 
 
 func on_boss_phase(ph: int) -> void:
@@ -1044,7 +1075,7 @@ func on_player_hurt(amount: float) -> void:
 			hud.show_hint("Your wax spilled! Grab the warm drops before they cool", 2.5)
 		var k := 3 if amount >= 8.0 else 2
 		for i in k:
-			add_loose("wax_warm", player.global_position, amount * 0.5 / k, Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(45.0, 70.0))
+			add_loose("wax_warm", player.global_position, amount * 0.4 / k, Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(60.0, 85.0))
 	shake(3.0)
 	hitstop(0.06, 0.05)
 	hud.on_hurt()
@@ -1092,8 +1123,9 @@ func _end_run(won: bool) -> void:
 	if won:
 		Game.records["wins"] += 1
 		var t := clock_minutes()
-		if float(Game.records["best_finish"]) <= 0.0 or t < float(Game.records["best_finish"]):
-			Game.records["best_finish"] = maxf(t, 0.01)
+		var key := "best_finish" if candle_id == "tallow" else "best_finish_" + candle_id
+		if not Game.records.has(key) or float(Game.records[key]) <= -999.0 or float(Game.records.get(key, 0.0)) == 0.0 or t < float(Game.records[key]):
+			Game.records[key] = t
 	Game.save()
 	main.goto("results", {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
 		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins})
@@ -1147,7 +1179,7 @@ func _physics_process(dt: float) -> void:
 		if player.wax < 8.0:
 			melt *= 0.6       # the flame clings on when it is nearly out
 		if player.chill_t > 0.0:
-			melt *= 1.5
+			melt *= 2.5
 		player.wax -= melt * dt
 		streak_t -= dt
 		if streak_t <= 0.0:
@@ -1174,14 +1206,15 @@ func _clock_events() -> void:
 		if m >= mark and not _bells.has(mark):
 			_bells[mark] = true
 			Audio.play("bell_toll")
-			if "clock" in player.rites:
+			if "clock" in player.rites and not _bell_paid.has(mark):
+				_bell_paid[mark] = true
 				player.heal(4.0)
 				fx_text(player.global_position + Vector2(0, -34), "+4 min", UI.GOLD)
 			match int(mark):
 				60: hud.show_banner("1:00 AM", "The clock strikes one", 1.8)
 				90: hud.show_banner("1:30 AM", "Half past one. Hurry.", 1.6)
 				105: hud.show_banner("1:45 AM", "Your wick is nearly gone", 1.6)
-		elif m < mark - 4.0 and _bells.has(mark):
+		elif m < mark - 10.0 and _bells.has(mark):
 			_bells.erase(mark)
 	if player.wax < 15.0 and not player.dead:
 		_heartbeat -= get_physics_process_delta_time()

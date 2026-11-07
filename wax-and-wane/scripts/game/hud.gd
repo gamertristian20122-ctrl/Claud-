@@ -521,6 +521,13 @@ func _input(event: InputEvent) -> void:
 			bomb_btn.scale = Vector2(0.9, 0.9)
 			bomb_btn.create_tween().tween_property(bomb_btn, "scale", Vector2.ONE, 0.12)
 		return
+	if event is InputEventScreenDrag and event.index == _keep_idx and event.position.distance_to(_keep_press) > 8.0:
+		_keep_idx = -1
+		if _r_idx < 0:
+			_r_idx = event.index
+			_r_origin = _keep_press
+			stick_r.position = _r_origin
+			stick_r.visible = true
 	if event is InputEventScreenDrag and event.index == _bomb_idx and event.position.distance_to(_bomb_press) > 8.0:
 		# a drag that started on the bomb button becomes the aim stick
 		_bomb_idx = -1
