@@ -101,6 +101,7 @@ func setup(params: Dictionary) -> void:
 	else:
 		run_seed = randi()
 	rng.seed = run_seed
+	set_meta("seeded", params.has("seed") and not daily)   # a typed-in seed: fixed relic pool (Unlocks)
 
 
 func _ready() -> void:
@@ -130,7 +131,7 @@ func _ready() -> void:
 	_fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fl.add_child(_fade)
-	relic_pool = Items.RELICS.keys()
+	relic_pool = Unlocks.pool(self)   # relics that are in the house yet (the fixed pool for seeded runs)
 	FloorGen.shuffle(relic_pool, rng)
 	player = Player.new()
 	player.world = self
@@ -256,7 +257,7 @@ func _start_floor(n: int) -> void:
 	hud.show_banner(FLOORS[n]["name"].to_upper(), "Floor %d of %d   -   %s%s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes()), omen_txt], 2.6)
 	if omen != "":
 		hud.show_hint("%s: %s" % [OMENS[omen]["name"], OMENS[omen]["desc"]], 5.0)
-	if n == 1 and (Game.records["seen_intro"] or main.autotest != null):
+	if n == 1 and (Game.records["seen_intro"] or main.autotest != null) and int(Game.records["runs"]) <= 3:   # later: the chalk on the floor
 		hud.show_hint(Controls.controls_hint(), 7.0)
 	RunSave.on_floor_start(self)   # Save & Continue: snapshot the start of this floor
 
@@ -313,7 +314,7 @@ func _on_enter_room() -> void:
 				var a := add_pickup("relic", room.center() + Vector2(-26, 2), _next_relic())
 				var b: Pickup
 				if floor_num == 1 and player.keepsake == "":
-					b = add_pickup("keepsake", room.center() + Vector2(26, 2), Items.KEEPSAKES.keys()[rng.randi() % Items.KEEPSAKES.size()])
+					b = add_pickup("keepsake", room.center() + Vector2(26, 2), Unlocks.pick_keepsake(self))
 				else:
 					b = add_pickup("relic", room.center() + Vector2(26, 2), _next_relic())
 				a.record["group"] = "treasure"
@@ -512,7 +513,7 @@ func _stock_shop() -> void:
 	var tonics := Items.TONICS.keys()
 	add_pickup("tonic", c + Vector2(0, -4), tonics[rng.randi() % tonics.size()], 5)
 	if floor_num >= 2 and rng.randf() < 0.35:
-		var ks: Array = Items.KEEPSAKES.keys().filter(func(k): return k != player.keepsake)
+		var ks: Array = Unlocks.keepsakes(self).filter(func(k): return k != player.keepsake)
 		add_pickup("keepsake", c + Vector2(40, -4), ks[rng.randi() % ks.size()], 8)
 	else:
 		add_pickup("wax_big", c + Vector2(40, 0), "", 4)
@@ -597,6 +598,7 @@ func collect_item(id: String, pos: Vector2, rec := {}) -> void:
 	if id == "":
 		return
 	var was_done := Items.rite_of(id) in player.rites
+	Records.take(self, id)   # the Journal: taken / seen
 	Items.apply(id, player, self)
 	Juice.of(self).relic_taken(id)
 	Audio.play("item_get")
@@ -662,6 +664,7 @@ func count_enemies() -> int:
 
 func on_enemy_killed(e: Enemy) -> void:
 	kills += 1
+	Records.on_kill(self, e)   # the Journal: lodgers snuffed, guardians beaten
 	RelicFx.on_kill(self, e)
 	Audio.play("enemy_die")
 	fx_poof(e.global_position + Vector2(0, -6), false, 1.4)
@@ -958,6 +961,7 @@ func charge_keepsake(n: int) -> void:
 
 
 func on_keepsake_taken(id: String, pos: Vector2, rec: Dictionary) -> void:
+	Records.take(self, id)   # the Journal: taken / seen
 	Audio.play("item_get")
 	Juice.of(self).relic_taken(id)
 	if Game.tip("keepsake"):
@@ -1065,6 +1069,7 @@ func _explode(pos: Vector2, r: Room) -> void:
 			e.active = true
 			e.take_hit(10.0 + 2.0 * floor_num, (e.global_position - pos).normalized() * 150.0)
 	if player.global_position.distance_to(pos) < bomb_radius * 0.8:
+		Records.blame("bomb")
 		player.hurt(10.0, player.global_position - pos)
 
 
@@ -1090,6 +1095,7 @@ func add_moth() -> void:
 
 func on_player_hurt(amount: float) -> void:
 	room_hits += 1
+	Records.on_hurt(self)   # who landed the blow (the death note)
 	hits_total += 1
 	if streak >= 3:
 		fx_text(player.global_position + Vector2(0, -40), "doused", UI.DIM)
@@ -1114,6 +1120,7 @@ func on_player_died() -> void:
 	if finished:
 		return
 	finished = true
+	Records.on_died(self)   # what put the flame out
 	hud.release_sticks()
 	Audio.music("death_jingle", 0.3)
 	Audio.play("snuff_out")
@@ -1154,8 +1161,8 @@ func _end_run(won: bool) -> void:
 		if best == 0.0 or t < best:
 			Game.records[key] = t if t != 0.0 else 0.001   # 0 means "never won"
 	Game.save()
-	main.goto("results", {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
-		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins})
+	main.goto("results", Records.end_run(self, won, {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
+		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins}))
 
 
 func give_up() -> void:
