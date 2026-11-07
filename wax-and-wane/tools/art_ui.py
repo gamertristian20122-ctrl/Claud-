@@ -569,12 +569,14 @@ GLYPH_AMP = """
 ....###..###.....
 ....###..###.....
 ....###..###.....
+....###..###.....
 .....######......
 .....#####.......
 ....#######...###
 ...###.####..###.
 ..###...####.###.
 ..###....######..
+.###......####...
 .###......####...
 .###......#####..
 .###.....###.###.
@@ -583,32 +585,62 @@ GLYPH_AMP = """
 ....#####........
 """
 
-# Last cream row per column (-1 = no cream in that column).
+# Cream top layer: last cream row per column ('.' = none). A gentle wavy
+# edge; the real drips are the drop sprites below.
 MELT = {
-    "W": [2, 3, 3, 4, 6, 10, 11, 9, 4, 3, -1, -1, -1, -1, 3, 3, 4, 3, 5, 12, 13, 11, 4,
-          -1, -1, -1, -1, 3, 3, 5, 7, 6, 3, 2],
-    "A": [-1, -1, -1, -1, -1, -1, -1, -1, 4, 4, 3, 3, 4, 10, 11, 7, 4, -1, -1, -1, -1, -1, -1, -1],
-    "X": [2, 3, 3, 4, 7, 8, 6, 3, 2, -1, -1, -1, -1, 2, 3, 5, 4, 3, 3, 2, -1],
-    "N": [2, 3, 4, 11, 12, 5, 3, 5, 6, 3, -1, -1, -1, -1, -1, -1, 2, 3, 3, 8, 7, 3, 3, 2],
-    "E": [3, 3, 4, 9, 10, 7, 4, 3, 2, 3, 3, 2, 2, 3, 2, 5, 6, 3, -1],
+    "W": "2332333233....3323332333....332332",
+    "A": "........33233233........",
+    "X": "233232332....2333233..",
+    "N": "2332332332......23323332",
+    "E": "3323232332323323332",
 }
 
-# Wax drips hanging below letters: (char, x within the letter, sprite).
-DRIP_LONG = """
+# Drops of cream running down the strokes: 2 px neck, 4 px bulb.
+DROP_BIG = """
+.ww.
+.ww.
+.ww.
+.ww.
+wwww
+wwww
+.ww.
+"""
+DROP_MID = """
+.ww.
+.ww.
+wwww
+wwww
+.ww.
+"""
+# (letter index in LOGO_TEXT, x, y, sprite) - y is the drop's first row.
+FACE_DRIPS = [
+    (0, 4, 3, DROP_BIG), (0, 17, 3, DROP_MID),
+    (1, 12, 3, DROP_BIG),
+    (2, 5, 3, DROP_MID),
+    (4, 4, 3, DROP_MID), (4, 17, 3, DROP_BIG),
+    (5, 12, 3, DROP_MID),
+    (6, 2, 3, DROP_BIG), (6, 18, 3, DROP_MID),
+    (7, 3, 3, DROP_BIG),
+]
+
+# Wax hanging off the bottom slab of a few letters (tan wax, cream lit edge).
+HANG_BIG = """
+wXXd
+wXXd
+.wd.
+.wd.
+wwXd
+wXXd
+.dD.
+"""
+HANG_SMALL = """
 wXd
-wXd
-wX.
-wX.
 wXd
 wXd
 .d.
 """
-DRIP_SHORT = """
-wd
-wd
-Xd
-"""
-DRIPS = [(1, 3, DRIP_LONG), (2, 16, DRIP_SHORT), (5, 15, DRIP_SHORT), (6, 4, DRIP_LONG), (7, 11, DRIP_SHORT)]
+# (letter index, x, sprite) - the sprite starts on the letter's bottom row.
+DRIPS = [(1, 3, HANG_BIG), (2, 15, HANG_SMALL), (6, 3, HANG_BIG), (7, 11, HANG_SMALL)]
 
 LOGO_TEXT = ["W", "A", "X", "&", "W", "A", "N", "E"]
 LOGO_KERN = {("W", "A"): -5}
@@ -626,64 +658,74 @@ def glyph_rows(name):
 
 
 def build_logo():
-    # 1) place the silhouettes
+    # 1) place the silhouettes on the baseline
     placed = []
     x = 1
     prev = None
     for ch in LOGO_TEXT:
         rows = glyph_rows(ch)
-        w = len(rows[0])
         if prev is not None:
             x += LOGO_GAP + LOGO_KERN.get((prev, ch), 0)
             if "&" in (prev, ch):
                 x += AMP_SPACE
-        y = CAP_TOP + (24 - len(rows))          # everything sits on the baseline
-        placed.append((ch, x, y, rows))
-        x += w
+        placed.append((ch, x, CAP_TOP + 24 - len(rows), rows))
+        x += len(rows[0])
         prev = ch
-    W = x + 3
-    Hh = CAP_TOP + 24 + 12
-    face = {}      # (x, y) -> role ('top' / 'body'), plus colour set
+    W, Hh = x + 3, CAP_TOP + 24 + 12
+    face = {}        # (x, y) -> letter index
+    cream = set()
     for i, (ch, gx, gy, rows) in enumerate(placed):
-        cols = BRASS_COLOURS if ch == "&" else WAX_COLOURS
-        melt = MELT.get(ch)
         h = len(rows)
+        melt = MELT.get(ch)
         for r, row in enumerate(rows):
             for c, v in enumerate(row):
                 if v != "#":
                     continue
-                # soften the outer corners of the first and last slab rows
-                if r in (0, h - 1):
-                    left = c == 0 or row[c - 1] != "#"
-                    right = c == len(row) - 1 or row[c + 1] != "#"
-                    if left or right:
+                if r in (0, h - 1):          # soften the slab corners
+                    if c == 0 or row[c - 1] != "#" or c == len(row) - 1 or row[c + 1] != "#":
                         continue
-                if melt is not None:
-                    role = "top" if r <= melt[c] else "body"
-                else:
-                    role = "top" if r <= 2 else "body"
-                face[(gx + c, gy + r)] = (role, cols)
-    # 2) shade faces (light from the top-left)
+                face[(gx + c, gy + r)] = i
+                if melt and melt[c] != "." and r <= int(melt[c]):
+                    cream.add((gx + c, gy + r))
+    for (gi, dx, dy, spr) in FACE_DRIPS:
+        ch, gx, gy, rows = placed[gi]
+        for r, row in enumerate(rows_of(spr)):
+            for c, v in enumerate(row):
+                p = (gx + dx + c, gy + dy + r)
+                if v == "w" and face.get(p) == gi:
+                    cream.add(p)
+    # 2) shade the faces, light from the top-left
     pix = {}
-    for (fx, fy), (role, cols) in face.items():
-        right = face.get((fx + 1, fy))
-        above = face.get((fx, fy - 1))
-        left = face.get((fx - 1, fy))
-        if role == "top":
-            ch = cols["topshade"] if right is None else cols["top"]
-        else:
-            shaded = right is None or (above and above[0] == "top") or (left and left[0] == "top")
-            ch = cols["shade"] if shaded else cols["body"]
+    for (fx, fy), i in face.items():
+        if placed[i][0] == "&":                       # polished brass
+            up = (fx, fy - 1) in face
+            lf = (fx - 1, fy) in face
+            rt = (fx + 1, fy) in face
+            dn = (fx, fy + 1) in face
+            if not up or not lf:
+                ch = "y"
+            elif not rt or not dn:
+                ch = "c"
+            else:
+                ch = "o"
+        elif (fx, fy) in cream:                       # melted cream wax
+            ch = "w" if (fx + 1, fy) in face else "X"
+        else:                                         # tan wax body
+            shaded = ((fx + 1, fy) not in face or (fx, fy - 1) in cream
+                      or (fx - 1, fy) in cream)
+            ch = "d" if shaded else "X"
         pix[(fx, fy)] = ch
     # 3) slab depth: two rows straight down below every face pixel
-    for (fx, fy), (role, cols) in face.items():
-        for k, key in ((1, "depth1"), (2, "depth2")):
+    for (fx, fy), i in face.items():
+        brass = placed[i][0] == "&"
+        for k in (1, 2):
             p = (fx, fy + k)
             if p in face:
                 break
-            if p not in pix or (key == "depth1" and pix[p] == cols["depth2"]):
-                pix[p] = cols[key]
-    # 4) hanging drips (start on the face's bottom row, cover the slab depth)
+            want = ("R" if brass else "D") if k == 1 else ("m" if brass else "F")
+            if p not in pix or (k == 1 and pix[p] in "Fm"):
+                pix[p] = want
+    # 4) wax hanging off the bottom slabs
     for (gi, dx, spr) in DRIPS:
         ch, gx, gy, rows = placed[gi]
         top = gy + len(rows) - 1
@@ -691,29 +733,22 @@ def build_logo():
             for c, v in enumerate(row):
                 if v != ".":
                     pix[(gx + dx + c, top + r)] = v
-    # 5) Tallow's flame burns on top of the &
-    amp = [p for p in placed if p[0] == "&"][0]
-    flame = Image.open(os.path.join(ART, "hero", "flame_f0.png")).convert("RGBA")
     im = Image.new("RGBA", (W, Hh), (0, 0, 0, 0))
     out = im.load()
     for (px_, py_), ch in pix.items():
         out[px_, py_] = rgba(PAL[ch])
-    # 6) outline
-    solid = set(pix)
+    # 5) 1 px outline (4-neighbour, like the 0x72 sprites)
     ol = rgba(PAL["K"])
     for y in range(Hh):
         for xx in range(W):
-            if (xx, y) in solid:
-                continue
-            if any((xx + dx, y + dy) in solid for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+            if (xx, y) not in pix and any((xx + dx, y + dy) in pix
+                                          for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
                 out[xx, y] = ol
-    # flame: wick pixel lands one row above the &'s top loop
-    fx = amp[1] + 8 - 4
-    fy = amp[2] - 1 - 12
-    im.alpha_composite(flame, (fx, fy))
-    # crop to content (+0 margin)
-    bbox = im.getbbox()
-    return im.crop(bbox)
+    # 6) Tallow's flame burns on the top loop of the &, wick on its outline
+    amp = [p for p in placed if p[0] == "&"][0]
+    flame = Image.open(os.path.join(ART, "hero", "flame_f0.png")).convert("RGBA")
+    im.alpha_composite(flame, (amp[1] + 8 - 4, amp[2] - 1 - 12))
+    return im.crop(im.getbbox())
 
 
 def make_logo():
