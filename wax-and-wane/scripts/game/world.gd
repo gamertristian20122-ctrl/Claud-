@@ -232,7 +232,7 @@ func _start_floor(n: int) -> void:
 	else:
 		layout = FloorGen.generate(n, frng)
 	recompute_discount()
-	boss_kind = Enemy.pick_boss(n, run_seed, daily)
+	boss_kind = Enemy.pick_boss(FLOORS[n]["bosses"], n, run_seed, daily)
 	dark.color = FLOORS[n]["dark"]
 	for c in layout["cells"].keys():
 		layout["cells"][c]["seen"] = false

@@ -56,8 +56,9 @@ records so the daily is identical for everyone.
   `e.tele()` (a `Telegraph` node: `line()`, `ring()`, `path()`); feel free to add sound/shake there.
   New enemy shot kinds (all 7x7, loaded by `Shot` as `fx/<kind>`): `bolt_page`, `bolt_ring`, `bolt_wax`,
   `bolt_bone` in `assets/art/fx/`.
-- **World:** `world.boss_kind` is the guardian chosen for the current floor (`Enemy.pick_boss(n, seed, daily)`),
-  `Enemy.FLOOR_BOSSES` lists both options per floor. `FLOORS[n]["bosses"]` mirrors it; `FLOORS[n]["boss"]` kept.
+- **World:** `world.boss_kind` is the guardian chosen for the current floor
+  (`Enemy.pick_boss(FLOORS[n]["bosses"], n, run_seed, daily)`); `FLOORS[n]["bosses"]` lists both options,
+  `FLOORS[n]["boss"]` (the v1 guardian) is kept for anything that still reads it.
 - **Enemy flags:** `e.buried` = underground / blinked out (no contact, shots pass, `active` is false but the
   AI keeps running). `e.mem` is per-creature scratch space. `e.later(delay, fn)` runs `fn` on enemy time.
 - **Player:** Soot smears (`SootPatch`, on the room's floor layer) slow Tallow by handing back 45% of each

@@ -29,7 +29,7 @@ func build(kinds: Array, cols: int, sc: int, title: String) -> void:
 	add_child(head)
 	var rows := ceili(kinds.size() / float(cols))
 	var cw := vs.x / cols
-	var ch := (vs.y - 12.0) / rows
+	var ch := (vs.y - 18.0) / rows
 	for i in kinds.size():
 		var k: String = kinds[i]
 		var d: Dictionary = Enemy.DEFS[k]
@@ -115,8 +115,9 @@ static func tour(bot: Node) -> void:
 static func boss_tour(bot: Node) -> void:
 	bot.args["god"] = true
 	bot.args["drive"] = true
+	var floors: Dictionary = load("res://scripts/game/world.gd").FLOORS
 	for n in [1, 2, 3, 4]:
-		for kind in Enemy.FLOOR_BOSSES[n]:
+		for kind in floors[n]["bosses"]:
 			if bot.args.has("only") and str(bot.args["only"]) != kind:
 				continue
 			bot.main.goto("game", {"seed": 11 + n})

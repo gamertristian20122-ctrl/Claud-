@@ -128,13 +128,6 @@ const DEFS := {
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
 }
 
-## Two guardians may wait on each floor; one is picked from the run seed.
-const FLOOR_BOSSES := {
-	1: ["big_zombie", "wax_mother"],
-	2: ["ogre", "sexton"],
-	3: ["necro_boss", "choir"],
-	4: ["big_demon", "pendulum"],
-}
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
 
@@ -207,10 +200,12 @@ static func _blob(w: int, h: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
-## The floor's guardian, picked from the run seed (so Tonight's Candle is the same for everyone).
-## Until a player has won once, a normal run always ends with the Hour Fiend.
-static func pick_boss(floor_num: int, run_seed: int, daily := false) -> String:
-	var opts: Array = FLOOR_BOSSES.get(floor_num, ["big_zombie"])
+## The floor's guardian out of `opts` (world FLOORS[n]["bosses"]), picked from the run seed so
+## Tonight's Candle is the same for everyone. Until a player has won once, a normal run always ends
+## with the first finale (the Hour Fiend).
+static func pick_boss(opts: Array, floor_num: int, run_seed: int, daily := false) -> String:
+	if opts.is_empty():
+		return "big_zombie"
 	if floor_num >= 4 and not daily and int(Game.records.get("wins", 0)) <= 0:
 		return opts[0]
 	return opts[absi(hash("%d:boss:%d" % [run_seed, floor_num])) % opts.size()]

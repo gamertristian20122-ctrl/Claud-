@@ -379,9 +379,9 @@ func boss_pendulum(e: Enemy, ddt: float, _to_p: Vector2, _dist: float) -> void:
 	if e.state != "swing":
 		return
 	# warn just before each turn, strike at the turn ("tock"), and fire low at the bottom
-	if absf(s) > 0.86 and not e.mem.get("warned", false):
+	if absf(s) > 0.7 and not e.mem.get("warned", false):
 		e.mem["warned"] = true
-		e.play_anim("atk", 0.45)
+		e.play_anim("atk", 0.6)
 		e._telegraph(Color(1, 0.4, 0.3))
 		Audio.play("tick", 0.0, 0.0, 1.2)
 	if absf(s) > 0.985 and not e.mem.get("tock", false):
