@@ -933,7 +933,7 @@ func assist_aim(pos: Vector2, dir: Vector2) -> Vector2:
 
 
 func enemy_dmg_mult() -> float:
-	return 1.0 + 0.12 * (floor_num - 1)
+	return 1.0 + 0.12 * (mini(floor_num, LAST_FLOOR) - 1)   # the Clock Tower hits as hard as the Belfry
 
 
 func time_scale_enemies() -> float:

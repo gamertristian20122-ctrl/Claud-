@@ -132,14 +132,14 @@ const DEFS := {
 		"title": "The Hour Fiend's heart swings", "phase_lines": ["", "Tick... tock... TICK!", "It is nearly two!"],
 		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
-	"keeper": {"hp": 340.0, "speed": 0.0, "ai": "tower_keeper", "r": 14.0, "boss": true, "heavy": true, "name": "THE KEEPER OF HOURS",
+	"keeper": {"hp": 300.0, "speed": 0.0, "ai": "tower_keeper", "r": 14.0, "boss": true, "heavy": true, "name": "THE KEEPER OF HOURS",
 		"title": "It winds the house, every night", "phase_lines": ["", "Time stands still...", "It chimes for you!"],
 		"victory": "THE KEEPER OF HOURS IS STILLED", "no_flip": true, "secret": true,
 		"lore": "It has wound the house clock every night for three hundred years. Tonight it wants to wind you.", "stain": Color("#5f2d56")},
 }
 
 ## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
-const FLOOR_HP := [1.0, 1.28, 1.75, 2.25, 2.5]
+const FLOOR_HP := [1.0, 1.28, 1.75, 2.25, 2.35]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
 

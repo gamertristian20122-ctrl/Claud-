@@ -19,7 +19,7 @@ extends RefCounted
 const PIVOT := Vector2(136, 104)     # room-local centre of the floor dial
 const HOUR_LEN := 74.0
 const MIN_LEN := 104.0
-const HAND_HIT := 7.0
+const HAND_HIT := 6.0
 const STOP_TIME := 2.9
 const MAX_SENTRIES := 2
 const FACE := Vector2(0, -41)        # the dial on the sprite, from the Keeper's feet
@@ -154,16 +154,16 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 				e.dir = to_p.normalized()
 		"fan":
 			if e.t <= 0:
-				var n := 4 + e.phase
+				var n := 3 + e.phase
 				var base: float = (w.player.global_position + Vector2(0, -6) - face).angle()
 				for i in n:
 					w.enemy_shot(face, Vector2.from_angle(base + (i - (n - 1) / 2.0) * 0.21) * (74.0 + 6.0 * e.phase), "bolt_cog")
 				Audio.play("enemy_shoot", 2.0, 0.05, 0.75)
 				e.state = "idle"
-				e.cd = [0.0, 1.5, 1.35, 1.25][e.phase]
+				e.cd = [0.0, 1.6, 1.5, 1.5][e.phase]
 		"ring":
 			if e.t <= 0:
-				w.burst(face, 10 + 2 * e.phase, 58.0, "bolt_cog", randf() * TAU)
+				w.burst(face, 8 + 2 * e.phase, 58.0, "bolt_cog", randf() * TAU)
 				Audio.play("tick", 2.0, 0.0, 0.55)
 				w.shake(1.5)
 				e.state = "idle"
@@ -475,9 +475,10 @@ static func bot_push(w: Node, pos: Vector2) -> Vector2:
 		var ahead := angle_difference(a, pa) * dirn
 		var left := absf(angle_difference(a, a1))
 		if ahead > -0.15 and ahead < left + 0.2:
-			# in the arc it is about to sweep: get behind the hand, or out past its tip
-			var behind := Vector2.from_angle(pa - dirn * PI / 2)
-			push += (behind * 1.4 + rel.normalized() * (1.6 if h["len"] < 90.0 else 0.6)) * 1.6
+			# in the arc it is about to sweep: before it moves, step behind its ghost; once it moves,
+			# run ahead of it (and out toward its tip)
+			var side := Vector2.from_angle(pa - dirn * PI / 2) if h["st"] == "ghost" else Vector2.from_angle(pa + dirn * PI / 2)
+			push += (side * 1.4 + rel.normalized() * (1.6 if h["len"] < 90.0 else 0.6)) * 1.6
 	return push
 
 

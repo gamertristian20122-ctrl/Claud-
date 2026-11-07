@@ -15,6 +15,8 @@ const FLOOR := 5
 const UNLOCK_CLOCK := 60.0
 const HINT := "Something ticks above the belfry... be done by one."
 const MOON := Color(0.55, 0.68, 1.0)
+## Minutes the ladder of light gives back on arrival (the tower is long and the wax keeps burning).
+const ARRIVAL_WAX := 12.0
 ## A sensible kit for a run that starts on floor 5 (--tower): what a good run carries by then.
 const TEST_KIT := ["sharp_wick", "bellows", "lamp_oil", "beeswax", "split_wick", "thimble", "wax_coat", "hourglass"]
 
@@ -68,8 +70,10 @@ static func _shopless(res: Dictionary, rng: RandomNumberGenerator) -> void:
 static func on_floor_start(w: Node) -> void:
 	if int(w.floor_num) != FLOOR:
 		return
+	# the ladder's light runs down the wick: a reward for being done by one (saved in the floor snapshot)
+	w.player.heal(ARRIVAL_WAX)
 	w.hud.show_banner("THE CLOCK TOWER", "Above the bells   -   %s" % Game.clock_text(w.clock_minutes()), 3.0)
-	w.hud.show_hint("The wax still burns up here. Two o'clock still comes.", 5.0)
+	w.hud.show_hint("The ladder's light ran down your wick: +%d min. Two o'clock still comes." % int(ARRIVAL_WAX), 5.0)
 	Game.records["tower_seen"] = true
 	Game.save()
 	Achievements.unlock("tower")
