@@ -135,7 +135,7 @@ static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasu
 			"start", "shop": tpl = RoomTemplates.START
 			"treasure": tpl = RoomTemplates.TREASURE
 			"boss": tpl = RoomTemplates.BOSS
-			_: tpl = RoomTemplates.pick_normal(rng)
+			_: tpl = RoomTemplates.pick_normal(rng, floor_num, dist[c])
 		out[c] = {
 			"type": type,
 			"grid": RoomTemplates.to_grid(tpl),

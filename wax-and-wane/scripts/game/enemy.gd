@@ -224,6 +224,8 @@ func _move(d: Vector2) -> bool:
 		return false
 	var moved := false
 	var gp := global_position
+	if not flying:
+		d *= room.slow_at(gp)   # cobwebs
 	var np := gp + Vector2(d.x, 0)
 	if not room.blocked(np, radius, flying):
 		gp = np

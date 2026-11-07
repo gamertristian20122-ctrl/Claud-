@@ -65,7 +65,7 @@ func _physics_process(dt: float) -> void:
 	position += vel * dt
 	life -= dt
 	var room: Room = world.room
-	if room and room.shot_hits(global_position + Vector2(0, 6), dmg):
+	if room and room.shot_hits(global_position + Vector2(0, 6), dmg, friendly):
 		end()
 		Audio.play("hit_wall", -3.0)
 		return
