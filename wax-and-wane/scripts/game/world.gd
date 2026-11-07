@@ -21,8 +21,8 @@ const OMENS := {
 	"long_night": {"name": "Long Night", "desc": "A bigger floor with two treasure rooms"},
 	"smoky_halls": {"name": "Smoky Halls", "desc": "Your light is shorter, but rooms give twice"},
 }
-## Base melt: a full candle (120 wax) lasts ~13 minutes if you never get hit.
-const DRAIN_PER_SEC := 120.0 / (11.5 * 60.0)
+## Base melt: a full candle (120 wax) lasts 9.5 minutes if you never get hit; kills, clears and drips buy time back.
+const DRAIN_PER_SEC := 120.0 / (9.5 * 60.0)
 
 var main: Node
 var floor_num := 1
@@ -463,7 +463,7 @@ func _room_reward(pos: Vector2) -> void:
 	var roll := rng.randf()
 	if roll < 0.32:
 		add_pickup("wax_small", pos)
-	elif roll < 0.45:
+	elif roll < 0.40:
 		add_pickup("wax_big", pos)
 	elif roll < 0.72:
 		for i in rng.randi_range(2, 4):
