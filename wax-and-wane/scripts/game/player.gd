@@ -634,23 +634,41 @@ func _draw_wick(o: Vector2, top: int, flat: bool) -> void:
 			draw_rect(Rect2(Vector2(0, fy - 3) + o, Vector2(1, 1)), Color("#da4e38"))
 
 
-## The melt puddle spreads over the dish and onto the floor (drawn above the holder).
+## The melt: wax fills the brass dish, runs down its front and spreads into a puddle on the floor
+## (drawn above the holder; the dish spans x -9..8, its bowl rows are y -6..-5).
 func _draw_pool() -> void:
 	if not dead or _melt <= 0.05:
 		return
 	var k := clampf((_melt - 0.05) / 0.8, 0.0, 1.0)
-	var w := body_w + int(roundf(14.0 * k))
-	var L := -w / 2
-	var y := -4 + int(roundf(2.0 * k))   # it sinks from the dish to the floor
-	_pool.draw_rect(Rect2(L, y - 1, w, 3), OUTLINE)
-	_pool.draw_rect(Rect2(L - 1, y, w + 2, 2), OUTLINE)
-	_pool.draw_rect(Rect2(L + 1, y, w - 2, 1), c_hi)
-	_pool.draw_rect(Rect2(L, y + 1, w, 1), c_wax)
-	_pool.draw_rect(Rect2(L + 2, y, maxi(1, w / 3), 1), POOL)
-	_pool.draw_rect(Rect2(L + w - 3, y + 1, 2, 1), c_deep)
-	if k > 0.4:
-		# a couple of runs that reached the floor
-		_pool.draw_rect(Rect2(L - 3, y + 1, 3, 2), OUTLINE)
-		_pool.draw_rect(Rect2(L - 2, y + 1, 2, 1), c_sh)
-		_pool.draw_rect(Rect2(L + w, y + 1, 3, 2), OUTLINE)
-		_pool.draw_rect(Rect2(L + w, y + 1, 2, 1), c_sh)
+	var c := -1   # the dish centre
+	# 1) the dish fills (never drawn across the body that is still standing in it)
+	var dw := int(roundf(lerpf(float(body_w), 15.0, minf(1.0, k * 2.2))))
+	var dl := c - dw / 2
+	var bl := -_bw / 2
+	var br := bl + _bw
+	for x in range(dl - 1, dl + dw + 1):
+		if _h > 0 and x >= bl and x < br:
+			continue
+		var edge := x == dl - 1 or x == dl + dw
+		_pool.draw_rect(Rect2(x, -6, 1, 1), OUTLINE if edge else c_hi)
+		_pool.draw_rect(Rect2(x, -5, 1, 1), OUTLINE if edge else c_wax)
+	# 2) it spills over the front of the dish in two runs of different lengths ...
+	if k > 0.3:
+		var run := clampi(int((k - 0.3) / 0.25 * 4.0), 1, 4)
+		for side in 2:
+			var x := c - 4 if side == 0 else c + 3
+			var n := run if side == 0 else maxi(1, run - 1)
+			_pool.draw_rect(Rect2(x, -4, 2, n), c_wax)
+			_pool.draw_rect(Rect2(x, -4, 1, n), c_hi)
+			_pool.draw_rect(Rect2(x + 2, -4, 1, n), OUTLINE)
+			_pool.draw_rect(Rect2(x, -4 + n, 2, 1), OUTLINE)
+	# 3) ... and spreads into a puddle around the base
+	if k > 0.55:
+		var fw := int(roundf(lerpf(12.0, 28.0, (k - 0.55) / 0.45)))
+		var fl := c - fw / 2
+		_pool.draw_rect(Rect2(fl, -2, fw, 3), OUTLINE)
+		_pool.draw_rect(Rect2(fl - 1, -1, fw + 2, 2), OUTLINE)
+		_pool.draw_rect(Rect2(fl + 1, -1, fw - 2, 1), c_hi)
+		_pool.draw_rect(Rect2(fl, 0, fw, 1), c_sh)
+		_pool.draw_rect(Rect2(fl + 2, -1, maxi(1, fw / 4), 1), POOL)
+		_pool.draw_rect(Rect2(fl + fw - 3, 0, 2, 1), c_deep)

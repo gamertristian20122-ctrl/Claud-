@@ -237,7 +237,11 @@ func splat(at: Vector2, mat: String, big := false) -> void:
 		st.splat(at, mat, big)
 
 
+## The bomb's mark on the floor (and a short freeze for the blast).
 func scorch(at: Vector2) -> void:
+	world.hitstop(0.045, 0.1)
+	hot.burst(at + Vector2(0, -6), 14, 40.0, 120.0, Vector2.ZERO, PI, 0.4, FxParts.SPARK, 120.0, 1.5, 1, true)
+	lit.burst(at, 10, 15.0, 50.0, Vector2.ZERO, PI, 0.8, FxParts.SMOKE, -25.0, 2.5, 2)
 	var st := stains_here()
 	if st:
 		st.stamp_image(Stains.image("scorch", "soot"), at)
@@ -264,6 +268,8 @@ func enemy_killed(e: Node2D) -> void:
 	gibs.throw(at + Vector2(0, -3), randi_range(4, 6) + (2 if big else 0), mat, 1.0, kv)
 	lit.burst(at + Vector2(0, -4), 3, 10.0, 25.0, Vector2.ZERO, PI, 0.35, FxParts.DUST, -20.0, 2.0)
 	shake(1.6 if not big else 3.0)
+	if big:
+		world.hitstop(0.035, 0.12)   # a heavy or marked foe lands with a tiny freeze
 
 
 func boss_finale(e: Node2D) -> void:

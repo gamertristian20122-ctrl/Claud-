@@ -2,6 +2,7 @@ extends Node
 ## Automated play-test bot + screenshot tour.
 ##   -- --autotest --playtest [--runs=N] [--speed=4] [--seed=N]   plays full runs, prints a summary
 ##   -- --autotest --tour --shots=/abs/dir                         screenshots of every screen
+##   -- --autotest --herosheet --shots=/abs/dir                    Tallow in every juice state (pixel check)
 
 var main: Node
 var args := {}
@@ -37,7 +38,9 @@ func _ready() -> void:
 	Engine.time_scale = Game.base_time_scale
 	Game.settings["aim_assist"] = true
 	await get_tree().create_timer(0.8).timeout
-	if mode == "tour":
+	if args.has("herosheet"):
+		_hero_sheet()
+	elif mode == "tour":
 		_tour()
 	else:
 		_next_run()
@@ -405,6 +408,16 @@ func _tour_juice(w: Node) -> void:
 	w.place_bomb()
 	await _wait(2.4)
 	await _shot("stains")
+	# stains stay on the floor: leave the room and come back
+	var sc: Vector2i = w.cur_cell
+	for c in w.layout["cells"].keys():
+		if c != sc and w.layout["cells"][c]["type"] == "start":
+			_jump(w, c)
+			break
+	await _wait(0.4)
+	_jump(w, sc)
+	await _wait(0.5)
+	await _shot("stains_return")
 	# a relic held aloft
 	w.collect_item("blue_flame" if Items.RELICS.has("blue_flame") else Items.RELICS.keys()[0], w.player.global_position)
 	await _wait(0.35)
@@ -424,3 +437,52 @@ func _tour_juice(w: Node) -> void:
 	p._stained = false
 	p._melt_from = -1
 	p.face.visible = true
+
+
+## Tallow in every juice state side by side (squash, stretch, flash, drips, guttering, holding, melting).
+func _hero_sheet() -> void:
+	DirAccess.make_dir_recursive_absolute(_shots_dir)
+	var layer := CanvasLayer.new()
+	layer.layer = 60
+	add_child(layer)
+	var bg := ColorRect.new()
+	bg.color = Color("#483b3a")
+	bg.size = Vector2(480, 216)
+	layer.add_child(bg)
+	var ps: Array = []
+	for i in 12:
+		var p := Player.new()
+		p.world = null
+		p.position = Vector2(20 + (i % 6) * 34, 60 + (i / 6) * 70)
+		layer.add_child(p)
+		p.set_physics_process(false)
+		p.light.enabled = false
+		p.glow.enabled = false
+		ps.append(p)
+	await get_tree().process_frame
+	ps[4]._drips = [[-1, 0.3, 1.0], [1, 0.75, 1.0]]
+	ps[5].wax = 20.0
+	ps[6].hold_aloft(Art.tex("items/blue_flame"))
+	for k in [7, 8, 9]:
+		ps[k].dead = true
+		ps[k]._melt_from = ps[k].body_height()
+	ps[7]._melt = 0.3
+	ps[8]._melt = 0.6
+	ps[9]._melt = 0.95
+	ps[10].apply_candle("tea_light")
+	ps[11].apply_candle("pillar")
+	for f in 3:
+		ps[1]._sq = -1.0
+		ps[1]._sq_v = 0.0
+		ps[2]._sq = 0.7
+		ps[2]._sq_v = 0.0
+		ps[3]._white = 1.0
+		ps[5]._sput = 0.1
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	img = img.get_region(Rect2i(0, 0, 210, 160))
+	img.resize(img.get_width() * 6, img.get_height() * 6, Image.INTERPOLATE_NEAREST)
+	img.save_png(_shots_dir + "/hero_states.png")
+	print("[tour] hero sheet")
+	get_tree().quit()
