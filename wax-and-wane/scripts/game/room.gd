@@ -46,6 +46,9 @@ var hearths: Array[Vector2i] = []
 var _fires: Array = []    # [PointLight2D, base energy, phase]
 var _burn_t := 0.0
 var _t := 0.0
+# walker flow field toward one target cell (rebuilt when the target moves or the grid changes)
+var _flow := PackedInt32Array()
+var _flow_to := Vector2i(-99, -99)
 
 
 func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictionary) -> void:
@@ -468,6 +471,72 @@ func char_at(c: Vector2i) -> String:
 	return data["grid"][c.y][c.x]
 
 
+## Steering for walkers: the direction to walk from `from_wp` to reach `to_wp`. Straight at it when
+## nothing solid is in between, otherwise along the shortest path round rocks, pits and furniture
+## (a breadth-first flow field over the grid, cached per target cell).
+func path_dir(from_wp: Vector2, to_wp: Vector2) -> Vector2:
+	var d := to_wp - from_wp
+	if d.length_squared() < 1.0:
+		return Vector2.ZERO
+	if _clear_line(from_wp, to_wp):
+		return d.normalized()
+	var fc := _clamp_cell(cell_of(from_wp - position))
+	var tc := _clamp_cell(cell_of(to_wp - position))
+	if tc != _flow_to:
+		_build_flow(tc)
+	var best := fc
+	var bd: int = _flow[fc.y * COLS + fc.x]
+	for k in 8:
+		var o: Vector2i = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(-1, -1)][k]
+		var n := fc + o
+		if n.x < 0 or n.y < 0 or n.x >= COLS or n.y >= ROWS:
+			continue
+		if o.x != 0 and o.y != 0 and (char_at(Vector2i(fc.x + o.x, fc.y)) in SOLID or char_at(Vector2i(fc.x, fc.y + o.y)) in SOLID):
+			continue   # no cutting corners
+		var v: int = _flow[n.y * COLS + n.x]
+		if v >= 0 and (bd < 0 or v < bd):
+			bd = v
+			best = n
+	if best == fc:
+		return d.normalized()
+	return (cell_center(best) + Vector2(0, 4) - from_wp).normalized()
+
+
+func _clamp_cell(c: Vector2i) -> Vector2i:
+	return Vector2i(clampi(c.x, 0, COLS - 1), clampi(c.y, 0, ROWS - 1))
+
+
+## Nothing solid along the segment (sampled every 6 px).
+func _clear_line(a: Vector2, b: Vector2) -> bool:
+	var n := int(a.distance_to(b) / 6.0) + 1
+	for i in range(1, n):
+		var p := a.lerp(b, float(i) / n) - position
+		if char_at(cell_of(p)) in SOLID:
+			return false
+	return true
+
+
+func _build_flow(target: Vector2i) -> void:
+	_flow_to = target
+	_flow.resize(COLS * ROWS)
+	_flow.fill(-1)
+	_flow[target.y * COLS + target.x] = 0
+	var q: Array[Vector2i] = [target]
+	var head := 0
+	while head < q.size():
+		var c: Vector2i = q[head]
+		head += 1
+		var v: int = _flow[c.y * COLS + c.x]
+		for o in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + o
+			if n.x < 0 or n.y < 0 or n.x >= COLS or n.y >= ROWS or _flow[n.y * COLS + n.x] >= 0:
+				continue
+			if char_at(n) in SOLID:
+				continue
+			_flow[n.y * COLS + n.x] = v + 1
+			q.append(n)
+
+
 ## Speed factor for a walker at world position `wp` (cobwebs halve it).
 func slow_at(wp: Vector2) -> float:
 	return WEB_SLOW if char_at(cell_of(wp - position)) == "W" else 1.0
@@ -626,6 +695,7 @@ func break_obstacle(c: Vector2i) -> void:
 	if not ch in BOMB_BREAK:
 		return
 	data["grid"][c.y][c.x] = "."
+	_flow_to = Vector2i(-99, -99)
 	obstacle_hp.erase(c)
 	var node: Node2D = obstacle_nodes.get(c)
 	obstacle_nodes.erase(c)

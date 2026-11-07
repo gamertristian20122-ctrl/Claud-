@@ -347,3 +347,52 @@ func _floor_decals(th: String) -> void:
 		var tex2 := Art.tex(foot[rng.randi() % foot.size()])
 		_add(tex2, Vector2(16 + 16 * x2 + 8 - tex2.get_width() / 2, 32 - tex2.get_height() + 6), rng.randf() < 0.5)
 		used[c2] = true
+
+
+# ---------------------------------------------------------------- test (run by -- --checkrooms)
+
+## Builds every layout as a real Room for every theme and room type (with a stand-in world) and checks
+## the static light budget and that no decor ever covers a door slot. Returns the number of problems.
+static func check_dressing() -> int:
+	var stub_script := GDScript.new()
+	stub_script.source_code = "extends Node2D\nvar actors := Node2D.new()\nvar hud = null\nvar room = null\nvar player = null\nvar enemies := []\nvar floor_num := 1\n"
+	stub_script.reload()
+	var stub: Node2D = stub_script.new()
+	var errs := 0
+	var most := 0
+	var slots: Array[Rect2] = [Rect2(120, 0, 32, 32), Rect2(120, 176, 32, 16), Rect2(0, 88, 16, 32), Rect2(256, 88, 16, 32)]
+	var layouts: Array = []
+	for t in RoomTemplates.NORMAL:
+		layouts.append(["normal", t["id"], t["rows"]])
+	for k in ["start", "shop"]:
+		layouts.append([k, k, RoomTemplates.START])
+	layouts.append(["treasure", "treasure", RoomTemplates.TREASURE])
+	layouts.append(["secret", "secret", RoomTemplates.TREASURE])
+	layouts.append(["boss", "boss", RoomTemplates.BOSS])
+	var n := 0
+	for th in ["cellar", "crypt", "chapel", "belfry"]:
+		for L in layouts:
+			for sd in [1, 77, 4242]:
+				var d := {"type": L[0], "grid": RoomTemplates.to_grid(L[2]), "cleared": true, "visited": true,
+					"seen": true, "pickups": [], "seed": hash("%s:%s:%d" % [th, L[1], sd]), "dist": 3}
+				var r := Room.new()
+				r.build(stub, Vector2i.ZERO, d, th, {Vector2i.UP: "normal", Vector2i.DOWN: "boss", Vector2i.LEFT: "hidden", Vector2i.RIGHT: "treasure"})
+				n += 1
+				var lights: int = r.decor.lights.size() + r.candles.size() + r._fires.size()
+				most = maxi(most, lights)
+				if lights > LIGHT_BUDGET:
+					errs += 1
+					print("[checkrooms] %s %s seed %d: %d static lights" % [th, L[1], sd, lights])
+				for it in r.decor._items:
+					var tex: Texture2D = it[0]
+					var rect := Rect2(it[1], tex.get_size())
+					for sl in slots:
+						if rect.intersects(sl):
+							errs += 1
+							print("[checkrooms] %s %s: %s covers a door slot at %s" % [th, L[1], tex.resource_path.get_file(), rect])
+				r.objects.free()
+				r.free()
+	stub.actors.free()
+	stub.free()
+	print("[checkrooms] dressed %d rooms: most static lights in one room = %d (budget %d), %d problems" % [n, most, LIGHT_BUDGET, errs])
+	return errs

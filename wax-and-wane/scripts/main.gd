@@ -43,7 +43,7 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 	if "--checkrooms" in args:   # validate every room layout (scripts/game/room_templates.gd)
-		get_tree().quit(1 if RoomTemplates.validate() > 0 else 0)
+		get_tree().quit(1 if RoomTemplates.validate() + RoomDecor.check_dressing() > 0 else 0)
 		return
 	if "--autotest" in args:
 		autotest = load("res://scripts/autotest.gd").new()
