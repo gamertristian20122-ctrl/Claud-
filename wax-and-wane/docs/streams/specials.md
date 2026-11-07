@@ -130,4 +130,15 @@ Everything is drawn as character grids in the 0x72 palette (the tool asserts pal
 | + bot rings / winds / feeds | 4 | 4 | ~3 Seances a run, each a boss relic: far too generous |
 | + Seance waves 5/5/5 with a marked foe | 4 | 3 | |
 | + drop-less spirits, champions hit for 9, chest 60% | 8 | 6 | both losses on floors 1-2 after a hard early Seance |
-| + gentler Cellar Seance, bot rings above 65 wax | 2 | 2 | |
+| + gentler Cellar Seance, bot rings above 65 wax | 4 | 3 | |
+| + Seance relic capped at tier 2 | 8 | 3 | losses on floors 2, 2, 3, 4, 4: undershoots |
+| **final: Seance relic tier 0-3** | **8** | **5** | **62%**; losses on floor 2; winners 12:12 - 1:18 AM |
+
+The last 28 runs with the bot using the rooms: 17 wins (61%). `--god --runs=2` on the final build: both
+reach the end. No script errors in any run. Per 8 final runs the bot met 11 Seances (all won), 7 Mirrors
+(4 deals, 3 veils), 12 Music Boxes (2 lucky tunes, 1 lodger), 7 Fonts, 5 Studies and 5 champions.
+
+**For the integrator / polish stream:** on this branch the base game without special rooms gave the bot
+0 wins in 4 (`--nospecials`), so the specials are now part of what keeps the bot near 60%. Tune the
+whole game with them in (or compare with `--nospecials`). Knobs: `Specials.INFO[t]["chance"]`,
+`WAVE_SIZE` / `WAVE_SIZE_CELLAR`, `SEANCE_TIER`, `MINI_HP`, `MINI_TOUCH`, `MIRROR_COST`, `FONT_ODDS`, `TUNES`.
