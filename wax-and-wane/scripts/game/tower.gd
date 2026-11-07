@@ -163,7 +163,7 @@ static func dress(d: RoomDecor, free_top: Array, budget: int) -> int:
 			g.z_index = -18
 			r.add_child(g)
 			var pool := Art.tex("tower/light/moon_slats") if Art.has("tower/light/moon_slats") else null
-			var l := d._light(pos + Vector2(20, 58), MOON, 1.5, 1.0, 0.03, pool)
+			var l := d._light(pos + Vector2(18, 50), MOON, 1.1, 0.85, 0.03, pool)
 			if pool == null:
 				l.texture_scale = 0.35
 			free_top.erase(t)

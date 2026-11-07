@@ -980,14 +980,14 @@ def build_end_window():
 # =========================================================================== moonlight texture
 def build_moon_light():
     """Moonlight through louvres: four soft bars leaning right, falling off at the ends (smooth)."""
-    W, H = 96, 128
+    W, H = 64, 88
     a = np.zeros((H, W), dtype=np.float64)
     ys, xs = np.mgrid[0:H, 0:W]
-    u = (xs - W / 2.0) - (ys - H / 2.0) * 0.32           # leans with the moon high on the left
+    u = (xs - W / 2.0) - (ys - H / 2.0) * 0.5           # leans with the moon high on the left
     v = (ys - H / 2.0)
-    bars = np.cos((v / H) * math.pi * 9.0) * 0.5 + 0.5
+    bars = np.cos((v / H) * math.pi * 6.0) * 0.5 + 0.5
     bars = np.clip((bars - 0.25) / 0.6, 0.0, 1.0)
-    fall = np.exp(-((u / (W * 0.30)) ** 2) - ((v / (H * 0.42)) ** 4))
+    fall = np.exp(-((u / (W * 0.26)) ** 2) - ((v / (H * 0.40)) ** 4))
     a = bars * fall
     im = np.zeros((H, W, 4), dtype=np.uint8)
     im[:, :, 0:3] = 255
