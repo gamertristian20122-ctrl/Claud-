@@ -75,15 +75,15 @@ const AUTO_DUCK := {
 ## Per-floor space for the Room bus: [room_size, damping, wet, predelay_ms, spread, hipass]
 const SPACES := {
 	1: [0.28, 0.75, 0.07, 12.0, 0.6, 0.25],   # Cellar: small, low ceiling, damp and dry
-	2: [0.78, 0.45, 0.16, 32.0, 0.9, 0.15],   # Crypt: long stone vaults
-	3: [0.88, 0.30, 0.18, 45.0, 1.0, 0.10],   # Chapel: the biggest, brightest hall
-	4: [0.62, 0.15, 0.12, 24.0, 1.0, 0.35],   # Belfry: open, airy timber tower
+	2: [0.82, 0.42, 0.19, 34.0, 0.9, 0.15],   # Crypt: long stone vaults
+	3: [0.90, 0.28, 0.22, 48.0, 1.0, 0.10],   # Chapel: the biggest, brightest hall
+	4: [0.70, 0.12, 0.15, 26.0, 1.0, 0.35],   # Belfry: open, airy timber tower (bright, thin lows)
 }
 ## Intensity -> music low-pass cutoff (Hz) and Score volume (dB), interpolated between these points.
-const INTENSITY_POINTS := [[0.0, 420.0, -7.0], [0.5, 3200.0, -2.0], [1.0, 20500.0, 0.0]]
+const INTENSITY_POINTS := [[0.0, 420.0, -7.0], [0.5, 4800.0, -2.0], [1.0, 20500.0, 0.0]]
 const LOW_WAX_CUTOFF := 7500.0
-const LOW_WAX_MUSIC_DB := -2.5
-const HEART_DB := -4.0
+const LOW_WAX_MUSIC_DB := -3.0
+const HEART_DB := -3.0
 
 var current_music := ""
 var music_intensity := 1.0
@@ -114,7 +114,8 @@ var _heart: AudioStreamPlayer
 var _heart_db := -60.0
 var _loops := {}            # id -> [AudioStreamPlayer, WeakRef or null]
 var _next_loop := 1
-var _last_us := 0
+var _clock := 0.0          # seconds of unscaled time (ignores pause and Engine.time_scale)
+var _rng := RandomNumberGenerator.new()   # own generator: sound variation never shifts gameplay randomness
 var _bus_music := -1
 var _bus_sfx := -1
 var _bus_room := -1
@@ -144,7 +145,6 @@ func _ready() -> void:
 	_heart = AudioStreamPlayer.new()
 	_heart.bus = "SFX"
 	add_child(_heart)
-	_last_us = Time.get_ticks_usec()
 
 
 # ---------------------------------------------------------------- buses
@@ -233,17 +233,17 @@ func _pick_take(n: String, list: Array) -> AudioStream:
 	if list.size() == 1:
 		return list[0]
 	var last: int = _last_take.get(n, -1)
-	var i := randi() % (list.size() - 1)
+	var i := _rng.randi() % (list.size() - 1)
 	if last >= 0 and i >= last:
 		i += 1
 	elif last < 0:
-		i = randi() % list.size()
+		i = _rng.randi() % list.size()
 	_last_take[n] = i
 	return list[i]
 
 
 func _now() -> float:
-	return Time.get_ticks_msec() / 1000.0
+	return _clock
 
 
 func _voice_for(n: String, prio: int) -> int:
@@ -291,8 +291,8 @@ func play(n: String, volume_db := 0.0, pitch_jitter := 0.06, pitch := 1.0) -> vo
 	p.stream = _pick_take(n, list)
 	p.bus = "SFX" if DRY.has(n) else "Room"
 	var jit: float = LEVEL_JITTER.get(n, 0.0)
-	p.volume_db = volume_db + float(VOLUME.get(n, 0.0)) + randf_range(-jit, jit)
-	p.pitch_scale = maxf(0.2, pitch + randf_range(-pitch_jitter, pitch_jitter))
+	p.volume_db = volume_db + float(VOLUME.get(n, 0.0)) + _rng.randf_range(-jit, jit)
+	p.pitch_scale = maxf(0.2, pitch + _rng.randf_range(-pitch_jitter, pitch_jitter))
 	p.play()
 	_pool_name[v] = n
 	_pool_prio[v] = prio
@@ -411,7 +411,7 @@ func enter_room(room_type: String, cleared: bool) -> void:
 		music("shop")
 	elif current_music == "shop" and _floor_music != "":
 		music(_floor_music)
-	set_intensity(0.5 if cleared else 1.0)
+	set_intensity(0.5 if cleared and room_type != "shop" else 1.0)   # the merchant's tune is heard in full
 
 
 ## 1.0 = combat (full music), 0.5 = room cleared (gentle low-pass, a little quieter), 0.0 = muffled.
@@ -497,11 +497,11 @@ func _duck_db(now: float) -> float:
 	return d
 
 
-func _process(_delta: float) -> void:
-	var us := Time.get_ticks_usec()
-	var dt := clampf((us - _last_us) / 1000000.0, 0.0, 0.1)   # real time: unaffected by pause / slow-motion
-	_last_us = us
-	var now := _now()
+func _process(delta: float) -> void:
+	# unscaled time: the mix moves at the same speed in slow-motion, in the 4x play-test and in movie captures
+	var dt := clampf(delta / maxf(Engine.time_scale, 0.001), 0.0, 0.1)
+	_clock += dt
+	var now := _clock
 	var tree := get_tree()
 	if music_paused and not tree.paused:
 		music_paused = false

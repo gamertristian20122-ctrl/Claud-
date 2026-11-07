@@ -1016,7 +1016,7 @@ def sfx_low_wax_loop():
         hb = heartbeat(1.0 if k == 0 else 0.8, 52.0)
         y[secs(t0):secs(t0) + len(hb)] += hb
     for i in range(8):
-        tk = clock_tick(i % 2 == 1, 0.22 if i % 2 == 0 else 0.16, 371 + i)
+        tk = clock_tick(i % 2 == 1, 0.50 if i % 2 == 0 else 0.38, 371 + i)
         y[secs(0.1 + i * 0.2):secs(0.1 + i * 0.2) + len(tk)] += tk
     out = y[:L].copy()
     out[:len(y) - L] += y[L:]

@@ -5,6 +5,7 @@
     python3 tools/import_audio.py fetch              # only download the sources (music + Ninja SFX) to the cache
     python3 tools/import_audio.py analyse FILE...    # print the descriptors used to choose tracks (globs ok)
     python3 tools/import_audio.py report             # descriptors + loudness / seam check of the built tracks
+    python3 tools/import_audio.py mixcheck CAPTURE LOG   # read a movie capture of `--autotest --audiotest`
 
 Sources are downloaded once with curl from the series-ai/jam-ready-assets library (media.githubusercontent.com,
 git LFS is not needed) into $AUDIO_CACHE (default ~/.cache/wax_and_wane_audio). Each track is:
@@ -48,32 +49,37 @@ SEAM_MS = 4.0
 
 # slot -> source + why it was chosen. Measured with `analyse` (onsets/s = note/hit density, perc = HPSS
 # percussive share, minor = KK-profile minor-vs-major correlation, diss = semitone+tritone co-activation,
-# reg = energy-weighted mean MIDI pitch). We cannot listen, so each choice is argued from those numbers.
-# Tension ramps floor by floor by onset density: 2.0 -> 2.5 -> 2.7 -> 3.8 /s, boss 3.4, final boss 4.9.
+# reg = energy-weighted mean MIDI pitch, dyn = 95th-10th percentile short-term level). We cannot listen, so each
+# choice is argued from those numbers (all 45 Ninja Adventure tracks and the Kenney loops were measured; the Kenney
+# loops are 8-30 s and mostly major, so none made the cut).
+# Tension ramps floor by floor by onset density: 1.96 -> 2.50 -> 2.72 -> 3.72 /s; boss 3.31, final boss 4.89.
 MUSIC = {
-    "title": {"src": NINJA_MUSIC + "32 - Manor.ogg", "why":
-              "Haunted-manor theme; the most legato track in the pack (percussive share 0.02), slow (90 bpm), "
-              "opens softly, 107 s so the title screen never audibly loops."},
+    "title": {"src": NINJA_MUSIC + "22 - Dream.ogg", "why":
+              "Darkest of the slow pieces: low register (mean pitch MIDI 61), sparse (2.0 onsets/s) and eerie (diss "
+              "0.35, no settled key), opens quietly and swells (11 dB dynamic range); 96 s, so the title never loops "
+              "audibly. (Manor, Intro and Mystical were busier or brighter / more major.)"},
     "floor_1": {"src": NINJA_MUSIC + "40 - Crypt.ogg", "why":
-                "Cellar: the sparsest dark track (2.0 onsets/s), C minor, lowest register of all candidates "
-                "(mean pitch MIDI 56), slow breathing swells (15.6 dB dynamic range). Calm but heavy."},
+                "Cellar: the sparsest dark track (1.96 onsets/s), the most clearly minor (C minor, +0.23), the lowest "
+                "register of all 45 (mean pitch MIDI 57), slow breathing swells (15 dB). Calm but heavy - the bottom "
+                "of the tension ramp."},
     "floor_2": {"src": NINJA_MUSIC + "21 - Dungeon.ogg", "why":
-                "Crypt: a step up (2.5 onsets/s) and the most unsettled harmony in the pack (highest tritone / "
-                "semitone co-activation, no clear key centre), still low and slow."},
+                "Crypt: a step up (2.50 onsets/s) and the most unsettled harmony of the usable tracks (diss 0.36, no "
+                "clear key centre), still low (MIDI 58) and slow."},
     "floor_3": {"src": NINJA_MUSIC + "12 - Temple.ogg", "why":
-                "Chapel: sacred-sounding, clearly minor (C# minor, strongest minor third of the shortlist), high "
-                "register like a choir/organ (mean pitch MIDI 75), denser again (2.7 onsets/s)."},
+                "Chapel: sacred-sounding minor (C# minor), the highest register of the dark tracks, like a choir or "
+                "organ (MIDI 75), consonant (diss 0.05), denser again (2.72 onsets/s)."},
     "floor_4": {"src": NINJA_MUSIC + "24 - Final Area.ogg", "why":
-                "Belfry: the most driven floor track (3.8 onsets/s, percussive share 0.19), C minor and dissonant; "
-                "the last climb before the Hour Fiend."},
+                "Belfry: the most driven floor track (3.72 onsets/s, percussive share 0.25), C minor (+0.17) and "
+                "dissonant (0.30); the last climb before the Hour Fiend."},
     "shop": {"src": NINJA_MUSIC + "39 - Boat.ogg", "why":
-             "Tallow Merchant: D minor but consonant (lowest dissonance of the minor candidates), a gentle steady "
-             "lilt (2.0 onsets/s), 96 s long so browsing never loops; a safe room that still lives in the house."},
+             "Tallow Merchant: D minor but the most consonant minor track (diss 0.06), a gentle steady lilt (1.99 "
+             "onsets/s), 96 s so browsing never loops; a safe room that still lives in the house."},
     "boss": {"src": NINJA_MUSIC + "17 - Fight.ogg", "why":
-             "Floor guardians: A minor, dense (3.4 onsets/s) and dissonant, a hard switch up from the floor tracks."},
+             "Floor guardians (floors 1-3): D minor, low (MIDI 61), dense (3.31 onsets/s) and dissonant (0.21) - a hard "
+             "switch up from the Cellar, Crypt and Chapel tracks."},
     "final_boss": {"src": NINJA_MUSIC + "28 - Tension.ogg", "why":
-                   "Hour Fiend: the densest (4.9 onsets/s) and most percussive (0.23) track in the pack - the peak "
-                   "of the tension ramp."},
+                   "Hour Fiend: the densest usable track in the pack (4.89 onsets/s) and one of the two most percussive "
+                   "(0.30) - the peak of the tension ramp."},
 }
 # victory_jingle / death_jingle stay the original synthesized ones (tools/make_audio.py): they are 3-4 s long to fit
 # the victory banner and the snuff-out sequence, minor/major as needed and built from the game's own bell and music
@@ -281,6 +287,7 @@ PCN = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
 def describe(path):
     sr = 22050
     x = decode(path, 1, sr)
+    x = signal.sosfilt(signal.butter(2, 25.0, "highpass", fs=sr, output="sos"), x)   # DC / rumble would bias it
     dur = len(x) / sr
     f, t, Z = signal.stft(x, sr, nperseg=1024, noverlap=768, boundary=None)
     M = np.abs(Z)
@@ -342,6 +349,88 @@ def report():
         print_desc(describe(p))
 
 
+# =============================================================================================== mix check
+def mixcheck(capture, log):
+    """Measure the game's real output (Godot --write-movie capture of `-- --autotest --audiotest`) against the
+    [audio] marks in its log: clipping, intensity / pause low-pass, ducking, the low-wax layer, music levels
+    and the per-floor reverb tails."""
+    sr = 48000
+    r = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", capture, "-vn", "-ac", "2", "-ar", str(sr), "-f", "f32le", "-"],
+                       capture_output=True, check=True)
+    x = np.frombuffer(r.stdout, np.float32).astype(np.float64).reshape(-1, 2)
+    marks = {}
+    order = []
+    for line in open(log):
+        m = re.match(r"\[audio\] mark ([0-9.]+) (\S+)", line)
+        if m:
+            marks[m.group(2)] = float(m.group(1))
+            order.append(m.group(2))
+    mono = x.mean(1)
+    fails = []
+
+    def seg(a, b):
+        return mono[int(a * sr):int(b * sr)]
+
+    def rms_db(y):
+        return 20 * np.log10(np.sqrt(np.mean(y ** 2)) + 1e-12)
+
+    def band_db(y, lo, hi):
+        f, P = signal.welch(y, sr, nperseg=4096)
+        return 10 * np.log10(P[(f >= lo) & (f < hi)].sum() + 1e-20)
+
+    def span(name, pad=0.4, length=None):
+        a = marks[name] + pad
+        b = a + length if length else marks[order[order.index(name) + 1]] - 0.05
+        return a, b
+
+    pk = 20 * np.log10(np.max(np.abs(x)) + 1e-12)
+    clipped = int(np.sum(np.abs(x) >= 0.999))
+    print(f"  output peak {pk:.2f} dBFS, samples at full scale: {clipped}")
+    if pk > -0.3 or clipped:
+        fails.append("clipping")
+    print("  music state      rms dB   >3 kHz rel. 150-1000 Hz (dB)")
+    hf = {}
+    for name in ("combat", "cleared", "paused", "unpaused"):
+        a, b = span(name, 0.8)
+        y = seg(a, b)
+        hf[name] = band_db(y, 3000, 12000) - band_db(y, 150, 1000)
+        print(f"  {name:14s} {rms_db(y):7.1f}   {hf[name]:7.1f}")
+    if not (hf["paused"] < hf["cleared"] - 6 and hf["cleared"] < hf["combat"] - 1.5 and hf["unpaused"] > hf["paused"] + 10):
+        fails.append("intensity low-pass ordering")
+    a = marks["duck"]
+    before, during = rms_db(seg(a - 1.0, a - 0.05)), rms_db(seg(a + 0.15, a + 0.95))
+    print(f"  duck -8 dB: {before:.1f} -> {during:.1f} dB ({during - before:+.1f})")
+    if during - before > -4.0:
+        fails.append("duck")
+    lw, le = span("lowwax", 0.5), span("lowwax_end", 1.6)
+    t_on, t_off = band_db(seg(*lw), 1800, 4500), band_db(seg(*le), 1800, 4500)
+    s_on, s_off = band_db(seg(*lw), 30, 90), band_db(seg(*le), 30, 90)
+    print(f"  low-wax layer: ticks band {t_on - t_off:+.1f} dB, heartbeat band {s_on - s_off:+.1f} dB vs after")
+    if t_on - t_off < 3.0:
+        fails.append("low-wax ticks not audible")
+    for name in ("shop", "floor_resume", "boss"):
+        a, b = span(name, 1.2)
+        print(f"  {name:14s} rms {rms_db(seg(a, b)):6.1f} dB")
+    a, b = span("burst", 0.0)
+    y = x[int(a * sr):int(b * sr)]
+    print(f"  SFX burst: peak {20 * np.log10(np.max(np.abs(y)) + 1e-12):.2f} dBFS, rms {rms_db(y.mean(1)):.1f} dB")
+    print("  space   decay to -30 dB after a door slam")
+    rts = []
+    for f in (1, 2, 3, 4):
+        a = marks[f"space_{f}"]
+        y = seg(a, a + 1.55)
+        env = 20 * np.log10(np.sqrt(ndimage.uniform_filter1d(y ** 2, int(0.02 * sr))) + 1e-9)
+        i0 = int(np.argmax(env))
+        below = np.where(env[i0:] < env[i0] - 30)[0]
+        rt = below[0] / sr if len(below) else 1.55
+        rts.append(rt)
+        print(f"  {f}       {rt * 1000:6.0f} ms")
+    if not (rts[0] < rts[1] and rts[0] < rts[2] and rts[2] >= rts[1]):
+        fails.append("reverb spaces ordering")
+    print("  mixcheck: " + ("OK" if not fails else "FAILED: " + ", ".join(fails)))
+    return not fails
+
+
 # =============================================================================================== main
 def main():
     args = sys.argv[1:]
@@ -356,6 +445,8 @@ def main():
             print_desc(describe(p))
     elif what == "report":
         report()
+    elif what == "mixcheck":
+        sys.exit(0 if mixcheck(args[1], args[2]) else 1)
     elif what == "music":
         os.makedirs(MUSIC_OUT, exist_ok=True)
         slots = args[1:] or list(MUSIC)

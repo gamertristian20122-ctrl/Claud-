@@ -2,6 +2,7 @@ extends Node
 ## Automated play-test bot + screenshot tour.
 ##   -- --autotest --playtest [--runs=N] [--speed=4] [--seed=N]   plays full runs, prints a summary
 ##   -- --autotest --tour --shots=/abs/dir                         screenshots of every screen
+##   -- --autotest --audiotest                                     audio catalogue + live-mix check (audio_check.gd)
 
 var main: Node
 var args := {}
@@ -31,6 +32,8 @@ func _ready() -> void:
 			args[a.substr(2)] = true
 	if args.has("tour"):
 		mode = "tour"
+	if args.has("audiotest"):
+		mode = "audiotest"
 	runs_left = int(args.get("runs", "1"))
 	_shots_dir = str(args.get("shots", ""))
 	Game.base_time_scale = float(args.get("speed", "1"))
@@ -39,6 +42,8 @@ func _ready() -> void:
 	await get_tree().create_timer(0.8).timeout
 	if mode == "tour":
 		_tour()
+	elif mode == "audiotest":
+		add_child(load("res://scripts/audio_check.gd").new())
 	else:
 		_next_run()
 
@@ -96,7 +101,7 @@ func _process(dt: float) -> void:
 
 ## Called by the world every physics frame: returns [move, aim] or [] to leave input alone.
 func drive(w: Node) -> Array:
-	if mode == "tour" and not args.has("drive"):
+	if (mode == "tour" or mode == "audiotest") and not args.has("drive"):
 		return []
 	var p: Player = w.player
 	if args.has("god") and p:
