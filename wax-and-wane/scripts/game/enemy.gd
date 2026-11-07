@@ -224,6 +224,8 @@ func _move(d: Vector2) -> bool:
 		return false
 	var moved := false
 	var gp := global_position
+	if not flying:
+		d *= room.slow_at(gp)   # cobwebs
 	var np := gp + Vector2(d.x, 0)
 	if not room.blocked(np, radius, flying):
 		gp = np
@@ -257,10 +259,10 @@ func _telegraph(color := Color(1, 1, 1)) -> void:
 # ---------------------------------------------------------------- behaviours
 
 func _ai_chase(ddt: float, to_p: Vector2, _dist: float) -> void:
-	var want := to_p
+	var want: Vector2 = world.room.path_dir(global_position, global_position + to_p) * to_p.length() if world.room else to_p   # round obstacles
 	if def.get("jitter", false):
 		_wob += ddt * 5.0
-		want = to_p.normalized() + to_p.normalized().orthogonal() * sin(_wob) * 0.7
+		want = want.normalized() + want.normalized().orthogonal() * sin(_wob) * 0.7
 	_walk(ddt, want, speed)
 
 

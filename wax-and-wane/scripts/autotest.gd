@@ -4,6 +4,7 @@ extends Node
 ##   -- --autotest --tour --shots=/abs/dir                         screenshots of every screen
 ##   -- --autotest --audiotest                                     audio catalogue + live-mix check (audio_check.gd)
 ##   -- --autotest --herosheet --shots=/abs/dir                    Tallow in every juice state (pixel check)
+##   -- --autotest --tour --rooms --shots=/abs/dir                 three dressed rooms on every floor
 
 var main: Node
 var args := {}
@@ -251,6 +252,16 @@ func _path_next(room: Room, from: Vector2i, to: Vector2i) -> Vector2i:
 	return step
 
 
+func _can_walk(room: Room, from: Vector2i, to: Vector2i) -> bool:
+	if from == to or room.char_at(to) == "#":
+		return true
+	return _path_next(room, from, to) != to or _adjacent(from, to)
+
+
+func _adjacent(a: Vector2i, b: Vector2i) -> bool:
+	return absi(a.x - b.x) + absi(a.y - b.y) == 1
+
+
 func _best_pickup(w: Node, p: Player) -> Node2D:
 	var best: Node2D = null
 	var bd := 1e9
@@ -264,6 +275,8 @@ func _best_pickup(w: Node, p: Player) -> Node2D:
 		if o.price > 0 and p.coins < int(round(o.price * w.shop_discount)):
 			continue
 		if o.record and int(o.record.get("cost_wax", 0)) > 0 and p.wax_max - int(o.record["cost_wax"]) < 90:
+			continue
+		if not _can_walk(w.room, w.room.cell_of(p.global_position - w.room.position), w.room.cell_of(o.global_position - w.room.position)):
 			continue
 		var d: float = o.global_position.distance_to(p.global_position)
 		if d < bd:
@@ -334,6 +347,60 @@ func _jump(w: Node, c: Vector2i) -> void:
 	w._on_enter_room()
 
 
+## One cleared, dressed room of every floor (all four themes).
+func _theme_shots(w: Node) -> void:
+	for n in [1, 2, 3, 4]:
+		w._start_floor(n)
+		await _wait(2.9)   # let the floor banner clear
+		var c := _normal_cells(w)[0] as Vector2i
+		w.layout["cells"][c]["cleared"] = true
+		_jump(w, c)
+		w.player.position = w.room.center() + Vector2(0, 10)
+		w.player.wax = 100.0
+		await _wait(1.0)
+		await _shot("floor_%d_%s" % [n, w.FLOORS[n]["theme"]])
+
+
+## Three hand-picked layouts per floor showing the new props and hazards.
+func _room_tour(w: Node) -> void:
+	var picks := {1: ["storeroom", "web_corners", "oil_cellar", "fireplaces"], 2: ["coffin_rows", "bone_yard", "soot_vaults", "twin_holes"],
+		3: ["aisle", "hearth_hall", "pew_rows", "crate_fort"], 4: ["long_pews", "braziers", "spike_crossing", "bell_shafts"]}
+	for n in [1, 2, 3, 4]:
+		w._start_floor(n)
+		await _wait(2.9)
+		var cells := _normal_cells(w)
+		var i := 0
+		for id in picks[n]:
+			var c: Vector2i = cells[i % cells.size()]
+			i += 1
+			for t in RoomTemplates.NORMAL:
+				if t["id"] == id:
+					w.layout["cells"][c]["grid"] = RoomTemplates.to_grid(t["rows"])
+			w.layout["cells"][c]["cleared"] = i % 2 == 1
+			_jump(w, c)
+			w.player.position = w.room.center() + Vector2(0, 10)
+			w.player.wax = 100.0
+			await _wait(1.2)
+			await _shot("room_%d_%s" % [n, id])
+			if id == "oil_cellar":   # set one jar off and catch the fireball
+				for y in Room.ROWS:
+					for x in Room.COLS:
+						if w.room.char_at(Vector2i(x, y)) == "O" and y < 4:
+							w.room.damage_obstacle(Vector2i(x, y), 1.0)
+							await _wait(0.12)
+							await _shot("room_%d_%s_blast" % [n, id])
+							break
+
+
+func _normal_cells(w: Node) -> Array:
+	var out := []
+	for c in w.layout["cells"].keys():
+		if w.layout["cells"][c]["type"] == "normal":
+			out.append(c)
+	out.sort()
+	return out
+
+
 func _tour() -> void:
 	DirAccess.make_dir_recursive_absolute(_shots_dir)
 	if args.has("platform"):
@@ -374,6 +441,9 @@ func _tour() -> void:
 				await _shot(t)
 				break
 	await _tour_juice(w)
+	await _theme_shots(w)
+	if args.has("rooms"):
+		await _room_tour(w)
 	args["drive"] = true
 	# jump straight to the final boss for a look
 	w.player.wax = 60.0

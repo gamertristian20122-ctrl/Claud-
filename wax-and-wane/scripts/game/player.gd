@@ -273,6 +273,7 @@ func _move(d: Vector2) -> void:
 	if room == null:
 		position += d
 		return
+	d *= room.slow_at(position)   # cobwebs
 	var np := position + Vector2(d.x, 0)
 	if not room.blocked(np, RADIUS, false, true):
 		position = np
