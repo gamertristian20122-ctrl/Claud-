@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Wax & Wane - platform art: mouse cursors, keyboard/gamepad focus frames, the
-achievement medal and the Windows .ico app icon.
+achievement medal and the Windows .ico app icon (art from art_icon.py).
 
 Everything is hand-placed pixel art written as character grids (see PAL in
 art_ui.py, the 0x72 DungeonTileset II palette). No anti-aliasing, no gradients.
@@ -16,7 +16,8 @@ import sys
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import art_ui  # noqa: E402  (palette, grid(), glow_canvas(), upscale(), HERO)
+import art_icon  # noqa: E402  (the app icon art for the .ico)
+import art_ui  # noqa: E402  (palette, grid(), upscale())
 
 from art_ui import PAL, grid, rgba, upscale  # noqa: E402
 
@@ -124,52 +125,15 @@ def recolour(im, mapping):
 
 
 # --------------------------------------------------------------------------
-# Windows .ico: every size is pixel-exact (no resampling blur)
-#   16  hand-drawn small candle
-#   32  hero at 1x on the glow canvas
-#   48  the 48 px base icon (same art as app_icon_192 / 4)
-#   64, 96, 128, 192, 256 integer upscales (256 = 48 x5 inside an 8 px margin)
+# Windows .ico: every size is pixel-exact (no resampling blur). The art comes
+# from tools/art_icon.py (the app icon: Tallow in front of the clock dial):
+#   16  hand-drawn small icon
+#   32, 48  the in-game 1x Tallow on a small dial (96 = the 48 doubled)
+#   64  the 64 px flat icon (128 / 192 / 256 = x2 / x3 / x4)
 # --------------------------------------------------------------------------
-ICON_16 = """
-....KKKKKKKK....
-...K66666666K...
-..K666myym666K..
-.K6666yowy6666K.
-K66666yooy66666K
-K666666KK666666K
-K6666KKwwKK6666K
-K6666KwwXdK6666K
-K6666KwXXdK6666K
-K6666KwXXdK6666K
-K6666KwXXdK6666K
-K666KKKKKKKK666K
-K66KyyyyyyocK66K
-.K66KccccccK66K.
-..K666KKKK666K..
-...KKKKKKKKKK...
-"""
-
-
-def icon_32():
-    hero = Image.open(art_ui.HERO).convert("RGBA")
-    hb = hero.getbbox()
-    n = 32
-    hx = (n - (hb[2] - hb[0])) // 2 - hb[0]
-    hy = (n - (hb[3] - hb[1])) // 2 - hb[1]
-    fc = (hx + art_ui.FLAME_IN_HERO[0] + 0.5, hy + art_ui.FLAME_IN_HERO[1] + 0.5)
-    im = art_ui.glow_canvas(n, fc, [(12, "6"), (7, "m")], [3, 1, 1], rim="6")
-    im.alpha_composite(hero, (hx, hy))
-    return im
-
-
 def make_ico():
-    base48 = Image.open(os.path.join(UI, "app_icon_192.png")).convert("RGBA").resize((48, 48), Image.NEAREST)
-    i16 = grid(ICON_16)
-    i32 = icon_32()
-    i256 = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
-    i256.alpha_composite(upscale(base48, 5), (8, 8))
-    # 16, 32, 48, 64, 96, 128, 192, 256
-    imgs = [i16, i32, base48, upscale(i32, 2), upscale(base48, 2), upscale(i32, 4), upscale(base48, 4), i256]
+    i16, i32, i48, i64, i128, i256 = art_icon.ico_images()
+    imgs = [i16, i32, i48, i64, upscale(i48, 2), i128, upscale(i64, 3), i256]
     path = os.path.join(UI, "app_icon.ico")
     imgs[-1].save(path, format="ICO", sizes=[(im.width, im.height) for im in imgs], append_images=imgs[:-1])
     OUT.append(path)

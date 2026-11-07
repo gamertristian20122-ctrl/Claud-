@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Wax & Wane - UI art (HUD bar, icons, buttons, panels, sticks, title logo,
-launcher icons) plus a mock HUD preview.
+"""Wax & Wane - UI art (HUD bar, icons, buttons, panels, sticks, title logo)
+plus a mock HUD preview. The launcher / store icons are in art_icon.py.
 
 Every sprite is hand-authored pixel art written as character grids (one
 character = one pixel, see PAL). The title letters are hand-drawn
 silhouettes + hand-placed drips; a fixed rule pass adds their shading, slab
 depth and outline. The only computed shapes are the joystick rings (plain
-midpoint pixel circles) and the flat glow bands behind the app icon.
+midpoint pixel circles).
 Nothing is random, so running this script always gives identical PNGs.
 
 Colours: 0x72 DungeonTileset II palette only (see DESIGN.md). Outlines are
@@ -780,82 +780,15 @@ def make_logo():
 
 
 # ==========================================================================
-# LAUNCHER ICONS  (Tallow from hero_preview.png on dark warm wax-light)
-# Drawn at a small base size and scaled up by an integer factor (nearest).
-# The glow is two flat elliptical bands centred on the flame - no smooth
-# gradient.
+# LAUNCHER ICONS live in tools/art_icon.py (app_icon_192, the adaptive
+# fg/bg 432 pair, icon.png and the store icons). This script no longer
+# writes them.
 # ==========================================================================
-HERO = os.path.join(ART, "hero", "hero_preview.png")
-FLAME_IN_HERO = (7, 11)          # centre of the flame inside hero_preview.png
-ICON_BANDS = [(16, "6"), (10, "m")]   # (radius in base px, colour), largest first
-ICON_GLOW_TALL = 1.35                  # bands are taller than wide, like a flame's light
-ICON_CORNER = [4, 2, 1, 1]       # rounded corners of the legacy icon (insets)
-
-
-def glow_canvas(n, centre, bands, corner=None, rim=None):
-    im = Image.new("RGBA", (n, n), (0, 0, 0, 0))
-    px = im.load()
-    cx, cy = centre
-    for y in range(n):
-        for x in range(n):
-            if corner:
-                ins = 0
-                if y < len(corner):
-                    ins = corner[y]
-                elif y >= n - len(corner):
-                    ins = corner[n - 1 - y]
-                if x < ins or x >= n - ins:
-                    continue
-            ch = "K"
-            for r, c in bands:            # largest first
-                # (r - 0.3): no lone 1 px nubs at the band's extreme points
-                if (x + 0.5 - cx) ** 2 + ((y + 0.5 - cy) / ICON_GLOW_TALL) ** 2 <= (r - 0.3) ** 2:
-                    ch = c
-            px[x, y] = rgba(PAL[ch])
-    if rim:                                # 1 px rim just inside the edge
-        src = im.copy().load()
-        for y in range(n):
-            for x in range(n):
-                if src[x, y][3] and any(not (0 <= x + dx < n and 0 <= y + dy < n) or not src[x + dx, y + dy][3]
-                                        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
-                    px[x, y] = rgba(PAL[rim])
-    return im
+HERO = os.path.join(ART, "hero", "hero_preview.png")    # used by the HUD preview
 
 
 def upscale(im, k):
     return im.resize((im.width * k, im.height * k), Image.NEAREST)
-
-
-def make_app_icons():
-    hero = Image.open(HERO).convert("RGBA")
-    hb = hero.getbbox()
-    # legacy 192: 48 base px x4, hero centred on its bounding box
-    n = 48
-    hx = (n - (hb[2] - hb[0])) // 2 - hb[0]
-    hy = (n - (hb[3] - hb[1])) // 2 - hb[1]
-    fc = (hx + FLAME_IN_HERO[0] + 0.5, hy + FLAME_IN_HERO[1] + 0.5)
-    icon = glow_canvas(n, fc, ICON_BANDS, ICON_CORNER, rim="6")
-    icon.alpha_composite(hero, (hx, hy))
-    save(upscale(icon, 4), "app_icon_192.png")
-    # adaptive 432: 72 base px x6; foreground inside the 66 dp safe circle
-    n = 72
-    hx = (n - (hb[2] - hb[0])) // 2 - hb[0]
-    hy = (n - (hb[3] - hb[1])) // 2 - hb[1]
-    fg = Image.new("RGBA", (n, n), (0, 0, 0, 0))
-    fg.alpha_composite(hero, (hx, hy))
-    safe_r = n * 66 / 108 / 2
-    a = fg.getchannel("A").load()
-    for y in range(n):
-        for x in range(n):
-            if a[x, y]:
-                d = max(abs(x + dx - n / 2) ** 2 + abs(y + dy - n / 2) ** 2 for dx in (0, 1) for dy in (0, 1)) ** 0.5
-                assert d <= safe_r, ("hero leaves the adaptive safe zone", x, y, d, safe_r)
-    save(upscale(fg, 6), "app_icon_fg_432.png")
-    fc = (hx + FLAME_IN_HERO[0] + 0.5, hy + FLAME_IN_HERO[1] + 0.5)
-    # the launcher shows the middle 72 of 108 dp = 48 base px, the same size
-    # as the legacy icon, so the bands keep the same radii
-    bg = glow_canvas(n, fc, ICON_BANDS)
-    save(upscale(bg, 6), "app_icon_bg_432.png")
 
 
 # ==========================================================================
@@ -1033,7 +966,6 @@ def main():
     make_boxes()
     make_sticks()
     make_logo()
-    make_app_icons()
     make_preview()
     # Kenney fonts licence (CC0) next to the other licences
     lic = "/opt/assets/packs/kenney-fonts/fonts/License.txt"

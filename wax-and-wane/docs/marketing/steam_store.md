@@ -268,6 +268,9 @@ Steam raised these sizes in August 2024 and no longer accepts the old ones.
 | Library hero | 3840 x 1240, PNG | required | 384 x 124 at 10x; no logo or text in it (the logo sits on top) |
 | Library logo | 1280 wide and/or 720 tall, transparent PNG | required | the WAX & WANE logo scaled 4x or more, nearest-neighbour |
 
+**Icons** (ready in `docs/marketing/icons/`, made by `tools/art_icon.py`): `steam_client_256.png` (256 x 256)
+and `steam_community_184.png` (184 x 184). The Windows build's own icon is `assets/art/ui/app_icon.ico`.
+
 **Trailer:** 1920 x 1080 MP4 (H.264). See `trailer_plan.md`.
 
 Rules for capsules: show the game's art and its name only. Steam's capsule guidelines ban review quotes, award badges and "on sale" text on capsules. Tallow and the flame should be the brightest thing in every capsule; test the small capsule at actual size on a phone screen.
