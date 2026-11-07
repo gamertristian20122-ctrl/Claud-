@@ -165,7 +165,7 @@ func _physics_process(dt: float) -> void:
 		if price > 0:
 			ds += "   -   %d coins" % int(round(price * world.shop_discount))
 		if record and int(record.get("cost_wax", 0)) > 0:
-			ds += "   -   costs %d minutes for good, and up to %d now" % [int(record["cost_wax"]), int(record["cost_wax"]) / 2]
+			ds += "   -   %d max min for good, up to %d now" % [int(record["cost_wax"]), int(record["cost_wax"]) / 2]
 		var rite := Items.rite_progress_text(item, p) if kind == "relic" else ""
 		if rite != "":
 			ds += "   [%s]" % rite
