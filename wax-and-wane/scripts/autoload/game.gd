@@ -3,7 +3,7 @@ extends Node
 
 signal settings_changed
 
-const VERSION := "1.0.0"
+const VERSION := "1.0.1"
 const SAVE_PATH := "user://save.cfg"
 
 ## In-game clock: the run starts at midnight and the flame dies at 2:00 AM.

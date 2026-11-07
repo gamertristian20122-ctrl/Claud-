@@ -366,6 +366,55 @@ EMBER = [
 ]
 
 
+# Big ember (9x9) for the Iron Candlestick relic: the same flame, one size up.
+EMBER_BIG = [
+    """
+    ....r....
+    ....or...
+    ...oyo...
+    ..oyyyo..
+    .oyyyyyo.
+    .oyywwyo.
+    .oywwwyo.
+    ..oywyo..
+    ...ooo...
+    """,
+    """
+    .....r...
+    ....ro...
+    ...oyo...
+    ..oyyyo..
+    .oyyyyyo.
+    .oyyywyo.
+    .oywwwyo.
+    ..oyywo..
+    ...ooo...
+    """,
+    """
+    ....r....
+    ...ro....
+    ...oyo...
+    ..oyyyo..
+    .oyyyyyo.
+    .oywwyyo.
+    .oywwwyo.
+    ..oyywo..
+    ...ooo...
+    """,
+    """
+    ...r.....
+    ...ro....
+    ...oyo...
+    ..oyyyo..
+    .oyyyyyo.
+    .oyywwyo.
+    .oyywwyo.
+    ..oywyo..
+    ...ooo...
+    """,
+]
+
+
 def ember_frames(remap=None):
     return [grid(f, 7, 7, remap=remap) for f in EMBER]
 
@@ -611,6 +660,8 @@ def build_fx():
         save(im, "fx", "ember_f%d.png" % i)
     for i, im in enumerate(ember_frames({"w": "h", "y": "t", "o": "b", "r": "n"})):
         save(im, "fx", "ember_blue_f%d.png" % i)
+    for i, f in enumerate(EMBER_BIG):
+        save(grid(f, 9, 9), "fx", "ember_big_f%d.png" % i)
     for i, im in enumerate(poof_frames()):
         save(im, "fx", "poof_f%d.png" % i)
     for name, cols in ORB_COLS.items():
@@ -671,19 +722,21 @@ MATCH = [
     """,
 ]
 GLINTS = [[], [(1, 1)], [(1, 1), (0, 1), (1, 0)], [(1, 1)]]
+# Square-cornered stone plinth (0x72 crate / column style): 3 rows of top face, a lit
+# front edge, the front face with one mortar seam, 1 px #21141b outline drawn in the grid.
 PEDESTAL = """
-....................
-.....AAAAAAaaaa.....
-...AAaaaaaaaaaa55...
-..Aaaaaaaaaaaaaaa5..
-..Aaaaaaaaaaaaaaa5..
-..aAaaaaaaaaaaaa55..
-..aaAAAAAAAAAAA554..
-..aa55555555555544..
-..a444444444444444..
-..aa55555555555544..
-...a5555555555444...
-....................
+KKKKKKKKKKKKKKKKKKKK
+KaaaaaaaaaaaaaaaaaaK
+KaaaaaaaaaaaaaaaaaaK
+KaaaaaaaaaaaaaaaaaaK
+KAAAAAAAAAAAAAAAAAAK
+K555555555555555555K
+K555555555555555555K
+K555555555555555555K
+K444444444444444444K
+K555555555555555555K
+K555555555555555555K
+KKKKKKKKKKKKKKKKKKKK
 """
 
 
@@ -698,7 +751,7 @@ def build_pickups():
         for x, y in gl:
             im.putpixel((x + 1, y + 1), rgba(PAL["w"]))
         save(im, "pickups", "match_f%d.png" % i)
-    save(outline(grid(PEDESTAL, 20, 12)), "pickups", "pedestal.png")
+    save(grid(PEDESTAL, 20, 12), "pickups", "pedestal.png")
 
 
 # ==========================================================================
