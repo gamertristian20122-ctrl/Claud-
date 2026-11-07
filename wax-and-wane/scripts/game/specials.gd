@@ -53,7 +53,7 @@ const WAVES := 3
 const WAVE_SIZE := [5, 5, 5]
 const WAVE_SIZE_CELLAR := [3, 4, 4]
 ## The Seance pays a boss-pool relic of tier 0..SEANCE_TIER (it rolls often: the very best stay with the guardians).
-const SEANCE_TIER := 2
+const SEANCE_TIER := 3
 const MIRROR_TOLL := 1.0
 const MIRROR_COST := 15
 const CRANK_COST := 3
