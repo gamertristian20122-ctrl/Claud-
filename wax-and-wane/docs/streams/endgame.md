@@ -45,6 +45,8 @@ Branch `revamp/endgame`.
    - **Phase 3 (33%) - desperate.** The hour hand turns for good (slowly: you can walk round it), the minute hand
      sweeps faster with a shorter warning, and every 4.2 s the Keeper chimes: a ring of sound waves with a gap
      where you stand (keep still and it passes you by), and on every other chime a Cog Sentry (at most 2).
+   - Every phase is seen, even by a run that melts it: damage past the next threshold waits until the Keeper
+     has changed phase (a new phase breaks off whatever its hands were doing).
    - Versus card via `Juice.of(world).boss_card` (it uses `Enemy.frames_for("keeper")`), music `final_boss`.
 4. **True ending** (`scripts/ui/ending.gd`, a CanvasLayer over the world): "THE KEEPER OF HOURS IS STILLED",
    then four scenes (192x96 art at x2, moving parts drawn in code): the quiet house under the moon (twinkling
@@ -107,7 +109,23 @@ Records: `tower_seen`, `true_endings`, `true_best` (earliest true-ending clock m
   `[keeper] phase N after T s, Tallow at <clock>`, `[keeper] stilled after ...` / `[keeper] Tallow fell ...`.
 - `--tour --tower --shots=DIR`: the ladder, the tower's first room and three rooms, the Keeper's card, each phase,
   stopped time (start, countdown, resume), phase 3, the death, the four ending scenes, the credits, the TRUE ENDING
-  results, a tower death's results and the first-win hint.
+  results, a tower death's results, the first-win hint and Moonwick in the Candle Box.
+
+### Balance (bot, `--speed=4`, `--tower` = 8-relic kit, arriving at 12:36 AM after the ladder's +12 min)
+| Build | Runs | Result | Notes |
+|---|---|---|---|
+| first build (tower hits x1.48, HP x2.5, Keeper 340) | 3 | 0 wins | all reached the Keeper with ~50 wax and lost ~1.5 min a second |
+| pass 1: hits as in the Belfry, HP x2.35, Keeper 300, hand 6, +12 min on arrival | 1 | 0 | |
+| pass 1 + the bot runs ahead of a moving hand; Keeper only, 60 wax (`--keeper`) | 2 | 2 wins (1:57, 1:59 AM) | hands hit it once a fight; phase 3 cost ~2.4 min a second |
+| pass 2: Keeper 280, phase 3 slower | 1 | 1 (1:05 AM) | |
+| **pass 3: phase 3 rings only from the chimes, fans cap at 5, a sentry every 3rd chime** | **4** | **3 wins** (1:44, 12:53, 1:36 AM) | the loss reached the Keeper with 14 wax and got it to 23% |
+| + every phase is seen (damage waits at each threshold) | `--god --keeper` 2 | both still it, ~46 s fights | |
+
+The tower rooms are the main filter (a bad room costs 20-40 minutes); the Keeper fight costs a typical run
+30-60 minutes. Full game `--god --runs=2`: see the report (both runs climb the ladder, still the Keeper and end on
+TRUE ENDING; a god run carries ~18 relics and stills the Keeper in seconds, which is why each phase now holds).
+Knobs: `Tower.ARRIVAL_WAX`, `Tower.UNLOCK_CLOCK`, `Enemy.FLOOR_HP[4]`, `DEFS["keeper"]["hp"]`, `Keeper.HAND_HIT`,
+the per-phase cooldown tables in `Keeper.tower_keeper`, `chime_t`, `MAX_SENTRIES`.
 
 ## Art (`python3 tools/art_tower.py [--review=DIR]`)
 Everything is drawn in code in the 0x72 palette (the tool asserts palette and alpha), 1 px #222222 outline, light
