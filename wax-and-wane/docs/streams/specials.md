@@ -107,4 +107,24 @@ Everything is drawn as character grids in the 0x72 palette (the tool asserts pal
 - No third-party assets added.
 
 ## Tests
-See the end of this file (filled in when the stream finished).
+- `godot --headless --path . -- --checkscripts`: clean. `--checkrooms`: 0 problems (888 dressed rooms, at most 6
+  static lights; special rooms take the shop/treasure light budget).
+- `--tour --specials` (new): every special room (empty, in use, after use), the mirror's door and toll from the
+  room next door, a Seance wave per floor, a champion per floor (entry, fight, reward), the minimap with "?"
+  and with the Dowsing Rod, and all six champions in a row beside a plain Sootling. The full `--tour` also
+  completes (special doors and "?" marks show in its play shots).
+- `--playtest --speed=4 --runs=2 --god`: both runs reach the end, three times over (first build, after the bot
+  fix, final build).
+- The bot logs `[specials] ...` lines (enter, ring, waves done, tunes, font, offers, champions) while it plays.
+
+### Bot win rate (`--playtest --speed=4`, random seeds, normal candle)
+`--nospecials` (a test-only flag: no special rooms and no champions) gives the baseline on this branch.
+
+| Build | Runs | Wins | Notes |
+|---|---|---|---|
+| baseline, `--nospecials` | 4 | 0 | deaths on floors 3, 4, 3, 3 |
+| specials, first build (bot ignored the props) | 8 | 8 | mirror deals ~1 a run, champions ~2 a run |
+| + bot rings / winds / feeds | 4 | 4 | ~3 Seances a run, each a boss relic: far too generous |
+| + Seance waves 5/5/5 with a marked foe | 4 | 3 | |
+| + drop-less spirits, champions hit for 9, chest 60% | 8 | 6 | both losses on floors 1-2 after a hard early Seance |
+| + gentler Cellar Seance, bot rings above 65 wax | 2 | 2 | |
