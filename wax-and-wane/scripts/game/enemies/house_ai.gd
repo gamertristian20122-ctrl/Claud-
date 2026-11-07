@@ -24,6 +24,12 @@ static func _fly(e: Enemy, want: Vector2, spd: float, ddt: float) -> void:
 		e.spr.play("run")
 
 
+## Teach a new mechanic the first couple of times it shows up (shared tip counter in the save).
+static func _tip(e: Enemy, key: String, text: String) -> void:
+	if e.world and e.world.hud and e.world.main and e.world.main.autotest == null and Game.tip(key):
+		e.world.hud.show_hint(text, 3.0)
+
+
 static func _fan(e: Enemy, at: Vector2, base: float, n: int, spread: float, spd: float, kind: String) -> void:
 	for i in n:
 		e.world.enemy_shot(at, Vector2.from_angle(base + (i - (n - 1) / 2.0) * spread) * spd, kind)
@@ -157,6 +163,10 @@ func sooter(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 
 
 # ---------------------------------------------------------------- Waxwork Bride: only moves unwatched
+func init_statue(e: Enemy) -> void:
+	_tip(e, "waxwork", "The Waxwork Bride only moves while you look away")
+
+
 func statue(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 	var p: Player = e.world.player
 	var watched := false
@@ -281,6 +291,7 @@ func bouncer(e: Enemy, ddt: float, _to_p: Vector2, _dist: float) -> void:
 
 # ---------------------------------------------------------------- Grave Hand: burrow and grab
 func init_burrow(e: Enemy) -> void:
+	_tip(e, "grave_hand", "Keep moving: Grave Hands reach up where you stand")
 	_go_under(e)
 	e.t = randf_range(0.9, 1.4)
 
@@ -310,7 +321,8 @@ func burrow(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 			if e.t <= 0:
 				e.state = "sink"
 				e.t = 0.3
-				e.play_anim("rise", 0.3)
+				e.spr.play_backwards("rise")
+				e._anim_lock = 0.3
 		"sink":
 			if e.t <= 0:
 				_go_under(e)
@@ -337,6 +349,10 @@ static func _go_under(e: Enemy) -> void:
 
 
 # ---------------------------------------------------------------- Gutterspout: fires along its lines
+func init_turret(e: Enemy) -> void:
+	_tip(e, "gutterspout", "Gutterspouts fire along their row and column")
+
+
 func turret(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 	match e.state:
 		"aim":
