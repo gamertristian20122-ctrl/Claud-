@@ -107,10 +107,10 @@ const DEFS := {
 	"ogre": {"hp": 104.0, "speed": 26.0, "ai": "boss_gaoler", "r": 11.0, "boss": true, "heavy": true, "name": "THE GAOLER",
 		"title": "Keeper of the crypt keys", "lore": "Locked the crypt every night for a hundred years. Tonight it locks you in.",
 		"stain": Color("#3d734f")},
-	"necro_boss": {"hp": 142.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW WARDEN",
+	"necro_boss": {"hp": 148.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW WARDEN",
 		"sprite": "ogre", "tint": Color(0.78, 0.74, 1.0), "title": "It watches the empty pews",
 		"lore": "Nothing is left inside its robes but the habit of keeping watch.", "stain": Color("#5f2d56")},
-	"big_demon": {"hp": 220.0, "speed": 30.0, "ai": "boss_fiend", "r": 12.0, "boss": true, "heavy": true, "name": "THE HOUR FIEND",
+	"big_demon": {"hp": 230.0, "speed": 30.0, "ai": "boss_fiend", "r": 12.0, "boss": true, "heavy": true, "name": "THE HOUR FIEND",
 		"title": "It wants the clock to strike two", "victory": "THE HOUR FIEND IS SNUFFED",
 		"lore": "It lives in the gap between the ticks and eats the minutes you waste.", "stain": Color("#62232f")},
 	"wax_mother": {"hp": 92.0, "speed": 14.0, "ai": "boss_mother", "r": 13.0, "boss": true, "heavy": true, "name": "THE WAX MOTHER",
@@ -120,17 +120,17 @@ const DEFS := {
 	"sexton": {"hp": 108.0, "speed": 26.0, "ai": "boss_sexton", "r": 10.0, "boss": true, "heavy": true, "name": "THE SEXTON",
 		"title": "He digs for the house", "phase_lines": ["", "The dead hear his spade...", "He digs faster!"],
 		"lore": "He dug every grave in the crypt, and he has measured you for one.", "stain": Color("#8a503e")},
-	"choir": {"hp": 152.0, "speed": 14.0, "ai": "boss_choir", "r": 14.0, "boss": true, "heavy": true, "name": "THE MELTED CHOIR",
+	"choir": {"hp": 158.0, "speed": 14.0, "ai": "boss_choir", "r": 14.0, "boss": true, "heavy": true, "name": "THE MELTED CHOIR",
 		"no_flip": true, "title": "Three voices, one hymn", "phase_lines": ["", "They sing in harmony...", "All three at once!"],
 		"lore": "They sang so long by candlelight that their faces ran. They are still singing.", "stain": Color("#da4e38")},
-	"pendulum": {"hp": 228.0, "speed": 0.0, "ai": "boss_pendulum", "r": 14.0, "boss": true, "heavy": true, "name": "THE GREAT PENDULUM",
+	"pendulum": {"hp": 238.0, "speed": 0.0, "ai": "boss_pendulum", "r": 14.0, "boss": true, "heavy": true, "name": "THE GREAT PENDULUM",
 		"title": "The Hour Fiend's heart swings", "phase_lines": ["", "Tick... tock... TICK!", "It is nearly two!"],
 		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
 }
 
 ## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
-const FLOOR_HP := [1.0, 1.28, 1.65, 2.1]
+const FLOOR_HP := [1.0, 1.28, 1.75, 2.25]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
 

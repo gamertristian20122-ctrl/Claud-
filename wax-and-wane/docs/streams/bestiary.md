@@ -48,10 +48,10 @@ records so the daily is identical for everyone.
 - **Belfry**: Deathwatch Beetles, rats, Icebox Corpses; heavy: Gutterspouts, Belfry Brutes, Snuffers, Waxworks; flyers: Clapper Bats, imps, Cherubs.
 
 ### Balance changes (for the integrator)
-- Ordinary creatures' health by floor is `Enemy.FLOOR_HP` = x1.0 / 1.28 / 1.65 / 2.1 (v1.1 was
+- Ordinary creatures' health by floor is `Enemy.FLOOR_HP` = x1.0 / 1.28 / 1.75 / 2.25 (v1.1 was
   1.0 / 1.25 / 1.5 / 1.75): the cellar and crypt stay close to v1.1, the chapel and belfry press harder.
-  Guardians: Old Rot 78, Gaoler 104, Wax Mother 92, Sexton 108 (floors 1-2, close to v1.1); Hollow Warden 142,
-  Melted Choir 152, Hour Fiend 220, Great Pendulum 228 (floors 3-4, ~+16-18%).
+  Guardians: Old Rot 78, Gaoler 104, Wax Mother 92, Sexton 108 (floors 1-2, close to v1.1); Hollow Warden 148,
+  Melted Choir 158, Hour Fiend 230, Great Pendulum 238 (floors 3-4, ~+21-23%).
 - Contact hits: 6 on floors 1-2 (as v1.1), 7 from the chapel up (`touch` default in `Enemy._physics_process`).
 - `small_fry` creatures (Lamp Moths, Melt Drops) do not feed Kindling (one line in `world.on_enemy_killed`),
   otherwise swarms made the streak heal free.
