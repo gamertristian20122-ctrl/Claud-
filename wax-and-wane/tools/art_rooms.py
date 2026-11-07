@@ -221,10 +221,12 @@ def floor_layout(rng):
     return lay
 
 
-def build_room(theme, decor=True):
+def build_room(theme, decor=True, variant=0):
+    """variant 0 = the classic floor; 1 and 2 = the themed floors in FLOOR_VARIANTS."""
     T = THEMES[theme]
-    rng = random.Random(T["seed"])
+    rng = random.Random(T["seed"] + 7919 * variant)
     W, H = ROOM_W, ROOM_H
+    painter = FLOOR_VARIANTS[theme][variant - 1] if variant else None
 
     # ---- floor -------------------------------------------------------------------
     floor = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -234,16 +236,22 @@ def build_room(theme, decor=True):
             paste(floor, tile(lay[r][c]), FLOOR_X0 + 16 * c, FLOOR_Y0 + 16 * r)
     if decor:
         decorate_floor(theme, floor, lay, rng)
+    extra_ring, extra_shadow = {}, {}
+    if painter:
+        res = painter(floor, rng)
+        if res:
+            extra_ring, extra_shadow = res
     floor = remap(floor, T["floor"])
     # 1-tile vignette ring along the walls (ambient occlusion), then hard cast shadows
     # (light comes from the top-left: the top wall and the left wall throw a short shadow).
     fx0, fy0 = FLOOR_X0, FLOOR_Y0
     fx1, fy1 = FLOOR_X0 + 16 * FLOOR_COLS, FLOOR_Y0 + 16 * FLOOR_ROWS
-    ring = T["ring"]
+    ring = dict(T["ring"])
+    ring.update(extra_ring)
     for box in [(fx0, fy0, fx1, fy0 + 16), (fx0, fy1 - 16, fx1, fy1),
                 (fx0, fy0 + 16, fx0 + 16, fy1 - 16), (fx1 - 16, fy0 + 16, fx1, fy1 - 16)]:
         remap_region(floor, box, ring)
-    sh = {}
+    sh = dict(extra_shadow)
     for k, v in T["shadow"].items():
         sh[k] = v
     for k, v in ring.items():  # the ring colour also darkens inside the shadow
@@ -336,6 +344,303 @@ def decorate_floor(theme, floor, lay, rng):
     if theme == "crypt":
         # slime dribbling from the goo on the wall (face tile 4) onto the floor tile below
         paste(floor, tile("wall_goo_base"), FLOOR_X0 + 16 * 4, FLOOR_Y0)
+
+
+# --------------------------------------------------------------------------- floor variants
+# Painted over the classic tiles in the base stone ramp (O / S1 / S2) before the theme remap, so
+# every variant takes its theme's colours; wood and carpet use their own 0x72 colours and return
+# how the wall vignette and the cast shadows darken them.
+FX0, FY0, FX1, FY1 = 16, 32, 256, 176
+
+
+def _stone(px, x0, y0, w, h, rng, chip=0.0):
+    """One flagstone: S1 fill, lit top + left edge (S2), 1 px mortar on the right + bottom (O)."""
+    for y in range(y0, y0 + h):
+        for x in range(x0, x0 + w):
+            c = S1
+            if x == x0 + w - 1 or y == y0 + h - 1:
+                c = O
+            elif (y == y0 and x < x0 + w - 2) or (x == x0 and y < y0 + h - 2):
+                c = S2
+            px[x, y] = rgb(c) + (255,)
+    for _ in range(int(w * h * chip)):
+        x = rng.randrange(x0 + 2, x0 + w - 2)
+        y = rng.randrange(y0 + 2, y0 + h - 2)
+        px[x, y] = rgb(S2 if rng.random() < 0.6 else O) + (255,)
+
+
+def _crack(px, x, y, rng, n):
+    for _ in range(n):
+        if not (FX0 + 2 <= x < FX1 - 2 and FY0 + 2 <= y < FY1 - 2):
+            break
+        px[x, y] = rgb(O) + (255,)
+        x += rng.choice((-1, 0, 1, 1))
+        y += rng.choice((0, 1, 1))
+
+
+def _partition(total, sizes, rng):
+    out, left = [], total
+    while left > 0:
+        opts = [v for v in sizes if v <= left and (left - v == 0 or left - v >= min(sizes))]
+        v = rng.choice(opts)
+        out.append(v)
+        left -= v
+    return out
+
+
+DRAIN = G("""
+....AAAAAAAA....
+..AAkjkjkjkjAA..
+.AkjkjkjkjkjkiA.
+.AjAAAAAAAAAAjA.
+AkjAkkkkkkkkAjiA
+AjkAjjjjjjjjAkjA
+AkjAkkkkkkkkAjiA
+AjkAjjjjjjjjAkjA
+AkjAkkkkkkkkAjiA
+AjkAjjjjjjjjAkjA
+AkjAkkkkkkkkAjiA
+.AjAAAAAAAAAAjA.
+.AiijijijijijiA.
+..AAiiiiiiiiAA..
+....AAAAAAAA....
+................
+""")
+DRAIN_PAL = {"A": "#222222", "k": "#111111", "j": "#3f3f3f", "i": "#545454"}
+
+
+def paint_flagstones(floor, rng):
+    """Cellar: big worn flagstones and an iron drain with a damp ring."""
+    px = floor.load()
+    y = FY0
+    for h in _partition(FY1 - FY0, [16, 24, 24, 32], rng):
+        x = FX0
+        for w in _partition(FX1 - FX0, [24, 32, 32, 40, 48], rng):
+            _stone(px, x, y, w, h, rng, chip=0.004)
+            if rng.random() < 0.18:
+                _crack(px, x + rng.randrange(3, w - 3), y + 2, rng, rng.randrange(4, 9))
+            x += w
+        y += h
+    c, r = rng.choice([(3, 2), (11, 2), (3, 6), (11, 6), (4, 5), (10, 3)])
+    dx, dy = FX0 + 16 * c, FY0 + 16 * r
+    for yy in range(dy - 3, dy + 19):     # the damp ring around the drain
+        for xx in range(dx - 3, dx + 19):
+            d = ((xx - dx - 7.5) ** 2 + (yy - dy - 7.5) ** 2) ** 0.5
+            if d < 11.5 and px[xx, yy][:3] == rgb(S1) and (xx * 7 + yy * 3) % 5 != 0:
+                px[xx, yy] = rgb("#3b3332") + (255,)
+    floor.alpha_composite(grid(DRAIN, DRAIN_PAL), (dx, dy))
+
+
+def paint_worn(floor, rng):
+    """Cellar: the classic tiles, more broken, with packed-dirt patches and stray straw."""
+    px = floor.load()
+    for _ in range(4):
+        c, r = rng.randrange(1, 14), rng.randrange(1, 8)
+        paste(floor, tile(rng.choice(["floor_4", "floor_7", "floor_8"])), FX0 + 16 * c, FY0 + 16 * r)
+    px = floor.load()
+    for _ in range(5):
+        cx, cy = rng.randrange(FX0 + 24, FX1 - 24), rng.randrange(FY0 + 18, FY1 - 18)
+        rad = rng.randrange(6, 11)
+        for yy in range(cy - rad, cy + rad):
+            for xx in range(cx - rad - 4, cx + rad + 4):
+                d = (((xx - cx) / 1.4) ** 2 + (yy - cy) ** 2) ** 0.5
+                if d < rad and px[xx, yy][:3] == rgb(S1):
+                    px[xx, yy] = rgb("#3b3332" if d < rad - 1.2 else "#302c2b") + (255,)
+        for _ in range(rng.randrange(3, 6)):
+            sx, sy = cx + rng.randrange(-rad, rad), cy + rng.randrange(-rad // 2, rad // 2)
+            col = rng.choice(["#b58057", "#d8a57d"])
+            for k in range(3):
+                if FX0 < sx + k < FX1 - 1 and px[sx + k, sy][:3] != rgb(O):
+                    px[sx + k, sy] = rgb(col) + (255,)
+
+
+GLYPHS = [
+    G("""
+    xxxxxxxxxx
+    ..........
+    xxxx.xxxxx
+    ..........
+    xxxxxxx...
+    """),
+    G("""
+    ...xxx...
+    ..x.x.x..
+    ..xxxxx..
+    ...x.x...
+    """),
+    G("""
+    x.......x
+    .x.....x.
+    ..xxxxx..
+    .x.....x.
+    x.......x
+    """),
+    G("""
+    ....x....
+    ..xxxxx..
+    ....x....
+    ....x....
+    ....x....
+    """),
+]
+
+
+def paint_slabs(floor, rng):
+    """Crypt: rows of engraved grave slabs either side of a tiled aisle (col 7 stays tiles)."""
+    px = floor.load()
+    for r in range(1, 8):
+        for c0 in (1, 3, 5, 8, 10, 12):
+            x0, y0 = FX0 + 16 * c0, FY0 + 16 * r
+            for y in range(y0, y0 + 16):
+                for x in range(x0, x0 + 32):
+                    edge = x in (x0, x0 + 31) or y in (y0, y0 + 15)
+                    lit = (y == y0 + 1 and x < x0 + 30) or (x == x0 + 1 and y < y0 + 14)
+                    px[x, y] = rgb(O if edge else (S2 if lit else S1)) + (255,)
+            g = rng.choice(GLYPHS)
+            gx, gy = x0 + 16 - len(g[0]) // 2, y0 + 8 - len(g) // 2
+            for yy, row in enumerate(g):
+                for xx, ch in enumerate(row):
+                    if ch == "x":
+                        px[gx + xx, gy + yy] = rgb(O) + (255,)
+            if rng.random() < 0.3:
+                _crack(px, x0 + rng.randrange(4, 28), y0 + 2, rng, rng.randrange(5, 11))
+            if rng.random() < 0.25:   # a chipped corner
+                for k in range(3):
+                    px[x0 + 30 - k, y0 + 1 + (2 - k)] = rgb(O) + (255,)
+
+
+def paint_inlay(floor, rng):
+    """Crypt: an old inlaid border framing the middle of the room, chipped and cracked."""
+    px = floor.load()
+    for x0, y0, x1, y1 in ((FX0 + 36, FY0 + 20, FX1 - 37, FY1 - 21), (FX0 + 39, FY0 + 23, FX1 - 40, FY1 - 24)):
+        for x in range(x0, x1 + 1):
+            for y in (y0, y1):
+                if px[x, y][:3] != rgb(O) or rng.random() < 0.5:
+                    px[x, y] = rgb(S2) + (255,)
+        for y in range(y0, y1 + 1):
+            for x in (x0, x1):
+                if px[x, y][:3] != rgb(O) or rng.random() < 0.5:
+                    px[x, y] = rgb(S2) + (255,)
+    for cx, cy in ((FX0 + 37, FY0 + 21), (FX1 - 38, FY0 + 21), (FX0 + 37, FY1 - 22), (FX1 - 38, FY1 - 22)):
+        for d in range(-3, 4):
+            px[cx + d, cy] = rgb(S2) + (255,)
+            px[cx, cy + d] = rgb(S2) + (255,)
+        px[cx, cy] = rgb(O) + (255,)
+    for _ in range(8):
+        _crack(px, rng.randrange(FX0 + 8, FX1 - 8), rng.randrange(FY0 + 6, FY1 - 20), rng, rng.randrange(4, 10))
+
+
+CARPET = {"field": "#9f294e", "deep": "#62232f", "gold": "#ee8e2e", "hi": "#facb3e", "lo": "#c56025",
+          "dot": "#da4e38"}
+
+
+def paint_carpet(floor, rng):
+    """Chapel: a worn red runner from the top door to the bottom door."""
+    px = floor.load()
+    x0, x1 = 116, 155
+    for y in range(FY0, FY1):
+        for x in range(x0, x1 + 1):
+            if x in (x0, x1):
+                c = O
+            elif x == x0 + 1:
+                c = CARPET["hi"]
+            elif x == x1 - 1:
+                c = CARPET["lo"]
+            elif x in (x0 + 2, x1 - 2):
+                c = CARPET["deep"]
+            elif x in (x0 + 3, x1 - 3):
+                c = CARPET["gold"] if (y // 2) % 2 == 0 else CARPET["deep"]
+            else:
+                dy = (y - FY0) % 16 - 8
+                dx = x - 136 if x < 136 else x - 135
+                m = abs(dx) + abs(dy)
+                c = CARPET["deep"] if m == 6 else (CARPET["dot"] if m <= 1 else CARPET["field"])
+            px[x, y] = rgb(c) + (255,)
+    for _ in range(14):       # threadbare spots
+        x, y = rng.randrange(x0 + 5, x1 - 4), rng.randrange(FY0 + 4, FY1 - 4)
+        if px[x, y][:3] == rgb(CARPET["field"]):
+            px[x, y] = rgb(CARPET["deep"]) + (255,)
+            if px[x + 1, y][:3] == rgb(CARPET["field"]):
+                px[x + 1, y] = rgb(CARPET["deep"]) + (255,)
+    dark = {CARPET["field"]: CARPET["deep"], CARPET["dot"]: CARPET["field"], CARPET["gold"]: CARPET["lo"],
+            CARPET["hi"]: CARPET["gold"], CARPET["lo"]: CARPET["deep"]}
+    return dark, dark
+
+
+def paint_checker(floor, rng):
+    """Chapel: polished chequered flags (every other tile is the darker stone)."""
+    px = floor.load()
+    for r in range(FLOOR_ROWS):
+        for c in range(FLOOR_COLS):
+            if (r + c) % 2:
+                for y in range(FY0 + 16 * r, FY0 + 16 * r + 16):
+                    for x in range(FX0 + 16 * c, FX0 + 16 * c + 16):
+                        if px[x, y][:3] == rgb(S1):
+                            px[x, y] = rgb(O) + (255,)
+                        elif px[x, y][:3] == rgb(S2) and (x + y) % 3 == 0:
+                            px[x, y] = rgb(S1) + (255,)
+
+
+WOOD = {"hi": "#8f4029", "fill": "#62232f", "grain": "#38262d", "gap": "#21141b", "nail": "#545454"}
+
+
+def _planks(px, rng, x0, y0, x1, y1):
+    for by in range(y0, y1, 8):
+        x = x0 - rng.randrange(0, 40)
+        while x < x1:
+            ln = rng.randrange(32, 80)
+            a, b = max(x, x0), min(x + ln, x1)
+            for y in range(by, min(by + 8, y1)):
+                k = y - by
+                for xx in range(a, b):
+                    if k == 7 or (xx == b - 1 and b < x1):
+                        c = WOOD["gap"]
+                    elif k == 0 or (xx == a and a > x0):
+                        c = WOOD["hi"]
+                    else:
+                        c = WOOD["fill"]
+                    px[xx, y] = rgb(c) + (255,)
+            for _ in range((b - a) // 10):
+                gx, gy = rng.randrange(a + 1, max(a + 2, b - 4)), by + rng.randrange(2, 6)
+                for k in range(rng.randrange(2, 5)):
+                    if gx + k < b - 1:
+                        px[gx + k, gy] = rgb(WOOD["grain"]) + (255,)
+            if b - a >= 10:
+                for nx in (a + 2, b - 3):
+                    px[nx, by + 2] = rgb(WOOD["nail"]) + (255,)
+                    px[nx, by + 5] = rgb(WOOD["nail"]) + (255,)
+            x += ln
+
+
+WOOD_RING = {WOOD["hi"]: WOOD["fill"], WOOD["grain"]: WOOD["gap"]}
+WOOD_DARK = {WOOD["fill"]: WOOD["grain"], WOOD["hi"]: WOOD["grain"], WOOD["grain"]: WOOD["gap"]}
+
+
+def paint_planks(floor, rng):
+    """Belfry: a floor of old boards, nailed down."""
+    _planks(floor.load(), rng, FX0, FY0, FX1, FY1)
+    return WOOD_RING, WOOD_DARK
+
+
+def paint_planks_border(floor, rng):
+    """Belfry: boards over the middle, the old stone left around the edge."""
+    px = floor.load()
+    _planks(px, rng, FX0 + 16, FY0 + 16, FX1 - 16, FY1 - 16)
+    for x in range(FX0 + 15, FX1 - 15):   # a dark lip where the boards meet the stone
+        px[x, FY0 + 15] = rgb(O) + (255,)
+        px[x, FY1 - 16] = rgb(WOOD["gap"]) + (255,)
+    for y in range(FY0 + 15, FY1 - 15):
+        px[FX0 + 15, y] = rgb(O) + (255,)
+        px[FX1 - 16, y] = rgb(WOOD["gap"]) + (255,)
+    return WOOD_RING, WOOD_DARK
+
+
+FLOOR_VARIANTS = {
+    "cellar": [paint_flagstones, paint_worn],
+    "crypt": [paint_slabs, paint_inlay],
+    "chapel": [paint_carpet, paint_checker],
+    "belfry": [paint_planks, paint_planks_border],
+}
 
 
 # --------------------------------------------------------------------------- doors
@@ -1242,6 +1547,8 @@ def main():
     made = {}
     for theme in THEMES:
         made["room_" + theme] = build_room(theme)
+        for v in (1, 2):
+            made["room_%s_%d" % (theme, v)] = build_room(theme, variant=v)
     for variant in ("normal", "boss", "gold"):
         suf = "" if variant == "normal" else "_" + variant
         for state in ("open", "closed"):

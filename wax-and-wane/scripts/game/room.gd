@@ -137,10 +137,12 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 					spikes.append(s)
 				"W":
 					var wb := Sprite2D.new()
-					wb.texture = Art.tex("decor/prop_web")
+					var wv: String = ["decor/prop_web", "decor/prop_web_b", "decor/prop_web_c"][posmod(x * 3 + y * 5 + int(data["seed"]), 3)]
+					wb.texture = Art.tex(wv) if Art.has(wv) else Art.tex("decor/prop_web")
 					wb.centered = false
 					wb.position = cell_pos(Vector2i(x, y))
 					wb.flip_h = (x + y) % 2 == 1
+					wb.flip_v = (x * y) % 3 == 1
 					floor_layer.add_child(wb)
 					webs[Vector2i(x, y)] = wb
 	# decor, wall lights and the floor variant
