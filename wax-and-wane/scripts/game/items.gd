@@ -73,7 +73,7 @@ const RELICS := {
 	"bell_rope": {"name": "Bell Rope", "desc": "Each guardian you fell rings back 5 minutes", "q": 2, "pools": ["boss", "treasure"]},
 	"cuckoo_clock": {"name": "Cuckoo Clock", "desc": "Each quarter hour: +2 min and a burst of sparks", "q": 3, "pools": ["treasure", "boss"]},
 	"minute_hand": {"name": "Minute Hand", "desc": "Every kill winds back 4 seconds", "q": 2, "pools": ["treasure", "shop"]},
-	"both_ends": {"name": "Lit at Both Ends", "desc": "+50% damage, but you melt faster", "q": 2, "pools": ["treasure", "altar"]},
+	"both_ends": {"name": "Lit at Both Ends", "desc": "+40% damage, but you melt faster", "q": 2, "pools": ["treasure", "altar"]},
 	# ---- v2.0: odds and ends
 	"powder_tin": {"name": "Powder Tin", "desc": "+2 bombs; blasts leave burning ground", "q": 1, "pools": ["shop"]},
 	"honeycomb": {"name": "Honeycomb", "desc": "Foes drop wax more often, and it mends more", "q": 1, "pools": ["treasure", "hollow"]},
@@ -315,8 +315,8 @@ static func apply(id: String, p: Player, world: Node) -> void:
 			p.pierce += 1
 			p.shot_range *= 1.15
 		"both_ends":
-			p.damage *= 1.5
-			p.drain_mult *= 1.2
+			p.damage *= 1.4
+			p.drain_mult *= 1.25
 		"powder_tin":
 			p.bombs += 2
 		"wax_seal":
