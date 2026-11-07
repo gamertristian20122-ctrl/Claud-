@@ -184,6 +184,12 @@ func from_dict(d: Dictionary) -> void:
 	minis_beaten = (d.get("minis", []) as Array).duplicate()
 
 
+## Play-test log line (only while the autotest bot runs).
+func _log(text: String) -> void:
+	if world.main and world.main.get("autotest") != null:
+		print("[specials] floor %d %s" % [world.floor_num, text])
+
+
 # ================================================================ building
 
 func _built(r: Room) -> void:
@@ -355,6 +361,7 @@ func _entered() -> bool:
 		Audio.play("snuff_out", -4.0, 0.0, 1.3)
 	if not d.get("greeted", false):
 		d["greeted"] = true
+		_log("enter " + t)
 		world.hud.show_banner(INFO[t]["name"], INFO[t]["sub"], 1.8)
 		if Game.tip("special_" + t, 2):
 			world.hud.show_hint(INFO[t]["hint"], 4.0)
@@ -403,6 +410,10 @@ func _physics_process(dt: float) -> void:
 		return
 	var feet: Vector2 = r.cell_center(PROP_CELL) + Vector2(0, 2)
 	var near: bool = p.global_position.distance_to(feet) < 17.0
+	if t == "seance" and d.get("rung", false):
+		if not d.get("seance_done", false):
+			_seance_tick(dt, d)
+		return
 	if _busy > 0.0:
 		_busy -= dt
 		if _busy <= 0.0:
@@ -414,9 +425,7 @@ func _physics_process(dt: float) -> void:
 		return
 	match t:
 		"seance":
-			if d.get("rung", false) and not d.get("seance_done", false):
-				_seance_tick(dt, d)
-			elif near:
+			if near:
 				_ring()
 		"musicbox":
 			if near and not d.get("box_broken", false):
@@ -480,6 +489,7 @@ func _ring() -> void:
 	world.fx_ring(r.cell_center(PROP_CELL) + Vector2(0, -14), Color("#cae6f5"))
 	world.hud.show_banner("", "The lodgers answer...", 1.4)
 	_wave_t = 1.1
+	_log("seance rung")
 
 
 func _seance_tick(dt: float, d: Dictionary) -> void:
@@ -508,8 +518,8 @@ func _spawn_wave(d: Dictionary) -> void:
 	var wave: int = int(d.get("wave", 0)) + 1
 	d["wave"] = wave
 	var n: int = world.floor_num
-	var here: Dictionary = world.POOLS[n]
-	var next: Dictionary = world.POOLS[mini(n + 1, world.LAST_FLOOR)]
+	var here: Dictionary = world.POOLS.get(n, world.POOLS[1])
+	var next: Dictionary = world.POOLS.get(n + 1, here)
 	# wave 1: three from this floor; wave 2: four, two from below; wave 3: four and a heavy from below
 	var picks: Array = []
 	var count: int = [3, 4, 4][wave - 1]
@@ -538,6 +548,7 @@ func _mirror_taken() -> void:
 	Audio.play("door_burst", -2.0, 0.0, 1.4)
 	world.fx_sparks(world.room.cell_center(PROP_CELL) + Vector2(0, -20), Vector2.UP, 8, true)
 	Achievements.unlock("mirror_deal")
+	_log("mirror deal")
 
 
 func _veiled() -> void:
@@ -589,6 +600,7 @@ func _tune(d: Dictionary) -> void:
 			break
 	_play("idle")
 	_squash()
+	_log("music box: " + out)
 	var fly := func() -> Vector2: return Vector2(world.rng.randf_range(-1.0, 1.0), world.rng.randf_range(0.4, 1.0)).normalized() * 60.0
 	match out:
 		"nothing":
@@ -617,7 +629,7 @@ func _tune(d: Dictionary) -> void:
 			world.fx_text(at, "Something climbs out!", UI.RED)
 			world.shake(3.0)
 			var n: int = world.floor_num
-			var lst: Array = world.POOLS[n]["e"]
+			var lst: Array = world.POOLS.get(n, world.POOLS[1])["e"]
 			d["cleared"] = false
 			world.room.set_open(false)
 			for i in (1 if n < 3 else 2):
@@ -668,7 +680,9 @@ func _font_pay(d: Dictionary) -> void:
 	var at: Vector2 = world.room.cell_center(PROP_CELL) + Vector2(0, -32)
 	Audio.play("wax_bubble")
 	var odds: float = FONT_ODDS[clampi(fed - 1, 0, FONT_ODDS.size() - 1)]
-	if world.rng.randf() >= odds:
+	var paid: bool = world.rng.randf() < odds
+	_log("font fed %d: %s" % [fed, "pays" if paid else "drinks"])
+	if not paid:
 		var nxt: float = FONT_ODDS[clampi(fed, 0, FONT_ODDS.size() - 1)]
 		world.fx_text(at, "It drinks.  Next: %d in 10" % int(round(nxt * 10.0)) if fed < FONT_USES - 1 else "It drinks.  The next one pays", UI.WAX)
 		if fed >= FONT_USES:
@@ -721,6 +735,7 @@ func _give_tonics(pos: Vector2) -> void:
 
 ## An offer (study / mirror) was taken. Returns false if it could not be taken right now.
 func take_offer(o: Offer) -> bool:
+	_log("offer " + o.item)
 	match o.item:
 		"map": _read_map()
 		"tonics": _give_tonics(o.global_position)
@@ -741,6 +756,7 @@ func _cleared() -> void:
 		for i in world.rng.randi_range(4, 6):
 			world.add_pickup("coin", c + Vector2(0, 18), "", 0, Vector2.from_angle(world.rng.randf() * TAU) * 50.0)
 		world.hud.show_banner("THE SEANCE IS OVER", "The lodgers leave a gift", 1.6)
+		_log("seance done")
 		Audio.play("bell_toll", -2.0, 0.0, 1.2)
 		Achievements.unlock("seance")
 	if d.has("mini") and not d.get("mini_paid", false) and (_mini == null or not is_instance_valid(_mini) or not _mini.alive):
@@ -811,6 +827,7 @@ func spawn_mini(kind: String, pos: Vector2) -> Enemy:
 	world.hud.show_banner(info["name"], info["sub"], 1.8)
 	world.hud.set_boss(info["name"], true)
 	Audio.play("boss_roar", -4.0, 0.0, 1.25)
+	_log("mini %s hp %.0f" % [kind, e.max_hp])
 	world.shake(3.0)
 	return e
 
@@ -922,6 +939,7 @@ func _mini_down() -> void:
 		world.fx_stain(at, "soot", true)
 	if kind == "" or world.player.dead:
 		return
+	_log("mini %s beaten" % kind)
 	if not kind in minis_beaten:
 		minis_beaten.append(kind)
 	var all: Array = Game.records.get("minis_beaten", [])
