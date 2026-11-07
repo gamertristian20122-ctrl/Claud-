@@ -25,6 +25,8 @@ var _who: Label
 var _dim: ColorRect
 var _landed := false
 var _shake := 0.0
+## speed streaks inside the bands: [band, depth 0..1, x, length, speed]
+var _streaks: Array = []
 
 
 func setup(j: Node, k: String, t: String) -> void:
@@ -93,6 +95,9 @@ func _ready() -> void:
 	_who = UI.label("%s   %s" % [who, Game.clock_text(world.clock_minutes()) if world.has_method("clock_minutes") else ""], 8, UI.GOLD)
 	_who.position = Vector2(_vs.x * 0.16 + 26, _band_top(1, _vs.x * 0.16 + 26) + 14)
 	add_child(_who)
+	for i in 14:
+		var b := i % 2
+		_streaks.append([b, randf_range(0.12, 0.88), randf() * _vs.x, randf_range(18, 60), randf_range(160, 320)])
 	_apply(0.0)
 
 
@@ -122,10 +127,13 @@ func _slide(b: int) -> float:
 	return k2 * k2 * w * (-1.0 if b == 0 else 1.0)
 
 
-func _apply(_dt: float) -> void:
+func _apply(dt: float) -> void:
 	var s0 := _slide(0)
 	var s1 := _slide(1)
 	_bands.position = Vector2.ZERO
+	for st in _streaks:
+		# guardian streaks run left, Tallow's run right
+		st[2] = wrapf(st[2] + (-1.0 if st[0] == 0 else 1.0) * st[4] * dt, -80.0, _vs.x + 20.0)
 	_bands.queue_redraw()
 	var a := clampf(_t / 0.15, 0.0, 1.0) if not _out else 1.0 - clampf((_t - OUT_AT) / (END_T - OUT_AT), 0.0, 1.0)
 	_dim.color.a = 0.72 * a
@@ -161,6 +169,14 @@ func _draw_bands() -> void:
 	_band(0, s0, Color("#62232f"), Color("#9f294e"), Color("#da4e38"))
 	# Tallow's band: night blue with a warm candle-light edge
 	_band(1, s1, Color("#2a2a3a"), Color("#314152"), Color("#ee8e2e"))
+	for st in _streaks:
+		var b: int = st[0]
+		var sx := s0 if b == 0 else s1
+		var x0: float = st[2] + sx
+		var x1: float = x0 + st[3]
+		var y0 := roundf(lerpf(_band_top(b, x0) + 3.0, _band_bottom(b, x0) - 4.0, st[1]))
+		var y1 := roundf(lerpf(_band_top(b, x1) + 3.0, _band_bottom(b, x1) - 4.0, st[1]))
+		_bands.draw_line(Vector2(x0, y0), Vector2(x1, y1), Color("#9f294e") if b == 0 else Color("#314152"), 1.0)
 	# a thin ember line between them (where they cross the screen)
 	var y0 := lerpf(134.0, 118.0, 0.0)
 	var y1 := lerpf(134.0, 118.0, 1.0)

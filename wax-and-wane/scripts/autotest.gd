@@ -317,7 +317,11 @@ func _tour() -> void:
 	await _wait(1.8)
 	await _shot("title")
 	main.goto("game", {"seed": 7})
-	await _wait(1.6)
+	await _wait(0.28)
+	await _shot("burn_cover")
+	await _wait(0.42)
+	await _shot("burn_reveal")
+	await _wait(0.9)
 	await _shot("start_room")
 	var w: Node = main.current
 	w.player.keepsake = "hand_bell"
@@ -396,6 +400,8 @@ func _tour_juice(w: Node) -> void:
 	w.player.position = c0 + Vector2(0, 40)
 	await _wait(0.12)
 	await _shot("gibs")
+	await _wait(0.2)
+	await _shot("room_clear")
 	w.place_bomb()
 	await _wait(2.4)
 	await _shot("stains")

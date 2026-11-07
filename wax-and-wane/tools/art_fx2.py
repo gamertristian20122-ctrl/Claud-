@@ -127,6 +127,9 @@ SPLATS = [
     (16, 12, 4.8, 3.6, 0.24, 67, 7, None, 3),
     (11, 10, 2.6, 2.2, 0.30, 71, 7, None, 1),
     (16, 11, 5.2, 3.3, 0.26, 83, 8, None, 3),
+    # 8, 9: the huge boss splats (one per boss death)
+    (30, 20, 9.5, 6.2, 0.22, 97, 14, None, 4),
+    (32, 20, 10.0, 6.4, 0.30, 131, 16, None, 4),
 ]
 
 
@@ -137,13 +140,23 @@ def splat(i):
     if throw is not None:   # the blob sits back from the direction it was thrown in
         cx -= math.cos(throw) * (W / 2.0 - rx - 0.8)
         cy -= math.sin(throw) * (H / 2.0 - ry - 0.8) * 0.6
-    m = blob_mask(W, H, cx, cy, rx, ry, wob, seed, [])
+    if W >= 24:
+        # big puddles: a union of overlapping discs (a single wobbly ellipse this size reads as a heart)
+        lobes = []
+        for k in range(6):
+            a = k * math.tau / 6 + rnd.uniform(-0.5, 0.5)
+            d = rnd.uniform(0.45, 0.95)
+            lobes.append((math.cos(a) * rx * d, math.sin(a) * ry * d, rnd.choice([0.22, 0.3, 0.38, 0.46]) * rx))
+        m = blob_mask(W, H, cx, cy, rx * 0.5, ry * 0.55, wob, seed,
+                      [(dx, dy * 0.75, r * (ry / rx) ** 0.5) for (dx, dy, r) in lobes])
+    else:
+        m = blob_mask(W, H, cx, cy, rx, ry, wob, seed, [])
     for k in range(nd):
         if throw is None:
             a = (k + rnd.random() * 0.6) * math.tau / nd
         else:
             a = throw + rnd.uniform(-0.9, 0.9)
-        far = rnd.uniform(1.25, 1.95)
+        far = rnd.uniform(1.15, 1.6) if W >= 24 else rnd.uniform(1.25, 1.95)
         ex, ey = cx + math.cos(a) * rx * far, cy + math.sin(a) * ry * far
         ex = min(max(ex, 0.6), W - 0.6)
         ey = min(max(ey, 0.6), H - 0.6)
@@ -263,7 +276,8 @@ def build():
 RAMPS = {
     "ash": ("#b6cbcf", "#7b8994", "#314152"),
     "goo": ("#4ba747", "#3d734f", "#314152"),
-    "blood": ("#8f4029", "#62232f", "#21141b"),
+    "blood": ("#c56025", "#8f4029", "#62232f"),
+    "red": ("#da4e38", "#9f294e", "#62232f"),
     "wax": ("#fdf7ed", "#e2b694", "#b58057"),
     "pumpkin": ("#ee8e2e", "#c56025", "#8f4029"),
     "ice": ("#72d6ce", "#417089", "#314152"),
@@ -287,7 +301,7 @@ def review(d):
     os.makedirs(d, exist_ok=True)
     floor = Image.open(os.path.join(OX72, "floor_1.png")).convert("RGBA")
     sps = [splat(i) for i in range(len(SPLATS))] + [gib(g) for g in GIBS]
-    cell = 20
+    cell = 34
     sheet = Image.new("RGBA", (cell * len(sps), cell * len(RAMPS)), (0, 0, 0, 255))
     for r, (name, ramp) in enumerate(RAMPS.items()):
         for c, s in enumerate(sps):
@@ -298,7 +312,7 @@ def review(d):
             rc = recolour(s, ramp)
             tile.alpha_composite(rc, ((cell - rc.width) // 2, (cell - rc.height) // 2))
             sheet.paste(tile, (c * cell, r * cell))
-    sheet = sheet.resize((sheet.width * 6, sheet.height * 6), Image.NEAREST)
+    sheet = sheet.resize((sheet.width * 4, sheet.height * 4), Image.NEAREST)
     sheet.save(os.path.join(d, "fx2_review.png"))
     print("review ->", os.path.join(d, "fx2_review.png"))
 

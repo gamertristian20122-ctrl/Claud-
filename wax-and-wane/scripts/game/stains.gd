@@ -19,8 +19,8 @@ const KEY := [Color("#b6cbcf"), Color("#7b8994"), Color("#314152")]
 const RAMPS := {
 	"ash": [Color("#b6cbcf"), Color("#7b8994"), Color("#483b3a")],
 	"goo": [Color("#4ba747"), Color("#3d734f"), Color("#314152")],
-	"blood": [Color("#8f4029"), Color("#62232f"), Color("#21141b")],
-	"red": [Color("#da4e38"), Color("#8f4029"), Color("#62232f")],
+	"blood": [Color("#c56025"), Color("#8f4029"), Color("#62232f")],
+	"red": [Color("#da4e38"), Color("#9f294e"), Color("#62232f")],
 	"wax": [Color("#fdf7ed"), Color("#e2b694"), Color("#b58057")],
 	"pumpkin": [Color("#ee8e2e"), Color("#c56025"), Color("#8f4029")],
 	"ice": [Color("#72d6ce"), Color("#417089"), Color("#314152")],
@@ -189,8 +189,18 @@ func stamp_image(src: Image, wp: Vector2, flip := false) -> bool:
 
 
 func splat(wp: Vector2, mat: String, big := false) -> void:
-	var v := randi_range(4, 7) if big else randi_range(0, 4)
+	var v := randi_range(4, 7) if big else randi_range(1, 5)
 	stamp_image(image("splat_%d" % v, mat), wp, randf() < 0.5)
+
+
+## A tiny splat (satellite drops around a kill).
+func speck(wp: Vector2, mat: String) -> void:
+	stamp_image(image("splat_0", mat), wp, randf() < 0.5)
+
+
+## The one huge splat a boss leaves.
+func huge(wp: Vector2, mat: String) -> void:
+	stamp_image(image("splat_%d" % randi_range(8, 9), mat), wp, randf() < 0.5)
 
 
 func gib(wp: Vector2, idx: int, mat: String) -> void:

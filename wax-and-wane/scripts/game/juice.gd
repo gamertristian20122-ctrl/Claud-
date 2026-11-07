@@ -253,8 +253,14 @@ func enemy_killed(e: Node2D) -> void:
 	if e.boss:
 		return   # the finale does its own thing
 	var big: bool = e.radius > 6.5 or e.champ != ""
-	splat(at + Vector2(0, -1), mat, big)
 	var kv: Vector2 = e.kvel
+	var st := stains_here()
+	if st:
+		st.splat(at + Vector2(0, -1), mat, big)
+		# a few drops thrown the way it was hit
+		var away := kv.normalized() if kv.length() > 5.0 else Vector2.from_angle(randf() * TAU)
+		for k in (3 if big else 2):
+			st.speck(at + away.rotated(randf_range(-0.8, 0.8)) * randf_range(7.0, 13.0), mat)
 	gibs.throw(at + Vector2(0, -3), randi_range(4, 6) + (2 if big else 0), mat, 1.0, kv)
 	lit.burst(at + Vector2(0, -4), 3, 10.0, 25.0, Vector2.ZERO, PI, 0.35, FxParts.DUST, -20.0, 2.0)
 	shake(1.6 if not big else 3.0)
@@ -297,10 +303,12 @@ func boss_finale(e: Node2D) -> void:
 	fin.tween_callback(func():
 		var st := stains_here()
 		if st:
-			st.splat(at, mat, true)
+			st.huge(at, mat)
+			for k in 5:
+				st.splat(at + Vector2.from_angle(k * TAU / 5.0 + randf()) * randf_range(16, 24) * Vector2(1, 0.7), mat, k % 2 == 0)
 			for k in 6:
-				st.splat(at + Vector2.from_angle(k * TAU / 6.0 + randf()) * randf_range(9, 17) * Vector2(1, 0.7), mat, k % 2 == 0)
-		gibs.throw(at + Vector2(0, -8), 14, mat, 1.8)
+				st.speck(at + Vector2.from_angle(randf() * TAU) * randf_range(22, 34) * Vector2(1, 0.7), mat)
+		gibs.throw(at + Vector2(0, -8), 12, mat, 1.7)
 		_flash_light(at + Vector2(0, -14), 2.6, 1.8)
 		hot.burst(at + Vector2(0, -12), 24, 50.0, 150.0, Vector2.ZERO, PI, 0.55, FxParts.SPARK, 80.0, 1.2, 1, true)
 		lit.burst(at + Vector2(0, -6), 14, 20.0, 60.0, Vector2.ZERO, PI, 0.7, FxParts.SMOKE, -30.0, 2.5, 2)
@@ -429,7 +437,7 @@ func _show_bars(on: bool) -> void:
 			_bars_layer.add_child(b)
 			_bars.append(b)
 	var vs := get_viewport().get_visible_rect().size
-	var h := 16.0
+	var h := 22.0
 	var tw := create_tween().set_parallel(true)
 	for i in 2:
 		var b: ColorRect = _bars[i]

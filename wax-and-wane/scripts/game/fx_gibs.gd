@@ -24,12 +24,12 @@ func throw(at: Vector2, n: int, mat: String, power := 1.0, away := Vector2.ZERO)
 		if gpos.size() >= MAX:
 			_settle(0)
 		var a := randf() * TAU
-		var v := Vector2.from_angle(a) * randf_range(28.0, 70.0) * power
+		var v := Vector2.from_angle(a) * randf_range(16.0, 46.0) * power
 		if away != Vector2.ZERO:
-			v += away.normalized() * 30.0 * power
+			v += away.normalized() * 22.0 * power
 		gpos.append(at + Vector2(randf_range(-2, 2), randf_range(-1, 1)))
 		z.append(randf_range(4.0, 9.0))
-		vz.append(randf_range(70.0, 130.0) * sqrt(power))
+		vz.append(randf_range(60.0, 115.0) * sqrt(power))
 		vel.append(v)
 		rest.append(0.0)
 		bounced.append(0)
@@ -68,7 +68,11 @@ func _remove(i: int) -> void:
 func _settle(i: int) -> void:
 	var st: Stains = juice.stains_here() if juice else null
 	if st:
-		st.gib(gpos[i], idx[i], mats[i])
+		# most chunks soak in as a drop; a few stay as a chunk on the floor
+		if randf() < 0.22:
+			st.gib(gpos[i], idx[i], mats[i])
+		else:
+			st.dot(gpos[i], mats[i], 2 + randi() % 2)
 	_remove(i)
 
 

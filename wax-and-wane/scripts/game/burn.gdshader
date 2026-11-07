@@ -36,20 +36,22 @@ void fragment() {
 	float cov = COLOR.a;
 	vec3 ink = COLOR.rgb;
 	vec2 g = floor(UV * px_size / cell);
-	float n = vnoise(g / 10.0) * 0.62 + vnoise(g / 3.7) * 0.28 + hash(g) * 0.10;
+	float n = vnoise(g / 11.0) * 0.68 + vnoise(g / 4.0) * 0.32;
+	vec2 asp = vec2(px_size.x / px_size.y, 1.0);
 	vec2 uv = g * cell / px_size;
-	float far = distance(uv * vec2(px_size.x / px_size.y, 1.0), origin * vec2(px_size.x / px_size.y, 1.0));
-	float v = clamp(n * 0.55 + far * 0.32, 0.0, 0.999);
-	float e = 0.10;
+	// the burn sweeps from one corner; noise makes the front ragged like charring paper
+	float far = distance(uv * asp, origin * asp) / length(asp);
+	float v = clamp(n * 0.3 + far * 0.7, 0.0, 0.999);
+	float e = 0.03;
 	float t = (reveal ? (1.0 - cov) : cov) * (1.0 + e) - e;
 	vec4 outc;
 	if (v < t) {
 		outc = reveal ? vec4(ink, 0.0) : vec4(ink, 1.0);
 	} else if (v < t + e) {
 		float k = (v - t) / e;
-		if (k < 0.18) outc = c_hot;
-		else if (k < 0.42) outc = c_yel;
-		else if (k < 0.70) outc = c_org;
+		if (k < 0.2) outc = c_hot;
+		else if (k < 0.45) outc = c_yel;
+		else if (k < 0.72) outc = c_org;
 		else outc = c_red;
 	} else {
 		outc = reveal ? vec4(ink, 1.0) : vec4(ink, 0.0);
