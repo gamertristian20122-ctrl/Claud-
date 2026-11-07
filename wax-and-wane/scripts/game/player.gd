@@ -1,0 +1,313 @@
+class_name Player
+extends Node2D
+## Tallow, the candle. Position = the point under the dish (feet). The wax body is drawn in code so
+## it gets shorter as the wax (health + clock) burns down; the light radius shrinks with it.
+
+const OUTLINE := Color("#21141b")
+const WAX_HI := Color("#fdf7ed")
+const WAX := Color("#f3e6cf")
+const WAX_SH := Color("#d3bfa9")
+const WAX_DEEP := Color("#aa8d7a")
+const POOL := Color("#e2b694")
+const RADIUS := 5.0
+
+var world: Node
+
+# ---- stats (items change these)
+var damage := 1.0
+var fire_delay := 0.42
+var shot_speed := 150.0
+var shot_range := 120.0
+var speed := 74.0
+var shots := 1
+var spread := 12.0
+var pierce := 0
+var homing := 0.0
+var burn := 0.0
+var knockback := 70.0
+var shot_scale := 1.0
+var blue := false
+var drain_mult := 1.0
+var wax_coat := false
+var coat_ready := true
+var revives := 0
+var luck := 0.0
+var hourglass := 0.0
+var slow_aura := 0.0
+var witching := false
+var hot_drip := false
+var hit_mult := 1.0
+
+# ---- state
+var wax := 120.0
+var wax_max := 120.0
+var coins := 0
+var bombs := 1
+var relics: Array[String] = []
+var vel := Vector2.ZERO
+var move_input := Vector2.ZERO
+var aim_input := Vector2.ZERO
+var facing := Vector2.RIGHT
+var fire_cd := 0.0
+var invuln := 0.0
+var dead := false
+var frozen := false
+var face_state := "open"
+var _blink := 2.0
+var _hurt_face := 0.0
+var _happy_face := 0.0
+var _bob := 0.0
+var _drip_t := 0.0
+
+var flame: AnimatedSprite2D
+var holder: Sprite2D
+var face: Sprite2D
+var light: PointLight2D
+var glow: PointLight2D
+var _shown_h := 14
+
+
+func _ready() -> void:
+	holder = Sprite2D.new()
+	holder.texture = Art.tex("hero/holder")
+	holder.centered = false
+	holder.offset = Vector2(-9, -7)
+	add_child(holder)
+	face = Sprite2D.new()
+	face.centered = false
+	face.z_index = 1
+	add_child(face)
+	flame = AnimatedSprite2D.new()
+	flame.centered = false
+	flame.offset = Vector2(-4, -12)
+	flame.z_index = 2
+	var mat := CanvasItemMaterial.new()
+	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	flame.material = mat
+	add_child(flame)
+	_set_flame_frames()
+	flame.play("default")
+	light = PointLight2D.new()
+	light.texture = Art.light_tex
+	light.color = Color(1.0, 0.74, 0.44)
+	light.energy = 1.15
+	light.shadow_enabled = true
+	light.shadow_filter = PointLight2D.SHADOW_FILTER_PCF5
+	light.shadow_color = Color(0, 0, 0, 0.8)
+	light.texture_scale = 1.4
+	add_child(light)
+	# a tight warm glow so the candle itself always reads in the dark
+	glow = PointLight2D.new()
+	glow.texture = Art.light_tex
+	glow.color = Color(1.0, 0.85, 0.6)
+	glow.energy = 0.55
+	glow.texture_scale = 0.22
+	add_child(glow)
+
+
+func _set_flame_frames() -> void:
+	flame.sprite_frames = Art.anim("hero/flame_blue" if blue else "hero/flame", 10.0)
+
+
+func set_blue(b: bool) -> void:
+	blue = b
+	_set_flame_frames()
+	flame.play("default")
+	light.color = Color(0.6, 0.8, 1.0) if b else Color(1.0, 0.74, 0.44)
+
+
+func wax_frac() -> float:
+	return clampf(wax / 120.0, 0.0, 1.35)
+
+
+func body_height() -> int:
+	return clampi(int(round(3.0 + 12.0 * wax_frac())), 3, 19)
+
+
+func _physics_process(dt: float) -> void:
+	if dead or frozen:
+		vel = vel.move_toward(Vector2.ZERO, 600 * dt)
+		return
+	var target := move_input.limit_length(1.0) * speed
+	var accel := 900.0 if target.length() > 1 else 1100.0
+	vel = vel.move_toward(target, accel * dt)
+	_move(vel * dt)
+	if vel.length() > 8:
+		_bob += dt * 14.0
+		if aim_input.length() < 0.2:
+			facing = vel.normalized()
+		if fmod(_bob, PI) < 14.0 * dt:
+			Audio.play("step", -2.0, 0.15)
+	else:
+		_bob = 0.0
+	# shooting
+	fire_cd -= dt
+	if aim_input.length() > 0.3:
+		facing = aim_input.normalized()
+		if fire_cd <= 0.0:
+			var rate := fire_delay
+			if witching and wax < 30.0:
+				rate *= 0.7
+			fire_cd = rate
+			_fire(aim_input.normalized())
+	if invuln > 0:
+		invuln -= dt
+		visible = fmod(invuln, 0.16) > 0.07 or invuln <= 0
+	if hot_drip:
+		_drip_t -= dt
+		if _drip_t <= 0 and vel.length() > 10:
+			_drip_t = 0.35
+			world.spawn_hot_drip(global_position)
+	if world.room and world.room.spike_hurts(global_position):
+		hurt(6.0, Vector2.ZERO)
+
+
+func _move(d: Vector2) -> void:
+	var room: Room = world.room
+	if room == null:
+		position += d
+		return
+	var np := position + Vector2(d.x, 0)
+	if not room.blocked(np, RADIUS, false, true):
+		position = np
+	else:
+		vel.x = 0
+	np = position + Vector2(0, d.y)
+	if not room.blocked(np, RADIUS, false, true):
+		position = np
+	else:
+		vel.y = 0
+
+
+func _fire(dir: Vector2) -> void:
+	dir = world.assist_aim(global_position, dir)
+	var n := shots
+	var dmg := damage
+	if witching and wax < 30.0:
+		dmg *= 1.6
+	var total := spread * (n - 1)
+	for i in n:
+		var a := deg_to_rad(-total / 2.0 + spread * i) if n > 1 else 0.0
+		world.shoot_player(global_position + Vector2(0, -6) + dir * 4, dir.rotated(a), self, dmg)
+	Audio.play("shoot", 0.0, 0.08)
+	# small recoil squash on the flame
+	flame.scale = Vector2(1.25, 0.8)
+
+
+func hurt(amount: float, from_dir: Vector2) -> void:
+	if dead or invuln > 0 or frozen:
+		return
+	if wax_coat and coat_ready:
+		coat_ready = false
+		invuln = 0.8
+		world.fx_text(global_position + Vector2(0, -26), "BLOCKED", UI.GOLD)
+		Audio.play("hit_wall", 2.0, 0.05, 0.7)
+		return
+	amount *= hit_mult
+	wax -= amount
+	invuln = 1.0
+	_hurt_face = 0.6
+	vel += from_dir.normalized() * 140.0
+	Audio.play("player_hurt")
+	Game.vibrate(60)
+	world.on_player_hurt(amount)
+	if wax <= 0:
+		die()
+
+
+func heal(amount: float) -> void:
+	wax = minf(wax + amount, wax_max)
+	_happy_face = 0.8
+
+
+func die() -> void:
+	if revives > 0:
+		revives -= 1
+		wax = 40.0
+		invuln = 2.0
+		world.fx_text(global_position + Vector2(0, -28), "REKINDLED!", UI.GOLD)
+		Audio.play("item_get")
+		world.fx_ring(global_position, Color(1, 0.6, 0.2))
+		return
+	wax = 0
+	dead = true
+	world.on_player_died()
+
+
+func _process(dt: float) -> void:
+	# face
+	_blink -= dt
+	_hurt_face -= dt
+	_happy_face -= dt
+	var f := "open"
+	if dead:
+		f = "hurt"
+	elif _hurt_face > 0:
+		f = "hurt"
+	elif _happy_face > 0:
+		f = "happy"
+	elif _blink < 0.12:
+		f = "blink"
+	if _blink < 0:
+		_blink = randf_range(2.0, 4.5)
+	if f != face_state or face.texture == null:
+		face_state = f
+		face.texture = Art.tex("hero/face_" + f)
+	var h := body_height()
+	var bob := -1 if sin(_bob) > 0.3 else 0
+	var top := -5 - h + bob
+	face.position = Vector2(-5, top + clampi(2 + h / 5, 2, 5))
+	holder.position.y = 0
+	flame.position = Vector2(0, top - 2)
+	# flame leans against movement, recovers from recoil
+	var lean := clampf(-vel.x / speed, -1.0, 1.0) * 0.32
+	flame.rotation = lerp_angle(flame.rotation, lean, minf(1.0, dt * 10.0))
+	flame.scale = flame.scale.lerp(Vector2.ONE, minf(1.0, dt * 14.0))
+	flame.visible = not dead
+	# light: flicker + shrink with wax
+	var t := Time.get_ticks_msec() / 1000.0
+	var flick := 1.0 + 0.045 * sin(t * 13.0) + 0.03 * sin(t * 23.7 + 1.3) + randf_range(-0.015, 0.015)
+	var wf := clampf(wax / 120.0, 0.0, 1.0)
+	light.texture_scale = lerpf(0.72, 1.5, wf) * flick
+	light.energy = (lerpf(0.95, 1.2, wf) * flick) if not dead else move_toward(light.energy, 0.0, dt * 1.5)
+	light.position = flame.position + Vector2(0, -4)
+	glow.position = light.position
+	glow.energy = 0.0 if dead else 0.55
+	if h != _shown_h or bob != 0:
+		_shown_h = h
+	queue_redraw()
+
+
+func _draw() -> void:
+	# ground shadow (pixel ellipse)
+	var sh := Color(0, 0, 0, 0.35)
+	draw_rect(Rect2(-6, -1, 12, 2), sh)
+	draw_rect(Rect2(-8, 0, 16, 1), sh)
+	var h := body_height()
+	var bob := -1 if sin(_bob) > 0.3 else 0
+	var base := -5 + bob   # body bottom sits inside the dish
+	var top := base - h
+	# body: 10 px wide, x -5..4
+	draw_rect(Rect2(-5, top, 10, h), OUTLINE)
+	draw_rect(Rect2(-4, top + 1, 8, h - 1), WAX)
+	draw_rect(Rect2(-4, top + 1, 1, h - 1), WAX_HI)
+	draw_rect(Rect2(1, top + 1, 2, h - 1), WAX_SH)
+	draw_rect(Rect2(3, top + 1, 1, h - 1), WAX_DEEP)
+	# melted rim + pool
+	draw_rect(Rect2(-4, top + 1, 8, 1), WAX_HI)
+	draw_rect(Rect2(-3, top + 1, 6, 1), POOL)
+	draw_rect(Rect2(-2, top + 2, 4, 1), WAX_SH)
+	# drips over the rim (fixed pattern so they read as wax, not noise)
+	if h >= 6:
+		draw_rect(Rect2(-5, top + 1, 1, 3), OUTLINE)
+		draw_rect(Rect2(-6, top + 2, 1, 3), OUTLINE)
+		draw_rect(Rect2(-5, top + 2, 1, 2), WAX_HI)
+		draw_rect(Rect2(-6, top + 5, 2, 1), OUTLINE)
+		draw_rect(Rect2(4, top + 1, 1, 4), OUTLINE)
+		draw_rect(Rect2(5, top + 3, 1, 3), OUTLINE)
+		draw_rect(Rect2(4, top + 3, 1, 2), WAX_SH)
+	if h >= 11:
+		draw_rect(Rect2(0, top + 2, 1, h / 2), WAX_SH)
+		draw_rect(Rect2(-1, top + 2 + h / 2, 3, 1), WAX_SH)
+	# wick
+	draw_rect(Rect2(0, top - 2, 1, 3), OUTLINE)
