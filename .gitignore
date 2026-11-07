@@ -1,3 +1,4 @@
 .taste-skill/
 node_modules/
 __pycache__/
+.claude/worktrees/
