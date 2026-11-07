@@ -358,6 +358,14 @@ func _room_tour(w: Node) -> void:
 			w.player.wax = 100.0
 			await _wait(1.2)
 			await _shot("room_%d_%s" % [n, id])
+			if id == "oil_cellar":   # set one jar off and catch the fireball
+				for y in Room.ROWS:
+					for x in Room.COLS:
+						if w.room.char_at(Vector2i(x, y)) == "O" and y < 4:
+							w.room.damage_obstacle(Vector2i(x, y), 1.0)
+							await _wait(0.12)
+							await _shot("room_%d_%s_blast" % [n, id])
+							break
 
 
 func _normal_cells(w: Node) -> Array:
