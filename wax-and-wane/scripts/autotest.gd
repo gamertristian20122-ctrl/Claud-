@@ -312,7 +312,9 @@ func _jump(w: Node, c: Vector2i) -> void:
 
 func _tour() -> void:
 	DirAccess.make_dir_recursive_absolute(_shots_dir)
-	await _wait(1.0)
+	await _wait(0.25)
+	await _shot("title_intro")
+	await _wait(1.8)
 	await _shot("title")
 	main.goto("game", {"seed": 7})
 	await _wait(1.6)
@@ -339,6 +341,7 @@ func _tour() -> void:
 				await _wait(0.6)
 				await _shot(t)
 				break
+	await _tour_juice(w)
 	args["drive"] = true
 	# jump straight to the final boss for a look
 	w.player.wax = 60.0
@@ -351,11 +354,67 @@ func _tour() -> void:
 	w.player.position = w.room.center() + Vector2(0, 40)
 	w.cam.position = w._cam_target(w.room)
 	w._on_enter_room()
-	await _wait(3.0)
+	await _wait(0.55)
+	await _shot("boss_card")
+	await _wait(1.9)
+	await _shot("boss_punch")
+	await _wait(2.5)
 	await _shot("boss")
 	await _wait(3.0)
 	await _shot("boss_2")
-	w.player.wax = 0.0
-	await _wait(7.0)
+	# the finale: flashes, poofs, slow-motion, one huge splat
+	if w.boss and is_instance_valid(w.boss):
+		w.boss.active = true
+		w.boss.take_hit(99999.0, Vector2.ZERO)
+		await _wait(0.5)
+		await _shot("boss_finale")
+		await _wait(1.0)
+		await _shot("boss_splat")
+	await _wait(6.0)
 	await _shot("results")
 	get_tree().quit()
+
+
+## Juice tour shots: gibs in flight, floor stains, a relic held aloft, the melt-down.
+func _tour_juice(w: Node) -> void:
+	for c in w.layout["cells"].keys():
+		if w.layout["cells"][c]["type"] == "normal" and c != w.cur_cell:
+			_jump(w, c)
+			break
+	await _wait(0.8)
+	for e in w.enemies:
+		if is_instance_valid(e):
+			e.queue_free()
+	w.enemies.clear()
+	var kinds := ["slug", "skelet", "chort", "pumpkin_dude", "goblin", "ice_zombie", "muddy", "imp"]
+	var c0: Vector2 = w.room.center()
+	for i in kinds.size():
+		var e: Enemy = w.spawn_enemy(kinds[i], c0 + Vector2(-84 + 24 * i, -30 + 26 * (i % 2)))
+		await get_tree().process_frame
+		e.active = true
+		e.take_hit(999.0, Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 60.0)
+	w.player.position = c0 + Vector2(0, 40)
+	await _wait(0.12)
+	await _shot("gibs")
+	w.place_bomb()
+	await _wait(2.4)
+	await _shot("stains")
+	# a relic held aloft
+	w.collect_item("blue_flame" if Items.RELICS.has("blue_flame") else Items.RELICS.keys()[0], w.player.global_position)
+	await _wait(0.35)
+	await _shot("relic_aloft")
+	await _wait(1.0)
+	# the melt-down (shown without ending the run)
+	var p: Player = w.player
+	p.dead = true
+	p._melt_from = p.body_height()
+	await _wait(0.45)
+	await _shot("melt_1")
+	await _wait(0.55)
+	await _shot("melt_2")
+	p.dead = false
+	p._melt = 0.0
+	p._popped = false
+	p._stained = false
+	p._melt_from = -1
+	p.face.visible = true

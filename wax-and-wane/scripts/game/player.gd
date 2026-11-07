@@ -2,6 +2,8 @@ class_name Player
 extends Node2D
 ## Tallow, the candle. Position = the point under the dish (feet). The wax body is drawn in code so
 ## it gets shorter as the wax (health + clock) burns down; the light radius shrinks with it.
+## Juice (all visual): breathing, squash & stretch, recoil, hurt flash, drips that run down the sides,
+## a guttering flame at low wax, holding a new relic aloft, and a melt-down when the flame goes out.
 
 const OUTLINE := Color("#21141b")
 const WAX_HI := Color("#fdf7ed")
@@ -98,6 +100,34 @@ var _bob := 0.0
 var _drip_t := 0.0
 var _recoil := 0.0
 var _lean := 0.0
+# ---- juice state (visual only)
+var _sq := 0.0            # > 0 stretch (taller, narrower), < 0 squash
+var _sq_v := 0.0
+var _was_moving := false
+var _breath := 0.0
+var _white := 0.0         # hurt flash
+var _recoil_off := Vector2.ZERO
+var _drips: Array = []    # [side -1/1, progress 0..1, speed]
+var _drip_spawn := 0.8
+var _sput := 0.0          # low wax: the flame gutters
+var _sput_t := 0.5
+var _wisp_t := 0.4
+var _hold_t := 0.0        # holding a new relic aloft
+var _held: Sprite2D
+var _glint: AnimatedSprite2D
+var _melt := 0.0          # death: 0..1 over ~1.2 real seconds
+var _melt_from := -1
+var _popped := false
+var _stained := false
+var _pool: Node2D         # the melt puddle (drawn above the dish)
+## Title screen: the wick starts unlit, then the light blooms (light_k 0 -> ~1.3 -> 1).
+var unlit := false
+var light_k := 1.0
+# the body's shape this frame, in whole pixels (set in _process, used by _draw)
+var _h := 14
+var _bw := 10
+var _top := -19
+var _base := -5
 
 var flame: AnimatedSprite2D
 var holder: Sprite2D
@@ -143,6 +173,16 @@ func _ready() -> void:
 	glow.energy = 0.55
 	glow.texture_scale = 0.22
 	add_child(glow)
+	_pool = Node2D.new()
+	_pool.z_index = 1
+	_pool.draw.connect(_draw_pool)
+	add_child(_pool)
+
+
+## Call a world effect if this world has it (the title screen's stand-in world does not).
+func _fx(method: String, args: Array) -> void:
+	if world and world.has_method(method):
+		world.callv(method, args)
 
 
 func _set_flame_frames() -> void:
@@ -187,7 +227,7 @@ func body_height() -> int:
 
 
 func _physics_process(dt: float) -> void:
-	if dead or frozen:
+	if dead or frozen or _hold_t > 0.0 or Juice.holding(world):
 		vel = vel.move_toward(Vector2.ZERO, 600 * dt)
 		return
 	var target := move_input.limit_length(1.0) * speed
@@ -258,10 +298,13 @@ func _fire(dir: Vector2) -> void:
 		world.shoot_player(global_position + Vector2(0, -6) + dir * 4 + off, dir.rotated(deg_to_rad(k * 2.5)), self, dmg)
 	Audio.play("shoot", 0.0, 0.08)
 	_recoil = 0.08
+	_recoil_off = Vector2(roundf(-dir.x * 0.75), roundf(-dir.y * 0.75))
+	_sq_v -= 2.5
+	_fx("fx_muzzle", [global_position + Vector2(0, -6) + dir * 6.0, dir, blue])
 
 
 func hurt(amount: float, from_dir: Vector2) -> void:
-	if dead or invuln > 0 or frozen:
+	if dead or invuln > 0 or frozen or _hold_t > 0.0:
 		return
 	if wax_coat and coat_ready:
 		coat_ready = false
@@ -276,6 +319,7 @@ func hurt(amount: float, from_dir: Vector2) -> void:
 		amount = wax - 1.0
 		wax = 1.0
 		invuln = 1.6
+		_hurt_fx()
 		world.fx_text(global_position + Vector2(0, -34), "GUTTERING!", UI.EMBER)
 		if Game.tip("gutter", 1):
 			world.hud.show_hint("Guttering: your flame clung on once this floor. Find wax!", 3.0)
@@ -285,12 +329,44 @@ func hurt(amount: float, from_dir: Vector2) -> void:
 	wax -= amount
 	invuln = 1.2
 	_hurt_face = 0.6
+	_hurt_fx()
 	vel += from_dir.normalized() * 140.0
 	Audio.play("player_hurt")
 	Game.vibrate(60)
 	world.on_player_hurt(amount)
 	if wax <= 0:
 		die()
+
+
+func _hurt_fx() -> void:
+	_white = 0.1
+	_sq = -1.0
+	_sq_v = 0.0
+	_hurt_face = maxf(_hurt_face, 0.6)
+
+
+## A relic was taken: hold it up above the flame for a moment (no moving, no harm meanwhile).
+func hold_aloft(tex: Texture2D) -> void:
+	if dead or tex == null:
+		return
+	if _held == null:
+		_held = Sprite2D.new()
+		_held.z_index = 4
+		_held.material = Art.unshaded
+		add_child(_held)
+		_glint = AnimatedSprite2D.new()
+		_glint.sprite_frames = Art.anim("fx/glint", 8.0)
+		_glint.material = Art.unshaded
+		_glint.z_index = 5
+		_glint.play("default")
+		add_child(_glint)
+	_held.texture = tex
+	_held.visible = true
+	_glint.visible = true
+	_hold_t = 0.9
+	_happy_face = 1.4
+	_sq_v += 6.0
+	vel = Vector2.ZERO
 
 
 func heal(amount: float) -> void:
@@ -307,6 +383,7 @@ func die() -> void:
 		Audio.play("item_get")
 		world.fx_ring(global_position, Color(1, 0.6, 0.2))
 		return
+	_melt_from = maxi(body_height(), 4)
 	wax = 0
 	dead = true
 	world.on_player_died()
@@ -331,26 +408,40 @@ func _process(dt: float) -> void:
 	if f != face_state or face.texture == null:
 		face_state = f
 		face.texture = Art.tex("hero/face_" + f)
-	var h := body_height()
-	var bob := -1 if sin(_bob) > 0.3 else 0
-	var top := -5 - h + bob
-	face.position = Vector2(-5, top + clampi(2 + h / 5, 2, 5))
-	holder.position.y = 0
-	flame.position = Vector2(0, top - 2)
+	_juice_step(dt)
+	var h := _h
+	var top := _top
+	var o := _recoil_off if _recoil > 0.0 else Vector2.ZERO
+	face.position = Vector2(-5, top + clampi(2 + h / 5, 2, 5)) + o
+	if dead and h < 6:
+		face.visible = false
+	holder.position = o
+	flame.position = Vector2(0, top - 2) + o
 	# flame leans against movement, recovers from recoil
 	_lean = lerpf(_lean, clampf(-vel.x / speed, -1.0, 1.0), minf(1.0, dt * 10.0))
 	(flame.material as ShaderMaterial).set_shader_parameter("lean", _lean)
 	_recoil -= dt
-	flame.offset = Vector2(-4, -12 + (1 if _recoil > 0 else 0))
-	flame.visible = not dead
-	# light: flicker + shrink with wax
+	var dip := (1 if _recoil > 0 else 0) + (2 if _sput > 0.0 else 0)
+	flame.offset = Vector2(-4, -12 + dip)
+	flame.self_modulate = Color(1.0, 0.62, 0.45) if _sput > 0.0 else Color.WHITE
+	flame.visible = (not dead or _melt < 0.25) and not unlit
+	# light: flicker + shrink with wax (and die with the flame)
 	var t := Time.get_ticks_msec() / 1000.0
 	var flick := 1.0 + 0.045 * sin(t * 13.0) + 0.03 * sin(t * 23.7 + 1.3) + randf_range(-0.015, 0.015)
 	var wf := clampf(wax / 120.0, 0.0, 1.0)
 	light.texture_scale = lerpf(0.95, 1.5, wf) * flick
 	if world and world.get("omen") == "smoky_halls":
 		light.texture_scale = maxf(0.95, light.texture_scale * 0.85)
-	light.energy = (lerpf(0.95, 1.2, wf) * flick) if not dead else move_toward(light.energy, 0.0, dt * 1.5)
+	var keep := clampf(1.0 - _melt / 0.8, 0.0, 1.0)
+	if dead:
+		light.energy = 1.0 * keep * flick
+		light.texture_scale *= lerpf(0.55, 1.0, keep)
+	else:
+		light.energy = lerpf(0.95, 1.2, wf) * flick * (0.55 if _sput > 0.0 else 1.0)
+	if unlit or light_k != 1.0:
+		var lk := 0.0 if unlit else light_k
+		light.energy *= lk
+		light.texture_scale *= 0.3 + 0.7 * minf(lk, 1.0) + 0.25 * maxf(0.0, lk - 1.0)
 	light.position = flame.position + Vector2(0, -4)
 	if flame2:
 		flame2.position = flame.position + Vector2(3, 2)
@@ -358,10 +449,92 @@ func _process(dt: float) -> void:
 	if "hearth" in rites:
 		light.texture_scale *= 1.12
 	glow.position = light.position
-	glow.energy = 0.0 if dead else 0.55
-	if h != _shown_h or bob != 0:
-		_shown_h = h
+	glow.energy = 0.55 * keep if dead else (0.0 if unlit else 0.55 * minf(1.0, light_k))
+	_shown_h = h
 	queue_redraw()
+	_pool.queue_redraw()
+
+
+## Squash & stretch, breathing, drips, guttering, the held relic and the melt-down.
+func _juice_step(dt: float) -> void:
+	var held := Juice.holding(world)
+	var moving := move_input.length() > 0.2 and not frozen and not dead and _hold_t <= 0.0 and not held
+	if moving != _was_moving:
+		_sq_v += 11.0 if moving else -11.0
+		_was_moving = moving
+	var rest := 0.35 if _hold_t > 0.0 else 0.0
+	_sq_v += (-(_sq - rest) * 300.0 - _sq_v * 18.0) * dt
+	_sq = clampf(_sq + _sq_v * dt, -1.2, 1.2)
+	_white -= dt
+	_breath += dt
+	# the body's shape in whole pixels: stretch = taller + narrower, squash = shorter + wider
+	var dh := int(roundf(_sq * 3.0))
+	var side := -int(roundf(_sq * 1.5))
+	var still := not moving and vel.length() < 8.0
+	var breathe := 1 if (still and not dead and sin(_breath * 2.6) > 0.55) else 0
+	var bob := -1 if sin(_bob) > 0.3 else 0
+	var h := body_height() + dh + breathe
+	if dead:
+		var k := clampf(_melt / 0.85, 0.0, 1.0)
+		var from := _melt_from if _melt_from > 0 else 4
+		h = int(roundf(float(from) * (1.0 - k * k * (3.0 - 2.0 * k))))
+	_h = clampi(h, 0, 22)
+	_bw = maxi(6, body_w + 2 * side) if not dead else body_w
+	_base = -5 + bob
+	_top = _base - _h
+	# wax drips run down the sides while walking, then drop to the floor
+	if moving and vel.length() > 20.0 and _h >= 8:
+		_drip_spawn -= dt
+		if _drip_spawn <= 0.0:
+			_drip_spawn = randf_range(0.7, 1.5)
+			if _drips.size() < 2:
+				_drips.append([-1 if randf() < 0.5 else 1, 0.0, randf_range(0.8, 1.25)])
+	var i := _drips.size() - 1
+	while i >= 0:
+		var d: Array = _drips[i]
+		d[1] += dt * 0.9 * float(d[2]) * (1.0 if moving else 0.4)
+		if d[1] >= 1.0 or dead:
+			_drips.remove_at(i)
+			if not dead:
+				var x := (-_bw / 2 - 1) if d[0] < 0 else (_bw / 2)
+				_fx("fx_wax_drop", [global_position + Vector2(x, _base - 2), vel * 0.3])
+		i -= 1
+	# low wax: the flame sputters and smokes
+	_sput -= dt
+	if not dead and wax < 24.0:
+		_sput_t -= dt
+		if _sput_t <= 0.0:
+			_sput_t = randf_range(0.25, 1.1)
+			_sput = randf_range(0.06, 0.16)
+		_wisp_t -= dt
+		if _wisp_t <= 0.0:
+			_wisp_t = randf_range(0.35, 0.8)
+			_fx("fx_wisp", [flame.global_position + Vector2(0, -10)])
+	# holding a relic aloft (a gold glint winks on it)
+	if _hold_t > 0.0:
+		_hold_t -= dt
+		var up := minf(1.0, (0.9 - _hold_t) / 0.15)
+		_held.position = Vector2(0, roundf(_top - 22 - 3.0 * up))
+		_glint.position = _held.position + Vector2(6, -6)
+		_glint.visible = fmod(_hold_t, 0.3) > 0.1
+		if _hold_t <= 0.0:
+			_held.visible = false
+			_glint.visible = false
+			_fx("fx_glint", [_held.global_position])
+	# death: the body sinks into a widening puddle, the flame shrinks and pops into smoke
+	if dead:
+		if _melt == 0.0:
+			_drips.clear()
+			if _melt_from < 0:
+				_melt_from = 4
+		_melt = minf(1.0, _melt + dt / maxf(Engine.time_scale, 0.01) / 1.2)
+		if _melt >= 0.8 and not _popped:
+			_popped = true
+			_fx("fx_smoke", [global_position + Vector2(0, _base - _h - 8)])
+			_fx("fx_wisp", [global_position + Vector2(0, _base - _h - 4)])
+		if _melt >= 0.95 and not _stained:
+			_stained = true
+			_fx("fx_stain", [global_position + Vector2(0, -1), "wax", true])
 
 
 func _draw() -> void:
@@ -369,57 +542,115 @@ func _draw() -> void:
 	var sh := Color(0, 0, 0, 0.35)
 	draw_rect(Rect2(-6, -1, 12, 2), sh)
 	draw_rect(Rect2(-8, 0, 16, 1), sh)
-	var h := body_height()
-	var bob := -1 if sin(_bob) > 0.3 else 0
-	var base := -5 + bob   # body bottom sits inside the dish
-	var top := base - h
-	# body: body_w px wide, centred on x = 0 (Tallow is 10 px: x -5..4)
-	var L := -body_w / 2
-	var R := L + body_w
-	draw_rect(Rect2(L, top, body_w, h), OUTLINE)
-	draw_rect(Rect2(L + 1, top + 1, body_w - 2, h - 1), c_wax)
-	draw_rect(Rect2(L + 1, top + 1, 1, h - 1), c_hi)
-	if body_w >= 10:
-		draw_rect(Rect2(R - 4, top + 1, 2, h - 1), c_sh)
+	var o := _recoil_off if _recoil > 0.0 else Vector2.ZERO
+	var h := _h
+	var base := _base
+	var top := _top
+	var bw := _bw
+	var white := _white > 0.0
+	var c_w := Color.WHITE if white else c_wax
+	var c_h := Color.WHITE if white else c_hi
+	var c_s := Color.WHITE if white else c_sh
+	var c_d := Color.WHITE if white else c_deep
+	var c_p := Color.WHITE if white else POOL
+	var ha := holder.self_modulate.a
+	holder.self_modulate = Color(3, 3, 3, ha) if white else Color(1, 1, 1, ha)
+	if h <= 0:
+		_draw_wick(o, top, true)
+		return
+	# body: bw px wide, centred on x = 0 (Tallow is 10 px: x -5..4)
+	var L := -bw / 2
+	var R := L + bw
+	draw_rect(Rect2(Vector2(L, top) + o, Vector2(bw, h)), OUTLINE)
+	draw_rect(Rect2(Vector2(L + 1, top + 1) + o, Vector2(bw - 2, h - 1)), c_w)
+	draw_rect(Rect2(Vector2(L + 1, top + 1) + o, Vector2(1, h - 1)), c_h)
+	if bw >= 10:
+		draw_rect(Rect2(Vector2(R - 4, top + 1) + o, Vector2(2, h - 1)), c_s)
 	else:
-		draw_rect(Rect2(R - 3, top + 1, 1, h - 1), c_sh)
-	draw_rect(Rect2(R - 2, top + 1, 1, h - 1), c_deep)
+		draw_rect(Rect2(Vector2(R - 3, top + 1) + o, Vector2(1, h - 1)), c_s)
+	draw_rect(Rect2(Vector2(R - 2, top + 1) + o, Vector2(1, h - 1)), c_d)
 	if stripes:
 		var row := top + 3
 		while row < base - 1:
-			draw_rect(Rect2(L + 1, row, body_w - 2, 1), c_sh)
-			draw_rect(Rect2(R - 2, row, 1, 1), c_deep)
+			draw_rect(Rect2(Vector2(L + 1, row) + o, Vector2(bw - 2, 1)), c_s)
+			draw_rect(Rect2(Vector2(R - 2, row) + o, Vector2(1, 1)), c_d)
 			row += 3
 	# melted rim + pool
-	draw_rect(Rect2(L + 1, top + 1, body_w - 2, 1), c_hi)
-	draw_rect(Rect2(L + 2, top + 1, body_w - 4, 1), POOL)
-	if body_w >= 8:
-		draw_rect(Rect2(L + 3, top + 2, body_w - 6, 1), c_sh)
+	draw_rect(Rect2(Vector2(L + 1, top + 1) + o, Vector2(bw - 2, 1)), c_h)
+	draw_rect(Rect2(Vector2(L + 2, top + 1) + o, Vector2(bw - 4, 1)), c_p)
+	if bw >= 8:
+		draw_rect(Rect2(Vector2(L + 3, top + 2) + o, Vector2(bw - 6, 1)), c_s)
 	# drips over the rim (fixed pattern so they read as wax, not noise)
 	if h >= 6:
-		draw_rect(Rect2(L, top + 1, 1, 3), OUTLINE)
-		draw_rect(Rect2(L - 1, top + 2, 1, 3), OUTLINE)
-		draw_rect(Rect2(L, top + 2, 1, 2), c_hi)
-		draw_rect(Rect2(L - 1, top + 5, 2, 1), OUTLINE)
-		draw_rect(Rect2(R - 1, top + 1, 1, 4), OUTLINE)
-		draw_rect(Rect2(R, top + 3, 1, 3), OUTLINE)
-		draw_rect(Rect2(R - 1, top + 3, 1, 2), c_sh)
-	if h >= 11 and body_w >= 10:
-		draw_rect(Rect2(0, top + 2, 1, h / 2), c_sh)
-		draw_rect(Rect2(-1, top + 2 + h / 2, 3, 1), c_sh)
+		draw_rect(Rect2(Vector2(L, top + 1) + o, Vector2(1, 3)), OUTLINE)
+		draw_rect(Rect2(Vector2(L - 1, top + 2) + o, Vector2(1, 3)), OUTLINE)
+		draw_rect(Rect2(Vector2(L, top + 2) + o, Vector2(1, 2)), c_h)
+		draw_rect(Rect2(Vector2(L - 1, top + 5) + o, Vector2(2, 1)), OUTLINE)
+		draw_rect(Rect2(Vector2(R - 1, top + 1) + o, Vector2(1, 4)), OUTLINE)
+		draw_rect(Rect2(Vector2(R, top + 3) + o, Vector2(1, 3)), OUTLINE)
+		draw_rect(Rect2(Vector2(R - 1, top + 3) + o, Vector2(1, 2)), c_s)
+	if h >= 11 and bw >= 10:
+		draw_rect(Rect2(Vector2(0, top + 2) + o, Vector2(1, h / 2)), c_s)
+		draw_rect(Rect2(Vector2(-1, top + 2 + h / 2) + o, Vector2(3, 1)), c_s)
+	# running drips (they slide down the sides while walking)
+	for d in _drips:
+		var k: float = d[1]
+		var fr := 0 if k < 0.35 else (1 if k < 0.7 else 2)
+		var x := (L - 1) if d[0] < 0 else (R - 2)
+		var y := top + 2 + int(k * maxf(0.0, h - 8.0))
+		draw_texture(Art.tex("hero/drip_f%d" % fr), Vector2(x, y) + o)
 	if foil:
 		# a tea light's foil cup
-		draw_rect(Rect2(L - 1, base - 4, body_w + 2, 5), OUTLINE)
-		draw_rect(Rect2(L, base - 3, body_w, 3), Color("#b6cbcf"))
-		draw_rect(Rect2(L, base - 1, body_w, 1), Color("#7b8994"))
-		draw_rect(Rect2(L + 1, base - 3, 1, 2), Color("#fdf7ed"))
-	# wick
-	draw_rect(Rect2(0, top - 2, 1, 3), OUTLINE)
-	if "wick" in rites:
-		draw_rect(Rect2(3, top, 1, 3), OUTLINE)
+		draw_rect(Rect2(Vector2(L - 1, base - 4) + o, Vector2(bw + 2, 5)), OUTLINE)
+		draw_rect(Rect2(Vector2(L, base - 3) + o, Vector2(bw, 3)), Color.WHITE if white else Color("#b6cbcf"))
+		draw_rect(Rect2(Vector2(L, base - 1) + o, Vector2(bw, 1)), Color("#7b8994"))
+		draw_rect(Rect2(Vector2(L + 1, base - 3) + o, Vector2(1, 2)), Color("#fdf7ed"))
+	_draw_wick(o, top, false)
 	if "clock" in rites:
 		# a little brass gear on the dish
-		draw_rect(Rect2(5, -5, 3, 3), Color("#facb3e"))
-		draw_rect(Rect2(6, -6, 1, 5), Color("#c56025"))
-		draw_rect(Rect2(4, -4, 5, 1), Color("#c56025"))
-		draw_rect(Rect2(6, -4, 1, 1), Color("#21141b"))
+		draw_rect(Rect2(Vector2(5, -5) + o, Vector2(3, 3)), Color("#facb3e"))
+		draw_rect(Rect2(Vector2(6, -6) + o, Vector2(1, 5)), Color("#c56025"))
+		draw_rect(Rect2(Vector2(4, -4) + o, Vector2(5, 1)), Color("#c56025"))
+		draw_rect(Rect2(Vector2(6, -4) + o, Vector2(1, 1)), Color("#21141b"))
+
+
+func _draw_wick(o: Vector2, top: int, flat: bool) -> void:
+	if flat:
+		# melted away: only the wick is left, lying in the puddle
+		draw_rect(Rect2(Vector2(-1, _base - 1) + o, Vector2(3, 1)), OUTLINE)
+	else:
+		draw_rect(Rect2(Vector2(0, top - 2) + o, Vector2(1, 3)), OUTLINE)
+		if "wick" in rites:
+			draw_rect(Rect2(Vector2(3, top) + o, Vector2(1, 3)), OUTLINE)
+	if dead and _melt >= 0.25 and _melt < 0.8:
+		# the flame is dying: a small code-drawn flame that shrinks, then pops
+		var fy := (top - 2) if not flat else (_base - 1)
+		if _melt < 0.55:
+			draw_rect(Rect2(Vector2(-1, fy - 4) + o, Vector2(3, 3)), Color("#ee8e2e"))
+			draw_rect(Rect2(Vector2(0, fy - 5) + o, Vector2(1, 1)), Color("#da4e38"))
+			draw_rect(Rect2(Vector2(0, fy - 3) + o, Vector2(1, 2)), Color("#facb3e"))
+		else:
+			draw_rect(Rect2(Vector2(0, fy - 2) + o, Vector2(1, 2)), Color("#ee8e2e"))
+			draw_rect(Rect2(Vector2(0, fy - 3) + o, Vector2(1, 1)), Color("#da4e38"))
+
+
+## The melt puddle spreads over the dish and onto the floor (drawn above the holder).
+func _draw_pool() -> void:
+	if not dead or _melt <= 0.05:
+		return
+	var k := clampf((_melt - 0.05) / 0.8, 0.0, 1.0)
+	var w := body_w + int(roundf(14.0 * k))
+	var L := -w / 2
+	var y := -4 + int(roundf(2.0 * k))   # it sinks from the dish to the floor
+	_pool.draw_rect(Rect2(L, y - 1, w, 3), OUTLINE)
+	_pool.draw_rect(Rect2(L - 1, y, w + 2, 2), OUTLINE)
+	_pool.draw_rect(Rect2(L + 1, y, w - 2, 1), c_hi)
+	_pool.draw_rect(Rect2(L, y + 1, w, 1), c_wax)
+	_pool.draw_rect(Rect2(L + 2, y, maxi(1, w / 3), 1), POOL)
+	_pool.draw_rect(Rect2(L + w - 3, y + 1, 2, 1), c_deep)
+	if k > 0.4:
+		# a couple of runs that reached the floor
+		_pool.draw_rect(Rect2(L - 3, y + 1, 3, 2), OUTLINE)
+		_pool.draw_rect(Rect2(L - 2, y + 1, 2, 1), c_sh)
+		_pool.draw_rect(Rect2(L + w, y + 1, 3, 2), OUTLINE)
+		_pool.draw_rect(Rect2(L + w, y + 1, 2, 1), c_sh)
