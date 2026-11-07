@@ -54,11 +54,64 @@ static func panel(min_size := Vector2.ZERO) -> PanelContainer:
 	return p
 
 
+static var _focus_box: StyleBox
+static var _focus_slot: Texture2D
+
+
+## Keyboard / gamepad selection frame: a gold notched ring 1 px outside a button_9 button.
+static func focus_box() -> StyleBox:
+	if _focus_box:
+		return _focus_box
+	if Art.has("ui/focus_9"):
+		var sb := StyleBoxTexture.new()
+		sb.texture = Art.tex("ui/focus_9")
+		sb.texture_margin_left = 4
+		sb.texture_margin_right = 4
+		sb.texture_margin_top = 4
+		sb.texture_margin_bottom = 4
+		sb.expand_margin_left = 1
+		sb.expand_margin_right = 1
+		sb.expand_margin_top = 1
+		sb.expand_margin_bottom = 1
+		sb.draw_center = false
+		_focus_box = sb
+	else:
+		var f := StyleBoxFlat.new()
+		f.draw_center = false
+		f.border_color = GOLD
+		f.set_border_width_all(1)
+		f.set_expand_margin_all(1)
+		f.anti_aliasing = false
+		_focus_box = f
+	return _focus_box
+
+
+## The same frame for 18x18 icon slots (relics in the pause menu).
+static func focus_slot() -> Texture2D:
+	if _focus_slot == null:
+		_focus_slot = Art.tex("ui/focus_slot") if Art.has("ui/focus_slot") else null
+	return _focus_slot
+
+
+## Makes an icon TextureButton keyboard/gamepad selectable with the pixel focus frame.
+static func focusable_slot(tb: TextureButton) -> void:
+	tb.focus_mode = Control.FOCUS_ALL
+	var slot := focus_slot()
+	if slot:
+		tb.draw.connect(func():
+			if tb.has_focus(true):
+				tb.draw_texture(slot, ((tb.size - slot.get_size()) / 2.0).floor()))
+		tb.focus_entered.connect(tb.queue_redraw)
+		tb.focus_exited.connect(tb.queue_redraw)
+
+
 static func button(text: String, cb: Callable, min_w := 96) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(min_w, 24)
-	b.focus_mode = Control.FOCUS_NONE
+	b.focus_mode = Control.FOCUS_ALL
+	b.add_theme_color_override("font_focus_color", GOLD)
+	b.add_theme_color_override("font_hover_pressed_color", GOLD)
 	b.add_theme_font_override("font", Art.font)
 	b.add_theme_font_size_override("font_size", 16)
 	b.add_theme_color_override("font_color", CREAM)
@@ -69,7 +122,7 @@ static func button(text: String, cb: Callable, min_w := 96) -> Button:
 	b.add_theme_stylebox_override("normal", normal)
 	b.add_theme_stylebox_override("hover", normal)
 	b.add_theme_stylebox_override("pressed", pressed)
-	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	b.add_theme_stylebox_override("focus", focus_box())
 	b.pressed.connect(func():
 		Audio.play("ui_click")
 		cb.call())
@@ -86,6 +139,20 @@ static func toggle(text: String, value: bool, cb: Callable) -> Button:
 		state[0] = not state[0]
 		refresh.call()
 		cb.call(state[0]))
+	return b
+
+
+## A button that steps through options: "Touch: AUTO" -> "Touch: ON" -> "Touch: OFF".
+static func cycle(text: String, values: Array, labels: Array, value: Variant, cb: Callable, min_w := 150) -> Button:
+	var b := button("", func(): pass, min_w)
+	var st := [maxi(0, values.find(value))]
+	var refresh := func():
+		b.text = "%s: %s" % [text, labels[st[0]]]
+	refresh.call()
+	b.pressed.connect(func():
+		st[0] = (st[0] + 1) % values.size()
+		refresh.call()
+		cb.call(values[st[0]]))
 	return b
 
 
@@ -141,4 +208,5 @@ static func modal(parent: Node, title := "") -> Array:
 		var t := label(title, 16, GOLD, HORIZONTAL_ALIGNMENT_CENTER)
 		v.add_child(t)
 	parent.add_child(root)
+	Controls.on_modal_opened(root)   # keyboard / gamepad focus moves in, and comes back on close
 	return [root, v]

@@ -82,6 +82,7 @@ func _ready() -> void:
 	row.add_child(UI.button("Settings", func(): SettingsPanel.open(root), 54))
 	row.add_child(UI.button("Credits", _credits, 54))
 	menu.add_child(row)
+	RunSave.add_continue_button(menu, main)   # "Continue / Floor N - 12:41 AM" when a run is saved
 	# --- the Candle Box: pick which candle to light
 	var box := HBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
@@ -98,6 +99,7 @@ func _ready() -> void:
 	if not Candles.is_unlocked(sel):
 		sel = "tallow"
 	_show_candle()
+	Controls.set_page_handler(root, _cycle)   # LB / RB (Q / E) pick a candle
 	var rec := Game.records
 	var line := "Runs %d   Wins %d" % [rec["runs"], rec["wins"]]
 	if rec.get("daily_date", "") == Time.get_date_string_from_system():
@@ -193,4 +195,4 @@ func on_back() -> void:
 	if top.get_meta("modal", false):
 		top.queue_free()
 		return
-	get_tree().quit()
+	Controls.quit_prompt(root)   # phones close at once; desktops ask first
