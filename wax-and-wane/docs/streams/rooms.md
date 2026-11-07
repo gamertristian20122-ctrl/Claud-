@@ -20,6 +20,9 @@ wall lights, and built from one of 69 hand-made layouts that a validator checks.
   - no floor cell is sealed in for good (bombs may be needed for `$` vaults);
   - the reward cells (6..8, 4) stay walkable;
   - there are at most 2 hearths per layout, no spawns sit in door lanes, and each layout has 1 to 8 foes.
+
+  It then builds every layout as a real `Room` (888 rooms: 4 themes x 74 layouts x 3 seeds, every room
+  type) and fails if any room has more than 6 static lights or any decor piece overlaps a door slot.
 - **New template characters** (also in `Room.SOLID` / `SHOT_SOLID`):
   | char | what | blocks | breaks by |
   |---|---|---|---|
@@ -72,8 +75,11 @@ wall lights, and built from one of 69 hand-made layouts that a validator checks.
 - **juice**: the stains node can go anywhere under `Room`. My layers are bg z -20, decor z -19, window
   glass -18, `floor_layer` (pits, spikes, webs) -15, doors -12, and wall flames / hollow cracks -11. z -14
   and -13 are free for stains.
-- **bestiary**: enemies still steer directly. Layouts with choke points are friendlier to a flow-field;
-  every walker spawn is guaranteed reachable.
+- **bestiary**: `Room.path_dir(from_wp, to_wp) -> Vector2` gives a walker's steering direction: straight
+  at the target when nothing solid is in between, otherwise the next step of a cached BFS flow field
+  around rocks, pits and furniture, with no corner cutting. `_ai_chase` uses it (one line, plus the
+  goblin jitter now wobbles around it). Please keep it, or call it from your own walker AIs: the new
+  choke and switchback layouts strand straight-line chasers. Every walker spawn is guaranteed reachable.
 - **autotest**:
   - `--tour` now takes one cleared room per floor (`floor_<n>_<theme>`).
   - `--tour --rooms` adds 4 hand-picked layouts per floor (`room_<n>_<id>`).

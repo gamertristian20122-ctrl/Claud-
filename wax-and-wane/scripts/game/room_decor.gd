@@ -115,10 +115,14 @@ func setup(r: Room, used_lights: int) -> void:
 	var placed := 0
 	var goal := rng.randi_range(2, 4)
 	var signature := rng.randf() < 0.7
+	var used_wide := {}
 	while placed < goal and tries < 24 and not free_top.is_empty():
 		tries += 1
 		var it: Array = pool[0] if signature else pool[rng.randi() % pool.size()]
 		var w: int = it[1]
+		if w == 2 and used_wide.has(it[0]):
+			continue   # one clock, one shelf, one rack per room
+		used_wide[it[0]] = true
 		var spots: Array = free_top
 		if w == 2:
 			spots = free_top.filter(func(t): return (t + 1) in free_top and (t <= 4 or t >= 9))
@@ -264,11 +268,11 @@ func _window(tile: int, style: String) -> void:
 	motes.amount = 5
 	motes.lifetime = 5.0
 	motes.preprocess = 5.0
-	motes.position = pos + Vector2(14, 44)
+	motes.position = pos + Vector2(16, 54)
 	motes.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	motes.emission_rect_extents = Vector2(9, 22)
+	motes.emission_rect_extents = Vector2(8, 14)
 	motes.direction = Vector2(0.3, 1)
-	motes.spread = 180.0
+	motes.spread = 70.0
 	motes.gravity = Vector2(0, 1.2)
 	motes.initial_velocity_min = 1.5
 	motes.initial_velocity_max = 3.5
