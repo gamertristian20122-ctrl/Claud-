@@ -8,7 +8,8 @@ Branch `revamp/endgame`.
    **1:00 AM** (`Tower.UNLOCK_CLOCK`, wax >= 60). Instead of the victory banner the boss room clears, pays
    the usual guardian reward (a relic, a big wax, coins, "Your flame grows") and **a ladder of light** rises in the
    middle: "A LADDER OF LIGHT - The bells are not done with you". Touching it climbs (a pale moonlit fade, not the
-   trapdoor fall) to floor 5. After 1:00 AM the normal victory still happens.
+   trapdoor fall) to floor 5, and the ladder's light runs down the wick: **+12 min** on arrival
+   (`Tower.ARRIVAL_WAX`; the tower is long and the wax keeps burning). After 1:00 AM the normal victory still happens.
    - The Belfry win is counted right away (records `wins`, `best_finish`, the Black Taper unlock and the win
      achievements), so dying in the tower never takes a win away; the true ending's own `_end_run(true)` takes
      that one back so it is never counted twice.
@@ -25,23 +26,25 @@ Branch `revamp/endgame`.
    the floor. Night colour `Color(0.27, 0.29, 0.40)`. Music `floor_5` = Ninja Adventure "19 - Ascension".
    Lodgers (`POOLS[5]`): Cog Sentries, Deathwatch Beetles, Hearth Devils, Rafter Leapers, Sootlings, Bone Lodgers;
    heavies Gutterspouts, Belfry Brutes, Waxwork Brides, Iron Snuffers, Necromancers; flyers Minute-Hand Wraiths,
-   Clapper Bats, Gilt Cherubs. Ordinary health x2.5 (`Enemy.FLOOR_HP[4]`), damage x1.48 (`enemy_dmg_mult`).
+   Clapper Bats, Gilt Cherubs. Ordinary health x2.35 (`Enemy.FLOOR_HP[4]`, Belfry x2.25); hits land as hard as in
+   the Belfry (`enemy_dmg_mult` stops growing after floor 4).
 3. **THE KEEPER OF HOURS** (`Enemy.DEFS["keeper"]`, `scripts/game/keeper.gd`): a hooded clockwork figure,
    48x56, a clock dial for a face (its hands show the house clock and run backwards in stopped time), a long-case
    trunk with a swinging pendulum, a plum cloak. It stands on a great brass dial inlaid in its floor
-   (`tower/room_keeper.png`) and its two great hands sweep that dial. 340 hp, contact 8.
+   (`tower/room_keeper.png`) and its two great hands sweep that dial. 280 hp, contact 8, a hand hits for 6.
    - **Phase 1 - the hands.** The hour hand (short, 74 px, slow: 180 deg in ~3.9 s) and the minute hand (long,
      104 px, quick: 120 deg in 1.6 s) take turns. Before a hand moves, its pale ghost shows where it starts, a
-     dotted red arc shows the arc it covers and a dotted line marks where it stops (1.0 / 0.9 s warning): step
-     behind the hand or out past its tip. Aimed cog fans (5) and cog rings (12) in between.
+     dotted red arc shows the arc it covers and a dotted line marks where it stops (1.0 / 0.9 s warning): run the
+     way the arc goes, past that line, or out past the tip (a one-time hint says so). Each sweep starts behind you
+     and passes through where you stand. Aimed cog fans (4) and cog rings (10) in between.
    - **Phase 2 (66%) - stopped time.** Every ~8.5 s: the room greys (a screen shader; bullets and Tallow keep
      their colour), everything freezes, 12-16 cog bolts appear one by one in the frozen air (a ring closing on
      where you stood, or the dial's twelve aimed at you), each with a pale mark showing which way it will fly; three
      brass pips over the Keeper go out with three ticks, then everything moves again at once. Your own sparks hang
      in the air during the stop and fly on with the rest. Frozen bolts are harmless until time moves.
    - **Phase 3 (33%) - desperate.** The hour hand turns for good (slowly: you can walk round it), the minute hand
-     sweeps faster with a shorter warning, and every 3.4 s the Keeper chimes: a ring of 15 sound waves with a gap
-     on the far side, and on every other chime a Cog Sentry (at most 2).
+     sweeps faster with a shorter warning, and every 4.2 s the Keeper chimes: a ring of sound waves with a gap
+     where you stand (keep still and it passes you by), and on every other chime a Cog Sentry (at most 2).
    - Versus card via `Juice.of(world).boss_card` (it uses `Enemy.frames_for("keeper")`), music `final_boss`.
 4. **True ending** (`scripts/ui/ending.gd`, a CanvasLayer over the world): "THE KEEPER OF HOURS IS STILLED",
    then four scenes (192x96 art at x2, moving parts drawn in code): the quiet house under the moon (twinkling
@@ -99,7 +102,9 @@ Records: `tower_seen`, `true_endings`, `true_best` (earliest true-ending clock m
 ## Tests
 - `godot --headless --path . -- --checkscripts`: clean. `--checkrooms`: 0 problems (1110 dressed rooms incl. the tower).
 - `--autotest --playtest --speed=4 --tower [--god]`: starts a run on floor 5 at 12:48 AM with an 8-relic kit
-  (`Tower.TEST_KIT`, +0.6 damage). Prints `[tower] test start ...`.
+  (`Tower.TEST_KIT`, +0.6 damage), +12 min for the ladder. Prints `[tower] test start ...`. Add `--keeper`
+  (and `--keeperwax=N`, default 60) to go straight into the Keeper's room. The Keeper fight logs
+  `[keeper] phase N after T s, Tallow at <clock>`, `[keeper] stilled after ...` / `[keeper] Tallow fell ...`.
 - `--tour --tower --shots=DIR`: the ladder, the tower's first room and three rooms, the Keeper's card, each phase,
   stopped time (start, countdown, resume), phase 3, the death, the four ending scenes, the credits, the TRUE ENDING
   results, a tower death's results and the first-win hint.
