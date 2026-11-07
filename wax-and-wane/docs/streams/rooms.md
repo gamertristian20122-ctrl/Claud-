@@ -56,7 +56,10 @@ wall lights, and built from one of 69 hand-made layouts that a validator checks.
   | Chapel | red carpet runner door to door | chequered flags |
   | Belfry | boards | boards with a stone border |
 
-  The classic `room_<theme>.png` files are byte-identical to before. Door positions are unchanged.
+  The top walls of every background are now plain. The 0x72 banners, wall holes and crypt slime that
+  used to be baked in are seeded decor pieces (extracted from the 0x72 tiles and recoloured per
+  theme), so shelves, windows and lights never sit on top of a baked banner. The classic floors are
+  unchanged and door positions are unchanged.
 - **Art** (`tools/art_decor.py` -> `assets/art/decor/`, new): 85 sprites in the 0x72 palette with a 1 px
   outline and light from the top-left (the tool asserts palette and alpha), plus one smooth light
   texture (`decor/light/window_pool.png`). Run `python3 tools/art_decor.py --review --out=<dir>` for

@@ -127,7 +127,7 @@ func setup(r: Room, used_lights: int) -> void:
 	var pool: Array = WALL[th]
 	var tries := 0
 	var placed := 0
-	var goal := rng.randi_range(2, 4)
+	var goal := rng.randi_range(3, 5)
 	var signature := rng.randf() < 0.7
 	var used_wide := {}
 	while placed < goal and tries < 24 and not free_top.is_empty():
