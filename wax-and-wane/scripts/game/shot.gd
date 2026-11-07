@@ -75,6 +75,7 @@ func _physics_process(dt: float) -> void:
 	if room and room.shot_hits(global_position + Vector2(0, 6), dmg, friendly):
 		if friendly and world.has_method("fx_sparks"):
 			world.fx_sparks(global_position, -vel.normalized(), 4, _blue)
+		if RelicFx.shot_wall(self): return
 		end()
 		Audio.play("hit_wall", -3.0)
 		return
@@ -87,6 +88,7 @@ func _physics_process(dt: float) -> void:
 				e.take_hit(dmg, vel.normalized() * knock, burn)
 				if world.has_method("fx_sparks"):
 					world.fx_sparks(global_position, vel.normalized(), 2, _blue)
+				RelicFx.shot_hit(self, e)
 				if pierce <= 0:
 					end()
 					return

@@ -515,6 +515,7 @@ func _draw_minimap() -> void:
 			"boss": mark = Color("#da4e38")
 			"treasure": mark = Color("#facb3e")
 			"shop": mark = Color("#72d6ce")
+			"secret": mark = Color("#dc4a7b")
 		if mark.a > 0:
 			minimap.draw_rect(Rect2(pos + Vector2(3, 1), Vector2(3, 4)), mark)
 
@@ -760,7 +761,7 @@ func open_pause() -> void:
 	var p: Player = world.player
 	if not p.relics.is_empty():
 		var row := HFlowContainer.new()
-		row.custom_minimum_size = Vector2(198, 0)
+		row.custom_minimum_size = Vector2(clampf(p.relics.size() * 19.0, 198.0, 304.0), 0)
 		row.alignment = FlowContainer.ALIGNMENT_CENTER
 		row.add_theme_constant_override("h_separation", 1)
 		row.add_theme_constant_override("v_separation", 1)

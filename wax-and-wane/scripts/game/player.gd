@@ -177,6 +177,7 @@ func _ready() -> void:
 	_pool.z_index = 1
 	_pool.draw.connect(_draw_pool)
 	add_child(_pool)
+	add_child(Costumes.new())
 
 
 ## Call a world effect if this world has it (the title screen's stand-in world does not).
@@ -287,6 +288,7 @@ func _move(d: Vector2) -> void:
 
 
 func _fire(dir: Vector2) -> void:
+	if RelicFx.before_fire(self, dir): return
 	dir = world.assist_aim(global_position, dir)
 	var n := shots
 	var dmg := damage
@@ -302,11 +304,13 @@ func _fire(dir: Vector2) -> void:
 	_recoil_off = Vector2(roundf(-dir.x * 0.75), roundf(-dir.y * 0.75))
 	_sq_v -= 2.5
 	_fx("fx_muzzle", [global_position + Vector2(0, -6) + dir * 6.0, dir, blue])
+	RelicFx.after_fire(self, dir)
 
 
 func hurt(amount: float, from_dir: Vector2) -> void:
 	if dead or invuln > 0 or frozen or _hold_t > 0.0:
 		return
+	if RelicFx.on_hurt(self, amount, from_dir): return
 	if wax_coat and coat_ready:
 		coat_ready = false
 		invuln = 0.8

@@ -175,10 +175,12 @@ func _physics_process(dt: float) -> void:
 		reach = 7.0
 	if _wait_leave and d > reach + 6.0:
 		_wait_leave = false
+	var pull := RelicFx.pull(world)   # Lucky Ash, Lodestone, Sweep's Brush
+	var wants := kind in ["coin", "bomb"] or (kind in ["wax_small", "wax_big"] and p.wax < p.wax_max - 0.5)
 	if d < reach and _t > 0.35:
 		_collect(p)
-	elif kind in ["coin", "wax_small", "wax_big", "bomb"] and d < 22.0 and p.luck > 0.0 and _t > 0.5:
-		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
+	elif wants and price == 0 and d < pull.x and _t > 0.5:
+		global_position = global_position.move_toward(p.global_position, pull.y * dt)
 	elif kind == "wax_warm" and d < 12.0 and _t > 0.3:
 		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
 
@@ -228,7 +230,7 @@ func _collect(p: Player) -> void:
 		"wax_small", "wax_big":
 			if p.wax >= p.wax_max - 0.5:
 				return
-			var amt: float = (6.0 if kind == "wax_small" else 18.0) * world.wax_bonus()
+			var amt: float = (6.0 if kind == "wax_small" else 18.0) * world.wax_bonus() * RelicFx.wax_mult(world)
 			p.heal(amt)
 			Audio.play("wax_pickup")
 			world.fx_text(global_position + Vector2(0, -14), "+%d min" % int(amt), UI.WAX)
@@ -271,12 +273,21 @@ func _collect(p: Player) -> void:
 			(spr as AnimatedSprite2D).play("default")
 			Audio.play("chest_open")
 			world.open_chest(global_position)
+			RelicFx.on_chest(world, global_position)
 			if record:
 				world.forget_pickup(record)
 				record = {}
 		"trapdoor":
 			taken = true
 			world.descend()
+
+
+## A helper (the Dust Bunny) brings this coin or bomb to Tallow.
+func fetch(p: Player) -> void:
+	if taken or price > 0 or not kind in ["coin", "bomb"]:
+		return
+	_t = maxf(_t, 0.4)
+	_collect(p)
 
 
 func _take() -> void:

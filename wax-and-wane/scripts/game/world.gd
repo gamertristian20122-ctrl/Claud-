@@ -289,6 +289,7 @@ func _on_enter_room() -> void:
 			if nb["type"] != "secret" or nb.get("revealed", false):
 				nb["seen"] = true
 	player.coat_ready = true
+	RelicFx.on_enter_room(self)
 	room_spawned = false
 	room_hits = 0
 	room_streak_wax = 0.0
@@ -438,6 +439,7 @@ func _clear_room() -> void:
 		return
 	d["cleared"] = true
 	rooms_cleared += 1
+	RelicFx.on_clear(self)
 	if d["type"] == "normal":
 		charge_keepsake(2 if run_time - room_t0 <= 8.0 + 2.5 * floor_num else 1)
 	room.set_open(true)
@@ -482,6 +484,7 @@ func _room_reward(pos: Vector2) -> void:
 
 
 func _next_relic() -> String:
+	return RelicFx.next_relic(self)
 	for i in relic_pool.size():
 		var id: String = relic_pool[i]
 		if not id in player.relics:
@@ -646,6 +649,7 @@ func count_enemies() -> int:
 
 func on_enemy_killed(e: Enemy) -> void:
 	kills += 1
+	RelicFx.on_kill(self, e)
 	Audio.play("enemy_die")
 	fx_poof(e.global_position + Vector2(0, -6), false, 1.4)
 	_kindle(e.global_position)
@@ -838,6 +842,7 @@ func shoot_player(pos: Vector2, dir: Vector2, p: Player, dmg: float) -> void:
 	s.burn = p.burn
 	s.knock = p.knockback
 	s.radius = 3.0 * p.shot_scale
+	RelicFx.on_shot_made(s, p)
 	fx_layer.add_child(s)
 
 
@@ -1031,6 +1036,7 @@ func _explode(pos: Vector2, r: Room) -> void:
 	lt.tween_property(l, "energy", 0.0, 0.5)
 	fx_scorch(pos)
 	r.blast(pos, bomb_radius)
+	RelicFx.on_blast(self, pos)
 	var hd := r.reveal_near(pos, bomb_radius)
 	if hd != Vector2i.ZERO and layout["cells"].has(r.cell + hd):
 		layout["cells"][r.cell + hd]["revealed"] = true
@@ -1419,3 +1425,12 @@ func fx_glint(pos: Vector2) -> void:
 ## A persistent splat on this room's floor ("goo", "ash", "blood", "red", "wax", "soot", ...).
 func fx_stain(pos: Vector2, mat := "wax", big := false) -> void:
 	Juice.of(self).splat(pos, mat, big)
+
+
+## Save & Continue: run state that lives outside the player (relic knowledge, fog, charges).
+func save_extra() -> Dictionary:
+	return {"relic_fx": RelicFx.of(self).to_dict()}
+
+
+func load_extra(d: Dictionary) -> void:
+	RelicFx.of(self).from_dict(d.get("relic_fx", {}))

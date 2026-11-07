@@ -46,6 +46,8 @@ func _ready() -> void:
 	await get_tree().create_timer(0.8).timeout
 	if args.has("herosheet"):
 		_hero_sheet()
+	elif mode == "tour" and args.has("relictour"):
+		_relic_tour()
 	elif mode == "tour":
 		_tour()
 	elif mode == "audiotest":
@@ -65,9 +67,25 @@ func _next_run() -> void:
 	if args.has("seed"):
 		params["seed"] = int(args["seed"]) + results.size()
 	main.goto("game", params)
+	if args.has("relics") or args.has("keepsake"):
+		await get_tree().create_timer(0.4).timeout
+		_grant(main.current)
+
+
+## --relics=a,b,c gives those relics at the start; --keepsake=id hands over a full keepsake.
+func _grant(w: Node) -> void:
+	if w == null or w.get("player") == null:
+		return
+	for id in str(args.get("relics", "")).split(",", false):
+		if Items.RELICS.has(id) and not id in w.player.relics:
+			w.collect_item(id, w.player.global_position)
+	if args.has("keepsake") and Items.KEEPSAKES.has(str(args["keepsake"])):
+		w.player.keepsake = str(args["keepsake"])
+		w.player.charge = int(Items.KEEPSAKES[w.player.keepsake]["pips"])
 
 
 var _status_t := 0.0
+var _stress_cell := Vector2i(-99, -99)
 
 
 func _process(dt: float) -> void:
@@ -75,6 +93,12 @@ func _process(dt: float) -> void:
 		return
 	var cur: Node = main.current
 	_status_t += dt
+	# --stress: a random relic in every new room, so every combination gets played
+	if args.has("stress") and cur and cur.name == "Game" and cur.get("player") and not cur.finished and cur.cur_cell != _stress_cell:
+		_stress_cell = cur.cur_cell
+		var left: Array = Items.RELICS.keys().filter(func(k): return not k in cur.player.relics)
+		if not left.is_empty():
+			cur.collect_item(left[randi() % left.size()], cur.player.global_position)
 	if _status_t > 10.0 and cur and cur.name == "Game":
 		_status_t = 0.0
 		var w: Node = cur
@@ -758,4 +782,145 @@ func _hero_sheet() -> void:
 	img.resize(img.get_width() * 6, img.get_height() * 6, Image.INTERPOLATE_NEAREST)
 	img.save_png(_shots_dir + "/hero_states.png")
 	print("[tour] hero sheet")
+	get_tree().quit()
+
+
+# ---------------------------------------------------------------- relic tour (--tour --relictour)
+
+func _give(w: Node, ids: Array) -> void:
+	for id in ids:
+		if not id in w.player.relics:
+			w.collect_item(id, w.player.global_position)
+
+
+func _room_of(w: Node, t: String, skip := 0) -> Vector2i:
+	for c in w.layout["cells"].keys():
+		if w.layout["cells"][c]["type"] == t and not w.layout["cells"][c]["cleared"]:
+			if skip <= 0:
+				return c
+			skip -= 1
+	return Vector2i(-99, -99)
+
+
+func _dummy(w: Node, pos: Vector2, relics: Array, rites: Array = []) -> Player:
+	var d := Player.new()
+	d.world = w
+	d.apply_candle("tallow")
+	d.wax = 100.0
+	d.frozen = true
+	d.revives = 1
+	for r in relics:
+		d.relics.append(r)
+	for r in rites:
+		d.rites.append(r)
+	w.actors.add_child(d)
+	d.light.enabled = false
+	d.global_position = pos
+	return d
+
+
+func _relic_tour() -> void:
+	DirAccess.make_dir_recursive_absolute(_shots_dir)
+	main.goto("game", {"seed": 11})
+	await _wait(1.6)
+	var w: Node = main.current
+	w.player.wax = 110.0
+	RelicFx.of(w)
+	# 1. the costume line-up: one dummy Tallow per piece you can see
+	var looks := [["glass_chimney"], ["tin_sconce"], ["old_pipe"], ["wax_coat"], ["lace_fan"], ["bell_wire"],
+		["scalding_wax"], ["pale_taper"], ["stopped_clock"], ["love_letter"], ["jet_brooch"], ["nightshade"],
+		["phoenix_feather"], ["both_ends"], []]
+	var dummies: Array = []
+	for i in looks.size():
+		var pos: Vector2 = w.room.position + Vector2(40 + (i % 8) * 28, 80 + (i / 8) * 44)
+		dummies.append(_dummy(w, pos, looks[i], ["household", "seance"] if i == looks.size() - 1 else []))
+	w.player.position = w.room.center() + Vector2(0, 60)
+	await _wait(1.2)
+	await _shot("lab_costumes")
+	for d in dummies:
+		d.queue_free()
+	# 2. curses on foes, frozen in place
+	var c := _room_of(w, "normal")
+	if c.x > -99:
+		_jump(w, c)
+	await _wait(1.4)
+	for e in w.enemies:
+		if is_instance_valid(e):
+			e.queue_free()
+	w.enemies.clear()
+	var kinds := ["charm", "fear", "poison", "slow", "stun"]
+	var foes: Array = []
+	for i in kinds.size():
+		foes.append(w.spawn_enemy(["goblin", "skelet", "tiny_zombie", "masked_orc", "imp"][i], w.room.position + Vector2(56 + i * 40, 96)))
+	await _wait(1.0)
+	w.freeze_t = 30.0
+	for i in kinds.size():
+		RelicFx.of(w).status(foes[i], kinds[i], 30.0)
+	w.player.position = w.room.center() + Vector2(0, 50)
+	await _wait(0.5)
+	for e in foes:
+		if is_instance_valid(e):
+			e.take_hit(0.01, Vector2.ZERO)
+	await _wait(0.7)
+	await _shot("lab_curses")
+	w.freeze_t = 0.0
+	for e in foes:
+		if is_instance_valid(e):
+			e.queue_free()
+	w.enemies.clear()
+	# 3. helpers + Tinderbox in a fight
+	_give(w, ["matchling", "paper_lantern", "warming_pan", "dust_bunny", "clockwork_mouse", "tinderbox"])
+	args["drive"] = true
+	c = _room_of(w, "normal")
+	if c.x > -99:
+		_jump(w, c)
+	for i in 2:
+		await _wait(1.4)
+		await _shot("relic_helpers_%d" % i)
+	# 4. the Blowlamp (and every curse)
+	_give(w, ["blowlamp", "cold_wax", "shadow_puppet", "love_letter", "nightshade", "bell_wire", "split_wick"])
+	c = _room_of(w, "normal")
+	if c.x > -99:
+		_jump(w, c)
+	for i in 3:
+		await _wait(1.0)
+		await _shot("relic_blowlamp_%d" % i)
+	# 5. the pause menu with a long relic list
+	_give(w, ["bellows", "spare_wick", "house_deed", "dowsing_rod", "lodestone", "pendulum", "cuckoo_clock", "honeycomb", "magpie_nest", "thimble", "salt_line", "scalding_wax", "minute_hand", "bell_rope", "glass_chimney", "tin_sconce", "old_pipe", "wax_coat"])
+	w.toggle_pause()
+	await _wait(0.4)
+	await _shot("relic_pause")
+	w.toggle_pause()
+	args.erase("drive")
+	# 6. shop and treasure rooms
+	for t in ["shop", "treasure"]:
+		for cc in w.layout["cells"].keys():
+			if w.layout["cells"][cc]["type"] == t:
+				_jump(w, cc)
+				await _wait(1.0)
+				w.player.position = w.room.center() + (Vector2(0, 14) if t == "shop" else Vector2(-26, 20))
+				await _wait(0.6)
+				await _shot("relic_" + t)
+				break
+	# 7. the Dowsing Rod's shimmer on a cracked wall
+	for cc in w.layout["cells"].keys():
+		var found := false
+		for dd in FloorGen.DIRS:
+			var nb: Vector2i = cc + dd
+			if w.layout["cells"].has(nb) and w.layout["cells"][nb]["type"] == "secret" and w.layout["cells"][cc]["type"] != "secret":
+				found = true
+		if found:
+			_jump(w, cc)
+			for e in w.enemies:
+				if is_instance_valid(e):
+					e.queue_free()
+			w.enemies.clear()
+			await _wait(1.0)
+			await _shot("relic_dowsing")
+			break
+	# 8. results with a long relic row
+	w.player.revives = 0
+	w.player.wax = 0.0
+	await _wait(6.0)
+	await _shot("relic_results")
 	get_tree().quit()
