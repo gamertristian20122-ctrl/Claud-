@@ -239,7 +239,7 @@ func _process(dt: float) -> void:
 				_hero.flame.visible = false
 				Audio.play("snuff_out", -8.0, 0.0, 1.2)
 				for i in 6:
-					_smoke.append([Vector2(96, 54), i * 0.22])
+					_smoke.append([Vector2(96, 54), -i * 0.22])   # a thread of smoke, puff after puff
 	if _card == 0 and fmod(_t, 0.9) < dt:
 		_smoke.append([Vector2(136, 37), 0.0])
 	for s in _smoke:
