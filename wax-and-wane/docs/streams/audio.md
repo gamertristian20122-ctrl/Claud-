@@ -18,6 +18,10 @@ Branch `revamp/audio`. Owns `scripts/autoload/audio.gd`, `assets/audio/`, `tools
 6. **Mix** — a limiter on the master bus (no clipping, ever), UI / pickups / the hurt sound stay dry and clear,
    the room bus gives way for a moment when Tallow is hurt, big sounds duck the music automatically.
 
+Pictures: `docs/streams/audio/music_tension_ramp.png` (the ramp below) and
+`docs/streams/audio/audio_mix_capture.png` (the game's real output during `--audiotest`, with every mix
+state labelled: you can see the high end vanish in the pause menu and the ticks appear at low wax).
+
 ## Music: the track per slot (and why)
 We can't listen, so all 45 Ninja Adventure tracks (and the Kenney music loops) were measured with
 `python3 tools/import_audio.py analyse <files>`: onset density (notes / hits per second), percussive share,
