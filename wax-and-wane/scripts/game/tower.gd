@@ -344,7 +344,7 @@ static func on_results(res: Control, v: Container, params: Dictionary) -> void:
 	_labels(v, labels)
 	if f == FLOOR:
 		for ch in res.get_children():
-			if ch is TextureRect and str(ch.texture.resource_path).contains("rooms/room_"):
+			if ch is TextureRect and ch.texture and str(ch.texture.resource_path).contains("rooms/room_"):
 				ch.texture = Art.tex("rooms/room_tower")
 				break
 		for l in labels:
