@@ -9,7 +9,8 @@ before the clock strikes two. The lower your wax, the shorter you get and the sm
 
 ## How to play
 - **Left thumb:** move (floating stick). **Right thumb:** shoot in that direction (hold to keep firing).
-- **Bomb button** (right edge): breaks rocks, hurts everything nearby, including you.
+- **Bomb button** (right edge): breaks rocks and hollow walls, hurts everything nearby, including you.
+- **Keepsake button** (above the bomb, once you carry one): use it when its pips are full. Keyboard: Q.
 - **II** (top right): pause. Android Back also pauses.
 - Desktop testing: WASD move, arrow keys shoot, Space/E bomb, Esc pause.
 
@@ -22,6 +23,15 @@ before the clock strikes two. The lower your wax, the shorter you get and the sm
 | Bosses | Old Rot, The Gaoler, The Hollow Vicar, The Hour Fiend (3 phases: fans, dashes, sweeping clock hands, bell tolls) |
 | Relics | 25 (Twin Wick, Blue Flame, Moth Friend, Hourglass, Phoenix Feather, Pocket Watch...) + 4 tonics |
 | Other | Shops, chests, mimics, urns and crates, spikes, pits, bombs, candelabras that light up when a room is cleared, bell tolls at 1:00 / 1:30 / 1:45 |
+| Kindling (v1.1) | Kills within 2.2 s chain into a streak that pours minutes back into the candle (x3 +1 min, x5 +2 min...); a hit douses it |
+| Spilled Wax (v1.1) | A hit splashes half the lost wax out as warm drops - grab them back within 4 s. Once per floor a killing hit leaves you Guttering at 1 minute |
+| Marked foes (v1.1) | Glowing ember / gilded / sooty / chilled monsters: tougher, and they pay out wax, coins or bombs |
+| Smoke Altar & Vigil (v1.1) | After some bosses: buy strong relics with minutes cut from the top of your candle forever - or, if you are struggling, a free Vigil gift |
+| Keepsakes (v1.1) | One held item with charge pips filled by clearing rooms: Hand Bell (freeze), Flare Match (ember ring), Winding Key (+12 min), Smoke Jar (untouchable) |
+| Candle Rites (v1.1) | Hold 3 relics of the same Rite (Hearth, Clock, Moth, Many Wicks) for a set bonus you can see on Tallow |
+| Candle Box (v1.1) | Unlockable candles with their own clocks: Tea Light, Party Candle, Altar Pillar, Black Taper (hard mode) |
+| Omens & Hollows (v1.1) | Floor twists that always pay back (Cold Draught, Tallow Moon, Long Night, Smoky Halls); one secret Hollow per floor behind a cracked, wax-seeping wall - bomb it |
+| Tonight's Candle (v1.1) | A nightly seeded run: same house for everyone that night, scored on your first try |
 
 ## Project layout
 ```
@@ -34,7 +44,8 @@ scripts/game/room.gd          one room: background, doors, obstacles, candelabra
 scripts/game/floor_gen.gd     floor layout generator      scripts/game/room_templates.gd   15x9 room layouts
 scripts/game/player.gd        Tallow (the wax body is drawn in code and shrinks with your wax)
 scripts/game/enemy.gd         every creature and boss     scripts/game/shot.gd   projectiles
-scripts/game/items.gd         relics + tonics             scripts/game/pickup.gd wax, coins, chests, shop goods
+scripts/game/items.gd         relics, tonics, keepsakes, rites, gifts   scripts/game/pickup.gd wax, coins, chests, shop goods
+scripts/game/candles.gd       the Candle Box (playable candles and their unlock goals)
 scripts/game/hud.gd           wax/clock bar, minimap, boss bar, twin-stick touch controls, pause menu
 scripts/ui/                   title, results, settings, UI helpers
 scripts/autotest.gd           play-test bot + screenshot tour

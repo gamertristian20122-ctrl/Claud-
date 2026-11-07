@@ -274,6 +274,8 @@ func hurt(amount: float, from_dir: Vector2) -> void:
 		wax = 1.0
 		invuln = 1.6
 		world.fx_text(global_position + Vector2(0, -34), "GUTTERING!", UI.EMBER)
+		if Game.tip("gutter", 1):
+			world.hud.show_hint("Guttering: your flame clung on once this floor. Find wax!", 3.0)
 		Audio.play("low_wax")
 		world.on_player_hurt(amount)
 		return

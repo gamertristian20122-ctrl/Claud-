@@ -33,6 +33,7 @@ var records := {
 	"kills": 0,
 	"seen_intro": false,
 	"unlocked": ["tallow"],
+	"tips": {},
 	"daily_date": "",
 	"daily_first": 0,
 	"daily_best": 0,
@@ -84,6 +85,17 @@ func _set_bus(bus: String, v: float) -> void:
 		return
 	AudioServer.set_bus_mute(idx, v <= 0.001)
 	AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(v, 0.001)))
+
+
+## True the first few times a tip is requested (tips teach new mechanics once, then stay quiet).
+func tip(key: String, times := 2) -> bool:
+	var t: Dictionary = records.get("tips", {})
+	var n: int = t.get(key, 0)
+	if n >= times:
+		return false
+	t[key] = n + 1
+	records["tips"] = t
+	return true
 
 
 ## Unlock a candle; returns true the first time.

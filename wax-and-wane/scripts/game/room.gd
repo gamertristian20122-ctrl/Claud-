@@ -117,6 +117,8 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 
 ## Cracks and seeping wax mark a hollow wall.
 func _hollow_hint(dir: Vector2i) -> void:
+	if world and world.hud and Game.tip("hollow", 1):
+		world.hud.show_hint("That wall is cracked and seeping wax... a bomb might open it", 3.0)
 	var crack := Sprite2D.new()
 	crack.centered = false
 	crack.z_index = -11

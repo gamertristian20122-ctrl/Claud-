@@ -337,6 +337,8 @@ func _spawn_room_enemies() -> void:
 		if champs_left > 0 and rng.randf() < champ_chance() * (3.0 if omen == "tallow_moon" else 1.0):
 			champs_left -= 1
 			champ = ["ember", "gilded", "sooty", "chilled"][rng.randi() % 4]
+			if Game.tip("marked"):
+				hud.show_hint("A marked foe glows: tougher, but it pays out", 2.5)
 		spawn_enemy(list[rng.randi() % list.size()], pos, champ)
 	# deeper rooms get one extra guest
 	if depth >= 4 and rng.randf() < 0.5:
@@ -676,6 +678,8 @@ func _kindle(pos: Vector2) -> void:
 		gain = minf(gain, 6.0 - room_streak_wax)
 		room_streak_wax += gain
 		player.heal(gain)
+		if Game.tip("kindling"):
+			hud.show_hint("Kill quickly to keep the streak: Kindling pours minutes back in", 3.0)
 		var word := "KINDLING" if streak < 5 else ("BLAZE" if streak < 8 else "INFERNO")
 		fx_text(player.global_position + Vector2(0, -40), "%s x%d  +%d min" % [word, streak, int(gain)], UI.EMBER)
 	if streak >= 8 and Game.has_method("unlock"):
@@ -895,6 +899,8 @@ func charge_keepsake(n: int) -> void:
 
 func on_keepsake_taken(id: String, pos: Vector2, rec: Dictionary) -> void:
 	Audio.play("item_get")
+	if Game.tip("keepsake"):
+		hud.show_hint("Keepsake: clear rooms to fill its pips, then tap its button", 3.5)
 	hud.show_banner(Items.display_name(id).to_upper(), Items.desc(id), 2.0)
 	fx_ring(pos + Vector2(0, -16), UI.GOLD)
 	var group: String = rec.get("group", "")
@@ -1034,6 +1040,8 @@ func on_player_hurt(amount: float) -> void:
 	streak_t = 0.0
 	# Spilled Wax: half the melted wax splashes out; grab it back before it cools
 	if amount >= 2.0 and room:
+		if Game.tip("spill"):
+			hud.show_hint("Your wax spilled! Grab the warm drops before they cool", 2.5)
 		var k := 3 if amount >= 8.0 else 2
 		for i in k:
 			add_loose("wax_warm", player.global_position, amount * 0.5 / k, Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(45.0, 70.0))
