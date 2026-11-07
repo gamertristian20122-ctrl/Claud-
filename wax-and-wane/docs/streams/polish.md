@@ -74,3 +74,47 @@ Also changed: plain kills drop bombs again (see above), and at most 3 marked foe
   trips through the four floors with node / object / orphan / resource counts after each floor.
 - `--ablate` repeats floor 1 with each script group switched off (enemies, shots, player, world, juice,
   relics, room, HUD) to show where the time goes.
+
+### Results (this container: 4 shared cores, other streams' bots running beside it)
+| | physics step avg / p95 | process frame avg / p95 | live lights max (by owner) | nodes max |
+|---|---|---|---|---|
+| before | 1.47-1.65 / 2.7-3.6 ms | 0.40-0.50 / 0.67-0.84 ms | 15-18 (marked foes 4-7) | 258-331 |
+| after | 1.39-1.68 / 2.8-3.2 ms | 0.41-0.47 / 0.65-0.72 ms | 12-14 (marked foes 3) | 250-322 |
+
+- Static lights per busiest room: 5 / 4 / 6 / 5 against the budget of 6 (`RoomDecor.LIGHT_BUDGET`), so no
+  room is over. Only one light casts shadows (Tallow's).
+- A spawned foe costs 0.1-0.16 ms. `--ablate` shows no single hog: foes ~0.3-0.4 ms of a physics step
+  (20 of them), relic helpers + Blowlamp ~0.35 ms, HUD 0.1 ms of a process frame.
+- Leak check, three trips through the four floors: nodes stay within +-16 of the previous trip, objects
+  within +-70 (no steady growth), 0 orphan nodes; resources rise 572 -> 608 once (textures loaded on
+  first use) and then stay.
+- The "engine worst/s" process spikes (18-28 ms) come from this machine being shared: the bench's own
+  per-frame maximum is 2-7 ms.
+
+Fixes:
+- `Stains`: the 240x144 stain texture is uploaded at most every 50 ms instead of every frame something
+  splats (a big fight re-uploaded it 60 times a second); mirrored splat images are made once and cached
+  instead of duplicated for every splat.
+- `world._physics_process`: the enemy and enemy-shot lists are pruned in place instead of allocating
+  two new arrays (and lambdas) every physics frame.
+- `Enemy`: at most 3 marked foes carry their own PointLight2D at a time (the tint still marks the rest);
+  a marked wave room used to add a light per foe.
+
+## 5. Phone UX (480x216)
+- Floating texts (`world.fx_text`: Kindling, Clean, Quick, +min...) and shop prices now have a crisp
+  1 px dark outline (`UI.outlined(label)`, `outline_size` 2 on the 8 px font, no blur). The drop shadow
+  alone got lost on bright chapel and cellar tiles.
+- Pause menu relics are 24x24 touch slots (18 px only when a run holds more than 24, so the menu still
+  fits 216 px).
+- Settings sliders: the - / + buttons are 24 px wide (were 20).
+- The hint band under hints and item previews grows with the line (long shop lines spilled past it).
+- Checked: pause 23 px + 4 px grace each side, bomb / keepsake 30 px + 4-6 px grace, menu buttons 24 px
+  tall; left/right safe insets are already applied to every HUD corner element (`Hud.safe_insets()`);
+  hints and previews lift above the boss bar.
+
+## Hooks for other streams
+- `UI.outlined(label) -> Label`: 1 px dark outline for any text drawn over the floor.
+- `Game.clock_text(minutes, spare := true)` / `Game.spare_minutes(minutes)`: the clock rule above.
+  Use these for any new time display (journal records, results death note, seeded runs).
+- `Enemy.TOUCH` (contact per floor) and `Enemy.FLOOR_HP` are the main difficulty knobs.
+- Bot: `--savecycle`, `--relics=` (now reliable), `[diag]` / `[stuck]` lines, `--bench`, `--ablate`.
