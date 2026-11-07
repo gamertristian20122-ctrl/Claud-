@@ -171,6 +171,10 @@ func drive(w: Node) -> Array:
 		return [mv.normalized(), to.normalized()]
 	# room is clear: pick up what is worth picking up
 	var pick := _best_pickup(w, p) if _room_t < 9.0 else null
+	if pick == null and w.room.data["type"] == "boss" and w.room.data["cleared"] and _next_dir(w) == Vector2i.ZERO:
+		for o in w.room.objects.get_children():
+			if o is Pickup and o.kind == "trapdoor":
+				pick = o
 	if pick:
 		return [(pick.global_position - pos).normalized(), Vector2.ZERO]
 	# break urns/crates near the path occasionally is skipped; head to the next room
@@ -277,6 +281,8 @@ func _next_dir(w: Node) -> Vector2i:
 				q.append(n)
 	if goal == Vector2i(-1, -1):
 		goal = boss_cell
+	if goal == Vector2i(-1, -1) and start != w.layout["boss"] and prev.has(w.layout["boss"]):
+		goal = w.layout["boss"]   # everything explored after an early boss: go back to its trapdoor
 	if goal == Vector2i(-1, -1):
 		return Vector2i.ZERO
 	var step := goal
