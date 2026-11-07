@@ -10,6 +10,8 @@ const WAX_SH := Color("#d3bfa9")
 const WAX_DEEP := Color("#aa8d7a")
 const POOL := Color("#e2b694")
 const RADIUS := 5.0
+## The flame leans by shifting whole pixel rows (no rotation, so the pixel grid stays intact).
+const LEAN_SHADER := preload("res://scripts/game/flame_lean.gdshader")
 
 var world: Node
 
@@ -58,6 +60,8 @@ var _hurt_face := 0.0
 var _happy_face := 0.0
 var _bob := 0.0
 var _drip_t := 0.0
+var _recoil := 0.0
+var _lean := 0.0
 
 var flame: AnimatedSprite2D
 var holder: Sprite2D
@@ -81,7 +85,9 @@ func _ready() -> void:
 	flame.centered = false
 	flame.offset = Vector2(-4, -12)
 	flame.z_index = 2
-	flame.material = Art.unshaded
+	var fm := ShaderMaterial.new()
+	fm.shader = LEAN_SHADER
+	flame.material = fm
 	add_child(flame)
 	_set_flame_frames()
 	flame.play("default")
@@ -91,7 +97,7 @@ func _ready() -> void:
 	light.energy = 1.15
 	light.shadow_enabled = true
 	light.shadow_filter = PointLight2D.SHADOW_FILTER_PCF5
-	light.shadow_color = Color(0, 0, 0, 0.8)
+	light.shadow_color = Color(0, 0, 0, 0.45)
 	light.texture_scale = 1.4
 	add_child(light)
 	# a tight warm glow so the candle itself always reads in the dark
@@ -150,7 +156,11 @@ func _physics_process(dt: float) -> void:
 			_fire(aim_input.normalized())
 	if invuln > 0:
 		invuln -= dt
-		visible = fmod(invuln, 0.16) > 0.07 or invuln <= 0
+	# blink only the wax body while invulnerable; the flame and lights stay on (no screen flashing)
+	var on := invuln <= 0 or fmod(invuln, 0.16) > 0.07
+	self_modulate.a = 1.0 if on else 0.3
+	holder.self_modulate.a = self_modulate.a
+	face.visible = on
 	if hot_drip:
 		_drip_t -= dt
 		if _drip_t <= 0 and vel.length() > 10:
@@ -189,8 +199,7 @@ func _fire(dir: Vector2) -> void:
 		var off := dir.orthogonal() * k * 4.0
 		world.shoot_player(global_position + Vector2(0, -6) + dir * 4 + off, dir.rotated(deg_to_rad(k * 2.5)), self, dmg)
 	Audio.play("shoot", 0.0, 0.08)
-	# small recoil squash on the flame
-	flame.scale = Vector2(1.25, 0.8)
+	_recoil = 0.08
 
 
 func hurt(amount: float, from_dir: Vector2) -> void:
@@ -259,15 +268,16 @@ func _process(dt: float) -> void:
 	holder.position.y = 0
 	flame.position = Vector2(0, top - 2)
 	# flame leans against movement, recovers from recoil
-	var lean := clampf(-vel.x / speed, -1.0, 1.0) * 0.32
-	flame.rotation = lerp_angle(flame.rotation, lean, minf(1.0, dt * 10.0))
-	flame.scale = flame.scale.lerp(Vector2.ONE, minf(1.0, dt * 14.0))
+	_lean = lerpf(_lean, clampf(-vel.x / speed, -1.0, 1.0), minf(1.0, dt * 10.0))
+	(flame.material as ShaderMaterial).set_shader_parameter("lean", _lean)
+	_recoil -= dt
+	flame.offset = Vector2(-4, -12 + (1 if _recoil > 0 else 0))
 	flame.visible = not dead
 	# light: flicker + shrink with wax
 	var t := Time.get_ticks_msec() / 1000.0
 	var flick := 1.0 + 0.045 * sin(t * 13.0) + 0.03 * sin(t * 23.7 + 1.3) + randf_range(-0.015, 0.015)
 	var wf := clampf(wax / 120.0, 0.0, 1.0)
-	light.texture_scale = lerpf(0.72, 1.5, wf) * flick
+	light.texture_scale = lerpf(0.95, 1.5, wf) * flick
 	light.energy = (lerpf(0.95, 1.2, wf) * flick) if not dead else move_toward(light.energy, 0.0, dt * 1.5)
 	light.position = flame.position + Vector2(0, -4)
 	glow.position = light.position

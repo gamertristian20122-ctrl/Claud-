@@ -87,7 +87,14 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 				"P":
 					var p := Sprite2D.new()
 					p.centered = false
-					p.texture = Art.tex("rooms/pit") if Art.has("rooms/pit") else Art.tex("0x72/hole")
+					# autotile: pick the pit piece by which neighbours are pits too (N=1 E=2 S=4 W=8)
+					var mask := 0
+					for k in 4:
+						var nb: Vector2i = Vector2i(x, y) + [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT][k]
+						if char_at(nb) == "P":
+							mask |= 1 << k
+					var pit_path := "rooms/pit_%d" % mask
+					p.texture = Art.tex(pit_path) if Art.has(pit_path) else (Art.tex("rooms/pit") if Art.has("rooms/pit") else Art.tex("0x72/hole"))
 					p.position = cell_pos(Vector2i(x, y))
 					floor_layer.add_child(p)
 				"S":
@@ -160,7 +167,6 @@ func _add_obstacle(c: Vector2i, ch: String) -> void:
 			var drip := Sprite2D.new()
 			drip.texture = Art.tex("rooms/decal_wax_puddle") if Art.has("rooms/decal_wax_puddle") else Art.tex("pickups/wax_small")
 			drip.position = Vector2(0, -9)
-			drip.scale = Vector2(0.75, 0.75)
 			holder.add_child(drip)
 	var occ := LightOccluder2D.new()
 	var poly := OccluderPolygon2D.new()

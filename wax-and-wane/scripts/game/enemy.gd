@@ -34,7 +34,7 @@ const DEFS := {
 	# bosses
 	"big_zombie": {"hp": 70.0, "speed": 20.0, "ai": "boss_rot", "r": 11.0, "boss": true, "heavy": true, "name": "OLD ROT"},
 	"ogre": {"hp": 100.0, "speed": 26.0, "ai": "boss_gaoler", "r": 11.0, "boss": true, "heavy": true, "name": "THE GAOLER"},
-	"necro_boss": {"hp": 120.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW VICAR", "sprite": "necromancer", "scale": 2.0},
+	"necro_boss": {"hp": 120.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW WARDEN", "sprite": "ogre", "tint": Color(0.78, 0.74, 1.0)},
 	"big_demon": {"hp": 190.0, "speed": 30.0, "ai": "boss_fiend", "r": 12.0, "boss": true, "heavy": true, "name": "THE HOUR FIEND"},
 }
 
@@ -72,6 +72,20 @@ var _hand_base := 0.0
 var shadow: Sprite2D
 static var _shadow_tex: Texture2D
 static var _flash_shader: Shader
+static var _shadow_big: Texture2D
+
+
+## A flat pixel ellipse used as a ground shadow (never scaled).
+static func _blob(w: int, h: int) -> Texture2D:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var c := Color(0.13, 0.08, 0.1, 0.45)
+	for y in h:
+		var dy := (y + 0.5 - h / 2.0) / (h / 2.0)
+		var half := sqrt(maxf(0.0, 1.0 - dy * dy)) * w / 2.0
+		for x in w:
+			if absf(x + 0.5 - w / 2.0) <= half:
+				img.set_pixel(x, y, c)
+	return ImageTexture.create_from_image(img)
 
 
 func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
@@ -104,20 +118,13 @@ func _ready() -> void:
 	var tex: Texture2D = spr.sprite_frames.get_frame_texture(anim, 0)
 	spr.centered = false
 	spr.offset = Vector2(-tex.get_width() / 2.0, -tex.get_height())
-	var sc: float = def.get("scale", 1.0)
-	spr.scale = Vector2(sc, sc)
-	half_h = tex.get_height() * sc * 0.4
+	spr.modulate = def.get("tint", Color.WHITE)
+	half_h = tex.get_height() * 0.4
 	if _shadow_tex == null:
-		var img := Image.create(10, 3, false, Image.FORMAT_RGBA8)
-		var c := Color(0.13, 0.08, 0.1, 0.45)
-		for x in range(2, 8):
-			img.set_pixel(x, 0, c)
-			img.set_pixel(x, 2, c)
-		for x in 10:
-			img.set_pixel(x, 1, c)
-		_shadow_tex = ImageTexture.create_from_image(img)
+		_shadow_tex = _blob(10, 3)
+		_shadow_big = _blob(22, 5)
 	shadow = Sprite2D.new()
-	shadow.texture = _shadow_tex
+	shadow.texture = _shadow_big if radius > 7.0 else _shadow_tex
 	shadow.position = Vector2(0, -1)
 	add_child(shadow)
 	mat = ShaderMaterial.new()
@@ -130,10 +137,12 @@ func _ready() -> void:
 	# spawn-in
 	active = false
 	spr.modulate.a = 0.0
-	scale = Vector2(0.4, 1.6)
+	if not boss:
+		scale = Vector2(0.4, 1.6)
 	var tw := create_tween()
 	tw.tween_property(spr, "modulate:a", 1.0, 0.35)
-	tw.parallel().tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if not boss:
+		tw.parallel().tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_interval(0.25 if not boss else 0.6)
 	tw.tween_callback(func(): active = true)
 
@@ -185,8 +194,7 @@ func _physics_process(dt: float) -> void:
 			_move(d / l * (radius + e.radius - l) * 0.3)
 	spr.position.y = -_jump_h
 	if shadow:
-		var k := clampf(1.0 - _jump_h / 40.0, 0.4, 1.0)
-		shadow.scale = Vector2(k, k) * (radius / 5.0)
+		shadow.visible = _jump_h < 18.0
 
 
 ## Collision is checked in world coordinates (our parent layer sits at the room's origin).

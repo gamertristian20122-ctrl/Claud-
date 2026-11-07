@@ -2,10 +2,10 @@ extends Node2D
 ## One run: floors, rooms, the candle, enemies, drops, the clock and every effect.
 
 const FLOORS := {
-	1: {"name": "The Cellar", "theme": "cellar", "dark": Color(0.28, 0.22, 0.23), "music": "floor_1", "boss": "big_zombie"},
-	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.2, 0.22, 0.29), "music": "floor_2", "boss": "ogre"},
-	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.23, 0.19, 0.29), "music": "floor_3", "boss": "necro_boss"},
-	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.28, 0.18, 0.17), "music": "floor_4", "boss": "big_demon"},
+	1: {"name": "The Cellar", "theme": "cellar", "dark": Color(0.32, 0.26, 0.27), "music": "floor_1", "boss": "big_zombie"},
+	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.25, 0.27, 0.34), "music": "floor_2", "boss": "ogre"},
+	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.28, 0.24, 0.34), "music": "floor_3", "boss": "necro_boss"},
+	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "boss": "big_demon"},
 }
 const POOLS := {
 	1: {"e": ["tiny_zombie", "goblin", "tiny_slug", "tiny_zombie"], "h": ["muddy", "slug", "skelet"], "f": ["imp"]},
@@ -533,7 +533,10 @@ func _boss_down(e: Enemy) -> void:
 
 func shoot_player(pos: Vector2, dir: Vector2, p: Player, dmg: float) -> void:
 	var s := Shot.new()
-	s.setup(self, pos, dir * p.shot_speed + p.vel * 0.25, "ember_blue" if p.blue else "ember", true)
+	var kind := "ember_blue" if p.blue else "ember"
+	if p.shot_scale > 1.0 and Art.has("fx/ember_big_f0"):
+		kind = "ember_big"
+	s.setup(self, pos, dir * p.shot_speed + p.vel * 0.25, kind, true)
 	s.dmg = dmg
 	s.life = p.shot_range / p.shot_speed
 	s.pierce = p.pierce
@@ -541,7 +544,6 @@ func shoot_player(pos: Vector2, dir: Vector2, p: Player, dmg: float) -> void:
 	s.burn = p.burn
 	s.knock = p.knockback
 	s.radius = 3.0 * p.shot_scale
-	s.scale = Vector2(p.shot_scale, p.shot_scale)
 	fx_layer.add_child(s)
 
 
@@ -1000,6 +1002,7 @@ func fx_drop(pos: Vector2, v: Vector2) -> void:
 
 func fx_text(pos: Vector2, text: String, col: Color) -> void:
 	var l := UI.label(text, 8, col, HORIZONTAL_ALIGNMENT_CENTER)
+	l.material = Art.unshaded
 	l.size = Vector2(60, 10)
 	l.position = pos - Vector2(30, 0)
 	l.z_index = 30

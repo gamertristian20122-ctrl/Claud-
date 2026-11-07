@@ -30,6 +30,10 @@ var _bomb_idx := -1
 var _bomb_press := Vector2.ZERO
 var _bomb_ms := 0
 var ghost_sticks := false
+var banner_band: ColorRect
+var hint_band: ColorRect
+var _banner_tw: Tween
+var _hint_tw: Tween
 
 var shown_wax := 120.0
 var ghost_wax := 120.0
@@ -141,6 +145,16 @@ func _ready() -> void:
 	boss_bar.draw.connect(_draw_boss_bar)
 	boss_box.add_child(boss_bar)
 	# --- banners
+	banner_band = ColorRect.new()
+	banner_band.color = Color(0.13, 0.08, 0.1, 0.78)
+	banner_band.modulate.a = 0
+	banner_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(banner_band)
+	hint_band = ColorRect.new()
+	hint_band.color = Color(0.13, 0.08, 0.1, 0.78)
+	hint_band.modulate.a = 0
+	hint_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(hint_band)
 	banner = UI.label("", 16, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
 	banner.modulate.a = 0
 	root.add_child(banner)
@@ -150,7 +164,7 @@ func _ready() -> void:
 	preview = UI.label("", 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
 	preview.modulate.a = 0
 	root.add_child(preview)
-	hint = UI.label("", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	hint = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
 	hint.modulate.a = 0
 	root.add_child(hint)
 	# --- sticks
@@ -208,26 +222,31 @@ func _layout() -> void:
 	(coin_label.get_parent() as Control).position = Vector2(8 + ins.x, 37)
 	minimap.position = Vector2(vs.x - minimap.size.x - 28 - ins.y, 4)
 	pause_btn.position = Vector2(vs.x - 26 - ins.y, 3)
-	bomb_btn.position = Vector2(vs.x - 33 - ins.y, 54)
+	bomb_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 118)
 	boss_box.position = Vector2((vs.x - 170) / 2.0, vs.y - 12)
 	banner.size = Vector2(vs.x, 16)
-	banner.position = Vector2(0, 48)
+	banner.position = Vector2(0, 16)
 	banner_sub.size = Vector2(vs.x, 10)
-	banner_sub.position = Vector2(0, 66)
+	banner_sub.position = Vector2(0, 33)
+	banner_band.position = Vector2(floorf(vs.x / 2.0) - 110, 14)
+	banner_band.size = Vector2(220, 32)
 	preview.size = Vector2(vs.x, 10)
-	preview.position = Vector2(0, vs.y - 38)
+	preview.position = Vector2(0, vs.y - 23)
 	hint.size = Vector2(vs.x, 10)
-	hint.position = Vector2(0, vs.y - 26)
+	hint.position = Vector2(0, vs.y - 12)
+	hint_band.position = Vector2(floorf(vs.x / 2.0) - 150, vs.y - 25)
+	hint_band.size = Vector2(300, 25)
 
 
 func show_banner(title: String, sub := "", dur := 2.4) -> void:
 	banner.text = title
 	banner_sub.text = sub
-	for l in [banner, banner_sub]:
-		var tw: Tween = l.create_tween()
-		tw.tween_property(l, "modulate:a", 1.0, 0.2)
-		tw.tween_interval(dur)
-		tw.tween_property(l, "modulate:a", 0.0, 0.6)
+	if _banner_tw:
+		_banner_tw.kill()
+	_banner_tw = create_tween().set_parallel(true)
+	for l in [banner, banner_sub, banner_band]:
+		_banner_tw.tween_property(l, "modulate:a", 1.0, 0.2)
+		_banner_tw.tween_property(l, "modulate:a", 0.0, 0.6).set_delay(0.2 + dur)
 
 
 ## Shown while standing next to a relic / shop item.
@@ -239,10 +258,12 @@ func preview_item(title: String, sub: String) -> void:
 
 func show_hint(text: String, dur := 6.0) -> void:
 	hint.text = text
-	var tw := hint.create_tween()
-	tw.tween_property(hint, "modulate:a", 1.0, 0.4)
-	tw.tween_interval(dur)
-	tw.tween_property(hint, "modulate:a", 0.0, 0.8)
+	if _hint_tw:
+		_hint_tw.kill()
+	_hint_tw = create_tween()
+	_hint_tw.tween_property(hint, "modulate:a", 1.0, 0.4)
+	_hint_tw.tween_interval(dur)
+	_hint_tw.tween_property(hint, "modulate:a", 0.0, 0.8)
 
 
 func set_boss(name: String, visible_: bool) -> void:
@@ -282,6 +303,7 @@ func _process(dt: float) -> void:
 	_preview_t -= dt
 	if _preview_t <= 0.0 and preview.modulate.a > 0.0:
 		preview.modulate.a = move_toward(preview.modulate.a, 0.0, dt * 4.0)
+	hint_band.modulate.a = maxf(hint.modulate.a, preview.modulate.a)
 	bar.queue_redraw()
 	clock_label.text = Game.clock_text(world.clock_minutes())
 	var low := p.wax < 20.0
@@ -329,14 +351,15 @@ func _draw_bar() -> void:
 	else:
 		bar.draw_rect(Rect2(x0, y0 + 1, wpx, h - 2), Color("#fdf7ed"))
 	# quarter-hour notches (every 15 minutes of wax)
+	# quarter-hour notches; the 1:00 AM notch is wider
 	var mins := p.wax_max
-	var q := 15.0
-	var k := q
+	var k := 15.0
 	while k < mins:
 		var nx := x0 + roundf(inner * k / mins)
-		if nx < x0 + wpx - 1:
-			bar.draw_rect(Rect2(nx, y0 + h - 3, 1, 2), Color("#d3bfa9"))
-		k += q
+		var ww := 2.0 if is_equal_approx(k, 60.0) else 1.0
+		var col := Color("#8a503e") if nx < x0 + wpx - 1 else Color("#775c55")
+		bar.draw_rect(Rect2(nx, y0 + 3, ww, h - 6), col)
+		k += 15.0
 	if Art.has("ui/bar_frame_left"):
 		bar.draw_texture(left, Vector2(0, y0 + (h - left.get_height()) / 2.0))
 	if Art.has("ui/bar_frame_right"):
@@ -360,9 +383,14 @@ func _draw_ghosts() -> void:
 
 func _draw_boss_bar() -> void:
 	var w := boss_bar.size.x
+	boss_bar.draw_rect(Rect2(-1, -1, w + 2, 8), Color("#775c55"))
 	boss_bar.draw_rect(Rect2(0, 0, w, 6), Color("#21141b"))
-	boss_bar.draw_rect(Rect2(1, 1, (w - 2) * boss_frac, 4), Color("#9f294e"))
-	boss_bar.draw_rect(Rect2(1, 1, (w - 2) * boss_frac, 1), Color("#dc4a7b"))
+	var fw := roundf((w - 2) * boss_frac)
+	boss_bar.draw_rect(Rect2(1, 1, fw, 4), Color("#9f294e"))
+	boss_bar.draw_rect(Rect2(1, 1, fw, 1), Color("#dc4a7b"))
+	boss_bar.draw_rect(Rect2(1, 4, fw, 1), Color("#62232f"))
+	var skull := Art.tex("0x72/skull")
+	boss_bar.draw_texture(skull, Vector2(-14, -6))
 
 
 func _draw_minimap() -> void:
@@ -371,21 +399,21 @@ func _draw_minimap() -> void:
 		return
 	var cells: Dictionary = layout["cells"]
 	var cur: Vector2i = world.cur_cell
-	var cw := 7.0
-	var ch := 5.0
-	var origin := minimap.size / 2.0 - Vector2(cw, ch) / 2.0
+	var cw := 9.0
+	var ch := 6.0
+	var origin := (minimap.size / 2.0 - Vector2(cw, ch) / 2.0).floor()
 	for c in cells.keys():
 		var d: Dictionary = cells[c]
 		if not d["seen"]:
 			continue
-		var off := Vector2((c.x - cur.x) * (cw + 1), (c.y - cur.y) * (ch + 1))
+		var off := Vector2((c.x - cur.x) * (cw + 2), (c.y - cur.y) * (ch + 2))
 		var pos: Vector2 = origin + off
 		if pos.x < 0 or pos.y < 0 or pos.x + cw > minimap.size.x or pos.y + ch > minimap.size.y:
 			continue
-		var col := Color(0.42, 0.36, 0.36, 0.85) if d["visited"] else Color(0.25, 0.2, 0.22, 0.75)
+		var col := Color("#775c55") if d["visited"] else Color("#483b3a")
 		if c == cur:
 			col = Color("#fdf7ed")
-		minimap.draw_rect(Rect2(pos - Vector2(1, 1), Vector2(cw + 2, ch + 2)), Color(0.07, 0.04, 0.06, 0.8))
+		minimap.draw_rect(Rect2(pos - Vector2(1, 1), Vector2(cw + 2, ch + 2)), Color("#21141b"))
 		minimap.draw_rect(Rect2(pos, Vector2(cw, ch)), col)
 		var mark := Color.TRANSPARENT
 		match d["type"]:
@@ -393,7 +421,7 @@ func _draw_minimap() -> void:
 			"treasure": mark = Color("#facb3e")
 			"shop": mark = Color("#72d6ce")
 		if mark.a > 0:
-			minimap.draw_rect(Rect2(pos + Vector2(2, 1), Vector2(3, 3)), mark)
+			minimap.draw_rect(Rect2(pos + Vector2(3, 1), Vector2(3, 4)), mark)
 
 
 # ---------------------------------------------------------------- touch input
@@ -490,7 +518,7 @@ func _input(event: InputEvent) -> void:
 			stick_r.set_meta("knob", d)
 
 
-func _button_at(n: Node, pos: Vector2) -> Button:
+func _button_at(n: Node, pos: Vector2) -> BaseButton:
 	for i in range(n.get_child_count() - 1, -1, -1):
 		var c := n.get_child(i)
 		if c is CanvasItem and not (c as CanvasItem).is_visible_in_tree():
@@ -498,7 +526,7 @@ func _button_at(n: Node, pos: Vector2) -> Button:
 		var found := _button_at(c, pos)
 		if found:
 			return found
-		if c is Button and (c as Button).get_global_rect().grow(2).has_point(pos):
+		if c is BaseButton and c != pause_btn and c != bomb_btn and (c as Control).get_global_rect().grow(2).has_point(pos):
 			return c
 	return null
 
@@ -536,12 +564,18 @@ func open_pause() -> void:
 		var row := HFlowContainer.new()
 		row.custom_minimum_size = Vector2(150, 0)
 		row.add_theme_constant_override("h_separation", 1)
+		var relic_info := UI.label("Tap a relic to read it", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 		for r in p.relics:
-			var tr := TextureRect.new()
-			tr.texture = Art.tex(Items.icon(r))
-			tr.tooltip_text = Items.display_name(r)
-			row.add_child(tr)
+			var tb := TextureButton.new()
+			tb.texture_normal = Art.tex(Items.icon(r))
+			tb.custom_minimum_size = Vector2(18, 18)
+			tb.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
+			tb.ignore_texture_size = true
+			var rid: String = r
+			tb.pressed.connect(func(): relic_info.text = "%s - %s" % [Items.display_name(rid), Items.desc(rid)])
+			row.add_child(tb)
 		v.add_child(row)
+		v.add_child(relic_info)
 	v.add_child(UI.button("Resume", func(): world.toggle_pause()))
 	v.add_child(UI.button("Settings", func(): SettingsPanel.open(root)))
 	v.add_child(UI.button("Give up", _confirm_give_up))

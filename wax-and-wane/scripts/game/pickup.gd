@@ -16,6 +16,7 @@ var taken := false
 var opened := false
 var record: Dictionary   # the room's saved entry for this pickup (removed when taken)
 var price_label: Label
+var _last_coins := -1
 
 
 func setup(w: Node, k: String, pos: Vector2, it := "", pr := 0) -> void:
@@ -67,6 +68,8 @@ func _ready() -> void:
 			s.z_index = -14
 			spr = s
 	add_child(spr)
+	if kind in ["coin", "wax_small", "wax_big", "bomb"]:
+		spr.material = Art.unshaded
 	if price > 0:
 		price_label = UI.label("%d" % price, 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
 		price_label.position = Vector2(-12, 3)
@@ -74,6 +77,8 @@ func _ready() -> void:
 		var coin := Sprite2D.new()
 		coin.texture = Art.tex("ui/icon_coin") if Art.has("ui/icon_coin") else Art.tex("0x72/coin_anim_f0")
 		coin.position = Vector2(-9, 7)
+		price_label.material = Art.unshaded
+		coin.material = Art.unshaded
 		add_child(price_label)
 		add_child(coin)
 		_refresh_price()
@@ -83,6 +88,7 @@ func _refresh_price() -> void:
 	if price_label:
 		var p: int = int(round(price * world.shop_discount))
 		price_label.text = "%d" % p
+		price_label.add_theme_color_override("font_color", UI.GOLD if world.player and world.player.coins >= p else UI.DIM)
 
 
 func _sprite(path: String, off: Vector2) -> Sprite2D:
@@ -111,6 +117,9 @@ func _physics_process(dt: float) -> void:
 		if kind in ["relic", "tonic"]:
 			bob = sin(_t * 3.0) * 1.5
 		spr.position.y = -_z + bob
+	if price_label and world.player and world.player.coins != _last_coins:
+		_last_coins = world.player.coins
+		_refresh_price()
 	if taken or world.player == null or world.player.dead:
 		return
 	var p: Player = world.player

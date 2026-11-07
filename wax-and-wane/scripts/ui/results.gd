@@ -17,12 +17,28 @@ func _ready() -> void:
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	var won: bool = params.get("won", false)
+	var themes := ["", "cellar", "crypt", "chapel", "belfry"]
+	var room := TextureRect.new()
+	room.texture = Art.tex("rooms/room_" + themes[clampi(int(params.get("floor", 1)), 1, 4)])
+	room.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	room.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	room.modulate = Color(0.32, 0.26, 0.28)
+	add_child(room)
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
+	var pnl := UI.panel()
+	center.add_child(pnl)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 4)
-	center.add_child(v)
+	pnl.add_child(v)
+	var hero := TextureRect.new()
+	hero.texture = Art.tex("hero/hero_preview")
+	hero.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	hero.custom_minimum_size = Vector2(0, 36)
+	if not won:
+		hero.modulate = Color(0.45, 0.4, 0.42)
+	v.add_child(hero)
 	var clock := Game.clock_text(float(params.get("clock", 120.0)))
 	var title := "DONE BY %s" % clock if won else "SNUFFED OUT"
 	v.add_child(UI.label(title, 16, UI.GOLD if won else UI.RED, HORIZONTAL_ALIGNMENT_CENTER))

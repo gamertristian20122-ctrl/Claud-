@@ -62,7 +62,6 @@ func _physics_process(dt: float) -> void:
 			vel = vel.lerp(want, minf(1.0, homing * dt * 6.0))
 	position += vel * dt
 	life -= dt
-	spr.rotation = vel.angle() if not friendly else 0.0
 	var room: Room = world.room
 	if room and room.shot_hits(global_position + Vector2(0, 6), dmg):
 		end()

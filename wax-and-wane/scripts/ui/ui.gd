@@ -25,7 +25,7 @@ static func label(text: String, size := 16, color := CREAM, align := HORIZONTAL_
 	return l
 
 
-static func _box(path: String, margin: int, fallback: Color) -> StyleBox:
+static func _box(path: String, margin: int, fallback: Color, content_v := 2) -> StyleBox:
 	if Art.has(path):
 		var sb := StyleBoxTexture.new()
 		sb.texture = Art.tex(path)
@@ -35,8 +35,8 @@ static func _box(path: String, margin: int, fallback: Color) -> StyleBox:
 		sb.texture_margin_bottom = margin
 		sb.content_margin_left = margin + 2
 		sb.content_margin_right = margin + 2
-		sb.content_margin_top = 2
-		sb.content_margin_bottom = 2
+		sb.content_margin_top = content_v
+		sb.content_margin_bottom = content_v
 		return sb
 	var f := StyleBoxFlat.new()
 	f.bg_color = fallback
@@ -49,7 +49,7 @@ static func _box(path: String, margin: int, fallback: Color) -> StyleBox:
 
 static func panel(min_size := Vector2.ZERO) -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", _box("ui/panel_9", 8, Color(0.13, 0.09, 0.1, 0.96)))
+	p.add_theme_stylebox_override("panel", _box("ui/panel_9", 8, Color(0.13, 0.09, 0.1, 0.96), 7))
 	p.custom_minimum_size = min_size
 	return p
 

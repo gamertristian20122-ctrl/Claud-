@@ -342,7 +342,7 @@ func _tour() -> void:
 	await _shot("boss")
 	await _wait(3.0)
 	await _shot("boss_2")
-	w.player.wax = 0.5
-	await _wait(4.0)
+	w.player.wax = 0.0
+	await _wait(7.0)
 	await _shot("results")
 	get_tree().quit()
