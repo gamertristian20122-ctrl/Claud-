@@ -75,3 +75,13 @@ all 64 at once. It ran clean.
 `ks_<id>.png`), helper sprites (`items/fam_*`), shot sprites (`items/fx/*`) and costume pieces
 (`items/costume/*`), and contact sheets of all 69 icons together. It reuses the palette, grids and
 outline pass of `tools/art_hero_fx_items.py`. All original; no new third-party assets.
+
+## Test results (bot, `--speed=4`, random seeds)
+- `--checkscripts`: clean. `--god --runs=2`: both runs reach the end (twice). `--god --stress`: a run that
+  ends holding all 64 relics, no errors. Targeted god runs (Stove Door + Lace Fan + Tinderbox; Blowlamp +
+  Bell Wire + Cold Wax; Old Pipe + Tin Sconce + Pale Taper + Split Wick; each with a new keepsake): clean.
+- v1.1 before this stream, same bot: 1 win in 4.
+- After the last balance pass (time refunds trimmed, Lit at Both Ends +40%): 14 wins in 22 normal runs
+  with `--runs=4` and `--unlockall` (64%). Winners finish from 11:55 PM to 1:43 AM, most between 12:30
+  and 1:15. Every loss was on floor 2 (once floor 3) holding only 2 to 5 relics: the early floors decide it.
+- Tours: `--tour` and `--tour --relictour` both complete; screenshots checked.
