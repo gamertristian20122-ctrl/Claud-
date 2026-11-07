@@ -1,7 +1,9 @@
 class_name Enemy
 extends Node2D
-## All creatures of the house (0x72 sprites) driven by a small data table + behaviour functions.
-## Bosses are the same class with `boss` set and their own pattern functions.
+## Every creature of the house, driven by a data table (DEFS) + behaviour functions.
+## The 0x72 creatures' behaviours live here; the house's own monsters are in enemies/house_ai.gd and
+## the newer bosses in enemies/boss_ai.gd (same Enemy node, chosen by the `ai` field).
+## Bosses are the same class with `boss` set.
 
 const FLASH_SHADER := """
 shader_type canvas_item;
@@ -12,31 +14,129 @@ void fragment() {
 	COLOR = vec4(mix(c.rgb, tint.rgb, flash), c.a);
 }
 """
-
-const DEFS := {
-	"tiny_zombie": {"hp": 4.0, "speed": 26.0, "ai": "chase", "r": 5.0},
-	"goblin": {"hp": 5.0, "speed": 40.0, "ai": "chase", "jitter": true, "r": 5.0},
-	"tiny_slug": {"hp": 3.0, "speed": 20.0, "ai": "chase", "r": 4.0},
-	"slug": {"hp": 8.0, "speed": 17.0, "ai": "chase", "r": 6.0},
-	"muddy": {"hp": 9.0, "speed": 0.0, "ai": "hop", "r": 6.0},
-	"swampy": {"hp": 8.0, "speed": 0.0, "ai": "hop", "shoot4": true, "r": 6.0},
-	"imp": {"hp": 4.0, "speed": 46.0, "ai": "fly", "r": 5.0, "fly": true},
-	"skelet": {"hp": 6.0, "speed": 30.0, "ai": "shooter", "r": 5.0, "cd": 1.9},
-	"pumpkin_dude": {"hp": 10.0, "speed": 22.0, "ai": "charger", "r": 6.0, "charge": 150.0},
-	"chort": {"hp": 9.0, "speed": 32.0, "ai": "charger", "r": 6.0, "charge": 175.0},
-	"wogol": {"hp": 10.0, "speed": 30.0, "ai": "jumper", "r": 6.0},
-	"orc_shaman": {"hp": 12.0, "speed": 18.0, "ai": "caster", "r": 6.0, "cd": 2.6},
-	"masked_orc": {"hp": 20.0, "speed": 24.0, "ai": "chase", "r": 7.0, "heavy": true},
-	"necromancer": {"hp": 14.0, "speed": 20.0, "ai": "summoner", "r": 6.0},
-	"doc": {"hp": 12.0, "speed": 22.0, "ai": "lobber", "r": 6.0},
-	"ice_zombie": {"hp": 11.0, "speed": 30.0, "ai": "chase", "r": 5.0, "death_burst": true},
-	"mimic": {"hp": 16.0, "speed": 48.0, "ai": "chase", "r": 6.0, "sprite": "chest_mimic"},
-	# bosses
-	"big_zombie": {"hp": 70.0, "speed": 20.0, "ai": "boss_rot", "r": 11.0, "boss": true, "heavy": true, "name": "OLD ROT"},
-	"ogre": {"hp": 100.0, "speed": 26.0, "ai": "boss_gaoler", "r": 11.0, "boss": true, "heavy": true, "name": "THE GAOLER"},
-	"necro_boss": {"hp": 120.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW WARDEN", "sprite": "ogre", "tint": Color(0.78, 0.74, 1.0)},
-	"big_demon": {"hp": 190.0, "speed": 30.0, "ai": "boss_fiend", "r": 12.0, "boss": true, "heavy": true, "name": "THE HOUR FIEND"},
+## Same flash, but the creature glows in the dark (ghost lights).
+const FLASH_SHADER_GLOW := """
+shader_type canvas_item;
+render_mode unshaded;
+uniform float flash : hint_range(0.0, 1.0) = 0.0;
+uniform vec4 tint : source_color = vec4(1.0, 1.0, 1.0, 1.0);
+void fragment() {
+	vec4 c = texture(TEXTURE, UV);
+	COLOR = vec4(mix(c.rgb, tint.rgb, flash), c.a);
 }
+"""
+
+## Every creature: stats, behaviour (`ai`), and for the Journal a `name`, a one-line `lore` and the colour
+## its remains `stain` the floor (Color). Optional: `fly`, `heavy`, `touch` (contact damage), `swarm` (arrives
+## in a group of N), `split` ([kind, n] on death), `glow` (unshaded), `face_dir` (faces where it goes),
+## `sprite` (shared art), `tint`, `cd` (attack cooldown). Bosses add `title`, `phase_lines`, `victory`.
+const DEFS := {
+	# ---- the 0x72 lodgers
+	"tiny_zombie": {"hp": 4.0, "speed": 26.0, "ai": "chase", "r": 5.0, "name": "Coal-Bin Shambler",
+		"lore": "Slept in the coal bin so long it forgot it was ever a boy.", "stain": Color("#3d734f")},
+	"goblin": {"hp": 5.0, "speed": 40.0, "ai": "chase", "jitter": true, "r": 5.0, "name": "Larder Thief",
+		"lore": "Steals candle ends to eat in the dark. Yours will do nicely.", "stain": Color("#3d734f")},
+	"tiny_slug": {"hp": 3.0, "speed": 20.0, "ai": "chase", "r": 4.0, "name": "Damp Slug",
+		"lore": "Follows the drip of the cellar pipes, and now the drip of you.", "stain": Color("#4ba747")},
+	"slug": {"hp": 8.0, "speed": 17.0, "ai": "chase", "r": 6.0, "name": "Cistern Slug",
+		"lore": "It has grown fat on the soap the maids threw down the drain.", "stain": Color("#3d734f")},
+	"muddy": {"hp": 9.0, "speed": 0.0, "ai": "hop", "r": 6.0, "name": "Puddle Lump",
+		"lore": "Coal dust and rainwater that decided to stand up.", "stain": Color("#483b3a")},
+	"swampy": {"hp": 8.0, "speed": 0.0, "ai": "hop", "shoot4": true, "r": 6.0, "name": "Drain Hopper",
+		"lore": "Each landing spits the sink's old water four ways at once.", "stain": Color("#4ba747")},
+	"imp": {"hp": 4.0, "speed": 46.0, "ai": "fly", "r": 5.0, "fly": true, "name": "Flue Imp",
+		"lore": "Rode the smoke down the chimney and never found the way back up.", "stain": Color("#62232f")},
+	"skelet": {"hp": 6.0, "speed": 30.0, "ai": "shooter", "r": 5.0, "cd": 1.9, "name": "Bone Lodger",
+		"lore": "Still pays its rent in teeth, one shot at a time.", "stain": Color("#aa8d7a")},
+	"pumpkin_dude": {"hp": 10.0, "speed": 22.0, "ai": "charger", "r": 6.0, "charge": 150.0, "name": "Harvest Head",
+		"lore": "Last autumn's lantern. It misses having a candle inside.", "stain": Color("#c56025")},
+	"chort": {"hp": 9.0, "speed": 32.0, "ai": "charger", "r": 6.0, "charge": 175.0, "name": "Hearth Devil",
+		"lore": "Lives behind the kitchen range and charges anything warmer than it.", "stain": Color("#62232f")},
+	"wogol": {"hp": 10.0, "speed": 30.0, "ai": "jumper", "r": 6.0, "name": "Rafter Leaper",
+		"lore": "Drops from the beams the moment your light passes under.", "stain": Color("#5f2d56")},
+	"orc_shaman": {"hp": 12.0, "speed": 18.0, "ai": "caster", "r": 6.0, "cd": 2.6, "name": "Green Chanter",
+		"lore": "Mutters the old house-rhymes until they turn into rings of fire.", "stain": Color("#3d734f")},
+	"masked_orc": {"hp": 20.0, "speed": 24.0, "ai": "chase", "r": 7.0, "heavy": true, "name": "Masked Porter",
+		"lore": "Carried coffins down the back stairs. Now it carries a grudge.", "stain": Color("#314152")},
+	"necromancer": {"hp": 14.0, "speed": 20.0, "ai": "summoner", "r": 6.0, "name": "Hooded Mourner",
+		"lore": "Keeps a vigil for the dead and keeps waking them for company.", "stain": Color("#5f2d56")},
+	"doc": {"hp": 12.0, "speed": 22.0, "ai": "lobber", "r": 6.0, "name": "Tincture Doctor",
+		"lore": "Every bottle in its coat cures one thing: being alive.", "stain": Color("#2a2a3a")},
+	"ice_zombie": {"hp": 11.0, "speed": 30.0, "ai": "chase", "r": 5.0, "death_burst": true, "name": "Icebox Corpse",
+		"lore": "Shut in the ice room by mistake. It bursts like a frozen pipe.", "stain": Color("#417089")},
+	"mimic": {"hp": 16.0, "speed": 48.0, "ai": "chase", "r": 6.0, "sprite": "chest_mimic", "name": "Hungry Chest",
+		"lore": "Packed with linens once. Now it is packed with teeth.", "stain": Color("#8a503e")},
+	"angel": {"hp": 7.0, "speed": 52.0, "ai": "orbit", "r": 5.0, "fly": true, "cd": 2.2, "name": "Gilt Cherub",
+		"lore": "Fell off the chapel ceiling and circles anything that shines.", "stain": Color("#facb3e")},
+	"orc_warrior": {"hp": 22.0, "speed": 26.0, "ai": "brute", "r": 7.0, "heavy": true, "cd": 1.0, "name": "Belfry Brute",
+		"lore": "Rang the great bell by hand for forty years. Its fists still ring.", "stain": Color("#314152")},
+	"zombie": {"hp": 13.0, "speed": 16.0, "ai": "spitter", "r": 6.0, "cd": 2.4, "name": "Potted Sleeper",
+		"lore": "Buried in the conservatory. Something green grew out and woke it.", "stain": Color("#3d734f")},
+	# ---- the house's own
+	"wax_blob": {"hp": 6.0, "speed": 18.0, "ai": "blob", "r": 6.0, "split": ["wax_bit", 2], "name": "Rose Melt",
+		"lore": "A chapel candle that melted into a puddle and kept the wick.", "stain": Color("#9f294e")},
+	"wax_bit": {"hp": 2.0, "speed": 40.0, "ai": "chase", "jitter": true, "r": 4.0, "touch": 4.0, "name": "Melt Drop",
+		"lore": "Half a Rose Melt. It wants the other half back.", "stain": Color("#9f294e")},
+	"moth": {"hp": 2.0, "speed": 48.0, "ai": "moth", "r": 4.0, "fly": true, "touch": 3.0, "swarm": 3, "name": "Lamp Moth",
+		"lore": "They come for the brightest flame in the house. Tonight that is you.", "stain": Color("#aa8d7a")},
+	"snuffer": {"hp": 12.0, "speed": 20.0, "ai": "snuffer", "r": 6.0, "cd": 1.6, "name": "Iron Snuffer",
+		"lore": "Its whole purpose is to put candles out. It takes the job seriously.", "stain": Color("#314152")},
+	"wisp": {"hp": 7.0, "speed": 20.0, "ai": "blinker", "r": 5.0, "fly": true, "glow": true, "cd": 2.4, "name": "Grave Light",
+		"lore": "A cold flame that walks the graveyard. Follow it and you never come back.", "stain": Color("#49a790")},
+	"sootling": {"hp": 5.0, "speed": 34.0, "ai": "sooter", "r": 5.0, "cd": 1.0, "name": "Sootling",
+		"lore": "Swept out of the chimney, it leaves itself everywhere it goes.", "stain": Color("#2a2a3a")},
+	"waxwork": {"hp": 16.0, "speed": 56.0, "ai": "statue", "r": 6.0, "name": "Waxwork Bride",
+		"lore": "She stood in the parlour for a hundred years. She only moves when no one looks.", "stain": Color("#d3bfa9")},
+	"cinder_rat": {"hp": 4.0, "speed": 92.0, "ai": "rat", "r": 4.0, "name": "Cinder Rat",
+		"lore": "Nests in the ash pit. Its back never quite stops smouldering.", "stain": Color("#483b3a")},
+	"psalter": {"hp": 9.0, "speed": 26.0, "ai": "fanner", "r": 6.0, "fly": true, "cd": 2.6, "name": "Restless Psalter",
+		"lore": "A hymn book that lost its choir. It hurls its pages at the dark.", "stain": Color("#8f4029")},
+	"clapper_bat": {"hp": 6.0, "speed": 50.0, "ai": "bellbat", "r": 5.0, "fly": true, "cd": 3.0, "name": "Clapper Bat",
+		"lore": "Stole the tongue of the smallest bell and rings it to see you.", "stain": Color("#5f2d56")},
+	"deathwatch": {"hp": 10.0, "speed": 64.0, "ai": "bouncer", "r": 5.0, "face_dir": true, "name": "Deathwatch Beetle",
+		"lore": "The ticking in the walls at night. Wound up, it never stops.", "stain": Color("#c56025")},
+	"grave_hand": {"hp": 8.0, "speed": 38.0, "ai": "burrow", "r": 5.0, "heavy": true, "name": "Grave Hand",
+		"lore": "Reaches up through the crypt floor for anyone who stands still.", "stain": Color("#8a503e")},
+	"gutterspout": {"hp": 18.0, "speed": 0.0, "ai": "turret", "r": 6.0, "heavy": true, "cd": 1.2, "name": "Gutterspout",
+		"lore": "Spat rain off the belfry roof for centuries. It aims better now.", "stain": Color("#7b8994")},
+	# ---- bosses
+	"big_zombie": {"hp": 70.0, "speed": 20.0, "ai": "boss_rot", "r": 11.0, "boss": true, "heavy": true, "name": "OLD ROT",
+		"title": "It sleeps under the cellar stairs", "lore": "The first lodger. It has been rotting down there since the house was built.",
+		"stain": Color("#3d734f")},
+	"ogre": {"hp": 100.0, "speed": 26.0, "ai": "boss_gaoler", "r": 11.0, "boss": true, "heavy": true, "name": "THE GAOLER",
+		"title": "Keeper of the crypt keys", "lore": "Locked the crypt every night for a hundred years. Tonight it locks you in.",
+		"stain": Color("#3d734f")},
+	"necro_boss": {"hp": 120.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW WARDEN",
+		"sprite": "ogre", "tint": Color(0.78, 0.74, 1.0), "title": "It watches the empty pews",
+		"lore": "Nothing is left inside its robes but the habit of keeping watch.", "stain": Color("#5f2d56")},
+	"big_demon": {"hp": 190.0, "speed": 30.0, "ai": "boss_fiend", "r": 12.0, "boss": true, "heavy": true, "name": "THE HOUR FIEND",
+		"title": "It wants the clock to strike two", "victory": "THE HOUR FIEND IS SNUFFED",
+		"lore": "It lives in the gap between the ticks and eats the minutes you waste.", "stain": Color("#62232f")},
+	"wax_mother": {"hp": 85.0, "speed": 14.0, "ai": "boss_mother", "r": 13.0, "boss": true, "heavy": true, "name": "THE WAX MOTHER",
+		"title": "Every drip in the cellar is her child",
+		"phase_lines": ["", "She weeps harder...", "Her candles gutter and rage!"],
+		"lore": "All the candles ever burnt in this house ran down to her. She wants you back.", "stain": Color("#9f294e")},
+	"sexton": {"hp": 115.0, "speed": 26.0, "ai": "boss_sexton", "r": 10.0, "boss": true, "heavy": true, "name": "THE SEXTON",
+		"title": "He digs for the house", "phase_lines": ["", "The dead hear his spade...", "He digs faster!"],
+		"lore": "He dug every grave in the crypt, and he has measured you for one.", "stain": Color("#8a503e")},
+	"choir": {"hp": 135.0, "speed": 14.0, "ai": "boss_choir", "r": 14.0, "boss": true, "heavy": true, "name": "THE MELTED CHOIR",
+		"no_flip": true, "title": "Three voices, one hymn", "phase_lines": ["", "They sing in harmony...", "All three at once!"],
+		"lore": "They sang so long by candlelight that their faces ran. They are still singing.", "stain": Color("#da4e38")},
+	"pendulum": {"hp": 200.0, "speed": 0.0, "ai": "boss_pendulum", "r": 14.0, "boss": true, "heavy": true, "name": "THE GREAT PENDULUM",
+		"title": "The Hour Fiend's heart swings", "phase_lines": ["", "Tick... tock... TICK!", "It is nearly two!"],
+		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
+		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
+}
+
+## Two guardians may wait on each floor; one is picked from the run seed.
+const FLOOR_BOSSES := {
+	1: ["big_zombie", "wax_mother"],
+	2: ["ogre", "sexton"],
+	3: ["necro_boss", "choir"],
+	4: ["big_demon", "pendulum"],
+}
+## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
+const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
 
 var world: Node
 var kind := ""
@@ -57,6 +157,8 @@ var active := false
 var boss := false
 var flying := false
 var heavy := false
+## Burrowed / blinked out: no contact damage and shots pass (the AI keeps running).
+var buried := false
 var spr: AnimatedSprite2D
 var mat: ShaderMaterial
 var kvel := Vector2.ZERO
@@ -76,9 +178,20 @@ var _pattern := 0
 var target_pos := Vector2.ZERO
 var _hand_base := 0.0
 var shadow: Sprite2D
+## Free scratch space for the house behaviours (counters, voices, volleys).
+var mem := {}
+var _anim_lock := 0.0
+var _brain: Callable
+var _ext := false
+var _queue: Array = []
+var _tele: Telegraph
 static var _shadow_tex: Texture2D
 static var _flash_shader: Shader
+static var _glow_shader: Shader
 static var _shadow_big: Texture2D
+static var _house: HouseAI
+static var _bosses: BossAI
+static var _frames_cache := {}
 
 
 ## A flat pixel ellipse used as a ground shadow (never scaled).
@@ -92,6 +205,39 @@ static func _blob(w: int, h: int) -> Texture2D:
 			if absf(x + 0.5 - w / 2.0) <= half:
 				img.set_pixel(x, y, c)
 	return ImageTexture.create_from_image(img)
+
+
+## The floor's guardian, picked from the run seed (so Tonight's Candle is the same for everyone).
+## Until a player has won once, a normal run always ends with the Hour Fiend.
+static func pick_boss(floor_num: int, run_seed: int, daily := false) -> String:
+	var opts: Array = FLOOR_BOSSES.get(floor_num, ["big_zombie"])
+	if floor_num >= 4 and not daily and int(Game.records.get("wins", 0)) <= 0:
+		return opts[0]
+	return opts[absi(hash("%d:boss:%d" % [run_seed, floor_num])) % opts.size()]
+
+
+## SpriteFrames for a creature: our own art in assets/art/monsters/ first, else the 0x72 frames.
+static func frames_for(sname: String) -> SpriteFrames:
+	if _frames_cache.has(sname):
+		return _frames_cache[sname]
+	var sf: SpriteFrames
+	if Art.has("monsters/%s_idle_f0" % sname):
+		sf = SpriteFrames.new()
+		sf.remove_animation("default")
+		for a in MONSTER_ANIMS:
+			if not Art.has("monsters/%s_%s_f0" % [sname, a]):
+				continue
+			sf.add_animation(a)
+			sf.set_animation_loop(a, a in ["idle", "run", "atk", "mound"])
+			sf.set_animation_speed(a, {"idle": 7.0, "run": 10.0, "atk": 8.0, "rise": 10.0, "mound": 6.0}.get(a, 8.0))
+			for tx in Art.seq("monsters/%s_%s" % [sname, a]):
+				sf.add_frame(a, tx)
+	elif sname == "chest_mimic":
+		sf = Art.anim("0x72/chest_mimic_open_anim", 8.0)
+	else:
+		sf = Art.creature(sname)
+	_frames_cache[sname] = sf
+	return sf
 
 
 func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
@@ -111,16 +257,18 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 	_wob = randf() * TAU
 
 
+## The colour this creature's remains leave on the floor (for death splats).
+func stain_color() -> Color:
+	return def.get("stain", Color("#483b3a"))
+
+
 func _ready() -> void:
 	spr = AnimatedSprite2D.new()
 	var sname: String = def.get("sprite", kind)
-	if sname == "chest_mimic":
-		spr.sprite_frames = Art.anim("0x72/chest_mimic_open_anim", 8.0)
-	else:
-		spr.sprite_frames = Art.creature(sname)
+	spr.sprite_frames = frames_for(sname)
 	var anim := "default" if sname == "chest_mimic" else "idle"
 	spr.play(anim)
-	spr.frame = randi() % 4
+	spr.frame = randi() % maxi(1, spr.sprite_frames.get_frame_count(anim))
 	var tex: Texture2D = spr.sprite_frames.get_frame_texture(anim, 0)
 	spr.centered = false
 	spr.offset = Vector2(-tex.get_width() / 2.0, -tex.get_height())
@@ -147,9 +295,26 @@ func _ready() -> void:
 	if _flash_shader == null:
 		_flash_shader = Shader.new()
 		_flash_shader.code = FLASH_SHADER
-	mat.shader = _flash_shader
+		_glow_shader = Shader.new()
+		_glow_shader.code = FLASH_SHADER_GLOW
+	mat.shader = _glow_shader if def.get("glow", false) else _flash_shader
 	spr.material = mat
 	add_child(spr)
+	# behaviour: our own method, or one of the house / boss behaviour sets
+	var ai: String = def["ai"]
+	if has_method("_ai_" + ai):
+		_brain = Callable(self, "_ai_" + ai)
+	else:
+		if _house == null:
+			_house = HouseAI.new()
+			_bosses = BossAI.new()
+		_ext = true
+		_brain = Callable(_bosses if ai.begins_with("boss_") else _house, ai)
+		if _brain.get_object().has_method("init_" + ai):
+			_brain.get_object().call("init_" + ai, self)
+	# some arrive in a flutter of friends
+	if def.get("swarm", 0) > 1 and not get_meta("swarm_child", false):
+		_spawn_swarm.call_deferred()
 	# spawn-in
 	active = false
 	spr.modulate.a = 0.0
@@ -161,6 +326,37 @@ func _ready() -> void:
 		tw.parallel().tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_interval(0.25 if not boss else 0.6)
 	tw.tween_callback(func(): active = true)
+
+
+func _spawn_swarm() -> void:
+	if not alive or world == null or world.room == null:
+		return
+	for i in int(def["swarm"]) - 1:
+		var off := Vector2.from_angle(TAU * (i + 1) / float(def["swarm"]) + randf() * 0.5) * 10.0
+		var m: Enemy = world.spawn_enemy(kind, global_position + off)
+		if m:
+			m.set_meta("swarm_child", true)
+
+
+## A warning-mark layer (created on first use).
+func tele() -> Telegraph:
+	if _tele == null:
+		_tele = Telegraph.new()
+		add_child(_tele)
+		move_child(_tele, 0)
+	return _tele
+
+
+## Run `fn` after `delay` seconds of enemy time (respects freezes and slows; skipped if we die).
+func later(delay: float, fn: Callable) -> void:
+	_queue.append([delay, fn])
+
+
+## Play one of our animations for `hold` seconds before walking/idling takes over again.
+func play_anim(a: String, hold := 0.5) -> void:
+	if spr.sprite_frames.has_animation(a):
+		spr.play(a)
+		_anim_lock = hold
 
 
 func _physics_process(dt: float) -> void:
@@ -179,42 +375,73 @@ func _physics_process(dt: float) -> void:
 				return
 	else:
 		spr.self_modulate = Color.WHITE
-	if not active:
+	if not active and not buried:
 		return
 	var p: Player = world.player
 	var slow: float = world.time_scale_enemies()
 	var ddt := dt * slow
 	t -= ddt
 	cd -= ddt
+	if _anim_lock > 0.0:
+		_anim_lock -= ddt
+		if _anim_lock <= 0.0 and spr.animation != "idle" and spr.sprite_frames.has_animation("idle"):
+			spr.play("idle")
 	# knockback
 	if kvel.length() > 1:
 		_move(kvel * dt)
 		kvel = kvel.move_toward(Vector2.ZERO, 500 * dt)
 	var to_p := p.global_position - global_position
 	var dist := to_p.length()
-	var ai: String = def["ai"]
-	call("_ai_" + ai, ddt, to_p, dist)
+	if _ext:
+		_brain.call(self, ddt, to_p, dist)
+	else:
+		_brain.call(ddt, to_p, dist)
+	if not alive:
+		return
+	if not _queue.is_empty() and ddt > 0.0:
+		_run_queue(ddt)
 	# face the player
-	if absf(to_p.x) > 2 and state != "charge":
+	if def.get("no_flip", false):
+		pass
+	elif def.get("face_dir", false):
+		if absf(dir.x) > 0.1:
+			spr.flip_h = dir.x < 0
+	elif absf(to_p.x) > 2 and state != "charge" and state != "still":
 		spr.flip_h = to_p.x < 0
 	# contact damage
-	if not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
+	var touch: float = def.get("touch", 8.0 if boss else 6.0)
+	if touch > 0.0 and not buried and not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
 		if champ == "chilled" and not p.dead:
 			if p.chill_t <= 0.0:
 				world.fx_text(p.global_position + Vector2(0, -30), "chilled", Color("#72d6ce"))
 			p.chill_t = 5.0
-		p.hurt((8.0 if boss else 6.0) * world.enemy_dmg_mult(), to_p)
+		p.hurt(touch * world.enemy_dmg_mult(), to_p)
+		if _ext and _brain.get_object().has_method("touched_" + def["ai"]):
+			_brain.get_object().call("touched_" + def["ai"], self)
 	# gentle separation
-	for e in world.enemies:
-		if e == self or not is_instance_valid(e) or not e.alive:
-			continue
-		var d: Vector2 = global_position - e.global_position
-		var l := d.length()
-		if l > 0.01 and l < radius + e.radius:
-			_move(d / l * (radius + e.radius - l) * 0.3)
+	if not buried:
+		for e in world.enemies:
+			if e == self or not is_instance_valid(e) or not e.alive or e.buried:
+				continue
+			var d: Vector2 = global_position - e.global_position
+			var l := d.length()
+			if l > 0.01 and l < radius + e.radius:
+				_move(d / l * (radius + e.radius - l) * 0.3)
 	spr.position.y = -_jump_h
 	if shadow:
-		shadow.visible = _jump_h < 18.0
+		shadow.visible = _jump_h < 18.0 and not buried
+
+
+func _run_queue(ddt: float) -> void:
+	var due: Array = []
+	for q in _queue:
+		q[0] -= ddt
+		if q[0] <= 0.0:
+			due.append(q)
+	for q in due:
+		_queue.erase(q)
+		if alive:
+			(q[1] as Callable).call()
 
 
 ## Collision is checked in world coordinates (our parent layer sits at the room's origin).
@@ -245,13 +472,31 @@ func _walk(ddt: float, want: Vector2, spd: float) -> void:
 		for a in [0.9, -0.9, 1.6, -1.6]:
 			if _move(d.rotated(a)):
 				break
-	if spr.animation != "run" and spr.sprite_frames.has_animation("run"):
+	if _anim_lock <= 0.0 and spr.animation != "run" and spr.sprite_frames.has_animation("run"):
 		spr.play("run")
 
 
 func _telegraph(color := Color(1, 1, 1)) -> void:
 	mat.set_shader_parameter("tint", color)
 	_flash = 0.85
+
+
+## True when we are standing inside something solid (pushed there by a blast or a spawn).
+func room_stuck() -> bool:
+	return world.room != null and world.room.blocked(global_position, radius, flying)
+
+
+## A random open floor spot between min_d and max_d from `from` (never inside rocks).
+func free_spot(from: Vector2, min_d: float, max_d := 9999.0) -> Vector2:
+	var room: Room = world.room
+	for i in 30:
+		var c := Vector2i(randi_range(1, 13), randi_range(1, 7))
+		if room.char_at(c) in [".", "e", "h", "f", "T"]:
+			var p: Vector2 = room.cell_center(c) + Vector2(0, 4)
+			var d := p.distance_to(from)
+			if d >= min_d and d <= max_d and not room.blocked(p, radius + 1.0):
+				return p
+	return world.free_spot_near(global_position, radius)
 
 
 # ---------------------------------------------------------------- behaviours
@@ -661,8 +906,27 @@ func _damage(dmg: float, sound: bool) -> void:
 		_die()
 
 
+## New bosses: a short roar, a line on the banner, then the next phase of patterns.
+func on_new_phase() -> void:
+	world.shake(5.0)
+	Audio.play("boss_roar")
+	var lines: Array = def.get("phase_lines", [])
+	if phase < lines.size() and lines[phase] != "":
+		world.hud.show_banner("", lines[phase], 1.2)
+	_telegraph(Color(1, 0.35, 0.3))
+	state = "roar"
+	t = 0.9
+	if _tele:
+		_tele.clear()
+
+
 func _die() -> void:
 	alive = false
+	if buried:
+		buried = false
+		spr.modulate.a = 1.0
+	if _tele:
+		_tele.clear()
 	if champ == "sooty":
 		var at2 := global_position + Vector2(0, -6)
 		world.fx_smoke(at2)
@@ -683,6 +947,14 @@ func _die() -> void:
 		get_tree().create_timer(0.4, false).timeout.connect(func():
 			if is_instance_valid(w) and not w.finished:
 				w.burst(at, 6, 65.0, "bullet_water", off))
+	if def.has("split") and world.room:
+		# a Rose Melt falls apart into drops that keep coming
+		var sp: Array = def["split"]
+		var base := randf() * TAU
+		for i in int(sp[1]):
+			var m: Enemy = world.spawn_enemy(sp[0], global_position + Vector2.from_angle(base + TAU * i / float(sp[1])) * 7.0)
+			if m:
+				m.kvel = Vector2.from_angle(base + TAU * i / float(sp[1])) * 60.0
 	world.on_enemy_killed(self)
 	if boss:
 		return   # the world plays the boss death sequence and frees us

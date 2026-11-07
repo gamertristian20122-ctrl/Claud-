@@ -313,6 +313,10 @@ func _jump(w: Node, c: Vector2i) -> void:
 func _tour() -> void:
 	DirAccess.make_dir_recursive_absolute(_shots_dir)
 	await _wait(1.0)
+	if args.has("gallery") or args.has("bosses"):
+		await BestiaryGallery.tour(self)
+		get_tree().quit()
+		return
 	await _shot("title")
 	main.goto("game", {"seed": 7})
 	await _wait(1.6)
