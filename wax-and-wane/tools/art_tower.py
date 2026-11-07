@@ -884,6 +884,29 @@ def build_end_house():
     # a chimney
     rect(cv, 134, 40, 5, 10, "C")
     rect(cv, 133, 39, 7, 2, "z")
+    cv.put(133, 39, "M")
+    # the front door and its step, a round attic window, mullions on the dark windows
+    rect(cv, 97, 72, 10, 10, "U")
+    rect(cv, 98, 71, 8, 1, "U")
+    cv.put(105, 77, "c")
+    rect(cv, 94, 81, 16, 1, "z")
+    disc(cv, 72.5, 51.5, 2.2, "1")
+    for (x, y) in ((58, 60), (70, 60), (82, 60), (118, 63), (130, 63), (142, 63), (58, 70), (130, 72), (142, 72)):
+        rect(cv, x + 2, y + 1, 1, 4, "C")
+    # a bare tree on the hill, leaning away from the wind
+    trunk = [(24, 80), (24, 76), (25, 72), (25, 68), (26, 64), (27, 60)]
+    for x, y in trunk:
+        rect(cv, x, y, 2, 4, "U")
+    for (x0, y0, x1, y1) in ((26, 66, 18, 58), (19, 59, 15, 56), (21, 61, 23, 55), (27, 61, 33, 54), (31, 56, 36, 53),
+                             (27, 60, 27, 52), (27, 54, 24, 50), (33, 55, 38, 57)):
+        line(cv, x0, y0, x1, y1, "U")
+    # a crooked fence along the hill
+    for x in range(150, 190, 5):
+        top = 78 + int(4 * math.sin(x / 23.0)) + int(2 * math.sin(x / 7.0))
+        rect(cv, x, top - 5 + (x // 5) % 2, 1, 6, "U")
+    for x in range(150, 190):
+        top = 78 + int(4 * math.sin(x / 23.0)) + int(2 * math.sin(x / 7.0))
+        cv.put(x, top - 3, "U")
     put("tower/end_house", to_img(cv))
 
 
