@@ -110,7 +110,7 @@ Expect something like ESRB "E10+ Fantasy Violence" and PEGI 7. If it comes back 
 1. "Does your app collect or share any of the required user data types?" **No.**
 2. The form then skips the security and deletion questions.
 
-Why this is true: the Android build's only permission is vibrate (checked in `export_presets.cfg`), so it can't reach the internet at all. Saves and settings stay in the game's own folder on the phone and are deleted on uninstall.
+Why this is true: the Android build's only permission is vibrate (checked in `export_presets.cfg`, and `tools/build_aab.sh` fails if the bundle asks for any other), so it can't reach the internet at all. Saves and settings stay in the game's own folder on the phone and are deleted on uninstall.
 [CHECK if you add the unlock: Play Billing talks to the Play Store app, and the plugin adds the billing permission. Read Google's Data safety help on payments before you answer, and re-check the permission list in the final build.]
 
 **Ads:** "Does your app contain ads?" **No.**
@@ -135,11 +135,11 @@ Questions: [EMAIL]
 
 1. Make a **personal** Play Console account: $25 one-time fee, government ID and a phone number for identity checks.
 2. Create the app: name, English (US), **Game**, Free (or Paid, see section 2).
-3. Ask the integrator for a Play-ready build:
-   - an **.aab** file (Google doesn't accept new apps as .apk), which needs Godot's Gradle build turned on;
-   - **target API 36 (Android 16)**, required for new apps since Aug 31, 2026. The container currently has Android platform 34, so platform 36 must be installed first [CHECK];
+3. Ask the integrator for a Play-ready build: `./tools/build_aab.sh` makes it (see section 6).
+   - an **.aab** file (Google doesn't accept new apps as .apk), made with Godot's Gradle build;
+   - **target API 36 (Android 16)**, required for new apps since Aug 31, 2026 (done: the script installs platform 36 and checks the bundle);
    - under Play App Signing, choose to **use your existing key** (the same one the itch APK uses), so a phone can update from either store.
-4. Open a **closed testing** track, add 15 to 20 testers by email (12 is the minimum and some drop out), and send them the opt-in link.
+4. Open a **closed testing** track, add 15 to 20 testers by email (12 is the minimum and some drop out), and send them the opt-in link (section 6).
 5. Keep at least 12 testers opted in for **14 days in a row**. Opting out and back in restarts that tester's count.
 6. On day 15, click "Apply for production" on the Dashboard and answer the questions about your testing. Google usually replies within 7 days.
 7. Publish to production. Earliest realistic launch: about 3 to 4 weeks after the closed test starts.
@@ -148,8 +148,61 @@ Where to find testers: friends and family with Android phones first, then tester
 
 ---
 
+## 6. Uploading the build
+
+**Which file:** `build/WaxAndWane_vX.Y.Z.aab` (for example `WaxAndWane_v2.0.0.aab`).
+Only the **.aab** goes to Google Play. The .apk is for itch.io and your own phone; Play won't take it.
+
+**Making it (the integrator does this):**
+```
+./tools/build_aab.sh
+```
+One command. It installs what's missing, builds the bundle signed with your release key, and checks it.
+It must end with `PLAY-READY`. The checks: target SDK 36, version code, package `com.tallow.waxandwane`,
+the label "Wax & Wane", not debuggable, only the vibrate permission, 64-bit (arm64) only, 16 KB page
+size support, and the right signing key. Re-check an old file with `./tools/build_aab.sh --verify FILE.aab`.
+
+### First upload only: Play App Signing with the key you already have
+Google re-signs the copy that players download. Give Google the **same key** your itch.io APK uses.
+Then a phone can update from either store, and the bundles you upload are signed with that same key
+(it is your **upload key** too), so there is nothing new to keep safe.
+
+1. Play Console > your app > **Test and release** > **App integrity** > **Play app signing**
+   (Play also asks this the first time you create a release).
+2. Tap **Choose signing key** (or **Change app signing key**) and pick
+   **Export and upload a key from Java keystore**. The wording may differ a little.
+3. Play shows a download for the **PEPK tool** and an **encryption public key**. Download both and
+   send them to the integrator.
+4. The integrator runs Google's command on the computer that has the key
+   (`FailedIdolsOfTheAbyss/keystore/release.keystore`, alias `failedidols`) and sends back one zip file.
+5. Upload that zip on the same page and press **Save**.
+
+Never send the keystore file or its password to anyone, and never put them in the game's public repo.
+If step 2 feels too fiddly: keep Google's own key instead. Uploads still work, signed with your key.
+The catch: the itch.io APK and the Play version can no longer update each other (a player would have
+to uninstall first and would lose their save).
+
+### Closed test (12 testers, 14 days)
+1. **Test and release** > **Testing** > **Closed testing** > **Create track** (or use the ready-made one).
+2. **Testers** tab: make an email list with 15 to 20 Google account emails (12 must stay opted in).
+3. **Create new release** > upload the .aab > the release name fills in by itself > write 2 or 3 lines
+   of "What's new" > **Next** > **Save and publish** (or **Send for review**).
+4. Wait for Google's review: usually a few hours, sometimes a few days.
+5. Copy the **opt-in link** from the Testers tab and send it to your testers. They tap
+   **Become a tester**, then install Wax & Wane from the Play Store.
+6. Every new build needs a higher version code (Play refuses a number it has seen). Bump the version
+   as usual (see CLAUDE.md), run `./tools/build_aab.sh`, and upload the new .aab as a new release on
+   the same track. Testers get it as a normal update.
+
+Yellow warnings about "debug symbols" or a "deobfuscation file" are fine to ignore. Read the
+**Pre-launch report** (Play tries the game on real phones): crashes there need fixing.
+
+---
+
 ## Sources
 - [Google: closed testing requirement for new personal accounts (12 testers, 14 days)](https://support.google.com/googleplay/android-developer/answer/14151465?hl=en)
 - [Google: Play service fees (2026 changes by region)](https://support.google.com/googleplay/android-developer/answer/112622?hl=en)
 - [Google: target API level requirements](https://support.google.com/googleplay/android-developer/answer/11926878)
 - [Google: Android developer verification](https://support.google.com/android-developer-console/answer/16561738?hl=en)
+- [Google: Use Play App Signing (upload your existing key)](https://support.google.com/googleplay/android-developer/answer/9842756)
+- [Android: support 16 KB page sizes](https://developer.android.com/guide/practices/page-sizes)
