@@ -92,21 +92,27 @@ static func achievement_of(id: String) -> Dictionary:
 	return {}
 
 
-## How to bring it into the house, in a few words: "Big Game: snuff a house champion".
-static func goal_text(id: String) -> String:
+## How it moves into the house, as one line for the Journal:
+##   "Moves in with Big Game: snuff a house champion."     (not earned yet)
+##   "Moved in with Big Game."                              (earned)
+##   "Moves in after 5 candles (3 lit so far)."             (a milestone)
+static func goal_line(id: String) -> String:
 	if not TABLE.has(id):
 		return ""
 	var src: Dictionary = TABLE[id]
 	if src.has("runs"):
 		var n := int(src["runs"])
-		return "Light %d candles (%d so far)" % [n, mini(int(Game.records.get("runs", 0)), n)]
+		var lit := int(Game.records.get("runs", 0))
+		return "Moved in after %d candles." % n if lit >= n else "Moves in after %d candles (%d lit so far)." % [n, lit]
 	var a := achievement_of(id)
 	if a.is_empty():
 		return ""
-	if a.get("hidden", false) and not Achievements.is_unlocked(a["id"]):
-		return "A secret of the house"
+	if Achievements.is_unlocked(a["id"]):
+		return "Moved in with %s." % a["name"]
+	if a.get("hidden", false):
+		return "Moves in with a secret of the house."
 	var d: String = a["desc"]
-	return "%s: %s" % [a["name"], d.substr(0, 1).to_lower() + d.substr(1)]
+	return "Moves in with %s: %s" % [a["name"], d.substr(0, 1).to_lower() + d.substr(1)]
 
 
 ## The item an achievement brings into the house ("" if none).

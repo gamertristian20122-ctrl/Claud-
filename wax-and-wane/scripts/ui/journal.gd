@@ -596,7 +596,7 @@ func _d_relic(e: Dictionary) -> void:
 	_head(_pic(tex if known else silhouette(tex), 2), Items.display_name(id) if known else "???", subs, UI.GOLD if known else UI.DIM)
 	if not unlocked:
 		_text("Not in the house yet.", UI.DIM)
-		_text("Brought by " + Unlocks.goal_text(id), UI.EMBER)
+		_text(Unlocks.goal_line(id), UI.EMBER)
 		return
 	if not known:
 		_text("Somewhere in the house. Not found yet.", UI.DIM)
@@ -612,7 +612,7 @@ func _d_relic(e: Dictionary) -> void:
 		var n := Records.taken(id)
 		_text("Taken %d time%s" % [n, "" if n == 1 else "s"] if n > 0 else "Seen, never taken", UI.WAX)
 	if Unlocks.is_locked_item(id):
-		_text("Brought by " + Unlocks.goal_text(id), LOCK)
+		_text(Unlocks.goal_line(id), LOCK)
 
 
 func _haunts(kind: String) -> String:

@@ -126,7 +126,11 @@ in contact, else floor spikes under Tallow, else the nearest creature within 34 
   credits, the achievements list, the chalk start room (touch / keyboard / mouse / gamepad), the pause
   menu, the Journal over the pause menu, the unlock toast, a death-note results screen with a new unlock.
   The staged profile never touches the save file (`Game.no_save`); the real records come back after.
-- Playtests: see the report at the end of the stream.
+- `--checkrooms`: 0 problems (888 dressed rooms; the chalk attaches to the stand-in start rooms too).
+- `--playtest --speed=4 --runs=2 --god`: both runs reach the end and win (12:18 AM, 12:22 AM), no script
+  errors. `--playtest --speed=4 --runs=2`: 2 wins (12:32, 12:37 AM), no script errors.
+- Full `--tour` (1600x720): 36 shots, no script errors; the start room shows the chalk.
+- `--tour --journal` at 1600x720 (480x216) and 1152x648 (384x216): every screen fits.
 
 ## Art
 `python3 tools/art_chalk.py [--review=<dir>]` writes 14 drawings to `assets/art/chalk/` (and review
