@@ -51,6 +51,10 @@ static func _settle_text(w: Node, keep_banner: bool) -> void:
 	if keep_banner or h.preview.modulate.a < 1.0:   # the item line under a relic: fully on or off
 		h.preview.modulate.a = 0.0
 		h._preview_t = 0.0
+	# floating "+1 min" texts in the room: only the ones still fully on stay in the picture
+	for ch in w.fx_layer.get_children():
+		if ch is Label and (ch as Label).modulate.a < 0.99:
+			(ch as Label).visible = false
 
 
 static func _until_game(at: Node) -> Node:
@@ -130,15 +134,21 @@ static func _fight_room(at: Node, w: Node, k: int, template: String, cast: Array
 	w.player.position = w.room.center() + Vector2(-40, 30)
 	await at._wait(0.4)
 	var c0: Vector2 = w.room.center()
-	for s in stains:
-		var e: Enemy = w.spawn_enemy(s[0], c0 + s[1])
-		await at.get_tree().process_frame
-		e.active = true
-		e.take_hit(999.0, Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 60.0)
+	await _splats(at, w, stains)
 	await at._wait(0.6)
 	for s in cast:
 		w.spawn_enemy(s[0], c0 + s[1])
 	w.room_spawned = true
+
+
+## Lodgers snuffed on the spot, so their stains (and drippings) are already on the floor.
+static func _splats(at: Node, w: Node, list: Array) -> void:
+	var c0: Vector2 = w.room.center()
+	for s in list:
+		var e: Enemy = w.spawn_enemy(s[0], c0 + s[1])
+		await at.get_tree().process_frame
+		e.active = true
+		e.take_hit(999.0, Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 60.0)
 
 
 # ---------------------------------------------------------------- store screenshots
@@ -203,8 +213,7 @@ static func _store(at: Node) -> void:
 	await _low_wax(at, w)
 	# 9 + 10. the Hour Fiend: the versus card, then the clock hands sweeping the room
 	await _boss(at, w)
-	# 11. a relic held aloft in the Belfry's treasure room, its banner fully on (last: the relic
-	# changes how Tallow looks). A short one with no Rite, so the banner stays inside its band.
+	# 11. a relic held aloft (last: the relic changes how Tallow looks)
 	at.args.erase("drive")
 	await _relic_aloft(at, w)
 	Audio.stop_all()
@@ -212,18 +221,26 @@ static func _store(at: Node) -> void:
 
 
 static func _relic_aloft(at: Node, w: Node) -> void:
-	var tc := _cell_of(w, "treasure")
-	if tc.x <= -99:
-		return
+	# a cleared, candle-lit Belfry room, Tallow in the middle of it with nothing above its head
+	var c := _normal(w, 3)
+	w.layout["cells"][c]["cleared"] = true
 	_clear_foes(w)
-	at._jump(w, tc)
-	w.player.position = w.room.center() + Vector2(0, 40)
+	w.hud.set_boss("", false)   # the guardian's bar from the fight before
+	at._jump(w, c)
+	_clear_foes(w)
+	w.player.position = w.room.center() + Vector2(-8, 30)
 	w.player.wax = 96.0
-	await at._wait(1.2)
+	await at._wait(0.4)
+	# the fight that just ended: splats round the room, a few drippings
+	await _splats(at, w, [["chort", Vector2(-62, -24)], ["clapper_bat", Vector2(52, -36)], ["deathwatch", Vector2(66, 22)],
+		["sootling", Vector2(-56, 40)], ["wax_blob", Vector2(30, 8)]])
+	await at._wait(1.4)
+	_clear_foes(w)   # (the wax bits a blob splits into)
 	var id := "both_ends" if Items.RELICS.has("both_ends") else "beeswax"
 	w.collect_item(id, w.player.global_position)
 	await at._wait(0.4)
-	await _snap(at, w, "relic_aloft", true)
+	# no banner: at 16:9 its band runs under the wax bar and the minimap (see docs/streams/storeart.md)
+	await _snap(at, w, "relic_aloft")
 
 
 static func _chapel(at: Node, w: Node) -> void:
@@ -429,7 +446,7 @@ static func _keyart(at: Node) -> void:
 	p.position = c0 + lay["tallow"]
 	p.invuln = 0.0
 	# night: the floor's own darkness, deeper and bluer (--keytint=r,g,b to try others)
-	var tint: PackedStringArray = str(at.args.get("keytint", "0.085,0.095,0.17")).split(",")
+	var tint: PackedStringArray = str(at.args.get("keytint", "0.13,0.135,0.22")).split(",")
 	w.dark.color = Color(float(tint[0]), float(tint[1]), float(tint[2])) if tint.size() == 3 else w.dark.color.darkened(0.6)
 	await at._wait(1.4)
 	# two flames in flight at the nearest lodger, a muzzle flash at the wick
@@ -445,7 +462,7 @@ static func _keyart(at: Node) -> void:
 	p.light.texture_scale = float(at.args.get("keyradius", "1.0"))
 	# Tallow is the brightest thing: every other light in the room burns lower (set after the pause, so
 	# no flicker code puts it back)
-	var dim := float(at.args.get("keydim", "0.55"))
+	var dim := float(at.args.get("keydim", "0.65"))
 	for l in _lights(w.room, []):
 		(l as PointLight2D).energy *= dim
 	# a cold light from above the guardian (moonlight through the ceiling), so it looms out of the dark
