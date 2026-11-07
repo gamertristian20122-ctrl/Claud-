@@ -101,7 +101,7 @@ func snuffer(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				var ln := minf(dist + 28.0, 170.0)
 				e.mem["len"] = ln
 				e.tele().line(e.global_position + Vector2(0, -3), e.global_position + Vector2(0, -3) + e.dir * ln, 0.7, RED)
-				e.play_anim("atk", 0.7)
+				e.play_anim("atk", 0.7 + ln / 205.0)
 				e._telegraph(Color(1, 0.4, 0.3))
 				Audio.play("charge", -4.0, 0.05, 1.2)
 
@@ -280,6 +280,11 @@ func bouncer(e: Enemy, ddt: float, _to_p: Vector2, _dist: float) -> void:
 
 
 # ---------------------------------------------------------------- Grave Hand: burrow and grab
+func init_burrow(e: Enemy) -> void:
+	_go_under(e)
+	e.t = randf_range(0.9, 1.4)
+
+
 func burrow(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 	var p: Player = e.world.player
 	match e.state:

@@ -19,7 +19,6 @@ Usage:
 """
 import math
 import os
-import shutil
 import sys
 
 from PIL import Image
@@ -907,14 +906,14 @@ def build_gargoyle():
 
 # ==========================================================================
 # BOLTS (7x7 enemy shots, unshaded in game). Readable colours that never match
-# Tallow's own orange embers: paper white, sound-wave cyan, rose wax, bone, soot.
+# Tallow's own orange embers: paper white, sound-wave cyan, rose wax, tumbling bone.
 # ==========================================================================
 BOLTS = {
     "bolt_page": [
         """
         .kkkkk.
         kwwwwwk
-        kw5w5wk
+        kw555wk
         kwwwwwk
         kw55wwk
         kwwwwwk
@@ -923,9 +922,9 @@ BOLTS = {
         """
         .......
         kkkkkkk
+        kw555wk
         kwwwwwk
-        kw5w55k
-        kwwwwwk
+        kw55w5k
         kkkkkkk
         .......
         """,
@@ -972,42 +971,22 @@ BOLTS = {
     ],
     "bolt_bone": [
         """
-        .......
-        .ww.ww.
-        .wAAAw.
-        ..AAA..
-        .wAAAw.
-        .ww.ww.
-        .......
+        ww.....
+        wAw....
+        .wAw...
+        ..wAw..
+        ...wAw.
+        ....wAw
+        .....ww
         """,
         """
-        .......
-        ..www..
-        .wAwAw.
-        .wAAAw.
-        .wAwAw.
-        ..www..
-        .......
-        """,
-    ],
-    "bolt_soot": [
-        """
-        ..SSS..
-        .S333S.
-        S33r33S
-        S3rer3S
-        S33r33S
-        .S333S.
-        ..SSS..
-        """,
-        """
-        ..SSS..
-        .S333S.
-        S33333S
-        S33r33S
-        S33333S
-        .S333S.
-        ..SSS..
+        .....ww
+        ....wAw
+        ...wAw.
+        ..wAw..
+        .wAw...
+        wAw....
+        ww.....
         """,
     ],
 }
@@ -1072,9 +1051,11 @@ def contact_sheet(path, names, bg=(36, 30, 36, 255), scale=4):
 
 
 def main():
-    if os.path.isdir(OUTDIR):
-        shutil.rmtree(OUTDIR)
-    os.makedirs(OUTDIR)
+    # clear old PNGs (keep Godot's .import files so re-running does not churn the import cache)
+    os.makedirs(OUTDIR, exist_ok=True)
+    for f in os.listdir(OUTDIR):
+        if f.endswith(".png"):
+            os.remove(os.path.join(OUTDIR, f))
     build_wax_blob()
     build_dribble()
     build_moth()
