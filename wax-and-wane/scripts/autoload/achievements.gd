@@ -43,6 +43,13 @@ const LIST := [
 	{"id": "guttering", "name": "Clinging On", "desc": "Live through a Guttering."},
 	{"id": "two_oclock", "name": "Two O'Clock", "desc": "Melt all the way down to 2:00 AM.", "hidden": true},
 	{"id": "candle_box", "name": "Full Candle Box", "desc": "Unlock every candle."},
+	# special rooms and mini-bosses (specials stream)
+	{"id": "seance", "name": "Spirits Answered", "desc": "Ring the Seance bell and see it through."},
+	{"id": "mirror_deal", "name": "Looking Glass", "desc": "Strike a bargain with the Cracked Mirror."},
+	{"id": "music_box", "name": "The Lucky Tune", "desc": "Wind a relic out of the Music Box."},
+	{"id": "font_5", "name": "Generous Wick", "desc": "Feed the Wax Font five times in one run."},
+	{"id": "mini_boss", "name": "Big Game", "desc": "Snuff a house champion."},
+	{"id": "mini_all", "name": "Trophy Wall", "desc": "Snuff all six house champions.", "hidden": true},
 ]
 const BOSS_IDS := {1: "boss_cellar", 2: "boss_crypt", 3: "boss_chapel"}
 const FLOOR_IDS := {2: "floor_crypt", 3: "floor_chapel", 4: "floor_belfry"}

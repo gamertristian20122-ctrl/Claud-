@@ -518,6 +518,7 @@ func _draw_minimap() -> void:
 			"secret": mark = Color("#dc4a7b")
 		if mark.a > 0:
 			minimap.draw_rect(Rect2(pos + Vector2(3, 1), Vector2(3, 4)), mark)
+		Specials.draw_map_mark(minimap, world, d, pos)   # special rooms ("?" until known), mini-bosses
 
 
 # ---------------------------------------------------------------- input

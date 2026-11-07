@@ -1,7 +1,8 @@
 class_name FloorGen
 extends RefCounted
 ## Builds one floor: a branching grid of rooms with a start, a boss room at the farthest dead end,
-## a treasure room and a shop. Returns {cells: {Vector2i: Dictionary}, start: Vector2i, boss: Vector2i}.
+## a treasure room and a shop, a secret hollow, the special rooms (Specials.TYPES, each a new dead end
+## off an ordinary room) and sometimes a mini-boss. Returns {cells: {Vector2i: Dictionary}, start, boss}.
 
 const W := 9
 const H := 8
@@ -23,10 +24,71 @@ static func generate(floor_num: int, rng: RandomNumberGenerator, extra := 0, tre
 		var res := _try(floor_num, target, rng, treasures)
 		if not res.is_empty():
 			_add_hollow(res, rng)
+			_add_specials(res, rng, floor_num)
+			_add_mini(res, rng, floor_num)
 			return res
 	var fb := _try(floor_num, 4, rng, 1)
 	_add_hollow(fb, rng)
+	_add_specials(fb, rng, floor_num)
+	_add_mini(fb, rng, floor_num)
 	return fb
+
+
+## Special rooms: each type rolls its own chance on its floors; it becomes a new dead end hanging off
+## one ordinary room and touching nothing else (so the hollow, shop, treasure and boss rooms keep
+## their places and walls). Runs after the hollow, from the same floor RNG.
+static func _add_specials(res: Dictionary, rng: RandomNumberGenerator, floor_num: int) -> void:
+	if res.is_empty():
+		return
+	var cells: Dictionary = res["cells"]
+	for t in Specials.TYPES:
+		var info: Dictionary = Specials.INFO[t]
+		var roll := rng.randf()
+		if not floor_num in info["floors"] or roll >= float(info["chance"]):
+			continue
+		var spots: Array = []
+		for c in cells.keys():
+			if cells[c]["type"] != "normal":
+				continue
+			for d in DIRS:
+				var n: Vector2i = c + d
+				if n.x < 0 or n.y < 0 or n.x >= W or n.y >= H or cells.has(n):
+					continue
+				if _neighbours(cells, n) != 1:
+					continue
+				spots.append([n, c])
+		if spots.is_empty():
+			continue
+		var pick: Array = spots[rng.randi() % spots.size()]
+		cells[pick[0]] = {"type": t, "grid": Specials.grid_for(t), "cleared": true, "visited": false,
+			"seen": false, "pickups": [], "seed": rng.randi(), "dist": int(cells[pick[1]]["dist"]) + 1}
+
+
+## Floors 2-4: one ordinary room away from the start may hold a mini-boss. Its layout becomes an
+## open one so the champion has room to move.
+static func _add_mini(res: Dictionary, rng: RandomNumberGenerator, floor_num: int) -> void:
+	if res.is_empty() or floor_num < 2 or floor_num > 4:
+		return
+	if rng.randf() >= Specials.MINI_CHANCE:
+		return
+	var cand: Array[Vector2i] = []
+	for c in res["cells"].keys():
+		var d: Dictionary = res["cells"][c]
+		if d["type"] == "normal" and int(d["dist"]) >= 2:
+			cand.append(c)
+	var kinds := Specials.minis_for(floor_num)
+	if cand.is_empty() or kinds.is_empty():
+		return
+	var c: Vector2i = cand[rng.randi() % cand.size()]
+	var d: Dictionary = res["cells"][c]
+	d["mini"] = kinds[rng.randi() % kinds.size()]
+	var open: Array = RoomTemplates.NORMAL.filter(func(t): return "open" in t.get("tags", []) and not "hard" in t.get("tags", []) and not "spikes" in t.get("tags", []))
+	if not open.is_empty():
+		var rows: Array = (open[rng.randi() % open.size()]["rows"] as Array).duplicate()
+		if rng.randf() < 0.5:
+			for i in rows.size():
+				rows[i] = (rows[i] as String).reverse()
+		d["grid"] = RoomTemplates.to_grid(rows)
 
 
 ## One secret "hollow" per floor: an empty cell touching 2+ ordinary rooms (never the boss or start).

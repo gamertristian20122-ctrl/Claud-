@@ -284,6 +284,7 @@ func _build_room(c: Vector2i) -> Room:
 		_spawn_pickup_node(r, rec)
 	if layout["cells"][c].get("altar", false):
 		_spawn_altar_visual(r)
+	Specials.on_build(self, r)   # special rooms: props, toll marks
 	return r
 
 
@@ -302,6 +303,8 @@ func _on_enter_room() -> void:
 	room_spawned = false
 	room_hits = 0
 	room_streak_wax = 0.0
+	if Specials.on_enter_room(self):   # a mini-boss room handles its own entry
+		return
 	match d["type"]:
 		"treasure":
 			if not d.get("stocked", false):
@@ -471,6 +474,7 @@ func _clear_room() -> void:
 		if run_time - room_t0 <= par:
 			player.heal(2.0)
 			fx_text(player.global_position + Vector2(0, -44), "QUICK  +2 min", UI.EMBER)
+	Specials.on_clear(self)   # a finished Seance or a beaten mini-boss pays out
 
 
 func _room_reward(pos: Vector2) -> void:
@@ -556,7 +560,7 @@ func add_pickup(kind: String, pos: Vector2, item := "", price := 0, pop_vel := V
 
 
 func _spawn_pickup_node(r: Room, rec: Dictionary) -> Pickup:
-	var p := Pickup.new()
+	var p: Pickup = Specials.new_pickup(rec)   # offers in special rooms are Pickups with their own look
 	p.setup(self, rec["kind"], rec["pos"] - r.position, rec["item"], rec["price"])
 	p.record = rec
 	r.objects.add_child(p)
@@ -1439,8 +1443,9 @@ func fx_stain(pos: Vector2, mat := "wax", big := false) -> void:
 
 ## Save & Continue: run state that lives outside the player (relic knowledge, fog, charges).
 func save_extra() -> Dictionary:
-	return {"relic_fx": RelicFx.of(self).to_dict()}
+	return {"relic_fx": RelicFx.of(self).to_dict(), "specials": Specials.of(self).to_dict()}
 
 
 func load_extra(d: Dictionary) -> void:
 	RelicFx.of(self).from_dict(d.get("relic_fx", {}))
+	Specials.of(self).from_dict(d.get("specials", {}))

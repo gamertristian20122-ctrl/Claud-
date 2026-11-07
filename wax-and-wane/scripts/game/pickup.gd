@@ -200,7 +200,10 @@ func _collect(p: Player) -> void:
 		# the clock visibly jumps forward, but never below 15 minutes
 		var cut := minf(wax_cost * 0.5, maxf(0.0, p.wax - 15.0))
 		p.wax = minf(p.wax - cut, p.wax_max)
-		world.pact = "smoke"
+		if record.has("pact"):
+			Specials.on_pact(world, record)   # the Cracked Mirror reuses this cost
+		else:
+			world.pact = "smoke"
 		world.fx_text(global_position + Vector2(0, -30), ("-%d max min" % wax_cost) + (("  -%d now" % int(cut)) if cut > 0.0 else ""), UI.RED)
 		Audio.play("snuff_out", 0.0, 0.0, 0.7)
 		record["cost_wax"] = 0

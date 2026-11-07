@@ -68,8 +68,8 @@ func setup(r: Room, used_lights: int) -> void:
 		th = "cellar"
 	var kind: String = room.data["type"]
 	var budget := LIGHT_BUDGET - used_lights
-	if kind in ["shop", "treasure", "secret"]:
-		budget -= 2   # their pedestals carry lights of their own
+	if kind in ["shop", "treasure", "secret"] or Specials.is_special(kind):
+		budget -= 2   # their pedestals (or the special room's prop) carry lights of their own
 	var free_top: Array = TOP_TILES.duplicate()
 	var free_side := {Vector2i.LEFT: SIDE_Y.duplicate(), Vector2i.RIGHT: SIDE_Y.duplicate()}
 	# ---- chapel windows: a symmetric pair throwing coloured light pools onto the floor

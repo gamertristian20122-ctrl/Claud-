@@ -217,6 +217,10 @@ func drive(w: Node) -> Array:
 				pick = o
 	if pick:
 		return [(pick.global_position - pos).normalized(), Vector2.ZERO]
+	# special rooms: ring the Seance bell, wind the music box, feed the font (sensibly, then move on)
+	var sp: Variant = Specials.bot_target(w)
+	if sp != null:
+		return [((sp as Vector2) - pos).normalized(), Vector2.ZERO]
 	# break urns/crates near the path occasionally is skipped; head to the next room
 	var dir := _next_dir(w)
 	if dir == Vector2i.ZERO:
@@ -440,6 +444,11 @@ func _tour() -> void:
 	if args.has("gallery") or args.has("bosses"):
 		await _wait(1.0)
 		await BestiaryGallery.tour(self)
+		get_tree().quit()
+		return
+	if args.has("specials"):   # every special room, a Seance wave and a mini-boss per floor
+		await _wait(1.0)
+		await Specials.tour(self)
 		get_tree().quit()
 		return
 	await _wait(0.25)

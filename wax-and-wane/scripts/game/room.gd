@@ -86,6 +86,8 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 			kind = "boss"
 		elif ntype == "treasure" or data["type"] == "treasure":
 			kind = "gold"
+		elif Specials.door_style(ntype, data["type"]) != "":
+			kind = Specials.door_style(ntype, data["type"])
 		door_kind[dir] = kind
 		var s := Sprite2D.new()
 		s.centered = false
@@ -403,6 +405,8 @@ func set_open(open: bool, instant := false) -> void:
 		var path := "rooms/door_%s_%s" % [nm, state]
 		if kind != "normal" and Art.has("rooms/door_%s_%s_%s" % [nm, kind, state]):
 			path = "rooms/door_%s_%s_%s" % [nm, kind, state]
+		elif kind != "normal" and Art.has("specials/door_%s_%s_%s" % [nm, kind, state]):
+			path = "specials/door_%s_%s_%s" % [nm, kind, state]
 		doors[dir].texture = Art.tex(path)
 	if not instant:
 		Audio.play("door_open" if open else "door_close", -2.0)
@@ -637,6 +641,8 @@ func shot_hits(wp: Vector2, dmg: float, friendly := true) -> bool:
 		if rect.has_point(lp):
 			if obstacle_hp.has(c):
 				damage_obstacle(c, dmg)
+			elif friendly and c == Specials.PROP_CELL and Specials.is_special(data.get("type", "")):
+				Specials.prop_shot(self, c)
 			return true
 	return false
 
