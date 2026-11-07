@@ -963,7 +963,7 @@ static func bot_target(w: Node) -> Variant:
 	var s: Specials = of(w)
 	var d: Dictionary = w.room.data
 	var t: String = d.get("type", "")
-	if not t in TYPES or s._prop_room != w.room or s._busy > 0.0 or s._cool > 0.0 or w.run_time - s._enter_t > 14.0:
+	if not t in TYPES or s._prop_room != w.room or w.run_time - s._enter_t > 14.0:
 		return null
 	var p: Player = w.player
 	var go := false
@@ -973,6 +973,8 @@ static func bot_target(w: Node) -> Variant:
 		"font": go = not d.get("font_spent", false) and p.wax > 75.0 and int(d.get("fed", 0)) < 2
 	if not go:
 		return null
+	if s._busy > 0.0 or s._cool > 0.0:   # step back and wait: each use needs a fresh touch
+		return w.room.cell_center(PROP_CELL) + Vector2(0, 38)
 	return w.room.cell_center(PROP_CELL) + Vector2(0, 12)
 
 
@@ -1093,6 +1095,15 @@ static func tour(at: Node) -> void:
 			if c == Vector2i(-99, -99):
 				continue
 			done[t] = true
+			if t == "mirror":   # the dark door and its toll, seen from the room next door
+				for dd in FloorGen.DIRS:
+					if w.layout["cells"].has(c + dd):
+						w.layout["cells"][c + dd]["cleared"] = true
+						at._jump(w, c + dd)
+						w.player.position = w.room.center() + Vector2(dd.x, dd.y) * -36.0 + Vector2(dd.y, dd.x) * 26.0
+						await at._wait(1.0)
+						await at._shot("special_%d_mirror_door" % n)
+						break
 			at._jump(w, c)
 			w.player.position = w.room.center() + Vector2(0, 52)
 			await at._wait(1.1)
@@ -1165,6 +1176,29 @@ static func tour(at: Node) -> void:
 	w._on_enter_room()
 	await at._wait(0.4)
 	await at._shot("special_minimap_dowsing")
+	# all six champions in a row (frozen), with a plain lodger for scale
+	var gc := _normal_far(w)
+	w.layout["cells"][gc]["cleared"] = true
+	w.layout["cells"][gc]["grid"] = RoomTemplates.to_grid(RoomTemplates.START)
+	at._jump(w, gc)
+	w.player.position = w.room.center() + Vector2(0, 56)
+	var s2: Specials = of(w)
+	var k := 0
+	for kind in MINIS:
+		var e := s2.spawn_mini(kind, w.room.center() + Vector2(-100 + k * 40, -6))
+		k += 1
+		e.set_physics_process(false)
+	var plain: Enemy = w.spawn_enemy("sootling", w.room.center() + Vector2(-100, 34))
+	await at._wait(0.2)
+	plain.set_physics_process(false)
+	for e in w.enemies:
+		if is_instance_valid(e):
+			e.spr.modulate.a = 1.0
+			e.scale = Vector2.ONE
+	s2._mini = null
+	w.hud.set_boss("", false)
+	await at._wait(2.2)
+	await at._shot("mini_gallery")
 
 
 static func _cell_of_type(w: Node, t: String) -> Vector2i:
