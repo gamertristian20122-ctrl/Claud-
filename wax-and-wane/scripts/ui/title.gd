@@ -182,8 +182,8 @@ func _credits() -> void:
 		"Design, code: made for you with Claude",
 		"Dungeon art: 0x72 - DungeonTileset II (CC0)",
 		"Fonts: Kenney Pixel & Mini (CC0)",
-		"Sounds: Kenney audio packs (CC0)",
-		"Music: original, synthesized for this game",
+		"Sounds: Kenney audio packs, Ninja Adventure (CC0)",
+		"Music: Ninja Adventure by Pixel-boy & AAA (CC0)",
 		"Engine: Godot Engine (MIT)",
 	]:
 		v.add_child(UI.label(line, 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))

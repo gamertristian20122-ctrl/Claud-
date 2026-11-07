@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""Build every sound effect and music track for Wax & Wane (re-runnable, deterministic).
+"""Build every sound effect (and the synthesized jingles) for Wax & Wane (re-runnable, deterministic).
 
-    python3 tools/make_audio.py                    # all SFX + all music + credits
+    python3 tools/make_audio.py                    # all SFX + the shipped synthesized music + credits
     python3 tools/make_audio.py sfx [name ...]     # SFX only (optionally just some)
-    python3 tools/make_audio.py music [name ...]   # music only (optionally just some)
+    python3 tools/make_audio.py music [name ...]   # synthesized music only (jingles; other names -> art_source/music_synth/)
     python3 tools/make_audio.py review [out_dir]   # print stats + write spectrogram PNGs of the built files
 
-SFX: layered from CC0 Kenney packs (env KENNEY_PACKS, default /opt/assets/packs) and/or numpy synthesis,
-then trimmed, faded, made mono, loudness-balanced and encoded by ffmpeg (Ogg Vorbis q5, 44.1 kHz mono).
-Music: composed in code (no samples) and rendered with numpy/scipy synthesis. Loops are seamless (reverb tail
-wrapped onto the loop start), Ogg Vorbis q4, 44.1 kHz stereo, RMS about -16 dBFS, peaks below -1 dBFS.
+SFX: layered from CC0 Kenney packs (env KENNEY_PACKS, default /opt/assets/packs), CC0 Ninja Adventure sounds
+(downloaded once by tools/import_audio.py) and/or numpy synthesis, then trimmed, faded, made mono, loudness-balanced
+and encoded by ffmpeg (Ogg Vorbis q5, 44.1 kHz mono). Loops (LOOPS) skip trim/fades and get loop=true on import.
+Variants: <name>_2, <name>_3 ... are extra takes that Audio.play(<name>) picks from at random.
+Music: the floor / title / shop / boss loops are licensed CC0 tracks built by tools/import_audio.py. The jingles
+are composed in code (no samples) and rendered with numpy/scipy synthesis, Ogg Vorbis q4, 44.1 kHz stereo.
 Needs ffmpeg (libvorbis), numpy, scipy (and Pillow for `review`).
 """
 import functools
@@ -46,7 +48,20 @@ PACK_INFO = {  # pack dir -> (display name, licence file name in assets/licenses
     "kenney-foley-sounds": ("Foley Sounds", "Kenney_Foley_Sounds_CC0.txt"),
     "kenney-retro-sounds-1": ("Retro Sounds 1", "Kenney_Retro_Sounds_1_CC0.txt"),
     "kenney-retro-sounds-2": ("Retro Sounds 2", "Kenney_Retro_Sounds_2_CC0.txt"),
+    "ninja": ("Ninja Adventure", "Ninja_Adventure_CC0.txt"),   # "ninja:<Sounds subpath>", fetched by import_audio
 }
+
+
+def pack_of(rel):
+    return "ninja" if rel.startswith("ninja:") else rel.split("/")[0]
+
+
+def pack_path(rel):
+    """Local file for a pack-relative path. Ninja Adventure sounds are downloaded (once) by tools/import_audio.py."""
+    if rel.startswith("ninja:"):
+        import import_audio
+        return import_audio.fetch(import_audio.NINJA_SOUNDS + rel[len("ninja:"):])
+    return os.path.join(PACKS, rel)
 
 
 # =============================================================================================== DSP basics
@@ -426,7 +441,7 @@ def src(rel, rate=1.0, rev=False):
     _CUR.append(rel)
     key = (rel, rate, rev)
     if key not in _SRC:
-        r = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", os.path.join(PACKS, rel), "-ac", "1", "-ar", str(SR),
+        r = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", pack_path(rel), "-ac", "1", "-ar", str(SR),
                             "-f", "f32le", "-"], capture_output=True, check=True)
         x = np.frombuffer(r.stdout, np.float32).astype(np.float64)
         x = hp(x, 20, 1)
@@ -683,6 +698,353 @@ def sfx_trapdoor():
                (src(RPG + "doorClose_3.ogg"), 0.32, -4), (src(FOLEY + "Woosh/woosh3.ogg", 0.55), 0.40, -6))
 
 
+# ----------------------------------------------------------------------------------------------- v2.0 variants
+# 2-4 takes of every frequent sound. Audio.play("shoot") picks shoot / shoot_2 / shoot_3 at random (never the
+# same one twice in a row) and adds its own pitch + level jitter, so callers need no changes. Each take keeps the
+# recipe of the original (same character, same loudness target) with a different source take, seed and tuning.
+def _shoot_take(woosh, rate, seed, f0, f1):
+    n = secs(0.17)
+    fwip = band_noise(0.17, seed, lambda t: 900 * 2.4 ** np.clip(t / 0.12, 0, 1), 1.2) * env_ad(n, 0.006, 0.045)
+    body = np.sin(phase(np.linspace(f0, f1, n))) * env_ad(n, 0.003, 0.03)
+    return mix((src(FOLEY + "Woosh/" + woosh, rate), 0, 0), (fwip, 0, -3), (body, 0, -12),
+               (crackle(0.12, seed + 1, rate=50), 0.01, -16))
+
+
+def sfx_shoot_2():
+    return _shoot_take("woosh4.ogg", 1.08, 13, 300, 180)
+
+
+def sfx_shoot_3():
+    return _shoot_take("woosh8.ogg", 1.22, 15, 345, 205)
+
+
+def _hit_wall_take(wood, soft, seed):
+    n = secs(0.12)
+    fizz = band_noise(0.12, seed, 4500, 1.5) * env_ad(n, 0.002, 0.035)
+    return mix((src(IMPACT + wood), 0, 0), (sat(src(IMPACT + soft), 2.5), 0, -7), (fizz, 0.004, -11))
+
+
+def sfx_hit_wall_2():
+    return _hit_wall_take("impactWood_light_000.ogg", "impactSoft_medium_001.ogg", 23)
+
+
+def sfx_hit_wall_3():
+    return _hit_wall_take("impactWood_light_003.ogg", "impactSoft_medium_003.ogg", 25)
+
+
+def _hit_enemy_take(punch, drip, seed, f_sq):
+    n = secs(0.08)
+    squelch = band_noise(0.08, seed, lambda t: f_sq * 0.5 ** np.clip(t / 0.06, 0, 1), 1.2) * env_ad(n, 0.002, 0.022)
+    return mix((sat(src(IMPACT + punch), 2.5), 0, 0), (src(FOLEY + "Water/" + drip), 0.004, -9), (squelch, 0, -8))
+
+
+def sfx_hit_enemy_2():
+    return _hit_enemy_take("impactPunch_medium_000.ogg", "drip2.ogg", 33, 1250)
+
+
+def sfx_hit_enemy_3():
+    return _hit_enemy_take("impactPunch_medium_004.ogg", "drip3.ogg", 35, 1600)
+
+
+def _enemy_die_take(punch, woosh, drip, seed, f_poof):
+    n = secs(0.45)
+    poof = band_noise(0.45, seed, lambda t: f_poof * 0.2 ** np.clip(t / 0.4, 0, 1), 1.5) * env_ad(n, 0.01, 0.12)
+    return mix((sat(src(IMPACT + punch), 2.5), 0, -1), (poof, 0, -3),
+               (src(FOLEY + "Woosh/" + woosh, 0.7), 0.01, -6), (src(FOLEY + "Water/" + drip, 0.8), 0.03, -12))
+
+
+def sfx_enemy_die_2():
+    return _enemy_die_take("impactPunch_heavy_001.ogg", "woosh6.ogg", "drip3.ogg", 43, 1150)
+
+
+def sfx_enemy_die_3():
+    return _enemy_die_take("impactPunch_heavy_004.ogg", "woosh2.ogg", "drip2.ogg", 45, 1450)
+
+
+def sfx_step_2():
+    return hp(src(IMPACT + "footstep_carpet_001.ogg"), 150)
+
+
+def sfx_step_3():
+    return hp(src(IMPACT + "footstep_carpet_003.ogg"), 150)
+
+
+def sfx_step_4():
+    return hp(src(IMPACT + "footstep_carpet_002.ogg", 0.94), 150)
+
+
+def sfx_coin_pickup_2():
+    return mix((src(UI + "glass_003.ogg"), 0, 0), (src(RPG + "handleCoins2.ogg", 1.06), 0.01, -7))
+
+
+def sfx_coin_pickup_3():
+    return mix((src(UI + "glass_001.ogg", 1.05), 0, 0), (src(RPG + "handleCoins.ogg", 1.1), 0.01, -9))
+
+
+def _splash_take(water, drip, seed):
+    return mix((src(FOLEY + "Water/" + water), 0, 0), (src(FOLEY + "Water/" + drip), 0, -4),
+               (band_noise(0.15, seed, 1800, 1.5) * env_ad(secs(0.15), 0.002, 0.04), 0, -8))
+
+
+def sfx_splash_2():
+    return _splash_take("sinkWater2.ogg", "drip3.ogg", 193)
+
+
+def sfx_splash_3():
+    return _splash_take("sinkWater3.ogg", "drip1.ogg", 195)
+
+
+# ----------------------------------------------------------------------------------------------- v2.0 new sounds
+# Names other streams call (see docs/streams/audio.md). Same palette as the rest: Kenney foley + the game's own
+# synthesized music box / celesta / bells / organ; a few noise-based Ninja Adventure takes (fire, wings, bubbles).
+N_EL = "ninja:Elemental/"
+
+
+def soft(x, fade=0.12, attack=0.004):
+    """A pack take with a smooth start and a smooth end (some takes stop abruptly)."""
+    n = len(x)
+    e = np.ones(n)
+    a = min(n // 4, secs(attack))
+    if a > 0:
+        e[:a] = np.linspace(0, 1, a)
+    f = min(n // 2, secs(fade))
+    e[n - f:] *= np.cos(np.linspace(0, np.pi / 2, f)) ** 2
+    return x * e
+N_HIT = "ninja:Hit & Impact/"
+N_MAG = "ninja:Magic & Skill/"
+N_CRE = "ninja:Creature/"
+
+
+def sfx_boss_sting():
+    """A dark orchestral stab for a boss reveal: low brass cluster + timpani + great bell + rumble."""
+    stab = sum(brass(m, 1.1, 1.0) for m in (38, 45, 50, 51)) / 4
+    stab = lp(stab, 1800) * env_ar(len(stab), 0.02, 0.6, 1.5)
+    x = mix((sat(stab, 1.6), 0, 0), (tom(55, 1.0, 0.5, 201), 0, -2), (tom(41, 1.0, 0.6, 202), 0.0, -4),
+            (church_bell(110.0, 3.0, seed=203), 0.0, -7), (lp(src(RETRO1 + "rumble1.ogg"), 400), 0, -10))
+    return room(x, 0.3, 2.0, 0.45, 3500, 204)
+
+
+def sfx_match_strike():
+    """Scratch of a match head, then the flare catching."""
+    n = secs(0.55)
+    flare = band_noise(0.55, 211, lambda t: 2600 * 0.45 ** np.clip(t / 0.4, 0, 1), 1.6) * env_ad(n, 0.02, 0.18)
+    return mix((src(UI + "scratch_004.ogg", 0.85), 0, 0), (src(UI + "scratch_001.ogg", 0.7), 0.03, -6),
+               (flare, 0.10, -4), (soft(lp(src(N_EL + "Fire3.wav"), 3000), 0.3), 0.12, -8),
+               (crackle(0.5, 212, 70) * env_ar(secs(0.5), 0.01, 0.6), 0.12, -13))
+
+
+def sfx_burn_whoosh():
+    """A gout of flame: fire burst + air."""
+    n = secs(0.6)
+    roar = band_noise(0.6, 221, lambda t: 700 * 2.2 ** np.clip(t / 0.25, 0, 1) * 0.7 ** np.clip((t - 0.25) / 0.3, 0, 1),
+                      1.8) * env_ar(n, 0.05, 0.7, 1.5)
+    return mix((soft(src(N_EL + "Fireball2.wav"), 0.25), 0, -3), (roar, 0, -2), (src(FOLEY + "Woosh/woosh6.ogg", 0.7), 0, -6),
+               (crackle(0.55, 222, 90) * env_ar(secs(0.55), 0.01, 0.6), 0.05, -12))
+
+
+def sfx_splat():
+    """A wet glob hitting the floor (wax, slime)."""
+    n = secs(0.2)
+    sq = band_noise(0.2, 231, lambda t: 900 * 0.4 ** np.clip(t / 0.15, 0, 1), 1.3) * env_ad(n, 0.002, 0.05)
+    return mix((sat(src(IMPACT + "impactSoft_heavy_001.ogg"), 2.0), 0, 0), (sq, 0, -4),
+               (src(FOLEY + "Water/drip2.ogg", 0.7), 0.01, -6), (lp(src(FOLEY + "Water/sinkWater4.ogg", 0.9), 2500), 0.0, -12))
+
+
+def sfx_gib():
+    """A creature bursting apart: wet crunch, bits, drips."""
+    n = secs(0.35)
+    sq = band_noise(0.35, 241, lambda t: 1500 * 0.3 ** np.clip(t / 0.3, 0, 1), 1.4) * env_ad(n, 0.002, 0.08)
+    return mix((sat(src(IMPACT + "impactPunch_heavy_003.ogg"), 2.8), 0, 0), (sq, 0, -3),
+               (src(FOLEY + "Rocks/stonesHit2.ogg", 1.4), 0.02, -12), (src(FOLEY + "Water/drip3.ogg", 0.8), 0.05, -8),
+               (src(FOLEY + "Water/drip1.ogg", 0.9), 0.13, -12), (src(FOLEY + "Water/sinkWater1.ogg", 0.8), 0.0, -13))
+
+
+def sfx_sizzle():
+    """Hot wax on stone: hiss + crackle that dies away."""
+    return mix((sizzle(0.75, 251, 4800, 0.28), 0, 0), (crackle(0.7, 252, 60, hpf=1800) * env_ar(secs(0.7), 0.01, 0.7), 0.02, -7),
+               (soft(lp(src(N_EL + "Fire3.wav", 1.2), 5000), 0.3), 0, -10))
+
+
+def sfx_relic_fanfare():
+    """Bigger than item_get: a rising music-box run into a brass + organ D major swell and two bells."""
+    run = [(i * 0.06, m, -3 + i * 0.3) for i, m in enumerate((62, 66, 69, 74, 78, 81, 86))]
+    pad = sum(organ(m, 1.6, 1.0, 0.15, 0.8) for m in (50, 57, 62, 66, 69)) / 5
+    horn = sum(brass(m, 1.2, 1.0) for m in (62, 66, 69)) / 3
+    x = mix((chime(run), 0, 0), (lp(pad, 2600), 0.40, -9), (lp(horn, 2200) * env_ar(secs(1.4), 0.08, 0.6), 0.40, -8),
+            *[(celesta(m), 0.42 + 0.05 * i, -8) for i, m in enumerate((74, 78, 81, 86))],
+            (church_bell(293.66, 2.6, seed=261), 0.40, -9), (church_bell(587.33, 2.0, seed=262), 0.72, -14))
+    return room(x, 0.3, 1.6, 0.35, 6000, 263)
+
+
+def sfx_achievement():
+    """Short bright two-step chime + sparkle (unlocks, journal entries)."""
+    x = mix((chime([(0.0, 81, -2), (0.11, 88, 0)]), 0, 0), (celesta(93), 0.11, -8), (celesta(100), 0.16, -12),
+            (church_bell(880.0, 1.4, seed=271), 0.11, -14), (crackle(0.3, 272, 40, hpf=6000), 0.12, -20))
+    return room(x, 0.25, 1.1, 0.25, 7000, 273)
+
+
+def sfx_ui_move():
+    """Focus moving between menu items (very short, soft)."""
+    return lp(src(UI + "tick_002.ogg"), 6000)
+
+
+def sfx_door_burst():
+    """A door forced open: splintering slam + hinge + air."""
+    return mix((sat(src(IMPACT + "impactWood_heavy_002.ogg"), 2.5), 0, 0), (src(IMPACT + "impactPlank_medium_002.ogg"), 0.01, -3),
+               (src(RPG + "doorOpen_2.ogg", 1.2), 0.0, -6), (src(IMPACT + "impactWood_light_004.ogg"), 0.09, -9),
+               (src(IMPACT + "impactWood_light_001.ogg"), 0.16, -12), (src(FOLEY + "Woosh/woosh3.ogg", 0.6), 0.0, -9))
+
+
+def sfx_fire_crackle():
+    """1.4 s of a small fire (braziers, burning floor); fades in and out so it can be retriggered."""
+    dur = 1.4
+    n = secs(dur)
+    body = fit(soft(lp(src(N_EL + "Fire2.wav"), 6000), 0.35, 0.05), n)
+    x = mix((body, 0, -4), (crackle(dur, 281, 45, hpf=1500), 0, 0), (crackle(dur, 282, 12, tau=0.006, hpf=600), 0, -4),
+            (band_noise(dur, 283, 500, 2.0) * 0.4, 0, -10), (band_noise(dur, 284, 1400, 1.5) * 0.25, 0, -12))
+    return x[:n] * env_ar(n, 0.12, 0.35, 1.0)
+
+
+def sfx_jar_explode():
+    """A thrown flask / jar bursting: glass + a small fiery pop + splash."""
+    n = secs(0.5)
+    t = t_(n)
+    pop = sat(np.sin(phase(110 * 0.5 ** np.clip(t / 0.2, 0, 1))) * np.exp(-t / 0.12), 2.0)
+    return mix((src(IMPACT + "impactGlass_heavy_002.ogg"), 0, 0), (src(IMPACT + "impactGlass_medium_001.ogg"), 0.02, -3),
+               (pop, 0, -3), (lp(src(N_EL + "Explosion.wav"), 3500), 0.01, -6), (src(FOLEY + "Water/sinkWater2.ogg", 1.1), 0.03, -8),
+               (src(IMPACT + "impactGlass_light_002.ogg", 0.85), 0.12, -12))
+
+
+def sfx_web():
+    """Sticky web: a stretchy pull and a soft fibrous snap."""
+    n = secs(0.35)
+    t = t_(n)
+    stretch = band_noise(0.35, 291, lambda tt: 1200 * 1.8 ** np.clip(tt / 0.3, 0, 1), 0.6) * env_ar(n, 0.06, 0.4)
+    twang = np.sin(phase(180 * (1 + 0.25 * np.exp(-t / 0.05)))) * np.exp(-t / 0.08)
+    return mix((src(RPG + "cloth3.ogg", 0.8), 0, 0), (stretch, 0, -6), (twang, 0.18, -9),
+               (src(RPG + "clothBelt.ogg", 1.2), 0.18, -6))
+
+
+def sfx_page_flip():
+    return mix((src(RPG + "bookFlip2.ogg"), 0, 0), (src(RPG + "bookFlip1.ogg", 1.1), 0.06, -9))
+
+
+def sfx_bell_small():
+    """A hand bell (smaller and brighter than bell_toll)."""
+    x = mix((church_bell(698.46, 1.8, seed=301), 0, 0), (src(IMPACT + "impactBell_heavy_003.ogg", 1.4), 0, -10))
+    return room(x, 0.2, 1.0, 0.3, 7000, 302)
+
+
+def sfx_clock_tick_fast():
+    """An urgent tick-tock pair (0.13 s apart) for countdowns."""
+    return mix((clock_tick(False, 1.0, 311), 0, 0), (clock_tick(True, 0.85, 312), 0.13, -1))
+
+
+def sfx_moth_flutter():
+    return mix((hp(src(N_CRE + "Wings2.wav"), 400), 0, 0), (lp(src(FOLEY + "Woosh/woosh5.ogg", 1.5), 5000), 0.02, -10))
+
+
+def _bubble(f0, tau, seed):
+    """One bubble bursting in a thick liquid: a damped tone whose pitch rises as it collapses, plus a soft pop."""
+    n = secs(tau * 6)
+    t = t_(n)
+    fr = f0 * (1 + 1.8 * (t / (tau * 6)))
+    x = np.sin(phase(fr)) * np.exp(-t / tau) * (1 - np.exp(-t / 0.002))
+    pop = lp(rng(seed).standard_normal(n), 1800) * np.exp(-t / 0.004) * 0.3
+    return x + pop
+
+
+def sfx_wax_bubble():
+    """Molten wax bubbling: a few slow, low, viscous bubbles and a soft hiss."""
+    return mix((_bubble(190, 0.035, 321), 0, 0), (_bubble(240, 0.028, 322), 0.13, -3), (_bubble(160, 0.045, 323), 0.27, -1),
+               (_bubble(280, 0.022, 324), 0.36, -6), (sizzle(0.5, 325, 3500, 0.2), 0.0, -16))
+
+
+def sfx_thud_heavy():
+    """Something heavy landing (big monsters, falling stone)."""
+    n = secs(0.5)
+    t = t_(n)
+    sub = sat(np.sin(phase(58 * (1 + 0.6 * np.exp(-t / 0.03)))) * np.exp(-t / 0.16), 2.2)
+    return mix((sat(src(IMPACT + "impactPunch_heavy_000.ogg"), 2.5), 0, 0), (sub, 0, -2),
+               (src(IMPACT + "impactWood_heavy_001.ogg"), 0.0, -6), (src(FOLEY + "Rocks/stonesHit1.ogg", 1.2), 0.04, -12))
+
+
+def sfx_summon():
+    """Dark summoning: reversed air rising into a dissonant shimmer over a low drone."""
+    dur = 1.2
+    n = secs(dur)
+    t = t_(n)
+    r = rng(331)
+    sh = np.zeros(n)
+    for f0 in (440.0, 466.16, 659.25, 698.46):
+        sh += np.sin(phase(f0 * 2 ** (0.5 * t / dur) * (1 + 0.004 * np.sin(2 * np.pi * r.uniform(4, 7) * t))))
+    sh = norm(sh) * env_ar(n, 0.5, 0.45, 1.5)
+    drone = lp(saw(np.full(n, 55.0)) + saw(np.full(n, 58.27), 0.3), 300) * env_ar(n, 0.3, 0.5)
+    x = mix((src(FOLEY + "Woosh/woosh6.ogg", 0.45, rev=True), 0.05, 0), (sh, 0, -6), (norm(drone), 0, -6),
+            (lp(src(N_MAG + "Spirit.wav", 0.8), 3000), 0.2, -12))
+    return room(x, 0.35, 1.4, 0.35, 4000, 332)
+
+
+def sfx_beam_loop():
+    """1.0 s seamless loop of a sustained fire beam (Audio.loop_start("beam_loop")): roar + crackle + hum."""
+    dur = 1.0
+    n = secs(dur)
+    t = t_(n)
+    roar = band_noise(dur * 2, 341, 900, 2.2)
+    hum = np.sin(2 * np.pi * 110 * t) + 0.5 * np.sin(2 * np.pi * 220 * t + 1) + 0.25 * np.sin(2 * np.pi * 330 * t + 2)
+    hum *= 1 + 0.2 * np.sin(2 * np.pi * 6 * t)
+    crk = crackle(dur * 2, 342, 70, hpf=2000)
+    x = 0.55 * norm(roar) + 0.25 * fit(crk, 2 * n)
+    return loop_xfade(x, n) + 0.22 * hum
+
+
+def sfx_charge_up():
+    """A longer, rising wind-up (0.9 s) with a tightening tremolo, ending on a click."""
+    dur = 0.9
+    n = secs(dur)
+    t = t_(n)
+    rise = (t / dur) ** 1.4
+    tone = np.sin(phase(160 * 4 ** (t / dur)))
+    trem = 0.6 + 0.4 * np.sin(2 * np.pi * np.cumsum(6 + 22 * t / dur) / SR)
+    sweep = band_noise(dur, 351, lambda tt: 250 * 12 ** np.clip(tt / dur, 0, 1), 0.9)
+    x = (0.5 * tone * trem + sweep * 0.8 + 0.2 * crackle(dur, 352, 90)) * rise
+    return mix((x * env_ar(n, 0.03, 0.03, 1.0), 0, 0), (src(RPG + "metalClick.ogg", 1.2), dur - 0.03, -8))
+
+
+def sfx_dodge():
+    return mix((src(FOLEY + "Woosh/woosh1.ogg", 1.35), 0, 0), (src(RPG + "cloth1.ogg", 1.25), 0.0, -8),
+               (band_noise(0.12, 361, lambda t: 1500 * 2 ** np.clip(t / 0.1, 0, 1), 1.0) * env_ad(secs(0.12), 0.01, 0.04), 0, -10))
+
+
+def sfx_unlock():
+    """A lock giving way + a small rising chime."""
+    return mix((src(RPG + "metalLatch.ogg"), 0, 0), (src(RPG + "metalClick.ogg"), 0.12, -4),
+               (chime([(0.22, 79, -4), (0.32, 86, -2)]), 0, 0), (celesta(91), 0.32, -10))
+
+
+def loop_xfade(x, n):
+    """Seamless n-sample loop from a 2n-sample signal: equal-power cross-fade of the second half into the first
+    (y[n-1] ~ x[n-1] runs on into y[0] ~ x[n])."""
+    up = np.sqrt(np.linspace(0, 1, n))
+    return x[:n] * up + x[n:2 * n] * np.sqrt(1 - up ** 2)
+
+
+def sfx_low_wax_loop():
+    """The low-wax layer (Audio.set_low_wax): a slow double heartbeat under quick clock ticks, 2 beats per loop,
+    1.6 s, loops seamlessly (everything past the end wraps onto the start)."""
+    L = secs(1.6)
+    y = np.zeros(L + secs(1.0))
+    for k, t0 in enumerate((0.0, 0.8)):
+        hb = heartbeat(1.0 if k == 0 else 0.8, 52.0)
+        y[secs(t0):secs(t0) + len(hb)] += hb
+    for i in range(8):
+        tk = clock_tick(i % 2 == 1, 0.50 if i % 2 == 0 else 0.38, 371 + i)
+        y[secs(0.1 + i * 0.2):secs(0.1 + i * 0.2) + len(tk)] += tk
+    out = y[:L].copy()
+    out[:len(y) - L] += y[L:]
+    return out + loop_xfade(lp(rng(372).standard_normal(2 * L), 120), L) * 0.25
+
+
 # name: (recipe, loudness target, peak cap dBFS, max length s). Loudness = max 100 ms RMS of a phone-weighted
 # signal; louder targets for big events, quieter for UI / steps (the game also applies its own VOLUME table).
 SFX = {
@@ -703,7 +1065,31 @@ SFX = {
     "shop_buy": (sfx_shop_buy, -15, -3, 1.00), "step": (sfx_step, -21, -3, 0.11),
     "charge": (sfx_charge, -15, -3, 0.70), "teleport": (sfx_teleport, -15, -3, 1.00),
     "splash": (sfx_splash, -16, -3, 0.60), "trapdoor": (sfx_trapdoor, -14, -3, 1.30),
+    # v2.0 variants (same targets as their originals)
+    "shoot_2": (sfx_shoot_2, -15, -3, 0.24), "shoot_3": (sfx_shoot_3, -15, -3, 0.24),
+    "hit_wall_2": (sfx_hit_wall_2, -16, -3, 0.26), "hit_wall_3": (sfx_hit_wall_3, -16, -3, 0.26),
+    "hit_enemy_2": (sfx_hit_enemy_2, -15, -3, 0.30), "hit_enemy_3": (sfx_hit_enemy_3, -15, -3, 0.30),
+    "enemy_die_2": (sfx_enemy_die_2, -14, -3, 0.60), "enemy_die_3": (sfx_enemy_die_3, -14, -3, 0.60),
+    "step_2": (sfx_step_2, -21, -3, 0.11), "step_3": (sfx_step_3, -21, -3, 0.11), "step_4": (sfx_step_4, -21, -3, 0.11),
+    "coin_pickup_2": (sfx_coin_pickup_2, -15, -3, 0.40), "coin_pickup_3": (sfx_coin_pickup_3, -15, -3, 0.40),
+    "splash_2": (sfx_splash_2, -16, -3, 0.60), "splash_3": (sfx_splash_3, -16, -3, 0.60),
+    # v2.0 new sounds
+    "boss_sting": (sfx_boss_sting, -10, -1, 2.60), "match_strike": (sfx_match_strike, -15, -3, 0.75),
+    "burn_whoosh": (sfx_burn_whoosh, -14, -3, 0.70), "splat": (sfx_splat, -15, -3, 0.40),
+    "gib": (sfx_gib, -14, -3, 0.60), "sizzle": (sfx_sizzle, -17, -3, 0.85),
+    "relic_fanfare": (sfx_relic_fanfare, -12, -2, 2.60), "achievement": (sfx_achievement, -14, -3, 1.40),
+    "ui_move": (sfx_ui_move, -22, -3, 0.06), "door_burst": (sfx_door_burst, -12, -2, 0.90),
+    "fire_crackle": (sfx_fire_crackle, -19, -3, 1.40), "jar_explode": (sfx_jar_explode, -13, -2, 0.90),
+    "web": (sfx_web, -16, -3, 0.50), "page_flip": (sfx_page_flip, -19, -3, 0.40),
+    "bell_small": (sfx_bell_small, -14, -2, 1.80), "clock_tick_fast": (sfx_clock_tick_fast, -16, -3, 0.22),
+    "moth_flutter": (sfx_moth_flutter, -18, -3, 0.50), "wax_bubble": (sfx_wax_bubble, -17, -3, 0.60),
+    "thud_heavy": (sfx_thud_heavy, -12, -2, 0.70), "summon": (sfx_summon, -14, -3, 1.40),
+    "beam_loop": (sfx_beam_loop, -16, -3, 1.00), "charge_up": (sfx_charge_up, -15, -3, 0.95),
+    "dodge": (sfx_dodge, -17, -3, 0.30), "unlock": (sfx_unlock, -14, -3, 1.20),
+    "low_wax_loop": (sfx_low_wax_loop, -15, -3, 1.60),
 }
+# seamless loops: no trim, no fades (loop=true is set on their .import files)
+LOOPS = {"beam_loop", "low_wax_loop"}
 
 
 def loudness(x):
@@ -722,10 +1108,35 @@ def decode(path, ch=1):
     return x.reshape(-1, ch) if ch > 1 else x
 
 
+def build_loop_sfx(name, x, target, cap):
+    """Seamless SFX loop: circular DC filter, loudness gain only (no trim / fades), loop=true on import."""
+    pre = min(len(x), secs(0.5))
+    x = hp(np.concatenate([x[-pre:], x]), 25, 1)[pre:]
+    short = (target - loudness(np.tile(x, 2))) - (cap - 20 * np.log10(peak(x)))
+    if short > 1.0:  # peak-limited: shave transients (circularly, so the seam stays clean)
+        x = limiter(x[:, None], 20 * np.log10(peak(x)) - min(short, 6.0), True, hold_ms=1.5)[:, 0]
+    g = min(target - loudness(np.tile(x, 2)), cap - 20 * np.log10(peak(x)))
+    wav = os.path.join(TMP, name + ".wav")
+    wavfile.write(wav, SR, (x * db(g)).astype(np.float32))
+    out = os.path.join(SFX_OUT, name + ".ogg")
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", wav, "-ac", "1", "-ar", str(SR), "-c:a", "libvorbis",
+                    "-q:a", "5", out], check=True)
+    import import_audio
+    import_audio.write_import(name, True, SFX_OUT, "res://assets/audio/sfx/")
+    y = decode(out)
+    print(f"  {name:12s} {len(y) / SR:5.2f}s  peak {20 * np.log10(peak(y)):6.1f} dBFS  loud {loudness(y):6.1f}  "
+          f"gain {g:+5.1f} dB  {os.path.getsize(out) // 1024:3d} KB  (loop, seam jump {abs(y[0] - y[-1]):.4f}, "
+          f"p99 step {np.percentile(np.abs(np.diff(y)), 99):.4f})")
+
+
 def build_sfx(name):
     global _CUR
     fn, target, cap, maxlen = SFX[name]
     _CUR = []
+    if name in LOOPS:
+        x = np.asarray(fn(), float)
+        USED[name] = sorted(set(_CUR))
+        return build_loop_sfx(name, x, target, cap)
     x = hp(np.asarray(fn(), float), 25, 1)
     USED[name] = sorted(set(_CUR))
     pk = peak(x)
@@ -856,7 +1267,9 @@ def limiter(y, ceiling_db, loop, hold_ms=6.0):
 
 def export_music(name, y):
     wav = os.path.join(TMP, name + ".wav")
-    out = os.path.join(MUSIC_OUT, name + ".ogg")
+    folder = MUSIC_OUT if name in MUSIC_SHIPPED else SYNTH_ALT_OUT
+    os.makedirs(folder, exist_ok=True)
+    out = os.path.join(folder, name + ".ogg")
     gain = 1.0
     for _ in range(4):
         wavfile.write(wav, SR, (y * gain).astype(np.float32))
@@ -1210,6 +1623,11 @@ MUSIC = {
     "floor_4": song_floor_4, "boss": song_boss, "final_boss": song_final_boss,
     "victory_jingle": song_victory_jingle, "death_jingle": song_death_jingle,
 }
+# v2.0: the loops ship as licensed CC0 tracks (tools/import_audio.py); only these synthesized pieces ship.
+# `make_audio.py music <name>` for any other name renders the original composition to art_source/music_synth/
+# (not exported) so it can still be compared or brought back.
+MUSIC_SHIPPED = ["victory_jingle", "death_jingle"]
+SYNTH_ALT_OUT = os.path.join(ROOT, "art_source/music_synth")
 
 
 # =============================================================================================== credits
@@ -1230,36 +1648,57 @@ so this file restates Kenney's standard CC0 licence for the pack.
 
 # SFX made only from (edited / layered / saturated) pack sounds, without synthesized layers
 PACK_ONLY = {"ui_click", "ui_back", "ui_open", "coin_pickup", "bomb_pickup", "door_open", "door_close", "urn_break",
-             "crate_break", "trapdoor", "step"}
+             "crate_break", "trapdoor", "step", "step_2", "step_3", "step_4", "coin_pickup_2", "coin_pickup_3",
+             "ui_move", "page_flip", "door_burst", "moth_flutter"}
+
+
+def write_licence(p):
+    """assets/licenses/<pack>.txt: keep a real licence text that is already there, else fetch the pack's own
+    License.txt from the catalogue, else restate Kenney's standard CC0 licence."""
+    name, fn = PACK_INFO[p]
+    dst = os.path.join(LIC_OUT, fn)
+    import import_audio
+    if p == "ninja":
+        import_audio.write_ninja_licence()
+        return
+    if os.path.exists(dst) and os.path.getsize(dst) > 0:
+        return
+    srcfile = os.path.join(PACKS, p, "audio", "License.txt")
+    if os.path.exists(srcfile) and os.path.getsize(srcfile) > 0:
+        shutil.copyfile(srcfile, dst)
+        return
+    try:
+        shutil.copyfile(import_audio.fetch(p + "/audio/License.txt", text=True), dst)
+    except Exception:  # offline: restate the standard licence
+        with open(dst, "w") as f:
+            f.write(KENNEY_LICENSE.format(name=f"{name} by Kenney", pack=p, packs=PACKS))
 
 
 def write_credits():
     os.makedirs(LIC_OUT, exist_ok=True)
-    packs = sorted({rel.split("/")[0] for rels in USED.values() for rel in rels})
+    packs = sorted({pack_of(rel) for rels in USED.values() for rel in rels})
     for p in packs:
-        name, fn = PACK_INFO[p]
-        srcfile = os.path.join(PACKS, p, "audio", "License.txt")
-        dst = os.path.join(LIC_OUT, fn)
-        if os.path.exists(srcfile) and os.path.getsize(srcfile) > 0:
-            shutil.copyfile(srcfile, dst)
-        else:
-            with open(dst, "w") as f:
-                f.write(KENNEY_LICENSE.format(name=f"{name} by Kenney", pack=p, packs=PACKS))
+        write_licence(p)
+
+    def credit(p):
+        return "Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)" if p == "ninja" else \
+            f"Kenney {PACK_INFO[p][0]} (www.kenney.nl, CC0)"
     lines = [
         "Wax & Wane - audio credits",
         "==========================",
         "",
-        "All audio is built by tools/make_audio.py (re-runnable).",
+        "Sound effects and the synthesized music are built by tools/make_audio.py (re-runnable); the licensed",
+        "music tracks by tools/import_audio.py - see assets/licenses/CREDITS_music.txt for which track is which.",
         "",
-        "MUSIC (assets/audio/music/): original compositions, synthesized from scratch in numpy for this game",
-        "(no samples). No third-party material. Free to use as part of the game.",
+        "MUSIC (assets/audio/music/): victory_jingle and death_jingle are original compositions, synthesized from",
+        "scratch in numpy for this game (no samples). The other tracks are CC0 (CREDITS_music.txt).",
         "",
         "SOUND EFFECTS (assets/audio/sfx/): layered, trimmed, faded, mono-mixed and loudness-balanced from the",
-        "Kenney audio packs below (all CC0 1.0, public domain - credit appreciated, not required) plus original",
+        "audio packs below (all CC0 1.0, public domain - credit appreciated, not required) plus original",
         "numpy synthesis. Licence files:",
         *["  assets/licenses/" + PACK_INFO[p][1] for p in packs],
         "",
-        "Packs used: " + "; ".join(f"Kenney {PACK_INFO[p][0]} (www.kenney.nl, CC0)" for p in packs),
+        "Packs used: " + "; ".join(credit(p) for p in packs),
         "",
         "Per-file sources:",
     ]
@@ -1267,9 +1706,9 @@ def write_credits():
         rels = USED.get(name)
         if rels is None:
             continue
-        srcs = ", ".join(f"{PACK_INFO[r.split('/')[0]][0]}: {os.path.basename(r)}" for r in rels)
+        srcs = ", ".join(f"{PACK_INFO[pack_of(r)][0]}: {os.path.basename(r)}" for r in rels)
         how = " (processed)" if name in PACK_ONLY else " + original synthesis"
-        lines.append(f"  {name + '.ogg':16s} " + (srcs + how if srcs else "original synthesis (numpy)"))
+        lines.append(f"  {name + '.ogg':20s} " + (srcs + how if srcs else "original synthesis (numpy)"))
     with open(os.path.join(LIC_OUT, "CREDITS_audio.txt"), "w") as f:
         f.write("\n".join(lines) + "\n")
 
@@ -1375,7 +1814,7 @@ def main():
                 write_credits()
         if what in ("all", "music"):
             print("music:")
-            for n in (names if what == "music" and names else MUSIC):
+            for n in (names if what == "music" and names else MUSIC_SHIPPED):
                 export_music(n, MUSIC[n]())
     finally:
         shutil.rmtree(TMP, ignore_errors=True)

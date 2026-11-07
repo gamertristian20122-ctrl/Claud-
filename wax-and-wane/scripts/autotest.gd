@@ -2,6 +2,7 @@ extends Node
 ## Automated play-test bot + screenshot tour.
 ##   -- --autotest --playtest [--runs=N] [--speed=4] [--seed=N]   plays full runs, prints a summary
 ##   -- --autotest --tour --shots=/abs/dir                         screenshots of every screen
+##   -- --autotest --audiotest                                     audio catalogue + live-mix check (audio_check.gd)
 
 var main: Node
 var args := {}
@@ -33,6 +34,8 @@ func _ready() -> void:
 		mode = "tour"
 		if not args.has("platform") and not args.has("device"):
 			Controls.set_device(Controls.TOUCH)   # the main tour shows the phone HUD
+	if args.has("audiotest"):
+		mode = "audiotest"
 	runs_left = int(args.get("runs", "1"))
 	_shots_dir = str(args.get("shots", ""))
 	Game.base_time_scale = float(args.get("speed", "1"))
@@ -41,6 +44,8 @@ func _ready() -> void:
 	await get_tree().create_timer(0.8).timeout
 	if mode == "tour":
 		_tour()
+	elif mode == "audiotest":
+		add_child(load("res://scripts/audio_check.gd").new())
 	else:
 		_next_run()
 
@@ -93,12 +98,14 @@ func _process(dt: float) -> void:
 			for r in results:
 				avg_floor += r["floor"]
 			print("[playtest] SUMMARY runs=%d wins=%d avg_floor=%.2f" % [results.size(), wins, avg_floor / results.size()])
+			Audio.stop_all()   # no playback left running at exit (keeps the log free of leak warnings)
+			await get_tree().create_timer(0.3, true, false, true).timeout
 			get_tree().quit()
 
 
 ## Called by the world every physics frame: returns [move, aim] or [] to leave input alone.
 func drive(w: Node) -> Array:
-	if mode == "tour" and not args.has("drive"):
+	if (mode == "tour" or mode == "audiotest") and not args.has("drive"):
 		return []
 	var p: Player = w.player
 	if args.has("god") and p:
@@ -376,6 +383,8 @@ func _tour() -> void:
 	w.player.wax = 0.0
 	await _wait(7.0)
 	await _shot("results")
+	Audio.stop_all()
+	await _wait(0.3)
 	get_tree().quit()
 
 

@@ -242,6 +242,7 @@ func _start_floor(n: int) -> void:
 	cam.position = _cam_target(room)
 	_on_enter_room()
 	Audio.music(FLOORS[n]["music"])
+	Audio.set_space(n)
 	var omen_txt := ("   -   Omen: %s" % OMENS[omen]["name"]) if omen != "" else ""
 	hud.show_banner(FLOORS[n]["name"].to_upper(), "Floor %d of %d   -   %s%s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes()), omen_txt], 2.6)
 	if omen != "":
@@ -278,6 +279,7 @@ func _build_room(c: Vector2i) -> Room:
 
 func _on_enter_room() -> void:
 	var d: Dictionary = room.data
+	Audio.enter_room(d["type"], d["cleared"])
 	d["visited"] = true
 	d["seen"] = true
 	for dd in FloorGen.DIRS:
@@ -439,6 +441,7 @@ func _clear_room() -> void:
 	room.set_open(true)
 	room.light_candles()
 	Audio.play("room_clear")
+	Audio.set_intensity(0.5)
 	if player.hourglass > 0:
 		player.heal(player.hourglass)
 		fx_text(player.global_position + Vector2(0, -26), "+%d min" % int(player.hourglass), UI.GOLD)
@@ -1206,6 +1209,7 @@ func _clock_events() -> void:
 				105: hud.show_banner("1:45 AM", "Your wick is nearly gone", 1.6)
 		elif m < mark - 10.0 and _bells.has(mark):
 			_bells.erase(mark)
+	Audio.set_low_wax(player.wax < 15.0 and not player.dead, player.wax / 15.0)
 	if player.wax < 15.0 and not player.dead:
 		_heartbeat -= get_physics_process_delta_time()
 		if _heartbeat <= 0:
@@ -1267,6 +1271,7 @@ func toggle_pause() -> void:
 		return
 	paused = not paused
 	get_tree().paused = paused
+	Audio.set_paused(paused)
 	if paused:
 		hud.open_pause()
 	else:
