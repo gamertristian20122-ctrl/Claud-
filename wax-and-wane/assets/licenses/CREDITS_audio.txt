@@ -87,7 +87,7 @@ Per-file sources:
   bell_small.ogg       Impact Sounds: impactBell_heavy_003.ogg + original synthesis
   clock_tick_fast.ogg  original synthesis (numpy)
   moth_flutter.ogg     Foley Sounds: woosh5.ogg, Ninja Adventure: Wings2.wav (processed)
-  wax_bubble.ogg       Ninja Adventure: Bubble2.wav + original synthesis
+  wax_bubble.ogg       original synthesis (numpy)
   thud_heavy.ogg       Foley Sounds: stonesHit1.ogg, Impact Sounds: impactPunch_heavy_000.ogg, Impact Sounds: impactWood_heavy_001.ogg + original synthesis
   summon.ogg           Foley Sounds: woosh6.ogg, Ninja Adventure: Spirit.wav + original synthesis
   beam_loop.ogg        original synthesis (numpy)
