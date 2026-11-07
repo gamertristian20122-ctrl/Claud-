@@ -295,7 +295,18 @@ func _place_hints() -> void:
 	var lift := 24.0 if boss_box.visible else 0.0
 	preview.position = Vector2(0, vs.y - 23 - lift)
 	hint.position = Vector2(0, vs.y - 12 - lift)
-	hint_band.position = Vector2(floorf(vs.x / 2.0) - 150, vs.y - 25 - lift)
+	hint_band.position = Vector2(floorf((vs.x - hint_band.size.x) / 2.0), vs.y - 25 - lift)
+
+
+## The dark band under hints / previews grows with the longest line (a shop line can be wide).
+func _fit_band(fresh: Label) -> void:
+	var w := 300.0
+	for l in [hint, preview]:
+		var lab: Label = l
+		if lab.text != "" and (lab == fresh or lab.modulate.a > 0.05):
+			w = maxf(w, Art.font_small.get_string_size(lab.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 16.0)
+	hint_band.size.x = minf(ceilf(w), view_size().x)
+	_place_hints()
 
 
 func show_banner(title: String, sub := "", dur := 2.4) -> void:
@@ -311,13 +322,17 @@ func show_banner(title: String, sub := "", dur := 2.4) -> void:
 
 ## Shown while standing next to a relic / shop item.
 func preview_item(title: String, sub: String) -> void:
-	preview.text = "%s  -  %s" % [title.to_upper(), sub]
+	var t := "%s  -  %s" % [title.to_upper(), sub]
+	if t != preview.text:
+		preview.text = t
+		_fit_band(preview)
 	preview.modulate.a = 1.0
 	_preview_t = 0.3
 
 
 func show_hint(text: String, dur := 6.0) -> void:
 	hint.text = text
+	_fit_band(hint)
 	if _hint_tw:
 		_hint_tw.kill()
 	_hint_tw = create_tween()
@@ -776,7 +791,9 @@ func open_pause() -> void:
 	var p: Player = world.player
 	if not p.relics.is_empty():
 		var row := HFlowContainer.new()
-		row.custom_minimum_size = Vector2(clampf(p.relics.size() * 19.0, 198.0, 304.0), 0)
+		# 24 px slots so a thumb can pick one; a huge collection packs tighter so the menu still fits
+		var slot := 24.0 if p.relics.size() <= 24 else 18.0
+		row.custom_minimum_size = Vector2(clampf(p.relics.size() * (slot + 1.0), 198.0, 304.0), 0)
 		row.alignment = FlowContainer.ALIGNMENT_CENTER
 		row.add_theme_constant_override("h_separation", 1)
 		row.add_theme_constant_override("v_separation", 1)
@@ -785,7 +802,7 @@ func open_pause() -> void:
 		for r in p.relics:
 			var tb := TextureButton.new()
 			tb.texture_normal = Art.tex(Items.icon(r))
-			tb.custom_minimum_size = Vector2(18, 18)
+			tb.custom_minimum_size = Vector2(slot, slot)
 			tb.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
 			tb.ignore_texture_size = true
 			UI.focusable_slot(tb)
