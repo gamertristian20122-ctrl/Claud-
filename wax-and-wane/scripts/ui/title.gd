@@ -103,7 +103,7 @@ func _ready() -> void:
 	menu = VBoxContainer.new()
 	menu.add_theme_constant_override("separation", 2)
 	menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	menu.position = Vector2(-6, -18 - (MENU_H * 4 + 2 * 3))
+	menu.position = Vector2(-6, -16 - (MENU_H * 4 + 2 * 3))
 	root.add_child(menu)
 	play_btn = _menu_btn("Light the wick", _play, MENU_W)
 	menu.add_child(play_btn)
@@ -114,7 +114,7 @@ func _ready() -> void:
 	journal_btn = _menu_btn("Journal", func(): Journal.open(root).tree_exited.connect(journal_btn.queue_redraw), half)
 	journal_btn.draw.connect(func():
 		if Records.any_new():
-			Journal._dot(journal_btn, Vector2(journal_btn.size.x - 9, 4)))
+			Journal._dot(journal_btn, Vector2(journal_btn.size.x - 7, 5)))
 	row1.add_child(journal_btn)
 	row1.add_child(_menu_btn("Seed", open_seed_pad, half))
 	menu.add_child(row1)
@@ -432,7 +432,9 @@ func open_seed_pad() -> void:
 		if st["digits"] == "":
 			return
 		Audio.play("ui_open")
-		main.goto("game", {"seed": int(st["digits"]), "candle": sel if Candles.is_unlocked(sel) else "tallow"})
+		var seed_n := int(st["digits"])
+		mr.queue_free()
+		main.goto("game", {"seed": seed_n, "candle": sel if Candles.is_unlocked(sel) else "tallow"})
 	go.pressed.connect(light)
 	for k in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "<", "0"]:
 		var b := UI.button(k if k != "<" else "Del", press.bind(k), 30)

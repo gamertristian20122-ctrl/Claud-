@@ -21,7 +21,7 @@ static func stage() -> void:
 	r["seen_intro"] = true
 	var ach := {}
 	for a in ["first_snuff", "night_shift", "floor_crypt", "floor_chapel", "floor_belfry", "boss_cellar", "boss_crypt",
-			"win", "hollow", "seance", "mini_boss", "ks_hand_bell", "kindling_8", "smoke_pact", "customer", "tonight"]:
+			"win", "hollow", "seance", "ks_hand_bell", "kindling_8", "smoke_pact", "customer", "tonight"]:
 		ach[a] = 1700000000
 	r["achievements"] = ach
 	var seen := {}
@@ -72,9 +72,7 @@ static func stage() -> void:
 	r["run_history"] = hist
 	r["daily_history"] = [{"date": "2026-11-07", "first": 6420, "best": 7010, "won": false},
 		{"date": "2026-11-06", "first": 8115, "best": 8115, "won": true}, {"date": "2026-11-04", "first": 3990, "best": 5120, "won": false}]
-	var known: Array = Unlocks.unlocked_items()
-	known.erase("blowlamp")   # it moves in at the end of the tour's run (results: NEW IN THE HOUSE)
-	r["unlocks_known"] = known
+	r["unlocks_known"] = Unlocks.unlocked_items()   # the Blowlamp moves in during the tour's run (Big Game)
 	r["journal_new"] = {"r:dowsing_rod": 1, "l:wisp": 1, "g:sexton": 1, "m:chort": 1, "c:party": 1}
 
 
@@ -145,6 +143,10 @@ static func tour(at: Node) -> void:
 		title._credits()
 		await at._wait(0.4)
 		await at._shot("credits")
+		var cm: Node = title.root.get_child(title.root.get_child_count() - 1)
+		if cm.get_meta("modal", false):
+			cm.queue_free()
+		await at._wait(0.2)
 	# ---- the chalk start room, for each device
 	main.goto("game", {"seed": 4242})
 	await at._wait(3.2)
@@ -169,8 +171,11 @@ static func tour(at: Node) -> void:
 	# ---- a death note: snuffed by a Grave Light, holding a few relics, the Blowlamp moves in
 	for id in ["bellows", "moth_friend", "split_wick", "cold_wax", "hourglass", "lace_fan", "paper_lantern"]:
 		w.collect_item(id, w.player.global_position)
-	await at._wait(1.2)
-	Achievements.unlock("mini_boss")   # already earned in the staged profile: no toast
+	await at._wait(3.2)   # the relic banner clears first (the toast waits for it)
+	Achievements.unlock("mini_boss")   # Big Game: the toast says the Blowlamp moved in
+	await at._wait(0.6)
+	await at._shot("toast_unlock")
+	await at._wait(2.2)
 	var e: Node = w.spawn_enemy("wisp", w.room.center() + Vector2(30, -10))
 	w.player.wax = 0.9   # under a minute: no Guttering to cling on with
 	w.player.invuln = 0.0

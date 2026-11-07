@@ -264,6 +264,18 @@ static func killer_name(k: String) -> String:
 	return "Something in the Dark"
 
 
+## A few words for a row in the Journal's run list.
+static func short_killer(k: String) -> String:
+	match k:
+		"clock": return "Melted down to two"
+		"gave_up": return "Gave up"
+		"bomb": return "Own bomb"
+		"spikes": return "Floor spikes"
+		"hearth": return "A lit hearth"
+		"oil": return "An oil jar"
+	return killer_name(k)
+
+
 ## One line for the results screen and the Journal.
 static func death_line(k: String) -> String:
 	match k:

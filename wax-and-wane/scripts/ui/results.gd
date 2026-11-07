@@ -40,7 +40,9 @@ func _ready() -> void:
 	_header(v, won, f)
 	# ---- the numbers
 	var t: float = params.get("time", 0.0)
-	var stats := "%s %d/4   %s   Played %d:%02d   Foes %d   Kindling x%d" % [FLOORS[f], f, Game.clock_text(float(params.get("clock", 120.0))),
+	# (when snuffed the clock always reads 2:00 AM - the wax is the clock - so show the rooms instead)
+	var mid := Game.clock_text(float(params.get("clock", 120.0))) if won else "Rooms %d" % int(params.get("rooms", 0))
+	var stats := "%s %d/4   %s   Played %d:%02d   Foes %d   Kindling x%d" % [FLOORS[f], f, mid,
 		int(t) / 60, int(t) % 60, int(params.get("kills", 0)), int(params.get("streak", 0))]
 	v.add_child(UI.label(stats, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	# ---- the relics (select one to read it)
@@ -152,7 +154,7 @@ func _header(v: VBoxContainer, won: bool, f: int) -> void:
 		return
 	col.add_child(UI.label("SNUFFED OUT", 16, UI.RED))
 	col.add_child(UI.label(Records.death_line(killer), 8, UI.CREAM))
-	var where := ("at %s in %s" % [clock, FLOORS[f]]) if killer != "clock" else "in %s" % FLOORS[f]
+	var where := "%s, floor %d of 4" % [FLOORS[f], f]
 	col.add_child(UI.label(where, 8, UI.EMBER))
 
 
