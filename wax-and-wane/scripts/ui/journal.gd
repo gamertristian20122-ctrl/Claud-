@@ -774,7 +774,7 @@ func _d_nights() -> void:
 		return
 	for n in nights.slice(0, 8):
 		var date: String = n.get("date", "")
-		_text("%s   first %s   best %s%s" % [date.substr(5), _num(int(n.get("first", 0))), _num(int(n.get("best", 0))), "   done before two" if n.get("won", false) else ""], UI.CREAM if n == nights[0] else UI.WAX)
+		_text("%s   first %s   best %s%s" % [date.substr(5), _num(int(n.get("first", 0))), _num(int(n.get("best", 0))), "   won" if n.get("won", false) else ""], UI.CREAM if n == nights[0] else UI.WAX)
 
 
 func _d_run(r: Dictionary) -> void:
