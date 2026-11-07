@@ -145,10 +145,19 @@ func vibrate(ms: int) -> void:
 
 
 ## 0..120 minutes after midnight -> "12:47 AM" / "1:05 AM" / "2:00 AM".
-static func clock_text(minutes: float) -> String:
-	var m := clampi(int(floor(minutes)), -720, 120)
-	if m < 0:
-		var pm := 720 + m
-		return "%d:%02d PM" % [12 if pm / 60 == 0 else pm / 60, pm % 60]
+## The night never starts before midnight: wax past a full candle (minutes < 0) reads
+## "12:00 AM +8 min" (8 spare minutes). `spare = false` gives just "12:00 AM" (the HUD shows the
+## spare minutes in their own small label, see spare_minutes()).
+static func clock_text(minutes: float, spare := true) -> String:
+	var m := clampi(int(floor(minutes)), 0, 120)
 	var h := m / 60
-	return "%d:%02d AM" % [12 if h == 0 else h, m % 60]
+	var t := "%d:%02d AM" % [12 if h == 0 else h, m % 60]
+	var s := spare_minutes(minutes)
+	if spare and s > 0:
+		t += " +%d min" % s
+	return t
+
+
+## Whole minutes of wax beyond a full night (0 when the clock is at or past midnight).
+static func spare_minutes(minutes: float) -> int:
+	return maxi(0, int(floor(-minutes)))

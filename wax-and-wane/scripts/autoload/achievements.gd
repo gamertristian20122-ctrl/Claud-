@@ -52,6 +52,8 @@ var _by_id := {}
 var _layer: CanvasLayer
 var _queue: Array[String] = []
 var _toast: Control
+var _toast_tw: Tween
+var _last_screen := 0   # instance id of the screen seen last frame
 var _wait := 0.0
 var _steam: Object
 # what the watcher saw last frame in the current run
@@ -230,6 +232,22 @@ func _check_candles() -> void:
 # ---------------------------------------------------------------- toast
 
 func _pump(dt: float) -> void:
+	# toasts belong to the run (and its results): arriving on the title drops what is left, so
+	# nothing lands on the logo (they are all saved and listed under Achievements anyway)
+	var scr := _screen()
+	var sid := scr.get_instance_id() if scr else 0
+	var arrived := sid != _last_screen
+	_last_screen = sid
+	if arrived and scr and scr.name == "Title":
+		_queue.clear()
+		_wait = 0.0
+		if _toast_tw:
+			_toast_tw.kill()
+			_toast_tw = null
+		if _toast and is_instance_valid(_toast):
+			_toast.queue_free()
+		_toast = null
+		return
 	if _toast != null or _queue.is_empty():
 		return
 	# wait for a floor / relic banner to clear first (they share the top of the screen)
@@ -240,6 +258,14 @@ func _pump(dt: float) -> void:
 		return
 	_wait = 0.0
 	_show(_queue.pop_front())
+
+
+func _screen() -> Node:
+	var main := get_tree().current_scene
+	if main == null or not ("current" in main):
+		return null
+	var c: Variant = main.get("current")
+	return c if c != null and is_instance_valid(c) else null
 
 
 func _show(id: String) -> void:
@@ -281,18 +307,25 @@ func _show(id: String) -> void:
 	var sz := box.get_combined_minimum_size()
 	var in_game := _world() != null
 	var y := 14.0 if in_game else 4.0
-	box.position = Vector2(floorf((vs.x - sz.x) / 2.0), -sz.y - 2.0)
+	var scr := _screen()
+	var hidden := -sz.y - 2.0
+	if scr and scr.name == "Title":   # under the menu, never over the logo
+		y = vs.y - sz.y - 4.0
+		hidden = vs.y + 2.0
+	box.position = Vector2(floorf((vs.x - sz.x) / 2.0), hidden)
 	if ResourceLoader.exists("res://assets/audio/sfx/achievement.ogg") or ResourceLoader.exists("res://assets/audio/sfx/achievement.wav"):
 		Audio.play("achievement")
 	else:
 		Audio.play("tick", -2.0, 0.0, 1.6)
 	var tw := create_tween().set_ignore_time_scale(true)
+	_toast_tw = tw
 	tw.tween_property(box, "position:y", y, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tw.tween_interval(TOAST_TIME)
-	tw.tween_property(box, "position:y", -sz.y - 2.0, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(box, "position:y", hidden, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_callback(func():
 		box.queue_free()
-		_toast = null)
+		_toast = null
+		_toast_tw = null)
 
 
 # ---------------------------------------------------------------- list screen

@@ -1334,7 +1334,7 @@ func _tick_jet(dt: float) -> void:
 		if _jet_tick <= 0.0:
 			_jet_tick = clampf(0.1 * p.fire_delay / 0.42, 0.05, 0.14)
 			_jet_damage()
-			if room:
+			if room and not has.has("pale_taper"):   # a ghost flame never chips urns or crates
 				room.shot_hits(_jet_origin + _jet_dir * (_jet_len + 2.0) + Vector2(0, 6), 1.0)
 		_jet_snd -= dt
 		if _jet_snd <= 0.0:

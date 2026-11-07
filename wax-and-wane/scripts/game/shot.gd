@@ -72,7 +72,12 @@ func _physics_process(dt: float) -> void:
 	position += vel * dt
 	life -= dt
 	var room: Room = world.room
-	if room and room.shot_hits(global_position + Vector2(0, 6), dmg, friendly):
+	if friendly and has_meta("ghost"):
+		# Pale Taper: a ghost passes through walls, urns and crates without touching them
+		if room and not RelicFx.shot_wall(self):
+			end()
+			return
+	elif room and room.shot_hits(global_position + Vector2(0, 6), dmg, friendly):
 		if friendly and world.has_method("fx_sparks"):
 			world.fx_sparks(global_position, -vel.normalized(), 4, _blue)
 		if RelicFx.shot_wall(self): return

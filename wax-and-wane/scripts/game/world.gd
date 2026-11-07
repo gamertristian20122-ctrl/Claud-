@@ -1377,17 +1377,43 @@ func fx_drop(pos: Vector2, v: Vector2) -> void:
 	Juice.of(self).lit.emit(pos, v + Vector2(0, -20), randf_range(0.32, 0.45), FxParts.WAX, 260.0, 0.0, 2 if randf() < 0.4 else 1)
 
 
+var _texts: Array = []   # live fx_text labels: a new one stacks clear of them instead of overlapping
+
+
 func fx_text(pos: Vector2, text: String, col: Color) -> void:
 	var l := UI.label(text, 8, col, HORIZONTAL_ALIGNMENT_CENTER)
 	l.material = Art.unshaded
 	l.size = Vector2(60, 10)
-	l.position = pos - Vector2(30, 0)
+	l.position = Vector2(pos.x - 30, _free_text_y(pos))
+	_texts.append(l)
 	l.z_index = 30
 	fx_layer.add_child(l)
 	var tw := l.create_tween()
 	tw.tween_property(l, "position:y", l.position.y - 12, 0.8).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(l, "modulate:a", 0.0, 0.8).set_delay(0.4)
 	tw.tween_callback(l.queue_free)
+
+
+## The y for a new floating text at `pos`: stacked 10 px above any live text it would overlap
+## (Kindling + Clean + Quick fire together), or below them when that would leave the room.
+func _free_text_y(pos: Vector2) -> float:
+	_texts = _texts.filter(func(o): return is_instance_valid(o) and not o.is_queued_for_deletion())
+	var top := (room.position.y + 2.0) if room else -INF
+	for step in [-10.0, 10.0]:
+		var y := pos.y
+		var moved := true
+		var n := 0
+		while moved and n < 8:
+			moved = false
+			n += 1
+			for o in _texts:
+				var ol: Label = o
+				if absf(ol.position.x + 30.0 - pos.x) < 70.0 and absf(ol.position.y - y) < 10.0:
+					y = ol.position.y + step
+					moved = true
+		if step > 0.0 or y >= top:
+			return y
+	return pos.y
 
 
 func fx_ring(pos: Vector2, col: Color) -> void:

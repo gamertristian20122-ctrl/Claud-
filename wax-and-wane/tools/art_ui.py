@@ -1036,9 +1036,11 @@ def main():
     make_app_icons()
     make_preview()
     # Kenney fonts licence (CC0) next to the other licences
-    lic = "/opt/assets/packs/kenney-fonts/fonts/License.txt"
-    if os.path.exists(lic):
-        shutil.copyfile(lic, os.path.join(ROOT, "assets", "licenses", "Kenney_Fonts_CC0.txt"))
+    # (the /opt/assets/packs copy can be an empty placeholder: never overwrite the real text with it)
+    for lic in ["/opt/assets/jra/kenney-fonts/fonts/License.txt", "/opt/assets/packs/kenney-fonts/fonts/License.txt"]:
+        if os.path.exists(lic) and os.path.getsize(lic) > 0:
+            shutil.copyfile(lic, os.path.join(ROOT, "assets", "licenses", "Kenney_Fonts_CC0.txt"))
+            break
     for p in OUT:
         print(os.path.relpath(p, ROOT), Image.open(p).size)
     if review:

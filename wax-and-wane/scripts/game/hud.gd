@@ -6,6 +6,7 @@ var world: Node
 var root: Control
 var bar: Control
 var clock_label: Label
+var spare_label: Label    # "+8 min": wax beyond a full night (the clock stays at 12:00 AM)
 var floor_label: Label
 var coin_label: Label
 var bomb_label: Label
@@ -111,6 +112,8 @@ func _ready() -> void:
 	clock_label = UI.label("12:00 AM", 16, UI.CREAM)
 	clock_label.position = Vector2(8, 17)
 	root.add_child(clock_label)
+	spare_label = UI.label("", 8, UI.GOLD)
+	root.add_child(spare_label)
 	floor_label = UI.label("", 8, UI.DIM)
 	floor_label.position = Vector2(66, 22)
 	root.add_child(floor_label)
@@ -279,11 +282,20 @@ func _layout() -> void:
 	banner_band.position = Vector2(floorf(vs.x / 2.0) - 110, 14)
 	banner_band.size = Vector2(220, 32)
 	preview.size = Vector2(vs.x, 10)
-	preview.position = Vector2(0, vs.y - 23)
 	hint.size = Vector2(vs.x, 10)
-	hint.position = Vector2(0, vs.y - 12)
-	hint_band.position = Vector2(floorf(vs.x / 2.0) - 150, vs.y - 25)
 	hint_band.size = Vector2(300, 25)
+	_place_hints()
+	spare_label.position = bar.position + Vector2(146, 2)
+
+
+## Hints and item previews sit at the bottom edge; while the boss bar is up they move above it
+## (they must never cover the boss's name or bar).
+func _place_hints() -> void:
+	var vs := view_size()
+	var lift := 24.0 if boss_box.visible else 0.0
+	preview.position = Vector2(0, vs.y - 23 - lift)
+	hint.position = Vector2(0, vs.y - 12 - lift)
+	hint_band.position = Vector2(floorf(vs.x / 2.0) - 150, vs.y - 25 - lift)
 
 
 func show_banner(title: String, sub := "", dur := 2.4) -> void:
@@ -316,6 +328,7 @@ func show_hint(text: String, dur := 6.0) -> void:
 
 func set_boss(name: String, visible_: bool) -> void:
 	boss_box.visible = visible_
+	_place_hints()
 	boss_name.text = name
 	boss_frac = 1.0
 	boss_bar.queue_redraw()
@@ -353,7 +366,9 @@ func _process(dt: float) -> void:
 		preview.modulate.a = move_toward(preview.modulate.a, 0.0, dt * 4.0)
 	hint_band.modulate.a = maxf(hint.modulate.a, preview.modulate.a)
 	bar.queue_redraw()
-	clock_label.text = Game.clock_text(world.clock_minutes())
+	clock_label.text = Game.clock_text(world.clock_minutes(), false)
+	var spare := Game.spare_minutes(world.clock_minutes())
+	spare_label.text = "+%d min" % spare if spare > 0 else ""
 	var low := p.wax < 20.0
 	var want := 0.0
 	if p.wax < 20.0 and not p.dead:
