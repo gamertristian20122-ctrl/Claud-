@@ -166,6 +166,10 @@ func _process(dt: float) -> void:
 			var d: Array = _diag[f]
 			parts.append("f%d %ds hits %d lost %d gained %d" % [f, d[0], d[1], d[2], d[3]])
 		print("[diag]    ", " | ".join(parts))
+		var src: Array = _diag_src.keys()
+		src.sort_custom(func(a, b): return _diag_src[a] > _diag_src[b])
+		print("[diag]    hit by ", src.slice(0, 6).map(func(k): return "%s %d" % [k, _diag_src[k]]))
+		_diag_src = {}
 		_diag = {}
 		_diag_wax = -1.0
 		runs_left -= 1
@@ -306,6 +310,18 @@ func drive(w: Node) -> Array:
 var _diag := {}
 var _diag_wax := -1.0
 var _diag_floor := 0
+var _diag_src := {}   # what hit us: the touching foe's kind, or "shot or hazard" (shots are gone by the next frame)
+
+
+func _hit_source(w: Node, p: Player) -> String:
+	var at: Vector2 = p.global_position
+	for e in w.enemies:
+		if is_instance_valid(e) and e.alive and e.global_position.distance_to(at) < e.radius + 8.0:
+			return e.kind
+	for sh in w.enemy_shots:
+		if is_instance_valid(sh) and (sh.global_position - (at + Vector2(0, -6))).length() < 14.0:
+			return "shot:" + str(sh.get("kind")) if sh.get("kind") != null else "shot"
+	return "shot or hazard"
 
 
 func _diag_tick(w: Node, p: Player) -> void:
@@ -318,6 +334,7 @@ func _diag_tick(w: Node, p: Player) -> void:
 		if dw < -0.5:
 			d[1] += 1
 			d[2] += -dw
+			_diag_src[_hit_source(w, p)] = int(_diag_src.get(_hit_source(w, p), 0)) + 1
 		elif dw > 0.05:
 			d[3] += dw
 	d[0] += w.get_physics_process_delta_time()
