@@ -398,6 +398,16 @@ static func check_dressing() -> int:
 						if rect.intersects(sl):
 							errs += 1
 							print("[checkrooms] %s %s: %s covers a door slot at %s" % [th, L[1], tex.resource_path.get_file(), rect])
+				if sd == 1:   # the same seed must dress the room the same way (Tonight's Candle)
+					var d2 := {"type": L[0], "grid": RoomTemplates.to_grid(L[2]), "cleared": true, "visited": true,
+						"seen": true, "pickups": [], "seed": d["seed"], "dist": 3}
+					var r2 := Room.new()
+					r2.build(stub, Vector2i.ZERO, d2, th, {Vector2i.UP: "normal", Vector2i.DOWN: "boss", Vector2i.LEFT: "hidden", Vector2i.RIGHT: "treasure"})
+					if str(r2.decor._items) != str(r.decor._items) or r2.decor.lights.size() != r.decor.lights.size():
+						errs += 1
+						print("[checkrooms] %s %s: decor is not deterministic" % [th, L[1]])
+					r2.objects.free()
+					r2.free()
 				r.objects.free()
 				r.free()
 	stub.actors.free()
