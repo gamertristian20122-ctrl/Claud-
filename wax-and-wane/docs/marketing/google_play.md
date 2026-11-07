@@ -55,7 +55,7 @@ Made by one developer. Pixel art built on 0x72's free DungeonTileset II, sound e
 **Contact details:** an email address (required, shown publicly). Use a separate address for the game, e.g. `[NEED]@gmail.com`.
 
 **Graphics** (as listed on the Play Console upload screens; check there before exporting)
-- App icon: 512 x 512 PNG (32-bit), under 1 MB
+- App icon: 512 x 512 PNG (32-bit), under 1 MB. Ready: `docs/marketing/icons/google_play_512.png` (made by `tools/art_icon.py`)
 - Feature graphic: 1024 x 500, JPG or 24-bit PNG (no transparency)
 - Phone screenshots: 2 to 8, landscape 1920 x 1080 works. Put the clock-and-candle shot first.
 - Optional: 7-inch and 10-inch tablet screenshots (same 1920 x 1080 shots are fine)

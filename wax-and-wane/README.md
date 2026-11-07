@@ -76,8 +76,8 @@ Bump `version/code` in `export_presets.cfg` for each build you install over an o
   `assets/licenses/0x72_DungeonTilesetII_CC0.txt`.
 - Fonts: **Kenney Pixel** and **Kenney Mini** by Kenney (CC0), `assets/licenses/Kenney_Fonts_CC0.txt`.
 - Sound effects: **Kenney** audio packs (CC0) — see `assets/licenses/` and `assets/licenses/CREDITS_audio.txt`.
-- Hero, effects, pickups, relic icons, room compositions, UI and logo: original pixel art made for this game
-  (`tools/art_*.py`), built from / matched to the 0x72 palette.
+- Hero, effects, pickups, relic icons, room compositions, UI, logo and app icons: original pixel art made for
+  this game (`tools/art_*.py`; app / store icons: `tools/art_icon.py`), built from / matched to the 0x72 palette.
 - Music: original, synthesized for this game (`tools/make_audio.py`).
 - Engine: Godot Engine (MIT).
 - Asset packs were obtained via the curated `series-ai/jam-ready-assets` library, which records each
