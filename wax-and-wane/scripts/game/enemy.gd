@@ -101,10 +101,10 @@ const DEFS := {
 	"gutterspout": {"hp": 18.0, "speed": 0.0, "ai": "turret", "r": 6.0, "heavy": true, "cd": 1.2, "name": "Gutterspout",
 		"lore": "Spat rain off the belfry roof for centuries. It aims better now.", "stain": Color("#7b8994")},
 	# ---- bosses
-	"big_zombie": {"hp": 84.0, "speed": 20.0, "ai": "boss_rot", "r": 11.0, "boss": true, "heavy": true, "name": "OLD ROT",
+	"big_zombie": {"hp": 78.0, "speed": 20.0, "ai": "boss_rot", "r": 11.0, "boss": true, "heavy": true, "name": "OLD ROT",
 		"title": "It sleeps under the cellar stairs", "lore": "The first lodger. It has been rotting down there since the house was built.",
 		"stain": Color("#3d734f")},
-	"ogre": {"hp": 120.0, "speed": 26.0, "ai": "boss_gaoler", "r": 11.0, "boss": true, "heavy": true, "name": "THE GAOLER",
+	"ogre": {"hp": 110.0, "speed": 26.0, "ai": "boss_gaoler", "r": 11.0, "boss": true, "heavy": true, "name": "THE GAOLER",
 		"title": "Keeper of the crypt keys", "lore": "Locked the crypt every night for a hundred years. Tonight it locks you in.",
 		"stain": Color("#3d734f")},
 	"necro_boss": {"hp": 142.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW WARDEN",
@@ -113,11 +113,11 @@ const DEFS := {
 	"big_demon": {"hp": 220.0, "speed": 30.0, "ai": "boss_fiend", "r": 12.0, "boss": true, "heavy": true, "name": "THE HOUR FIEND",
 		"title": "It wants the clock to strike two", "victory": "THE HOUR FIEND IS SNUFFED",
 		"lore": "It lives in the gap between the ticks and eats the minutes you waste.", "stain": Color("#62232f")},
-	"wax_mother": {"hp": 100.0, "speed": 14.0, "ai": "boss_mother", "r": 13.0, "boss": true, "heavy": true, "name": "THE WAX MOTHER",
+	"wax_mother": {"hp": 92.0, "speed": 14.0, "ai": "boss_mother", "r": 13.0, "boss": true, "heavy": true, "name": "THE WAX MOTHER",
 		"title": "Every drip in the cellar is her child",
 		"phase_lines": ["", "She weeps harder...", "Her candles gutter and rage!"],
 		"lore": "All the candles ever burnt in this house ran down to her. She wants you back.", "stain": Color("#9f294e")},
-	"sexton": {"hp": 132.0, "speed": 26.0, "ai": "boss_sexton", "r": 10.0, "boss": true, "heavy": true, "name": "THE SEXTON",
+	"sexton": {"hp": 122.0, "speed": 26.0, "ai": "boss_sexton", "r": 10.0, "boss": true, "heavy": true, "name": "THE SEXTON",
 		"title": "He digs for the house", "phase_lines": ["", "The dead hear his spade...", "He digs faster!"],
 		"lore": "He dug every grave in the crypt, and he has measured you for one.", "stain": Color("#8a503e")},
 	"choir": {"hp": 152.0, "speed": 14.0, "ai": "boss_choir", "r": 14.0, "boss": true, "heavy": true, "name": "THE MELTED CHOIR",
@@ -129,6 +129,8 @@ const DEFS := {
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
 }
 
+## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
+const FLOOR_HP := [1.0, 1.28, 1.65, 2.05]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
 
@@ -242,7 +244,7 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 	def = DEFS[k]
 	position = pos
 	var f := float(floor_num - 1)
-	max_hp = float(def["hp"]) * (1.0 + 0.4 * f) if not def.get("boss", false) else float(def["hp"])
+	max_hp = float(def["hp"]) * FLOOR_HP[clampi(floor_num, 1, 4) - 1] if not def.get("boss", false) else float(def["hp"])
 	hp = max_hp
 	speed = float(def["speed"]) * (1.0 + 0.05 * f)
 	radius = float(def["r"])
@@ -406,7 +408,7 @@ func _physics_process(dt: float) -> void:
 	elif absf(to_p.x) > 2 and state != "charge" and state != "still":
 		spr.flip_h = to_p.x < 0
 	# contact damage
-	var touch: float = def.get("touch", 8.0 if boss else 7.0)
+	var touch: float = def.get("touch", 8.0 if boss else 6.0)
 	if touch > 0.0 and not buried and not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
 		if champ == "chilled" and not p.dead:
 			if p.chill_t <= 0.0:

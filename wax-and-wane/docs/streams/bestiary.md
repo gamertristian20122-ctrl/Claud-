@@ -47,6 +47,16 @@ records so the daily is identical for everyone.
 - **Chapel**: Hearth Devils, Rafter Leapers, Grave Lights; heavy: Chanters, Mourners, Psalters, Waxwork Brides; flyers: Cherubs, moths, Psalters.
 - **Belfry**: Deathwatch Beetles, rats, Icebox Corpses; heavy: Gutterspouts, Belfry Brutes, Snuffers, Waxworks; flyers: Clapper Bats, imps, Cherubs.
 
+### Balance changes (for the integrator)
+- Ordinary creatures' health by floor is `Enemy.FLOOR_HP` = x1.0 / 1.28 / 1.65 / 2.05 (v1.1 was
+  1.0 / 1.25 / 1.5 / 1.75): the cellar and crypt stay close to v1.1, the chapel and belfry press harder.
+  Guardians: Old Rot 78, Gaoler 110, Wax Mother 92, Sexton 122 (floors 1-2, ~+10%); Hollow Warden 142,
+  Melted Choir 152, Hour Fiend 220, Great Pendulum 228 (floors 3-4, ~+16-18%).
+- `small_fry` creatures (Lamp Moths, Melt Drops) do not feed Kindling (one line in `world.on_enemy_killed`),
+  otherwise swarms made the streak heal free.
+- The bot numbers are in the stream report; with the stronger relics/juice streams merged, re-check
+  `--playtest` and tune here (health scaling in `Enemy.setup`, `touch` default, boss `hp`).
+
 ## Hooks for other streams
 - **Journal (round 2):** `Enemy.DEFS[kind]` has `name` (Title Case; bosses UPPER CASE as on the boss bar),
   `lore` (one line) and `stain` (Color). Bosses also have `title` (intro subtitle). Use
