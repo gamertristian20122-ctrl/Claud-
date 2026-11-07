@@ -489,8 +489,12 @@ static func tour(at: Node) -> void:
 		await at._shot("keeper_resume")
 		k.hp = k.max_hp * 0.25
 		w.on_boss_hp(k)
-		w.player.wax = 100.0
-		await at._wait(5.5)
+		for i in 40:   # each phase lasts at least Keeper.MIN_PHASE seconds
+			if k.phase >= 3:
+				break
+			w.player.wax = 100.0
+			await at._wait(0.5)
+		await at._wait(3.5)
 		await at._shot("keeper_phase3")
 		w.player.wax = 100.0
 		await at._wait(2.5)

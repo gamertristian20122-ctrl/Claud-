@@ -22,6 +22,8 @@ const MIN_LEN := 104.0
 const HAND_HIT := 6.0
 const STOP_TIME := 2.9
 const MAX_SENTRIES := 2
+## Shortest time in phase 1 / 2 before the next phase (strong runs still see every pattern).
+const MIN_PHASE := [0.0, 6.0, 8.0, 0.0]
 const FACE := Vector2(0, -41)        # the dial on the sprite, from the Keeper's feet
 const WARN := Color("#da4e38")
 const PALE := Color("#cae6f5")
@@ -106,20 +108,30 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 		if w.player.dead and not e.mem.get("logged", false):
 			e.mem["logged"] = true
 			print("[keeper] Tallow fell after %.0f s in phase %d, the Keeper at %d%% (hand hits %d)" % [e.mem["fight_t"], e.phase, int(100.0 * e.hp / e.max_hp), e.mem.get("hand_hits", 0)])
-	# every phase is seen: damage past the next threshold waits until the Keeper has changed phase
+	# every phase is seen, however strong the run: damage past the next threshold is held (the dial
+	# flashes pale and rings like metal) until the Keeper has changed phase, and a phase lasts at least
+	# MIN_PHASE seconds (long enough for its hands, and in phase 2 for one stopped time)
+	e.mem["phase_t"] = e.mem.get("phase_t", 0.0) + e.get_physics_process_delta_time()
+	e.mem["held_t"] = e.mem.get("held_t", 0.0) - e.get_physics_process_delta_time()
 	if e.phase < 3:
 		var gate: float = [0.0, 0.66, 0.33][e.phase] * e.max_hp - 0.5
 		if e.hp < gate:
 			e.hp = gate
 			w.on_boss_hp(e)
+			if e.mem["held_t"] <= 0.0 and float(e.mem["phase_t"]) < MIN_PHASE[e.phase]:
+				e.mem["held_t"] = 0.3
+				e._telegraph(PALE)
+				Audio.play("hit_wall", -6.0, 0.1, 1.6)
 	if e.state == "stop":
 		_stop_tick(e)
 		return
 	# a new phase (one at a time) breaks off whatever the hands were doing
 	var np := mini(e._boss_phase(), e.phase + 1)
-	if np > e.phase and e.state != "roar":
+	if np > e.phase and e.state != "roar" and float(e.mem["phase_t"]) >= MIN_PHASE[e.phase]:
 		_stop_hands(e)
 		e.phase = np
+		e.mem["phase_t"] = 0.0
+		e.mem["stop_due"] = 1.6   # stopped time comes early in phase 2
 		e.on_new_phase()
 		if w.main and w.main.autotest:
 			print("[keeper] phase %d after %.0f s, Tallow at %s" % [np, e.mem.get("fight_t", 0.0), Game.clock_text(w.clock_minutes())])
