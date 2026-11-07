@@ -1599,11 +1599,11 @@ class Shimmer extends Node2D:
 
 	func _draw() -> void:
 		var t := Time.get_ticks_msec() / 1000.0
-		for k in 4:
-			var ph := fmod(t * 0.9 + k * 0.27, 1.0)
+		for k in 6:
+			var ph := fmod(t * 0.9 + k * 0.19, 1.0)
 			if ph > 0.7:
 				continue
-			var at := Vector2(roundf(sin(k * 2.7) * 9.0), roundf(cos(k * 1.9) * 6.0))
+			var at := Vector2(roundf(sin(k * 2.7) * 7.0), roundf(cos(k * 1.9) * 11.0) - roundf(ph * 3.0))
 			var c := Color("#cae6f5") if ph < 0.35 else Color("#72d6ce")
 			draw_rect(Rect2(at, Vector2(1, 1)), Color("#fdf7ed"))
 			draw_rect(Rect2(at + Vector2(-1, 0), Vector2(1, 1)), c)
