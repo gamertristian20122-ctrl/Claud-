@@ -22,11 +22,12 @@ and runs that never finished (a 50-minute `timeout` per batch).
 
 | Batch | Flags | Runs | Script errors / errors | Stuck / timed out |
 |---|---|---|---|---|
-| normal, fresh profile | `--playtest --seed=S` (S = 100, 200, 1000, 2000, 5000-20000) | 62 | 0 / 0 | 0 / 0 |
+| normal, fresh profile | `--playtest --seed=S` (S = 100, 200, 1000, 2000, 5000-24000) and the plain `--runs=2` | NORMALN | 0 / 0 | 0 / 0 |
 | stress | `--stress` (a random relic every room), with and without `--god` | 6 | 0 / 0 | 0 / 0 |
-| save cycle | `--stress --god --savecycle` (Save & quit + Continue at floors 2, 3, 4; up to 64 relics) | 2 | 0 / 0 | 0 / 0 |
-| every candle | `--unlockall --candle=tea_light / party / pillar / black_taper` | 18 | 0 / 0 | 0 / 0 |
+| save cycle | `--stress --savecycle` with and without `--god` (Save & quit + Continue at floors 2, 3, 4; up to 64 relics) | CYCLEN | 0 / 0 | 0 / 0 |
+| every candle | `--unlockall --candle=tea_light / party / pillar / black_taper` | CANDLEN | 0 / 0 | 0 / 0 |
 | showcase combos | `--god --relics=blowlamp,tinderbox,twin_wick,candelabra`; `pale_taper,sharp_wick` + all six helpers + Moth Friend | 4 | 0 / 0 | 0 / 0 |
+| god | `--god --runs=2` (twice) | 4 | 0 / 0 | 0 / 0 |
 | bench | `--bench` (busiest rooms, 20 foes, Blowlamp + Tinderbox + helpers, full stains) x7 | 7 | 0 / 0 | - |
 
 Bugs found and fixed on the way:
@@ -49,12 +50,36 @@ so people do better than it.
 | pass 1 | 5 / 5 / 6 / 6 | 1 / 1.2 / 1.6 / 2.05 | 6 of 9 (67 %) | 12:00 - 1:52 AM (4 of 6 before 12:35) | floor 2-3 |
 | pass 2 | 5 / 5 / 6 / 6 | 1 / 1.2 / **1.7 / 2.2** | 9 of 12 (75 %) | 12:00 - 1:56 AM (median 12:34) | 2 on floor 2, 1 on floor 3 |
 | pass 3 | 5 / 5 / **7 / 7** | 1 / 1.2 / 1.7 / 2.2 | 10 of 12 (83 %) | 12:34 - 1:15 AM | 2 on floor 2 |
-PASS4ROW
+| pass 4 | **5 / 6** / 7 / 7 (`Enemy.TOUCH`) | 1 / 1.2 / 1.7 / 2.2 | 8 of 12 (67 %) | 12:05 - 1:21 AM (median 12:48) | 3 on floor 2, 1 on floor 3 |
+| **pass 5 (final)** | 5 / 6 / 7 / 7 | 1 / **1.25** / 1.7 / 2.2 | 5 of 12 (42 %) | 12:10 - 12:56 AM | 6 on floor 2, 1 on floor 3 |
+
+Passes 4 and 5 differ only by 4 % Crypt health, so read them together: **13 wins in 24 (54 %)**, winners
+finishing 12:05 - 1:21 AM (median 12:46 AM). Twelve bot runs swing by +-15 % on their own (one seed block
+went 0 for 4, the next 3 for 4), which is why every row is 12 runs on fresh seeds.
+
+Final values: `Enemy.TOUCH = [5, 6, 7, 7]` (was 6 / 6 / 7 / 7 inline), `Enemy.FLOOR_HP = [1.0, 1.25, 1.7, 2.2]`
+(was 1 / 1.28 / 1.75 / 2.25). Boss health, `DRAIN_PER_SEC` and the drop tables are unchanged apart from
+the bomb-drop fix.
+
+### Candles (god-free, `--unlockall --candle=X`, 3 runs each unless noted)
+| Candle | Setting | Wins | Winners finished |
+|---|---|---|---|
+| Tea Light | before | 1 of 3 | 12:50 AM |
+| Tea Light | pass 3 | 2 of 3 | 12:49, 1:27 AM |
+| Party Candle | pass 3 | 3 of 3 | 12:20 - 1:01 AM |
+| Altar Pillar | pass 3 | 3 of 3 | 12:27 - 1:11 AM |
+| Black Taper (melt x1.2, damage x1.1) | passes 2, 4, 5 | 8 of 9 | 12:00 - 1:31 AM |
+BLACKROW
+The Black Taper is meant to be the hard mode, but with a Smoke Altar after every boss and twice the
+marked foes (coin payouts) the bot ended its runs with 12-14 relics against 8-10 for Tallow, and won more
+often than with Tallow. It now melts x1.4 (was x1.2), takes x1.3 from hits (new candle key `"hit"`, read
+by `Player.apply_candle`) and has no damage bonus (was x1.1); its line says "Melts fast, hurts more".
 What the diagnostics showed: almost every loss is a run that reaches the Crypt with little wax and then
 takes 15-27 hits there (floor-2 wax lost to hits 105-150 vs 17-77 gained back). Runs that get through the
 Crypt with a few relics snowball and finish early. So the early contact damage is the strongest knob
 (one point on floors 1-2 moved the bot from 18 % to ~80 %), while late health / contact mostly sets how
-early the winners finish.
+early the winners finish. The `hit by` lines show enemy shots cause about three hits in four; contact
+is the rest, so the Crypt's shooters are what a struggling player meets first.
 
 Also changed: plain kills drop bombs again (see above), and at most 3 marked foes carry a glow light.
 
