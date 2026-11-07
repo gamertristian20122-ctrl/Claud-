@@ -2,16 +2,23 @@ extends Node2D
 ## One run: floors, rooms, the candle, enemies, drops, the clock and every effect.
 
 const FLOORS := {
-	1: {"name": "The Cellar", "theme": "cellar", "dark": Color(0.32, 0.26, 0.27), "music": "floor_1", "boss": "big_zombie"},
-	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.25, 0.27, 0.34), "music": "floor_2", "boss": "ogre"},
-	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.28, 0.24, 0.34), "music": "floor_3", "boss": "necro_boss"},
-	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "boss": "big_demon"},
+	1: {"name": "The Cellar", "theme": "cellar", "dark": Color(0.32, 0.26, 0.27), "music": "floor_1", "boss": "big_zombie", "bosses": ["big_zombie", "wax_mother"]},
+	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.25, 0.27, 0.34), "music": "floor_2", "boss": "ogre", "bosses": ["ogre", "sexton"]},
+	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.28, 0.24, 0.34), "music": "floor_3", "boss": "necro_boss", "bosses": ["necro_boss", "choir"]},
+	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "boss": "big_demon", "bosses": ["big_demon", "pendulum"]},
 }
+## Who lives where. e = ordinary slot, h = heavy slot, f = flyer slot. Each floor has its own lodgers
+## (cellar: wax, rats and slugs; crypt: graves and soot; chapel: hymns, ghosts and waxworks;
+## belfry: bells, clockwork and gargoyles) and the mix gets meaner as you climb.
 const POOLS := {
-	1: {"e": ["tiny_zombie", "goblin", "tiny_slug", "tiny_zombie"], "h": ["muddy", "slug", "skelet"], "f": ["imp"]},
-	2: {"e": ["goblin", "skelet", "swampy", "tiny_zombie"], "h": ["pumpkin_dude", "muddy", "doc"], "f": ["imp"]},
-	3: {"e": ["skelet", "chort", "swampy", "wogol"], "h": ["orc_shaman", "masked_orc", "necromancer", "pumpkin_dude"], "f": ["imp"]},
-	4: {"e": ["chort", "wogol", "ice_zombie", "skelet"], "h": ["orc_shaman", "masked_orc", "necromancer", "doc"], "f": ["imp"]},
+	1: {"e": ["tiny_zombie", "goblin", "tiny_slug", "cinder_rat", "wax_blob", "tiny_zombie", "goblin"],
+		"h": ["muddy", "slug", "skelet", "wax_blob", "zombie"], "f": ["imp", "moth"]},
+	2: {"e": ["goblin", "skelet", "swampy", "cinder_rat", "sootling", "tiny_zombie", "wax_blob"],
+		"h": ["pumpkin_dude", "doc", "grave_hand", "snuffer", "zombie", "muddy"], "f": ["imp", "moth", "wisp"]},
+	3: {"e": ["skelet", "chort", "wogol", "sootling", "wisp", "swampy"],
+		"h": ["orc_shaman", "necromancer", "psalter", "waxwork", "masked_orc", "grave_hand"], "f": ["angel", "moth", "psalter", "wisp"]},
+	4: {"e": ["chort", "wogol", "ice_zombie", "deathwatch", "cinder_rat", "skelet", "sootling"],
+		"h": ["gutterspout", "orc_warrior", "snuffer", "waxwork", "necromancer", "doc"], "f": ["clapper_bat", "imp", "angel", "clapper_bat"]},
 }
 const LAST_FLOOR := 4
 ## Omens of the Hour: floor twists that always pay you back.
@@ -41,6 +48,7 @@ var enemy_shots: Array = []
 var hazards: Array = []
 var moths: Array = []
 var boss: Enemy
+var boss_kind := ""
 var paused := false
 var transitioning := false
 var room_spawned := false
@@ -224,6 +232,7 @@ func _start_floor(n: int) -> void:
 	else:
 		layout = FloorGen.generate(n, frng)
 	recompute_discount()
+	boss_kind = Enemy.pick_boss(FLOORS[n]["bosses"], n, run_seed, daily)
 	dark.color = FLOORS[n]["dark"]
 	for c in layout["cells"].keys():
 		layout["cells"][c]["seen"] = false
@@ -374,7 +383,7 @@ func _spawn_room_enemies() -> void:
 func _start_boss() -> void:
 	room.set_open(false, true)
 	player.frozen = true
-	var kind: String = FLOORS[floor_num]["boss"]
+	var kind: String = boss_kind if boss_kind != "" else FLOORS[floor_num]["boss"]
 	var name: String = Enemy.DEFS[kind]["name"]
 	Audio.music("final_boss" if floor_num == LAST_FLOOR else "boss")
 	Audio.play("boss_roar")
@@ -652,7 +661,8 @@ func on_enemy_killed(e: Enemy) -> void:
 	RelicFx.on_kill(self, e)
 	Audio.play("enemy_die")
 	fx_poof(e.global_position + Vector2(0, -6), false, 1.4)
-	_kindle(e.global_position)
+	if not e.def.get("small_fry", false):   # swarm moths and melt drops do not feed Kindling
+		_kindle(e.global_position)
 	Juice.of(self).enemy_killed(e)
 	if e.boss:
 		_boss_down(e)
@@ -1123,7 +1133,7 @@ func _victory() -> void:
 	hud.release_sticks()
 	Audio.music("victory_jingle", 0.3)
 	Audio.play("victory")
-	hud.show_banner("THE HOUR FIEND IS SNUFFED", "Done by %s" % Game.clock_text(clock_minutes()), 3.0)
+	hud.show_banner(Enemy.DEFS.get(boss_kind, {}).get("victory", "THE HOUR FIEND IS SNUFFED"), "Done by %s" % Game.clock_text(clock_minutes()), 3.0)
 	var tw := create_tween()
 	tw.tween_interval(3.4)
 	tw.tween_callback(func(): _end_run(true))

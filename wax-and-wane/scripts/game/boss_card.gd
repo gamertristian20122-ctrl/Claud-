@@ -54,13 +54,13 @@ func _ready() -> void:
 	var d: Dictionary = Enemy.DEFS.get(kind, {})
 	_boss = AnimatedSprite2D.new()
 	var sname: String = d.get("sprite", kind)
-	_boss.sprite_frames = Art.creature(sname)
+	_boss.sprite_frames = Enemy.frames_for(sname)
 	_boss.play("idle")
 	_boss.centered = false
 	var tex: Texture2D = _boss.sprite_frames.get_frame_texture("idle", 0)
 	var tsz := tex.get_size() if tex else Vector2(32, 36)
 	_boss.offset = Vector2(-tsz.x / 2.0, -tsz.y)
-	_boss.scale = Vector2(3, 3)
+	_boss.scale = Vector2(3, 3) if tsz.y <= 36.0 else Vector2(2, 2)
 	_boss.flip_h = true
 	_boss.modulate = d.get("tint", Color.WHITE)
 	_boss.position = Vector2(_boss_x(), _band_bottom(0, _boss_x()) + 2)
@@ -86,7 +86,7 @@ func _ready() -> void:
 	_name.position = Vector2(_vs.x * 0.07, 50)
 	add_child(_name)
 	var fl: Dictionary = world.FLOORS.get(world.floor_num, {})
-	_sub = UI.label("Guardian of %s" % fl.get("name", "the house"), 8, Color("#d3bfa9"))
+	_sub = UI.label(str(d.get("title", "Guardian of %s" % fl.get("name", "the house"))), 8, Color("#d3bfa9"))
 	_sub.position = Vector2(_vs.x * 0.07 + 2, 70)
 	add_child(_sub)
 	var who := "TALLOW"
