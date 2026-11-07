@@ -134,7 +134,7 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 		if hands[which]["st"] == "off":
 			_start_sweep(e, which, to_p)
 			e.mem["next_hand"] = 1 - which
-			e.mem["hand_t"] = [0.0, 4.6, 5.4, 3.9][e.phase] + (1.2 if which == 0 else 0.0)
+			e.mem["hand_t"] = [0.0, 4.6, 5.4, 4.6][e.phase] + (1.2 if which == 0 else 0.0)
 	# phase 2: stopped time every so often (never while a hand is moving)
 	if e.phase == 2 and e.state == "idle":
 		e.mem["stop_due"] -= ddt
@@ -145,7 +145,7 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 	if e.phase >= 3:
 		e.mem["chime_t"] -= ddt
 		if e.mem["chime_t"] <= 0.0:
-			e.mem["chime_t"] = 3.4
+			e.mem["chime_t"] = 4.2
 			_chime(e, to_p)
 	var face: Vector2 = e.global_position + FACE
 	match e.state:
@@ -167,14 +167,14 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 					w.enemy_shot(face, Vector2.from_angle(base + (i - (n - 1) / 2.0) * 0.21) * (74.0 + 6.0 * e.phase), "bolt_cog")
 				Audio.play("enemy_shoot", 2.0, 0.05, 0.75)
 				e.state = "idle"
-				e.cd = [0.0, 1.6, 1.5, 1.5][e.phase]
+				e.cd = [0.0, 1.6, 1.5, 1.8][e.phase]
 		"ring":
 			if e.t <= 0:
 				w.burst(face, 8 + 2 * e.phase, 58.0, "bolt_cog", randf() * TAU)
 				Audio.play("tick", 2.0, 0.0, 0.55)
 				w.shake(1.5)
 				e.state = "idle"
-				e.cd = [0.0, 1.6, 1.5, 1.4][e.phase]
+				e.cd = [0.0, 1.6, 1.5, 1.7][e.phase]
 
 
 func _hands_busy(e: Enemy) -> bool:
@@ -279,7 +279,7 @@ func _chime(e: Enemy, to_p: Vector2) -> void:
 	e._telegraph(Color(1, 1, 1))
 	w.shake(2.5)
 	w.fx_ring(face, PALE)
-	# a ring of sound with a gap on the far side from you, so there is always a way through
+	# a ring of sound with a gap where you stand: keep still and it passes you by
 	var n := 16
 	var gap := to_p.angle() + PI
 	for i in n:
