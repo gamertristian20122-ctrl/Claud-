@@ -408,6 +408,22 @@ static func test_start(w: Node) -> void:
 	of(w).belfry_clock = 48.0
 	w._start_floor(FLOOR)
 	print("[tower] test start: floor %d, %s, relics %s" % [w.floor_num, Game.clock_text(w.clock_minutes()), w.player.relics])
+	if "--keeper" in OS.get_cmdline_user_args():   # --tower --keeper: straight to the Keeper (boss balance)
+		var wax := 60.0
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--keeperwax="):
+				wax = float(a.split("=")[1])
+		w.get_tree().create_timer(1.0).timeout.connect(func():
+			if not is_instance_valid(w) or w.finished:
+				return
+			var c: Vector2i = w.layout["boss"]
+			w.cur_cell = c
+			w.room.dispose()
+			w.room = w._build_room(c)
+			w.player.position = w.room.center() + Vector2(0, 56)
+			w.player.wax = wax
+			w.cam.position = w._cam_target(w.room)
+			w._on_enter_room())
 
 
 ## --tour --tower: the ladder, the tower's rooms, the Keeper's three phases and the ending cards.
@@ -508,3 +524,12 @@ static func tour(at: Node) -> void:
 	await at._wait(1.4)
 	await at._shot("results_tower_hint")
 	Game.records["tower_seen"] = seen
+	# Moonwick in the Candle Box (unlocked by the true ending above)
+	main.goto("title")
+	await at._wait(3.5)
+	var t: Node = main.current
+	if t and t.get("sel") != null and t.has_method("_show_candle"):
+		t.sel = "moonwick"
+		t._show_candle()
+		await at._wait(0.8)
+		await at._shot("title_moonwick")
