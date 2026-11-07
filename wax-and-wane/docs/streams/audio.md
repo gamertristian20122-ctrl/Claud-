@@ -47,7 +47,7 @@ EBU R128 to -16 LUFS with a circular look-ahead limiter for <= -1 dBTP true peak
 `loop=true` in the `.import`. Measured result: every loop at -16.0 ±0.1 LUFS, true peak -1.3 to -3.4 dBTP,
 seam jump below the 99th-percentile sample step of each track.
 
-**Sizes:** music 6.6 MB (budget 12 MB), SFX 0.97 MB, total audio ≈ 7.6 MB.
+**Sizes:** music 6.6 MiB (10 files; budget 12 MB), SFX 0.8 MiB (74 files), total audio ≈ 7.4 MiB.
 
 ## API (`Audio` autoload)
 Unchanged for existing callers: `Audio.play(name, volume_db := 0.0, pitch_jitter := 0.06, pitch := 1.0)`,
@@ -66,6 +66,7 @@ New:
 | `Audio.loop_start(name, follow := null, volume_db := 0.0, pitch := 1.0) -> int` | Start a looping sound (`beam_loop`); stops by itself when `follow` is freed |
 | `Audio.loop_stop(id, fade := 0.15)` | Stop it |
 | `Audio.has_sound(name) -> bool` | True if the sound exists (for fallbacks) |
+| `Audio.stop_all()` | Silence everything at once (call before `get_tree().quit()` so no playback is left running at exit) |
 
 Automatic behaviour (no calls needed): boss music starts with `boss_sting`; `boss_roar`, `boss_die`,
 `boss_sting`, `explosion`, `bell_toll`, `item_get`, `relic_fanfare`, `achievement`, `door_burst`,
@@ -79,6 +80,10 @@ music jingles and the title reset the whole mix (intensity, ducks, low wax, resu
 - `_clear_room`: `Audio.set_intensity(0.5)` after `Audio.play("room_clear")`
 - `_clock_events`: `Audio.set_low_wax(player.wax < 15.0 and not player.dead, player.wax / 15.0)`
 - `toggle_pause`: `Audio.set_paused(paused)` after `get_tree().paused = paused`
+
+Other small edits outside my files: `scripts/autotest.gd` (the `--audiotest` mode, 3 lines; the bot stands
+still in it; `Audio.stop_all()` + a 0.3 s wait before its two `quit()` calls so runs end without exit-time leak
+warnings) and the two Credits lines in `scripts/ui/title.gd`.
 
 ## Sound names
 Takes: `shoot` (3), `hit_wall` (3), `hit_enemy` (3), `enemy_die` (3), `step` (4), `coin_pickup` (3), `splash`
