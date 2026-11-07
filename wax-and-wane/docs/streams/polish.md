@@ -25,7 +25,7 @@ and runs that never finished (a 50-minute `timeout` per batch).
 | normal, fresh profile | `--playtest --seed=S` (S = 100, 200, 1000, 2000, 5000-24000) and the plain `--runs=2` | 76 | 0 / 0 | 0 / 0 |
 | stress | `--stress` (a random relic every room), with and without `--god` | 6 | 0 / 0 | 0 / 0 |
 | save cycle | `--stress --savecycle` with and without `--god` (Save & quit + Continue at floors 2, 3, 4; up to 64 relics) | 4 | 0 / 0 | 0 / 0 |
-| every candle | `--unlockall --candle=tea_light / party / pillar / black_taper` | 34 | 0 / 0 | 0 / 0 |
+| every candle | `--unlockall --candle=tea_light / party / pillar / black_taper` | 43 | 0 / 0 | 0 / 0 |
 | showcase combos | `--god --relics=blowlamp,tinderbox,twin_wick,candelabra`; `pale_taper,sharp_wick` + all six helpers + Moth Friend | 4 | 0 / 0 | 0 / 0 |
 | god | `--god --runs=2` (twice) | 4 | 0 / 0 | 0 / 0 |
 | bench | `--bench` (busiest rooms, 20 foes, Blowlamp + Tinderbox + helpers, full stains) x7 | 7 | 0 / 0 | - |
@@ -68,6 +68,9 @@ the bomb-drop fix.
 | Tea Light | pass 3 | 2 of 3 | 12:49, 1:27 AM |
 | Party Candle | pass 3 | 3 of 3 | 12:20 - 1:01 AM |
 | Altar Pillar | pass 3 | 3 of 3 | 12:27 - 1:11 AM |
+| **Tea Light** | **final (pass 5)** | 1 of 3 | 12:44 AM |
+| **Party Candle** | **final** | 3 of 3 | 12:32 - 12:44 AM |
+| **Altar Pillar** | **final** | 1 of 3 | 12:54 AM |
 | Black Taper (melt x1.2, damage x1.1) | passes 2, 4, 5 | 8 of 9 | 12:00 - 1:31 AM |
 | Black Taper | + melt x1.4, hits x1.3, damage x1.0 | 4 of 7 | 12:24 - 1:08 AM |
 | **Black Taper (final)** | + lit at 12:20 AM (100 wax) | **1 of 6** | 12:19 AM (losses on floors 2-3) |
