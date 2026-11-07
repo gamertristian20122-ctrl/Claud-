@@ -127,6 +127,10 @@ The tower rooms are the main filter (a bad room costs 20-40 minutes); the Keeper
 30-60 minutes. Full game `--playtest --speed=4 --runs=2 --god`: both runs climbed the ladder, stilled the Keeper
 and ended on TRUE ENDING (12:24 AM and 12:05 AM, 18 and 16 relics, no script errors). A god run stilled the Keeper in
 7-12 s, which is why each phase now holds until the Keeper has changed phase.
+Normal `--playtest --speed=4 --runs=2` (random seeds, no god mode): both runs beat the Belfry before one
+(12:16-12:20 AM, 15-17 relics), climbed the ladder, stilled the Keeper and ended on TRUE ENDING; no script errors.
+Those strong runs stilled it in 5-6 s before `Keeper.MIN_PHASE`; with it a fight lasts at least ~14 s plus
+phase 3. `--tower --keeper --god` with the minimum phase times: 46 s fights, phases at 16-20 s and 31-35 s.
 Knobs: `Tower.ARRIVAL_WAX`, `Tower.UNLOCK_CLOCK`, `Enemy.FLOOR_HP[4]`, `DEFS["keeper"]["hp"]`, `Keeper.HAND_HIT`,
 the per-phase cooldown tables in `Keeper.tower_keeper`, `chime_t`, `MAX_SENTRIES`.
 
