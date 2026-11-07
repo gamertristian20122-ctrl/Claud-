@@ -6,6 +6,8 @@ const FLOORS := {
 	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.25, 0.27, 0.34), "music": "floor_2", "boss": "ogre", "bosses": ["ogre", "sexton"]},
 	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.28, 0.24, 0.34), "music": "floor_3", "boss": "necro_boss", "bosses": ["necro_boss", "choir"]},
 	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "boss": "big_demon", "bosses": ["big_demon", "pendulum"]},
+	# the secret fifth floor (scripts/game/tower.gd): beat the Belfry by 1:00 AM to climb to it
+	5: {"name": "The Clock Tower", "theme": "tower", "dark": Color(0.22, 0.25, 0.36), "music": "floor_5", "boss": "keeper", "bosses": ["keeper"]},
 }
 ## Who lives where. e = ordinary slot, h = heavy slot, f = flyer slot. Each floor has its own lodgers
 ## (cellar: wax, rats and slugs; crypt: graves and soot; chapel: hymns, ghosts and waxworks;
@@ -19,6 +21,8 @@ const POOLS := {
 		"h": ["orc_shaman", "necromancer", "psalter", "waxwork", "masked_orc", "grave_hand"], "f": ["angel", "moth", "psalter", "wisp"]},
 	4: {"e": ["chort", "wogol", "ice_zombie", "deathwatch", "cinder_rat", "skelet", "sootling"],
 		"h": ["gutterspout", "orc_warrior", "snuffer", "waxwork", "necromancer", "doc"], "f": ["clapper_bat", "imp", "angel", "clapper_bat"]},
+	5: {"e": ["cog_sentry", "deathwatch", "chort", "wogol", "cog_sentry", "sootling", "skelet"],
+		"h": ["gutterspout", "orc_warrior", "waxwork", "snuffer", "cog_sentry", "necromancer"], "f": ["minute_wraith", "minute_wraith", "clapper_bat", "angel"]},
 }
 const LAST_FLOOR := 4
 ## Omens of the Hour: floor twists that always pay you back.
@@ -197,6 +201,8 @@ func _intro() -> void:
 
 func floor_title() -> String:
 	var t := "%s  -  %d/%d" % [FLOORS[floor_num]["name"], floor_num, LAST_FLOOR]
+	if floor_num > LAST_FLOOR:
+		t = "%s  -  above the bells" % FLOORS[floor_num]["name"]
 	if omen != "":
 		t += "\n" + OMENS[omen]["name"]
 	return t
@@ -258,6 +264,7 @@ func _start_floor(n: int) -> void:
 		hud.show_hint("%s: %s" % [OMENS[omen]["name"], OMENS[omen]["desc"]], 5.0)
 	if n == 1 and (Game.records["seen_intro"] or main.autotest != null):
 		hud.show_hint(Controls.controls_hint(), 7.0)
+	Tower.on_floor_start(self)   # the Clock Tower's own banner on floor 5
 	RunSave.on_floor_start(self)   # Save & Continue: snapshot the start of this floor
 
 
@@ -285,6 +292,7 @@ func _build_room(c: Vector2i) -> Room:
 	if layout["cells"][c].get("altar", false):
 		_spawn_altar_visual(r)
 	Specials.on_build(self, r)   # special rooms: props, toll marks
+	Tower.on_build(self, r)      # the ladder of light, the Keeper's floor dial
 	return r
 
 
@@ -346,7 +354,7 @@ func _on_enter_room() -> void:
 
 
 func champ_chance() -> float:
-	var c: float = [0.03, 0.06, 0.09, 0.12][floor_num - 1]
+	var c: float = [0.03, 0.06, 0.09, 0.12, 0.14][floor_num - 1]
 	return c * (2.0 if candle_id == "black_taper" else 1.0)
 
 
@@ -388,7 +396,7 @@ func _start_boss() -> void:
 	player.frozen = true
 	var kind: String = boss_kind if boss_kind != "" else FLOORS[floor_num]["boss"]
 	var name: String = Enemy.DEFS[kind]["name"]
-	Audio.music("final_boss" if floor_num == LAST_FLOOR else "boss")
+	Audio.music("final_boss" if floor_num >= LAST_FLOOR else "boss")
 	Audio.play("boss_roar")
 	Juice.of(self).boss_card(kind, name)
 	var tw := create_tween()
@@ -426,7 +434,7 @@ func go_through(dir: Vector2i) -> void:
 
 
 func descend() -> void:
-	if transitioning:
+	if transitioning or Tower.on_descend(self):   # the ladder of light climbs instead
 		return
 	if altar_floor == floor_num and pact != "smoke":
 		declined_smoke = true
@@ -821,6 +829,8 @@ func _boss_down(e: Enemy) -> void:
 	tw.tween_callback(func():
 		hud.set_boss("", false)
 		if floor_num >= LAST_FLOOR:
+			if Tower.on_last_boss_down(self):   # a ladder of light (before 1:00 AM) or the true ending
+				return
 			_victory()
 			return
 		_clear_room()
@@ -1443,9 +1453,10 @@ func fx_stain(pos: Vector2, mat := "wax", big := false) -> void:
 
 ## Save & Continue: run state that lives outside the player (relic knowledge, fog, charges).
 func save_extra() -> Dictionary:
-	return {"relic_fx": RelicFx.of(self).to_dict(), "specials": Specials.of(self).to_dict()}
+	return {"relic_fx": RelicFx.of(self).to_dict(), "specials": Specials.of(self).to_dict(), "tower": Tower.of(self).to_dict()}
 
 
 func load_extra(d: Dictionary) -> void:
 	RelicFx.of(self).from_dict(d.get("relic_fx", {}))
 	Specials.of(self).from_dict(d.get("specials", {}))
+	Tower.of(self).from_dict(d.get("tower", {}))

@@ -76,6 +76,10 @@ func apply_candle(id: String) -> void:
 	c_deep = Color(cs[3])
 	stripes = d.get("stripes", false)
 	foil = d.get("foil", false)
+	pierce += int(d.get("pierce", 0))            # Moonwick's sparks pass through one foe
+	holder_tex = d.get("holder", "hero/holder")  # Moonwick's silver dish
+	if holder:
+		holder.texture = Art.tex(holder_tex)
 	queue_redraw()
 
 # ---- state
@@ -131,6 +135,7 @@ var _base := -5
 
 var flame: AnimatedSprite2D
 var holder: Sprite2D
+var holder_tex := "hero/holder"
 var face: Sprite2D
 var light: PointLight2D
 var glow: PointLight2D
@@ -139,7 +144,7 @@ var _shown_h := 14
 
 func _ready() -> void:
 	holder = Sprite2D.new()
-	holder.texture = Art.tex("hero/holder")
+	holder.texture = Art.tex(holder_tex)
 	holder.centered = false
 	holder.offset = Vector2(-9, -7)
 	add_child(holder)

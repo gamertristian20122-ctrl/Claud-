@@ -98,6 +98,11 @@ const DEFS := {
 		"lore": "The ticking in the walls at night. Wound up, it never stops.", "stain": Color("#c56025")},
 	"grave_hand": {"hp": 8.0, "speed": 38.0, "ai": "burrow", "r": 5.0, "heavy": true, "name": "Grave Hand",
 		"lore": "Reaches up through the crypt floor for anyone who stands still.", "stain": Color("#8a503e")},
+	# ---- the Clock Tower (scripts/game/keeper.gd; floor 5 only)
+	"cog_sentry": {"hp": 11.0, "speed": 16.0, "ai": "tower_cog", "r": 6.0, "cd": 2.2, "name": "Cog Sentry",
+		"lore": "Wound up a hundred years ago and told to keep watch. Nobody told it to stop.", "stain": Color("#c56025")},
+	"minute_wraith": {"hp": 9.0, "speed": 40.0, "ai": "tower_wraith", "r": 5.0, "fly": true, "glow": true, "cd": 2.4,
+		"name": "Minute-Hand Wraith", "lore": "It was late, once. It has been hurrying ever since.", "stain": Color("#b6cbcf")},
 	"gutterspout": {"hp": 18.0, "speed": 0.0, "ai": "turret", "r": 6.0, "heavy": true, "cd": 1.2, "name": "Gutterspout",
 		"lore": "Spat rain off the belfry roof for centuries. It aims better now.", "stain": Color("#7b8994")},
 	# ---- bosses
@@ -127,10 +132,14 @@ const DEFS := {
 		"title": "The Hour Fiend's heart swings", "phase_lines": ["", "Tick... tock... TICK!", "It is nearly two!"],
 		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
+	"keeper": {"hp": 340.0, "speed": 0.0, "ai": "tower_keeper", "r": 14.0, "boss": true, "heavy": true, "name": "THE KEEPER OF HOURS",
+		"title": "It winds the house, every night", "phase_lines": ["", "Time stands still...", "It chimes for you!"],
+		"victory": "THE KEEPER OF HOURS IS STILLED", "no_flip": true, "secret": true,
+		"lore": "It has wound the house clock every night for three hundred years. Tonight it wants to wind you.", "stain": Color("#5f2d56")},
 }
 
 ## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
-const FLOOR_HP := [1.0, 1.28, 1.75, 2.25]
+const FLOOR_HP := [1.0, 1.28, 1.75, 2.25, 2.5]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
 
@@ -244,7 +253,7 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 	def = DEFS[k]
 	position = pos
 	var f := float(floor_num - 1)
-	max_hp = float(def["hp"]) * FLOOR_HP[clampi(floor_num, 1, 4) - 1] if not def.get("boss", false) else float(def["hp"])
+	max_hp = float(def["hp"]) * FLOOR_HP[clampi(floor_num, 1, FLOOR_HP.size()) - 1] if not def.get("boss", false) else float(def["hp"])
 	hp = max_hp
 	speed = float(def["speed"]) * (1.0 + 0.05 * f)
 	radius = float(def["r"])
@@ -307,7 +316,7 @@ func _ready() -> void:
 			_house = HouseAI.new()
 			_bosses = BossAI.new()
 		_ext = true
-		_brain = Callable(_bosses if ai.begins_with("boss_") else _house, ai)
+		_brain = Callable(Keeper.ai() if ai.begins_with("tower_") else (_bosses if ai.begins_with("boss_") else _house), ai)
 		if _brain.get_object().has_method("init_" + ai):
 			_brain.get_object().call("init_" + ai, self)
 	# some arrive in a flutter of friends

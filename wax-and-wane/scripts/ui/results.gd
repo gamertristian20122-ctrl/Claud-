@@ -81,6 +81,7 @@ func _ready() -> void:
 	row2.add_child(UI.button("Light another", func(): main.goto("game")))
 	row2.add_child(UI.button("Title", func(): main.goto("title")))
 	v.add_child(row2)
+	Tower.on_results(self, v, params)   # the Clock Tower: TRUE ENDING, its floor name, the hint after a first win
 
 
 ## Score for the nightly seeded run; only the first try of a date counts as "first".

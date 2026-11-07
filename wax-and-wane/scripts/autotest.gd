@@ -70,6 +70,9 @@ func _next_run() -> void:
 	if args.has("relics") or args.has("keepsake"):
 		await get_tree().create_timer(0.4).timeout
 		_grant(main.current)
+	if args.has("tower") and mode == "playtest":   # --tower: start on the Clock Tower (floor 5) with a kit
+		await get_tree().create_timer(0.5).timeout
+		Tower.test_start(main.current)
 
 
 ## --relics=a,b,c gives those relics at the start; --keepsake=id hands over a full keepsake.
@@ -203,6 +206,7 @@ func drive(w: Node) -> Array:
 		var c: Vector2 = w.room.center()
 		if pos.distance_to(c) > 80:
 			mv += (c - pos).normalized() * 0.5
+		mv += Keeper.bot_push(w, pos)   # the Keeper's hands: get behind them or past their tips
 		if w.keepsake_full() and (w.count_enemies() >= 3 or (w.boss and is_instance_valid(w.boss))):
 			w.use_keepsake()
 		if w.boss and is_instance_valid(w.boss) and p.bombs > 0 and _bomb_cd <= 0 and pos.distance_to(w.boss.global_position) < 30:
@@ -449,6 +453,11 @@ func _tour() -> void:
 	if args.has("specials"):   # every special room, a Seance wave and a mini-boss per floor
 		await _wait(1.0)
 		await Specials.tour(self)
+		get_tree().quit()
+		return
+	if args.has("tower"):   # the ladder of light, the Clock Tower, the Keeper's phases, the ending
+		await _wait(1.0)
+		await Tower.tour(self)
 		get_tree().quit()
 		return
 	await _wait(0.25)

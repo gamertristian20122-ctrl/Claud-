@@ -19,6 +19,8 @@ static func shuffle(a: Array, rng: RandomNumberGenerator) -> void:
 
 
 static func generate(floor_num: int, rng: RandomNumberGenerator, extra := 0, treasures := 1) -> Dictionary:
+	if floor_num == Tower.FLOOR:
+		return Tower.layout(rng)   # the Clock Tower: short, no shop, no special rooms
 	var target := 6 + floor_num * 2 + extra
 	for attempt in 200:
 		var res := _try(floor_num, target, rng, treasures)
