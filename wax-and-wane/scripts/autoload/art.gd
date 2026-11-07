@@ -10,12 +10,21 @@ var _frames := {}
 var font: Font
 var font_small: Font
 var light_tex: Texture2D
+## One shared "ignore lighting" material (fire, bullets, explosions).
+var unshaded: CanvasItemMaterial
 
 
 func _ready() -> void:
 	font = load("res://assets/fonts/kenney_pixel.ttf")
 	font_small = load("res://assets/fonts/kenney_mini.ttf") if ResourceLoader.exists("res://assets/fonts/kenney_mini.ttf") else font
 	light_tex = _make_light()
+	for f in [font, font_small]:
+		if f is FontFile:
+			f.antialiasing = TextServer.FONT_ANTIALIASING_NONE
+			f.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
+			f.hinting = TextServer.HINTING_NONE
+	unshaded = CanvasItemMaterial.new()
+	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 
 
 func has(path: String) -> bool:

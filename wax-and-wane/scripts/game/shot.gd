@@ -23,6 +23,8 @@ var lob_from := Vector2.ZERO
 var lob_to := Vector2.ZERO
 var lob_t := 0.0
 var lob_dur := 0.9
+## Ember lights are capped so a room never exceeds the renderer's per-item light limit.
+static var _lights := 0
 
 
 func setup(w: Node, pos: Vector2, v: Vector2, kind: String, is_friendly: bool) -> void:
@@ -33,12 +35,12 @@ func setup(w: Node, pos: Vector2, v: Vector2, kind: String, is_friendly: bool) -
 	spr = AnimatedSprite2D.new()
 	spr.sprite_frames = Art.anim("fx/" + kind, 12.0)
 	spr.play("default")
-	var mat := CanvasItemMaterial.new()
-	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
-	spr.material = mat
+	spr.material = Art.unshaded
 	add_child(spr)
 	z_index = 5
-	if friendly:
+	if friendly and _lights < 6:
+		_lights += 1
+		tree_exiting.connect(func(): _lights -= 1)
 		light = PointLight2D.new()
 		light.texture = Art.light_tex
 		light.texture_scale = 0.28

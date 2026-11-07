@@ -423,14 +423,14 @@ KNOB_ALPHA = {"K": 170, "w": 220, "X": 150, "d": 200}
 
 # ==========================================================================
 # TITLE LOGO  "WAX & WANE"
-# Hand-lettered slab-serif capitals in the 0x72 wax colours. Thick strokes
+# Hand-lettered slab-serif capitals in Tallow's wax colours. Thick strokes
 # go down-right, thin strokes up-right (like hand-cut wood type). Each glyph
-# below is a silhouette ('#'); MELT gives, per column, the last row covered
-# by the cream top layer (melted wax pooling on top and running down the
-# strokes as drips). DRIPS hang off the bottom of a few letters. The & is
-# brass (Tallow's holder colours) with Tallow's own flame burning on top.
-# Build: soften slab corners -> cream/tan fill -> shading (light top-left)
-# -> 2 px slab depth below every face -> hanging drips -> 1 px #21141b outline.
+# below is a silhouette ('#'). Every exposed top surface gets a cream rim,
+# wax drips run down the strokes and hang off a few bottom slabs. The & is
+# polished brass (Tallow's holder colours) with Tallow's own flame on top.
+# Build: soften slab corners -> rim / drips / tan body, shaded with light
+# from the top-left -> 2 px slab depth below every face -> hanging drips ->
+# 1 px #21141b outline -> flame.
 # ==========================================================================
 GLYPH_W = """
 ##########....#########....#######
@@ -585,70 +585,80 @@ GLYPH_AMP = """
 ....#####........
 """
 
-# Cream top layer: last cream row per column ('.' = none). A gentle wavy
-# edge; the real drips are the drop sprites below.
-MELT = {
-    "W": "2332333233....3323332333....332332",
-    "A": "........33233233........",
-    "X": "233232332....2333233..",
-    "N": "2332332332......23323332",
-    "E": "3323232332323323332",
-}
+# Every exposed top surface gets a RIM_ROWS-deep cream rim (the top of the
+# wax, like Tallow's own rim). Drips run down the faces and hang off the
+# bottom slabs; they are the same tan wax as the letters, shaped by a lit
+# left edge and the shadow they cast to the right and below.
+RIM_ROWS = 2
 
-# Drops of cream running down the strokes: 2 px neck, 4 px bulb.
+DROP_LONG = """
+.##.
+.##.
+.##.
+.##.
+.##.
+.##.
+####
+####
+.##.
+"""
 DROP_BIG = """
-.ww.
-.ww.
-.ww.
-.ww.
-wwww
-wwww
-.ww.
+.##.
+.##.
+.##.
+.##.
+####
+####
+.##.
 """
 DROP_MID = """
-.ww.
-.ww.
-wwww
-wwww
-.ww.
+.##.
+.##.
+####
+####
+.##.
 """
-# (letter index in LOGO_TEXT, x, y, sprite) - y is the drop's first row.
+# (letter index in LOGO_TEXT, x, y, sprite): y = the drop's first row.
 FACE_DRIPS = [
-    (0, 4, 3, DROP_BIG), (0, 17, 3, DROP_MID),
-    (1, 12, 3, DROP_BIG),
-    (2, 5, 3, DROP_MID),
-    (4, 4, 3, DROP_MID), (4, 17, 3, DROP_BIG),
-    (5, 12, 3, DROP_MID),
-    (6, 2, 3, DROP_BIG), (6, 18, 3, DROP_MID),
-    (7, 3, 3, DROP_BIG),
+    (0, 4, 1, DROP_LONG), (0, 17, 1, DROP_MID),
+    (1, 12, 3, DROP_LONG),
+    (2, 5, 1, DROP_BIG),
+    (4, 4, 1, DROP_MID), (4, 17, 1, DROP_LONG),
+    (5, 12, 3, DROP_BIG),
+    (6, 2, 1, DROP_LONG), (6, 18, 1, DROP_MID),
+    (7, 3, 1, DROP_LONG),
 ]
 
-# Wax hanging off the bottom slab of a few letters (tan wax, cream lit edge).
-HANG_BIG = """
-wXXd
-wXXd
-.wd.
-.wd.
-wwXd
-wXXd
-.dD.
+# Wax hanging below the bottom slabs; the sprite's first row is the
+# letter's bottom row, so the drip grows out of the slab.
+HANG_LONG = """
+####
+####
+.##.
+.##.
+.##.
+####
+####
+####
+.##.
 """
-HANG_SMALL = """
-wXd
-wXd
-wXd
-.d.
+HANG_SHORT = """
+###
+###
+.#.
+###
+###
+.#.
 """
-# (letter index, x, sprite) - the sprite starts on the letter's bottom row.
-DRIPS = [(1, 3, HANG_BIG), (2, 15, HANG_SMALL), (6, 3, HANG_BIG), (7, 11, HANG_SMALL)]
+# (letter index, x, sprite)
+DRIPS = [(1, 3, HANG_LONG), (2, 15, HANG_SHORT), (4, 9, HANG_SHORT), (6, 3, HANG_LONG),
+         (7, 11, HANG_SHORT)]
 
 LOGO_TEXT = ["W", "A", "X", "&", "W", "A", "N", "E"]
 LOGO_KERN = {("W", "A"): -5}
 LOGO_GAP = 2
 AMP_SPACE = 4          # extra space on each side of the &
 CAP_TOP = 12           # canvas row of the cap line
-WAX_COLOURS = {"top": "w", "body": "X", "shade": "d", "topshade": "X", "depth1": "D", "depth2": "F"}
-BRASS_COLOURS = {"top": "y", "body": "o", "shade": "c", "topshade": "o", "depth1": "R", "depth2": "m"}
 
 
 def glyph_rows(name):
@@ -671,58 +681,60 @@ def build_logo():
         placed.append((ch, x, CAP_TOP + 24 - len(rows), rows))
         x += len(rows[0])
         prev = ch
-    W, Hh = x + 3, CAP_TOP + 24 + 12
-    face = {}        # (x, y) -> letter index
-    cream = set()
+    W, Hh = x + 3, CAP_TOP + 24 + 14
+    face = {}                                   # (x, y) -> letter index
     for i, (ch, gx, gy, rows) in enumerate(placed):
         h = len(rows)
-        melt = MELT.get(ch)
         for r, row in enumerate(rows):
             for c, v in enumerate(row):
                 if v != "#":
                     continue
-                if r in (0, h - 1):          # soften the slab corners
+                if r in (0, h - 1):             # soften the slab corners
                     if c == 0 or row[c - 1] != "#" or c == len(row) - 1 or row[c + 1] != "#":
                         continue
                 face[(gx + c, gy + r)] = i
-                if melt and melt[c] != "." and r <= int(melt[c]):
-                    cream.add((gx + c, gy + r))
+    wax = lambda i: placed[i][0] != "&"
+    rim = set()
+    for (fx, fy), i in face.items():
+        if wax(i) and any((fx, fy - k) not in face for k in range(1, RIM_ROWS + 1)):
+            rim.add((fx, fy))
+    drip = set()
     for (gi, dx, dy, spr) in FACE_DRIPS:
         ch, gx, gy, rows = placed[gi]
         for r, row in enumerate(rows_of(spr)):
             for c, v in enumerate(row):
                 p = (gx + dx + c, gy + dy + r)
-                if v == "w" and face.get(p) == gi:
-                    cream.add(p)
+                if v == "#" and face.get(p) == gi and p not in rim:
+                    drip.add(p)
     # 2) shade the faces, light from the top-left
     pix = {}
     for (fx, fy), i in face.items():
-        if placed[i][0] == "&":                       # polished brass
-            up = (fx, fy - 1) in face
-            lf = (fx - 1, fy) in face
-            rt = (fx + 1, fy) in face
-            dn = (fx, fy + 1) in face
-            if not up or not lf:
+        lf, rt = (fx - 1, fy), (fx + 1, fy)
+        up, dn = (fx, fy - 1), (fx, fy + 1)
+        if not wax(i):                            # polished brass &
+            if up not in face or lf not in face:
                 ch = "y"
-            elif not rt or not dn:
+            elif rt not in face or dn not in face:
                 ch = "c"
             else:
                 ch = "o"
-        elif (fx, fy) in cream:                       # melted cream wax
-            ch = "w" if (fx + 1, fy) in face else "X"
-        else:                                         # tan wax body
-            shaded = ((fx + 1, fy) not in face or (fx, fy - 1) in cream
-                      or (fx - 1, fy) in cream)
+        elif (fx, fy) in rim:                     # cream rim of the wax
+            ch = "w" if rt in face else "X"
+        elif (fx, fy) in drip:                    # raised drip: lit left edge
+            ch = "w" if lf not in drip and lf not in rim else "X"
+            if rt not in face:
+                ch = "d"
+        else:                                     # tan body, drips cast shadow
+            shaded = rt not in face or lf in drip or up in drip or up in rim
             ch = "d" if shaded else "X"
         pix[(fx, fy)] = ch
     # 3) slab depth: two rows straight down below every face pixel
     for (fx, fy), i in face.items():
-        brass = placed[i][0] == "&"
         for k in (1, 2):
             p = (fx, fy + k)
             if p in face:
                 break
-            want = ("R" if brass else "D") if k == 1 else ("m" if brass else "F")
+            want = ("D" if wax(i) else "R") if k == 1 else ("F" if wax(i) else "m")
             if p not in pix or (k == 1 and pix[p] in "Fm"):
                 pix[p] = want
     # 4) wax hanging off the bottom slabs
@@ -731,8 +743,11 @@ def build_logo():
         top = gy + len(rows) - 1
         for r, row in enumerate(rows_of(spr)):
             for c, v in enumerate(row):
-                if v != ".":
-                    pix[(gx + dx + c, top + r)] = v
+                if v == ".":
+                    continue
+                lit = c == 0 or row[c - 1] == "."
+                dark = c == len(row) - 1 or row[c + 1] == "."
+                pix[(gx + dx + c, top + r)] = "w" if lit else ("d" if dark else "X")
     im = Image.new("RGBA", (W, Hh), (0, 0, 0, 0))
     out = im.load()
     for (px_, py_), ch in pix.items():
@@ -755,6 +770,138 @@ def make_logo():
     im = build_logo()
     assert im.width <= 220 and im.height <= 60, im.size
     save(im, "title_logo.png")
+
+
+
+# ==========================================================================
+# LAUNCHER ICONS  (Tallow from hero_preview.png on dark warm wax-light)
+# Drawn at a small base size and scaled up by an integer factor (nearest).
+# The glow is two flat elliptical bands centred on the flame - no smooth
+# gradient.
+# ==========================================================================
+HERO = os.path.join(ART, "hero", "hero_preview.png")
+FLAME_IN_HERO = (7, 11)          # centre of the flame inside hero_preview.png
+ICON_BANDS = [(16, "6"), (10, "m")]   # (radius in base px, colour), largest first
+ICON_GLOW_TALL = 1.35                  # bands are taller than wide, like a flame's light
+ICON_CORNER = [4, 2, 1, 1]       # rounded corners of the legacy icon (insets)
+
+
+def glow_canvas(n, centre, bands, corner=None, rim=None):
+    im = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    px = im.load()
+    cx, cy = centre
+    for y in range(n):
+        for x in range(n):
+            if corner:
+                ins = 0
+                if y < len(corner):
+                    ins = corner[y]
+                elif y >= n - len(corner):
+                    ins = corner[n - 1 - y]
+                if x < ins or x >= n - ins:
+                    continue
+            ch = "K"
+            for r, c in bands:            # largest first
+                # (r - 0.3): no lone 1 px nubs at the band's extreme points
+                if (x + 0.5 - cx) ** 2 + ((y + 0.5 - cy) / ICON_GLOW_TALL) ** 2 <= (r - 0.3) ** 2:
+                    ch = c
+            px[x, y] = rgba(PAL[ch])
+    if rim:                                # 1 px rim just inside the edge
+        src = im.copy().load()
+        for y in range(n):
+            for x in range(n):
+                if src[x, y][3] and any(not (0 <= x + dx < n and 0 <= y + dy < n) or not src[x + dx, y + dy][3]
+                                        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                    px[x, y] = rgba(PAL[rim])
+    return im
+
+
+def upscale(im, k):
+    return im.resize((im.width * k, im.height * k), Image.NEAREST)
+
+
+def make_app_icons():
+    hero = Image.open(HERO).convert("RGBA")
+    hb = hero.getbbox()
+    # legacy 192: 48 base px x4, hero centred on its bounding box
+    n = 48
+    hx = (n - (hb[2] - hb[0])) // 2 - hb[0]
+    hy = (n - (hb[3] - hb[1])) // 2 - hb[1]
+    fc = (hx + FLAME_IN_HERO[0] + 0.5, hy + FLAME_IN_HERO[1] + 0.5)
+    icon = glow_canvas(n, fc, ICON_BANDS, ICON_CORNER, rim="6")
+    icon.alpha_composite(hero, (hx, hy))
+    save(upscale(icon, 4), "app_icon_192.png")
+    # adaptive 432: 72 base px x6; foreground inside the 66 dp safe circle
+    n = 72
+    hx = (n - (hb[2] - hb[0])) // 2 - hb[0]
+    hy = (n - (hb[3] - hb[1])) // 2 - hb[1]
+    fg = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    fg.alpha_composite(hero, (hx, hy))
+    safe_r = n * 66 / 108 / 2
+    a = fg.getchannel("A").load()
+    for y in range(n):
+        for x in range(n):
+            if a[x, y]:
+                d = max(abs(x + dx - n / 2) ** 2 + abs(y + dy - n / 2) ** 2 for dx in (0, 1) for dy in (0, 1)) ** 0.5
+                assert d <= safe_r, ("hero leaves the adaptive safe zone", x, y, d, safe_r)
+    save(upscale(fg, 6), "app_icon_fg_432.png")
+    fc = (hx + FLAME_IN_HERO[0] + 0.5, hy + FLAME_IN_HERO[1] + 0.5)
+    # the launcher shows the middle 72 of 108 dp = 48 base px, the same size
+    # as the legacy icon, so the bands keep the same radii
+    bg = glow_canvas(n, fc, ICON_BANDS)
+    save(upscale(bg, 6), "app_icon_bg_432.png")
+
+
+# ==========================================================================
+# HUD PREVIEW  (mock composite of the in-game HUD over the cellar room)
+# Mirrors hud.gd: bar at (6,5), clock label at (8,17), counters at (8,34),
+# pause button at (w-25,3) in a 22x22 box, bomb button at (w-33, h*0.42) in a
+# 30x30 box, Label shadow (1,1) #21141b.
+# ==========================================================================
+def make_preview():
+    vw, vh = 384, 216
+    im = Image.new("RGBA", (vw, vh), (9, 7, 9, 255))
+    room = Image.open(os.path.join(ART, "rooms", "room_cellar.png")).convert("RGBA")
+    im.alpha_composite(room, ((vw - room.width) // 2, (vh - room.height) // 2))
+    hero = Image.open(HERO).convert("RGBA")
+    im.alpha_composite(hero, (vw // 2 - 10, vh // 2 + 10))
+    big = ImageFont.truetype(os.path.join(ROOT, "assets", "fonts", "kenney_pixel.ttf"), 16)
+    small = ImageFont.truetype(os.path.join(ROOT, "assets", "fonts", "kenney_mini.ttf"), 8)
+
+    def label(xy, text, col, font):
+        d = ImageDraw.Draw(im)
+        d.fontmode = "1"
+        d.text((xy[0] + 1, xy[1] + 1), text, font=font, fill=rgba(PAL["K"]))
+        d.text(xy, text, font=font, fill=rgba(col))
+        return d.textlength(text, font=font)
+
+    def centred(tex, box_xy, box):
+        # TextureRect/TextureButton STRETCH_KEEP_CENTERED (offset floored here)
+        im.alpha_composite(tex, (box_xy[0] + (box[0] - tex.width) // 2,
+                                 box_xy[1] + (box[1] - tex.height) // 2))
+
+    # wax bar: 12:47 AM -> 73 of 120 minutes of wax left, a recent hit in red
+    bar = bar_mock(73 / 120, 80 / 120)
+    full = Image.new("RGBA", (vw, vh), (0, 0, 0, 0))
+    full.alpha_composite(bar, (6, 5 - 9))  # bar_mock leaves 9 rows for the flame
+    im.alpha_composite(full)
+    label((8, 17), "12:47 AM", "#fdf7ed", big)
+    label((66, 22), "The Cellar  -  1/4", "#aa8d7a", small)
+    ui = lambda n: Image.open(os.path.join(UI, n)).convert("RGBA")
+    x = 8
+    centred(ui("icon_coin.png"), (x, 34), (10, 12))
+    x += 10 + 3
+    x += int(label((x, 34 - 3), "23", "#facb3e", big)) + 3 + 6 + 3
+    centred(ui("icon_bomb.png"), (x, 34), (10, 12))
+    x += 10 + 3
+    label((x, 34 - 3), "2", "#fdf7ed", big)
+    centred(ui("btn_pause.png"), (vw - 25, 3), (22, 22))
+    centred(ui("btn_bomb.png"), (vw - 33, int(vh * 0.42)), (30, 30))
+    base = ui("stick_base.png")
+    base.putalpha(base.getchannel("A").point(lambda v: int(v * 0.8)))
+    im.alpha_composite(base, (64 - 20, 160 - 20))
+    im.alpha_composite(ui("stick_knob.png"), (64 + 8 - 9, 160 - 5 - 9))
+    save(im, "ui_preview.png")
 
 
 
@@ -845,6 +992,22 @@ def write_review(d):
     sheet(os.path.join(d, "logo6.png"), [logo], scale=6)
     sheet(os.path.join(d, "logo1.png"), [logo], scale=1, pad=12)
     sheet(os.path.join(d, "logo3.png"), [logo], scale=3, pad=8)
+    sheet(os.path.join(d, "icons.png"), [ld("app_icon_192.png"),
+          ld("app_icon_bg_432.png").resize((192, 192), Image.NEAREST),
+          ld("app_icon_fg_432.png").resize((192, 192), Image.NEAREST)], scale=1, pad=8)
+    # adaptive icon as a launcher would show it: bg + fg, circle mask (72 dp)
+    comp = ld("app_icon_bg_432.png")
+    comp.alpha_composite(ld("app_icon_fg_432.png"))
+    mask = Image.new("L", comp.size, 0)
+    ImageDraw.Draw(mask).ellipse((72, 72, 360, 360), fill=255)
+    comp.putalpha(mask)
+    sheet(os.path.join(d, "icon_adaptive.png"), [comp.crop((72, 72, 360, 360))], scale=1, pad=8)
+    prev = ld("ui_preview.png")
+    prev.save(os.path.join(d, "preview1.png"))
+    prev.resize((prev.width * 4, prev.height * 4), Image.NEAREST).crop((0, 0, 900, 260)).save(
+        os.path.join(d, "preview4_tl.png"))
+    prev.resize((prev.width * 4, prev.height * 4), Image.NEAREST).crop((1536 - 700, 0, 1536, 520)).save(
+        os.path.join(d, "preview4_tr.png"))
 
 
 def main():
@@ -857,6 +1020,8 @@ def main():
     make_boxes()
     make_sticks()
     make_logo()
+    make_app_icons()
+    make_preview()
     for p in OUT:
         print(os.path.relpath(p, ROOT), Image.open(p).size)
     if review:

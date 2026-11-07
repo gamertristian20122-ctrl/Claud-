@@ -57,7 +57,7 @@ static func panel(min_size := Vector2.ZERO) -> PanelContainer:
 static func button(text: String, cb: Callable, min_w := 96) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(min_w, 20)
+	b.custom_minimum_size = Vector2(min_w, 24)
 	b.focus_mode = Control.FOCUS_NONE
 	b.add_theme_font_override("font", Art.font)
 	b.add_theme_font_size_override("font_size", 16)
@@ -134,7 +134,7 @@ static func modal(parent: Node, title := "") -> Array:
 	var p := panel()
 	center.add_child(p)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 3)
+	v.add_theme_constant_override("separation", 5)
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	p.add_child(v)
 	if title != "":

@@ -194,6 +194,7 @@ func _add_candelabra(c: Vector2i) -> void:
 	light.texture = Art.light_tex
 	light.color = Color(1.0, 0.72, 0.42)
 	light.energy = 0.0
+	light.enabled = false
 	light.texture_scale = 0.9
 	light.position = Vector2(0, -20)
 	holder.add_child(light)
@@ -206,6 +207,7 @@ func light_candles(instant := false) -> void:
 	for pair in candles:
 		var s: AnimatedSprite2D = pair[0]
 		var l: PointLight2D = pair[1]
+		l.enabled = true
 		if instant:
 			s.play("on")
 			l.energy = 0.75

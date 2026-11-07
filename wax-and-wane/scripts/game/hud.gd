@@ -24,6 +24,12 @@ var pause_layer: Control
 var vignette: TextureRect
 var preview: Label
 var _preview_t := 0.0
+var _safe_t := 0.0
+var _last_safe := Rect2i()
+var _bomb_idx := -1
+var _bomb_press := Vector2.ZERO
+var _bomb_ms := 0
+var ghost_sticks := false
 
 var shown_wax := 120.0
 var ghost_wax := 120.0
@@ -52,6 +58,8 @@ func _ready() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
+	root.draw.connect(_draw_ghosts)
+	ghost_sticks = int(Game.records["runs"]) <= 3
 	_flame_frames = Art.seq("hero/flame")
 	# low-wax vignette (drawn under everything else in the HUD)
 	var g := Gradient.new()
@@ -168,6 +176,8 @@ func _make_stick() -> Control:
 	c.visible = false
 	c.set_meta("knob", Vector2.ZERO)
 	c.draw.connect(func():
+		if not c.visible:
+			return
 		var base := Art.tex("ui/stick_base")
 		var knob := Art.tex("ui/stick_knob")
 		c.draw_texture(base, -base.get_size() / 2.0, Color(1, 1, 1, 0.8))
@@ -198,7 +208,7 @@ func _layout() -> void:
 	(coin_label.get_parent() as Control).position = Vector2(8 + ins.x, 34)
 	minimap.position = Vector2(vs.x - minimap.size.x - 28 - ins.y, 4)
 	pause_btn.position = Vector2(vs.x - 25 - ins.y, 3)
-	bomb_btn.position = Vector2(vs.x - 33 - ins.y, vs.y * 0.42)
+	bomb_btn.position = Vector2(vs.x - 33 - ins.y, 54)
 	boss_box.position = Vector2((vs.x - 170) / 2.0, vs.y - 12)
 	banner.size = Vector2(vs.x, 16)
 	banner.position = Vector2(0, 48)
@@ -262,6 +272,13 @@ func _process(dt: float) -> void:
 	if _ghost_hold <= 0:
 		ghost_wax = move_toward(ghost_wax, p.wax, 30.0 * dt)
 	_flame_t += dt
+	_safe_t -= dt
+	if _safe_t <= 0.0:
+		_safe_t = 0.5
+		var sa := DisplayServer.get_display_safe_area()
+		if sa != _last_safe:
+			_last_safe = sa
+			_layout()
 	_preview_t -= dt
 	if _preview_t <= 0.0 and preview.modulate.a > 0.0:
 		preview.modulate.a = move_toward(preview.modulate.a, 0.0, dt * 4.0)
@@ -281,6 +298,8 @@ func _process(dt: float) -> void:
 	move_vec = Vector2.ZERO if _l_idx < 0 else move_vec
 	stick_l.queue_redraw()
 	stick_r.queue_redraw()
+	if ghost_sticks:
+		root.queue_redraw()
 
 
 func _draw_bar() -> void:
@@ -328,6 +347,17 @@ func _draw_bar() -> void:
 		bar.draw_texture(fr, Vector2(x0 + wpx - 4, y0 - fr.get_height() + 5))
 
 
+func _draw_ghosts() -> void:
+	if not ghost_sticks:
+		return
+	var vs := view_size()
+	var base := Art.tex("ui/stick_base")
+	if _l_idx < 0:
+		root.draw_texture(base, Vector2(64, vs.y - 52) - base.get_size() / 2.0, Color(1, 1, 1, 0.3))
+	if _r_idx < 0:
+		root.draw_texture(base, Vector2(vs.x - 64, vs.y - 52) - base.get_size() / 2.0, Color(1, 1, 1, 0.3))
+
+
 func _draw_boss_bar() -> void:
 	var w := boss_bar.size.x
 	boss_bar.draw_rect(Rect2(0, 0, w, 6), Color("#21141b"))
@@ -372,8 +402,31 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		world.toggle_pause()
 		return
-	if world.paused or world.player == null:
+	if world.paused:
+		# Godot only turns the first finger into clicks; let any finger tap menu buttons
+		if event is InputEventScreenTouch and not event.pressed and event.index != 0:
+			var b := _button_at(root, event.position)
+			if b:
+				b.pressed.emit()
+				get_viewport().set_input_as_handled()
 		return
+	if world.player == null:
+		return
+	if event is InputEventScreenTouch and event.index == _bomb_idx and not event.pressed:
+		_bomb_idx = -1
+		if Time.get_ticks_msec() - _bomb_ms < 450 and Rect2(bomb_btn.position, bomb_btn.size).grow(6).has_point(event.position):
+			world.place_bomb()
+			bomb_btn.scale = Vector2(0.9, 0.9)
+			bomb_btn.create_tween().tween_property(bomb_btn, "scale", Vector2.ONE, 0.12)
+		return
+	if event is InputEventScreenDrag and event.index == _bomb_idx and event.position.distance_to(_bomb_press) > 8.0:
+		# a drag that started on the bomb button becomes the aim stick
+		_bomb_idx = -1
+		if _r_idx < 0:
+			_r_idx = event.index
+			_r_origin = _bomb_press
+			stick_r.position = _r_origin
+			stick_r.visible = true
 	var swap: bool = Game.settings["swap_sticks"]
 	if event is InputEventScreenTouch:
 		var pos: Vector2 = event.position
@@ -384,10 +437,10 @@ func _input(event: InputEvent) -> void:
 				world.toggle_pause()
 				get_viewport().set_input_as_handled()
 				return
-			if Rect2(bomb_btn.position, bomb_btn.size).grow(4).has_point(pos):
-				world.place_bomb()
-				bomb_btn.scale = Vector2(0.9, 0.9)
-				bomb_btn.create_tween().tween_property(bomb_btn, "scale", Vector2.ONE, 0.12)
+			if Rect2(bomb_btn.position, bomb_btn.size).grow(4).has_point(pos) and world.player.bombs > 0 and _bomb_idx < 0:
+				_bomb_idx = event.index
+				_bomb_press = pos
+				_bomb_ms = Time.get_ticks_msec()
 				get_viewport().set_input_as_handled()
 				return
 			var left_side := pos.x < view_size().x * 0.5
@@ -437,6 +490,19 @@ func _input(event: InputEvent) -> void:
 			stick_r.set_meta("knob", d)
 
 
+func _button_at(n: Node, pos: Vector2) -> Button:
+	for i in range(n.get_child_count() - 1, -1, -1):
+		var c := n.get_child(i)
+		if c is CanvasItem and not (c as CanvasItem).is_visible_in_tree():
+			continue
+		var found := _button_at(c, pos)
+		if found:
+			return found
+		if c is Button and (c as Button).get_global_rect().grow(2).has_point(pos):
+			return c
+	return null
+
+
 func _over_button(pos: Vector2) -> bool:
 	for b in [pause_btn, bomb_btn]:
 		if Rect2(b.position, b.size).grow(3).has_point(pos):
@@ -478,8 +544,21 @@ func open_pause() -> void:
 		v.add_child(row)
 	v.add_child(UI.button("Resume", func(): world.toggle_pause()))
 	v.add_child(UI.button("Settings", func(): SettingsPanel.open(root)))
-	v.add_child(UI.button("Give up", func(): world.give_up()))
+	v.add_child(UI.button("Give up", _confirm_give_up))
 	Audio.play("ui_open")
+
+
+func _confirm_give_up() -> void:
+	var m := UI.modal(root, "SNUFF YOUR FLAME?")
+	var r: Control = m[0]
+	r.process_mode = Node.PROCESS_MODE_ALWAYS
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	row.add_child(UI.button("Keep burning", func(): r.queue_free(), 100))
+	row.add_child(UI.button("Give up", func():
+		r.queue_free()
+		world.give_up(), 80))
+	(m[1] as VBoxContainer).add_child(row)
 
 
 func close_pause() -> void:

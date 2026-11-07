@@ -93,7 +93,7 @@ static func apply(id: String, p: Player, world: Node) -> void:
 			p.bombs += 3
 			world.bomb_radius *= 1.3
 		"hourglass":
-			p.hourglass += 4.0
+			p.hourglass += 3.0
 		"candelabra":
 			p.shots += 2
 			p.damage *= 0.85

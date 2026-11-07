@@ -71,6 +71,7 @@ var target_pos := Vector2.ZERO
 var _hand_base := 0.0
 var shadow: Sprite2D
 static var _shadow_tex: Texture2D
+static var _flash_shader: Shader
 
 
 func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
@@ -120,9 +121,10 @@ func _ready() -> void:
 	shadow.position = Vector2(0, -1)
 	add_child(shadow)
 	mat = ShaderMaterial.new()
-	var sh := Shader.new()
-	sh.code = FLASH_SHADER
-	mat.shader = sh
+	if _flash_shader == null:
+		_flash_shader = Shader.new()
+		_flash_shader.code = FLASH_SHADER
+	mat.shader = _flash_shader
 	spr.material = mat
 	add_child(spr)
 	# spawn-in

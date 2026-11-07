@@ -17,6 +17,9 @@ var autotest: Node
 
 func _ready() -> void:
 	get_tree().set_auto_accept_quit(false)
+	# match physics to the display (90/120 Hz phones) so motion is smooth
+	var hz := roundi(DisplayServer.screen_get_refresh_rate(60.0))
+	Engine.physics_ticks_per_second = clampi(hz, 60, 120)
 	get_tree().set_quit_on_go_back(false)
 	var top := CanvasLayer.new()
 	top.layer = 100

@@ -115,14 +115,17 @@ func _intro() -> void:
 			"before the clock strikes two.",
 			"",
 			"Your wax is your life - and your time.",
-			"Every hit melts you. Wax drippings mend you."]:
+			"Every hit melts you. Wax drippings mend you.",
+			"",
+			"Left thumb moves. Right thumb aims and fires."]:
 		v.add_child(UI.label(line, 8, UI.CREAM if line != "" else UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	v.add_child(UI.button("Light the wick", func():
 		Game.records["seen_intro"] = true
 		Game.save()
 		root.queue_free()
 		paused = false
-		get_tree().paused = false, 120))
+		get_tree().paused = false
+		hud.show_hint("Left thumb: move    Right thumb: aim + shoot", 8.0), 120))
 
 
 # ---------------------------------------------------------------- floors & rooms
@@ -153,8 +156,8 @@ func _start_floor(n: int) -> void:
 	_on_enter_room()
 	Audio.music(FLOORS[n]["music"])
 	hud.show_banner(FLOORS[n]["name"].to_upper(), "Floor %d of %d   -   %s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes())], 2.2)
-	if n == 1:
-		hud.show_hint("Left thumb: move    Right thumb: shoot    Wax = health = time", 7.0)
+	if n == 1 and (Game.records["seen_intro"] or main.autotest != null):
+		hud.show_hint("Left thumb: move    Right thumb: aim + shoot    Wax = health = time", 7.0)
 
 
 func _cam_target(r: Room) -> Vector2:
@@ -315,12 +318,12 @@ func _clear_room() -> void:
 	if d["type"] == "normal":
 		_room_reward(room.center() + Vector2(0, 4))
 		if room_hits == 0:
-			player.heal(2.0)
-			fx_text(player.global_position + Vector2(0, -34), "CLEAN  +2 min", UI.GOLD)
+			player.heal(1.0)
+			fx_text(player.global_position + Vector2(0, -34), "CLEAN  +1 min", UI.GOLD)
 		var par := 8.0 + 2.5 * floor_num
 		if run_time - room_t0 <= par:
-			player.heal(3.0)
-			fx_text(player.global_position + Vector2(0, -44), "QUICK  +3 min", UI.EMBER)
+			player.heal(2.0)
+			fx_text(player.global_position + Vector2(0, -44), "QUICK  +2 min", UI.EMBER)
 
 
 func _room_reward(pos: Vector2) -> void:
@@ -514,7 +517,7 @@ func _boss_down(e: Enemy) -> void:
 		_clear_room()
 		add_pickup("relic", room.center() + Vector2(-24, 0), _next_relic())
 		add_pickup("wax_big", room.center() + Vector2(24, 4))
-		add_pickup("trapdoor", room.center() + Vector2(0, 36))
+		add_pickup("trapdoor", free_spot_near(room.center() + Vector2(0, 36), 8.0))
 		for i in 4:
 			add_pickup("coin", room.center() + Vector2(0, 14), "", 0, Vector2.from_angle(rng.randf() * TAU) * 50.0)
 		player.damage += 0.15
@@ -673,9 +676,7 @@ func _explode(pos: Vector2, r: Room) -> void:
 	var ex := AnimatedSprite2D.new()
 	ex.sprite_frames = Art.anim("fx/explosion", 16.0, false)
 	ex.position = pos + Vector2(0, -12)
-	var mat := CanvasItemMaterial.new()
-	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
-	ex.material = mat
+	ex.material = Art.unshaded
 	fx_layer.add_child(ex)
 	ex.play("default")
 	ex.animation_finished.connect(ex.queue_free)
@@ -778,6 +779,8 @@ func _end_run(won: bool) -> void:
 
 
 func give_up() -> void:
+	if not paused:
+		return
 	toggle_pause()
 	player.dead = true
 	on_player_died()
@@ -950,9 +953,7 @@ func fx_poof(pos: Vector2, warm := true, sc := 1.0) -> void:
 	a.scale = Vector2(sc, sc)
 	if warm:
 		a.modulate = Color(1.0, 0.8, 0.55)
-	var mat := CanvasItemMaterial.new()
-	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
-	a.material = mat
+	a.material = Art.unshaded
 	fx_layer.add_child(a)
 	a.play("default")
 	a.animation_finished.connect(a.queue_free)

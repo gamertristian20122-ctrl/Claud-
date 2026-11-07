@@ -81,9 +81,7 @@ func _ready() -> void:
 	flame.centered = false
 	flame.offset = Vector2(-4, -12)
 	flame.z_index = 2
-	var mat := CanvasItemMaterial.new()
-	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
-	flame.material = mat
+	flame.material = Art.unshaded
 	add_child(flame)
 	_set_flame_frames()
 	flame.play("default")
