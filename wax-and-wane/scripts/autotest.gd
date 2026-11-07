@@ -1071,12 +1071,12 @@ func _bench_busiest(w: Node) -> Vector2i:
 	return best
 
 
-## Top the room up to `n` live foes (a moth swarm included).
-func _bench_crowd(w: Node, n: int) -> void:
+## Top the room up to `n` live foes (a moth swarm included), at most `most` new ones per call.
+func _bench_crowd(w: Node, n: int, most := 40) -> void:
 	var pool: Dictionary = w.POOLS[w.floor_num]
 	var have: int = w.count_enemies()
 	var i := 0
-	while have < n and i < 40:
+	while have < n and i < most:
 		i += 1
 		var list: Array = pool["f"] if i % 4 == 0 else (pool["h"] if i % 3 == 0 else pool["e"])
 		var e: Enemy = w.spawn_enemy(list[randi() % list.size()], w.random_free_spot(w.player.global_position, 60.0), ["", "", "", "ember"][i % 4])
@@ -1185,8 +1185,8 @@ func _bench_measure(w: Node, label: String, secs: float) -> void:
 			last = Time.get_ticks_usec()   # keep the bench's own bookkeeping out of the next sample
 		refill -= real / 1000.0
 		if refill <= 0.0 and game:
-			refill = 1.0
-			_bench_crowd(w, 20)
+			refill = 0.25   # a trickle, like summoners and wave rooms (a big batch would read as a spike)
+			_bench_crowd(w, 20, 2)
 			last = Time.get_ticks_usec()
 	get_tree().physics_frame.disconnect(_bench_ph_begin)
 	var pr := _bench_stats(proc)

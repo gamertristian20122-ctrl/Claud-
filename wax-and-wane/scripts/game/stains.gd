@@ -44,11 +44,14 @@ const PALETTE := ["#222222", "#483b3a", "#fdf7ed", "#da4e38", "#775c55", "#8f402
 static var _imgs := {}       # "splat_3|goo" -> Image
 static var _texs := {}       # same key -> ImageTexture (gibs in flight)
 static var _custom := {}     # Color html -> ramp
+static var _flips := {}      # Image -> its mirror (made once, not per splat)
 
 var room: Node2D
 var img: Image
 var stamps := 0
 var _dirty := false
+var _up_t := 0.0             # uploads to the GPU at most every UPLOAD_GAP s (a full 240x144 texture each)
+const UPLOAD_GAP := 0.05
 
 
 ## Material name for a creature: DEFS "stain" first, then the table, then a guess from the name.
@@ -179,8 +182,11 @@ func stamp_image(src: Image, wp: Vector2, flip := false) -> bool:
 	_ensure()
 	var s := src
 	if flip:
-		s = src.duplicate() as Image
-		s.flip_x()
+		if not _flips.has(src):
+			var m := src.duplicate() as Image
+			m.flip_x()
+			_flips[src] = m
+		s = _flips[src]
 	var at := Vector2i(lp.round()) - ORIGIN - Vector2i(s.get_width() / 2, s.get_height() / 2)
 	img.blend_rect(s, Rect2i(Vector2i.ZERO, s.get_size()), at)
 	stamps += 1
@@ -232,8 +238,10 @@ func _put(p: Vector2i, c: Color) -> void:
 		img.set_pixelv(p, c)
 
 
-func _process(_dt: float) -> void:
-	if _dirty and img:
+func _process(dt: float) -> void:
+	_up_t -= dt
+	if _dirty and img and _up_t <= 0.0:
+		_up_t = UPLOAD_GAP
 		_dirty = false
 		img.set_meta("stamps", stamps)
 		(texture as ImageTexture).update(img)

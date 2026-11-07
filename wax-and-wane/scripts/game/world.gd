@@ -700,7 +700,7 @@ func _plain_drop(e: Enemy) -> void:
 		add_pickup("wax_small", e.global_position)
 	elif r < 0.19 + luck * 0.1:
 		add_pickup("coin", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 25.0)
-	elif r < 0.165:
+	elif r < 0.215 + luck * 0.1:   # was `r < 0.165`, below the coin band: plain kills never dropped a bomb
 		add_pickup("bomb", e.global_position)
 
 
@@ -1206,7 +1206,13 @@ func _physics_process(dt: float) -> void:
 			go_through(exit)
 	if room_spawned and not room.data["cleared"] and count_enemies() == 0 and not transitioning and room.data["type"] != "boss":
 		_clear_room()
-	enemies = enemies.filter(func(e): return is_instance_valid(e) and (e.alive or e.boss))
+	# prune in place: no new array every physics frame
+	var i := enemies.size() - 1
+	while i >= 0:
+		var e = enemies[i]
+		if not (is_instance_valid(e) and (e.alive or e.boss)):
+			enemies.remove_at(i)
+		i -= 1
 	_update_hazards(dt)
 	_update_moths(dt)
 
@@ -1271,7 +1277,11 @@ func _update_moths(dt: float) -> void:
 			var tgt := nearest_enemy(m.global_position, 90.0)
 			if tgt:
 				shoot_player(m.global_position, (tgt.global_position + Vector2(0, -6) - m.global_position).normalized(), player, player.damage * 0.5)
-	enemy_shots = enemy_shots.filter(func(s): return is_instance_valid(s))
+	var j := enemy_shots.size() - 1
+	while j >= 0:
+		if not is_instance_valid(enemy_shots[j]):
+			enemy_shots.remove_at(j)
+		j -= 1
 
 
 func _process(dt: float) -> void:
