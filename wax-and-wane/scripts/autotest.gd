@@ -1,6 +1,7 @@
 extends Node
 ## Automated play-test bot + screenshot tour.
 ##   -- --autotest --playtest [--runs=N] [--speed=4] [--seed=N]   plays full runs, prints a summary
+##        [--god] [--stress] [--unlockall --candle=id] [--relics=a,b] [--savecycle: Save & quit + Continue each floor]
 ##   -- --autotest --tour --shots=/abs/dir                         screenshots of every screen
 ##   -- --autotest --audiotest                                     audio catalogue + live-mix check (audio_check.gd)
 ##   -- --autotest --herosheet --shots=/abs/dir                    Tallow in every juice state (pixel check)
@@ -72,6 +73,7 @@ func _next_run() -> void:
 		params["candle"] = str(args["candle"])
 	if args.has("seed"):
 		params["seed"] = int(args["seed"]) + results.size()
+	_cycled = -1
 	main.goto("game", params)
 	if args.has("relics") or args.has("keepsake"):
 		# wait for the new run (the screen fade can take longer than a fixed delay)
@@ -99,6 +101,29 @@ func _grant(w: Node) -> void:
 
 var _status_t := 0.0
 var _stress_cell := Vector2i(-99, -99)
+var _cycled := -1
+var _cycling := false
+
+
+func _save_cycle() -> void:
+	_cycling = true
+	await get_tree().create_timer(0.8).timeout
+	var w: Node = main.current
+	# compare with the floor-start snapshot (relics picked up since then are not in it, by design)
+	var pd: Dictionary = RunSave.snap.get("player", {})
+	var before: String = "snapshot relics %d wax %.0f" % [pd.get("relics", []).size(), float(pd.get("wax", 0.0))]
+	RunSave.flush()
+	main.goto("title")
+	await get_tree().create_timer(1.6).timeout
+	RunSave.continue_run(main)
+	var waited := 0.0
+	while waited < 8.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null and not main._busy):
+		await get_tree().create_timer(0.1).timeout
+		waited += 0.1
+	await get_tree().create_timer(0.5).timeout
+	w = main.current
+	print("[savecycle] floor %d: %s -> %s (floor %d)" % [_cycled, before, "relics %d wax %.0f" % [w.player.relics.size(), w.player.wax], w.floor_num])
+	_cycling = false
 
 
 func _process(dt: float) -> void:
@@ -112,6 +137,13 @@ func _process(dt: float) -> void:
 		var left: Array = Items.RELICS.keys().filter(func(k): return not k in cur.player.relics)
 		if not left.is_empty():
 			cur.collect_item(left[randi() % left.size()], cur.player.global_position)
+	# --savecycle: at the start of floors 2-4, Save & quit to the title and Continue (Save & Continue
+	# gets played with whatever the run holds; with --stress that is a lot of relics)
+	if args.has("savecycle") and not _cycling and cur and cur.name == "Game" and cur.get("player") and not cur.finished \
+			and cur.floor_num >= 2 and cur.floor_num != _cycled and RunSave.has_snapshot() \
+			and int(RunSave.snap["run"].get("floor", 0)) == cur.floor_num:
+		_cycled = cur.floor_num
+		_save_cycle()
 	if _status_t > 10.0 and cur and cur.name == "Game":
 		_status_t = 0.0
 		var w: Node = cur
