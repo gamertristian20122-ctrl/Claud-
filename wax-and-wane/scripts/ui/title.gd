@@ -90,7 +90,7 @@ func _ready() -> void:
 	root.add_child(box)
 	box.add_child(UI.button("<", func(): _cycle(-1), 18))
 	sel_name = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
-	sel_name.custom_minimum_size = Vector2(62, 0)
+	sel_name.custom_minimum_size = Vector2(62, 24)
 	sel_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(sel_name)
 	box.add_child(UI.button(">", func(): _cycle(1), 18))

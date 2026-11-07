@@ -318,6 +318,8 @@ func _tour() -> void:
 	await _wait(1.6)
 	await _shot("start_room")
 	var w: Node = main.current
+	w.player.keepsake = "hand_bell"
+	w.player.charge = 2
 	args["drive"] = true
 	# let the bot play a while and take pictures along the way
 	for i in 10:
