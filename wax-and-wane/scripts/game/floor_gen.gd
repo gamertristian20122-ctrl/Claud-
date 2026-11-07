@@ -38,7 +38,7 @@ static func generate(floor_num: int, rng: RandomNumberGenerator, extra := 0, tre
 ## one ordinary room and touching nothing else (so the hollow, shop, treasure and boss rooms keep
 ## their places and walls). Runs after the hollow, from the same floor RNG.
 static func _add_specials(res: Dictionary, rng: RandomNumberGenerator, floor_num: int) -> void:
-	if res.is_empty():
+	if res.is_empty() or "--nospecials" in OS.get_cmdline_user_args():   # balance baseline for the bot
 		return
 	var cells: Dictionary = res["cells"]
 	for t in Specials.TYPES:
@@ -67,7 +67,7 @@ static func _add_specials(res: Dictionary, rng: RandomNumberGenerator, floor_num
 ## Floors 2-4: one ordinary room away from the start may hold a mini-boss. Its layout becomes an
 ## open one so the champion has room to move.
 static func _add_mini(res: Dictionary, rng: RandomNumberGenerator, floor_num: int) -> void:
-	if res.is_empty() or floor_num < 2 or floor_num > 4:
+	if res.is_empty() or floor_num < 2 or floor_num > 4 or "--nospecials" in OS.get_cmdline_user_args():
 		return
 	if rng.randf() >= Specials.MINI_CHANCE:
 		return

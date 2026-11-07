@@ -49,6 +49,7 @@ const ROOM := [
 	"...............",
 ]
 const WAVES := 3
+const WAVE_SIZE := [5, 5, 5]
 const MIRROR_TOLL := 1.0
 const MIRROR_COST := 15
 const CRANK_COST := 3
@@ -520,20 +521,26 @@ func _spawn_wave(d: Dictionary) -> void:
 	var n: int = world.floor_num
 	var here: Dictionary = world.POOLS.get(n, world.POOLS[1])
 	var next: Dictionary = world.POOLS.get(n + 1, here)
-	# wave 1: three from this floor; wave 2: four, two from below; wave 3: four and a heavy from below
+	# wave 1: four from this floor and a heavy; wave 2: five, half from below, a flyer;
+	# wave 3: five from below with two heavies, and one of them is marked
 	var picks: Array = []
-	var count: int = [3, 4, 4][wave - 1]
+	var count: int = WAVE_SIZE[wave - 1]
 	for i in count:
-		var pool: Dictionary = next if (wave >= 2 and i % 2 == 1) else here
-		var lst: Array = pool["e"] if i < count - 1 or wave < 3 else next["h"]
-		if wave == 2 and i == 0:
+		var pool: Dictionary = next if (wave == 3 or (wave == 2 and i % 2 == 1)) else here
+		var lst: Array = pool["e"]
+		if i == 0 and wave == 2:
 			lst = pool["f"]
+		elif i >= count - (2 if wave == 3 else 1):
+			lst = pool["h"]
 		picks.append(lst[world.rng.randi() % lst.size()])
 	Audio.play("summon", -2.0)
-	for k in picks:
-		var pos: Vector2 = world.random_free_spot(world.player.global_position, 70.0)
+	for i in picks.size():
+		var pos: Vector2 = world.random_free_spot(world.player.global_position, 60.0)
 		world.fx_smoke(pos + Vector2(0, -6))
-		world.spawn_enemy(k, pos)
+		var champ := ""
+		if wave == WAVES and i == picks.size() - 1:
+			champ = ["ember", "gilded", "sooty", "chilled"][world.rng.randi() % 4]
+		world.spawn_enemy(picks[i], pos, champ)
 	world.room_t0 = world.run_time
 
 
