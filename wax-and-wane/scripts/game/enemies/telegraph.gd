@@ -11,6 +11,8 @@ var rod := false
 var rod_anchor := Vector2.ZERO
 var rod_end := Vector2.ZERO
 var _t := 0.0
+## The rod hangs from the ceiling in front of everything in the room, so it draws on its own layer.
+var _rod_node: Node2D
 
 const DARK := Color("#21141b")
 const BRASS := Color("#facb3e")
@@ -20,6 +22,10 @@ const BRASS_SH := Color("#c56025")
 func _ready() -> void:
 	material = Art.unshaded
 	z_index = -1
+	_rod_node = Node2D.new()
+	_rod_node.z_index = 5
+	_rod_node.draw.connect(_draw_rod)
+	add_child(_rod_node)
 
 
 func line(a: Vector2, b: Vector2, dur: float, col: Color) -> void:
@@ -51,6 +57,8 @@ func _process(dt: float) -> void:
 		s["t"] -= dt
 	shapes = shapes.filter(func(s): return s["t"] > 0.0)
 	queue_redraw()
+	if rod:
+		_rod_node.queue_redraw()
 
 
 func _px(p: Vector2, col: Color) -> void:
@@ -58,8 +66,6 @@ func _px(p: Vector2, col: Color) -> void:
 
 
 func _draw() -> void:
-	if rod:
-		_draw_rod()
 	for s in shapes:
 		# blink faster as the strike gets closer
 		var left: float = s["t"]
@@ -90,13 +96,16 @@ func _draw() -> void:
 
 
 func _draw_rod() -> void:
-	var a := to_local(rod_anchor)
+	if not rod:
+		return
+	var n := _rod_node
+	var a := n.to_local(rod_anchor)
 	var b := rod_end
-	draw_line(a, b, DARK, 4.0)
-	draw_line(a, b, BRASS_SH, 2.0)
-	draw_line(a + Vector2(-0.5, 0), b + Vector2(-0.5, 0), BRASS, 1.0)
+	n.draw_line(a, b, DARK, 4.0)
+	n.draw_line(a, b, BRASS_SH, 2.0)
+	n.draw_line(a + Vector2(-0.5, 0), b + Vector2(-0.5, 0), BRASS, 1.0)
 	# the hub it hangs from
-	draw_rect(Rect2(a.round() - Vector2(4, 4), Vector2(9, 9)), DARK)
-	draw_rect(Rect2(a.round() - Vector2(3, 3), Vector2(7, 7)), BRASS_SH)
-	draw_rect(Rect2(a.round() - Vector2(3, 3), Vector2(5, 5)), BRASS)
-	draw_rect(Rect2(a.round() - Vector2(1, 1), Vector2(3, 3)), DARK)
+	n.draw_rect(Rect2(a.round() - Vector2(4, 4), Vector2(9, 9)), DARK)
+	n.draw_rect(Rect2(a.round() - Vector2(3, 3), Vector2(7, 7)), BRASS_SH)
+	n.draw_rect(Rect2(a.round() - Vector2(3, 3), Vector2(5, 5)), BRASS)
+	n.draw_rect(Rect2(a.round() - Vector2(1, 1), Vector2(3, 3)), DARK)

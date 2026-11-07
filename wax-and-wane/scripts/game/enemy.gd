@@ -313,7 +313,7 @@ func _ready() -> void:
 		if _brain.get_object().has_method("init_" + ai):
 			_brain.get_object().call("init_" + ai, self)
 	# some arrive in a flutter of friends
-	if def.get("swarm", 0) > 1 and not get_meta("swarm_child", false):
+	if def.get("swarm", 0) > 1:
 		_spawn_swarm.call_deferred()
 	# spawn-in
 	active = false
@@ -329,7 +329,8 @@ func _ready() -> void:
 
 
 func _spawn_swarm() -> void:
-	if not alive or world == null or world.room == null:
+	# checked here (deferred) so the friends we spawn are already marked and never call friends of their own
+	if get_meta("swarm_child", false) or not alive or world == null or world.room == null:
 		return
 	for i in int(def["swarm"]) - 1:
 		var off := Vector2.from_angle(TAU * (i + 1) / float(def["swarm"]) + randf() * 0.5) * 10.0
@@ -947,7 +948,7 @@ func _die() -> void:
 		get_tree().create_timer(0.4, false).timeout.connect(func():
 			if is_instance_valid(w) and not w.finished:
 				w.burst(at, 6, 65.0, "bullet_water", off))
-	if def.has("split") and world.room:
+	if def.has("split") and world.room and not get_meta("no_split", false):
 		# a Rose Melt falls apart into drops that keep coming
 		var sp: Array = def["split"]
 		var base := randf() * TAU

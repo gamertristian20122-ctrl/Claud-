@@ -321,7 +321,12 @@ MOTH_WINGS = [
 
 def moth_frame(k, dy=0):
     cv = Canvas(16, 16)
-    cv.blit(MOTH_WINGS[k], 0, dy)
+    # ash-grey wings, ember eye-spots: never confused with the friendly Moth Friend relic (beige)
+    cv.blit(MOTH_WINGS[k], 0, dy, remap={"A": "i", "a": "s", "o": "r", "5": "2", "4": "3"})
+    for y in range(16):
+        for x in range(16):
+            if cv.get(x, y) == "i" and cv.get(x, y - 1) == "." and cv.get(x - 1, y) != ".":
+                cv.put(x, y, "S")
     post = Canvas(16, 16)
     # thin feathery antennae (outline colour, never outlined again)
     head = [r for r in range(16) if cv.get(7, r) != "."][0]

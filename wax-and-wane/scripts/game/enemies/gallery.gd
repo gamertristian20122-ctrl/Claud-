@@ -44,13 +44,16 @@ func build(kinds: Array, cols: int, sc: int, title: String) -> void:
 		var tex: Texture2D = s.sprite_frames.get_frame_texture(anim, 0)
 		s.offset = Vector2(-tex.get_width() / 2.0, -tex.get_height())
 		s.scale = Vector2(sc, sc)
-		s.position = Vector2(roundf(cx), roundf(cy + ch - 13.0))
+		s.position = Vector2(roundf(cx), roundf(cy + ch - (19.0 if cw < 70.0 else 13.0)))
 		s.modulate = d.get("tint", Color.WHITE)
 		add_child(s)
-		var l := UI.label(str(d.get("name", k)), 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
-		l.size = Vector2(cw, 10)
-		l.position = Vector2(cx - cw / 2.0, cy + ch - 12.0)
-		l.clip_text = true
+		var nm := str(d.get("name", k))
+		if cw < 70.0 and nm.contains(" "):
+			nm = nm.replace(" ", "\n")
+		var l := UI.label(nm, 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+		l.size = Vector2(cw, 18)
+		l.position = Vector2(cx - cw / 2.0, cy + ch - 13.0)
+		l.add_theme_constant_override("line_spacing", -3)
 		add_child(l)
 
 
@@ -84,12 +87,15 @@ static func tour(bot: Node) -> void:
 	await bot._wait(0.6)
 	await bot._shot("gallery_monsters")
 	g.queue_free()
-	var g2 := BestiaryGallery.new()
-	bot.add_child(g2)
-	g2.build(regulars(), 9, 2, "LODGERS x2")
-	await bot._wait(0.6)
-	await bot._shot("gallery_monsters_x2")
-	g2.queue_free()
+	var all := regulars()
+	var half := ceili(all.size() / 2.0)
+	for part in 2:
+		var g2 := BestiaryGallery.new()
+		bot.add_child(g2)
+		g2.build(all.slice(part * half, (part + 1) * half), 6, 2, "LODGERS x2  (%d/2)" % (part + 1))
+		await bot._wait(0.6)
+		await bot._shot("gallery_monsters_x2_%d" % (part + 1))
+		g2.queue_free()
 	var g3 := BestiaryGallery.new()
 	bot.add_child(g3)
 	g3.build(boss_kinds(), 4, 2, "THE GUARDIANS (%d)" % boss_kinds().size())
@@ -111,6 +117,8 @@ static func boss_tour(bot: Node) -> void:
 	bot.args["drive"] = true
 	for n in [1, 2, 3, 4]:
 		for kind in Enemy.FLOOR_BOSSES[n]:
+			if bot.args.has("only") and str(bot.args["only"]) != kind:
+				continue
 			bot.main.goto("game", {"seed": 11 + n})
 			await bot._wait(1.2)
 			var w: Node = bot.main.current

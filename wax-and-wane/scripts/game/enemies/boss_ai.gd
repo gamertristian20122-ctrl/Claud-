@@ -49,7 +49,7 @@ func boss_mother(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 			e._walk(ddt, to_p, e.speed * (1.0 + 0.35 * (e.phase - 1)))
 			if e.cd <= 0:
 				e._pattern += 1
-				var opts := ["weep", "shed"]
+				var opts := ["weep", "weep", "shed"]
 				if e.phase >= 2:
 					opts = ["weep", "spray", "shed", "spray"]
 				if e.phase >= 3:
@@ -72,11 +72,15 @@ func boss_mother(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 				e.cd = 2.0 - 0.3 * e.phase
 		"shed":
 			if e.t <= 0:
-				if e.world.count_enemies() < 6:
-					for sx in [-1, 1]:
-						var m: Enemy = e.world.spawn_enemy("wax_blob", e.global_position + Vector2(18 * sx, 4))
-						if m:
-							m.kvel = Vector2(90 * sx, 20)
+				# her brood: one drop at first, two later, never a flood (and they do not split again)
+				var brood: int = e.world.count_enemies() - 1
+				var n := (1 if e.phase == 1 else 2) - maxi(0, brood - 1)
+				for i in maxi(0, n):
+					var sx := -1 if (e._pattern + i) % 2 == 0 else 1
+					var m: Enemy = e.world.spawn_enemy("wax_blob", e.global_position + Vector2(18 * sx, 4))
+					if m:
+						m.set_meta("no_split", true)
+						m.kvel = Vector2(90 * sx, 20)
 				_squash(e, 1.5)
 				Audio.play("splash", 2.0, 0.05, 0.5)
 				e.state = "idle"
@@ -234,7 +238,7 @@ func boss_choir(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 		"idle":
 			# drift along the upper half of the chapel, keeping across from Tallow
 			var room: Room = e.world.room
-			var goal := Vector2(clampf(p.global_position.x, room.position.x + 60, room.position.x + 212), room.position.y + 78)
+			var goal := Vector2(clampf(p.global_position.x, room.position.x + 84, room.position.x + 188), room.position.y + 80)
 			var d := goal - e.global_position
 			if d.length() > 4.0:
 				e._move(d.normalized() * e.speed * ddt)
@@ -300,7 +304,7 @@ static func _voice(e: Enemy, v: int) -> void:
 
 # ================================================================= THE GREAT PENDULUM (floor 4)
 const PEND_ANCHOR := Vector2(136, 22)
-const PEND_LEN := 104.0
+const PEND_LEN := 96.0
 const PEND_RING := 33.0
 
 
