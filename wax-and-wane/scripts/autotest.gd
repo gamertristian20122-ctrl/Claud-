@@ -31,6 +31,8 @@ func _ready() -> void:
 			args[a.substr(2)] = true
 	if args.has("tour"):
 		mode = "tour"
+		if not args.has("platform") and not args.has("device"):
+			Controls.set_device(Controls.TOUCH)   # the main tour shows the phone HUD
 	runs_left = int(args.get("runs", "1"))
 	_shots_dir = str(args.get("shots", ""))
 	Game.base_time_scale = float(args.get("speed", "1"))
@@ -130,8 +132,11 @@ func drive(w: Node) -> Array:
 		_wander_t -= dt
 		var tgt0: Enemy = w.nearest_enemy(pos)
 		return [_wander, (tgt0.global_position - pos).normalized() if tgt0 else Vector2.ZERO]
-	var tgt: Enemy = w.nearest_enemy(pos)
+	var tgt: Enemy = w.nearest_enemy(pos) if _room_t_total < 25.0 else _toughest(w)   # summoners first when a room drags on
 	if tgt:
+		if _room_t_total > 30.0 and p.bombs > 0 and _bomb_cd <= 0 and pos.distance_to(tgt.global_position) < 40:
+			_bomb_cd = 4.0
+			w.place_bomb()
 		var to: Vector2 = tgt.global_position + Vector2(0, -tgt.half_h) - (pos + Vector2(0, -6))
 		var d := to.length()
 		var mv := Vector2.ZERO
@@ -201,6 +206,15 @@ func drive(w: Node) -> Array:
 	var wp := _path_next(room, my_cell, door_cell)
 	var goal: Vector2 = room.cell_center(wp) + Vector2(0, 2)
 	return [(goal - pos).normalized(), Vector2.ZERO]
+
+
+## The living foe with the most max HP (a summoner that keeps a room from ever clearing).
+func _toughest(w: Node) -> Enemy:
+	var best: Enemy = null
+	for e in w.enemies:
+		if is_instance_valid(e) and e.alive and e.active and (best == null or e.max_hp > best.max_hp):
+			best = e
+	return best if best else w.nearest_enemy(w.player.global_position)
 
 
 ## BFS over the room grid; returns the next cell to walk to (or the goal itself).
@@ -312,6 +326,10 @@ func _jump(w: Node, c: Vector2i) -> void:
 
 func _tour() -> void:
 	DirAccess.make_dir_recursive_absolute(_shots_dir)
+	if args.has("platform"):
+		await _platform_tour()
+		get_tree().quit()
+		return
 	await _wait(1.0)
 	await _shot("title")
 	main.goto("game", {"seed": 7})
@@ -359,3 +377,178 @@ func _tour() -> void:
 	await _wait(7.0)
 	await _shot("results")
 	get_tree().quit()
+
+
+# ---------------------------------------------------------------- platform tour (--tour --platform)
+# Save & Continue round trip (prints any stat that did not come back exactly), keyboard / gamepad
+# input through the InputMap, gamepad focus in menus, settings pages, achievements. Run it at
+# several window sizes: the shot names carry the game's visible size (e.g. 426x266 = 1280x800).
+
+func _vs() -> String:
+	var s := get_viewport().get_visible_rect().size
+	return "%dx%d" % [s.x, s.y]
+
+
+func _press(action: String, s: float) -> void:
+	Input.action_press(action)
+	await _wait(s)
+	Input.action_release(action)
+
+
+func _ui(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	await get_tree().process_frame
+	var up := InputEventAction.new()
+	up.action = action
+	up.pressed = false
+	Input.parse_input_event(up)
+	await _wait(0.2)
+
+
+func _pad(b: JoyButton) -> void:
+	for pressed in [true, false]:
+		var ev := InputEventJoypadButton.new()
+		ev.button_index = b
+		ev.pressed = pressed
+		Input.parse_input_event(ev)
+		await get_tree().process_frame
+	await _wait(0.2)
+
+
+func _layout_sig(w: Node) -> String:
+	var parts: Array = []
+	for c in w.layout["cells"].keys():
+		parts.append("%s:%s" % [c, w.layout["cells"][c]["type"]])
+	parts.sort()
+	return ",".join(parts)
+
+
+func _platform_tour() -> void:
+	var tag := _vs()
+	var fails := 0
+	print("[platform] visible size ", tag, "  window ", DisplayServer.window_get_size(), "  pixel scale ", Controls.pixel_scale())
+	Controls.set_device(Controls.PAD)
+	# a run with relics, a rite, a keepsake and coins, moved on to floor 3
+	main.goto("game", {"seed": 11})
+	await _wait(1.6)
+	var w: Node = main.current
+	var p: Player = w.player
+	for id in ["blue_flame", "moth_friend", "twin_wick", "candelabra", "sharp_wick", "matchbook"]:
+		w.collect_item(id, p.global_position)
+	Items.apply("flask_red", p, w)
+	p.coins = 17
+	p.keepsake = "winding_key"
+	p.charge = 4
+	p.wax = 81.0
+	w.kills = 23
+	await _wait(0.4)
+	w._start_floor(3)
+	await _wait(0.6)
+	var sig := _layout_sig(w)
+	var before: Dictionary = RunSave.snap.duplicate(true)
+	print("[platform] saved: ", RunSave.summary(), "  relics=", p.relics, " rites=", p.rites, " omen=", w.omen)
+	main.goto("title")
+	await _wait(1.4)
+	await _shot("title_continue_" + tag)
+	SettingsPanel.open(main.current.root)
+	await _wait(0.5)
+	await _shot("settings_game_" + tag)
+	await _ui("ui_page_next")
+	await _ui("ui_down")
+	await _shot("settings_controls_" + tag)
+	await _ui("ui_cancel")
+	Achievements.open_list(main.current.root)
+	await _wait(0.5)
+	await _shot("achievements_" + tag)
+	await _ui("ui_cancel")
+	await _wait(0.3)
+	# Continue: the same floor, the same stats
+	RunSave.continue_run(main)
+	await _wait(1.8)
+	w = main.current
+	p = w.player
+	var after: Dictionary = RunSave.snap
+	for sec in ["player", "world"]:
+		for k in before[sec]:
+			if str(before[sec][k]) != str(after[sec].get(k)):
+				fails += 1
+				print("[platform] MISMATCH %s.%s: %s -> %s" % [sec, k, before[sec][k], after[sec].get(k)])
+	for k in ["run_seed", "floor", "candle", "omen", "daily"]:
+		if str(before["run"][k]) != str(after["run"][k]):
+			fails += 1
+			print("[platform] MISMATCH run.%s: %s -> %s" % [k, before["run"][k], after["run"][k]])
+	if _layout_sig(w) != sig:
+		fails += 1
+		print("[platform] MISMATCH layout")
+	if w.moths.size() != 1:
+		fails += 1
+		print("[platform] MISMATCH moths: ", w.moths.size())
+	print("[platform] continue restored floor %d, relics %s, rites %s, wax %.1f, coins %d" % [w.floor_num, p.relics, p.rites, p.wax, p.coins])
+	await _shot("continued_" + tag)
+	# keyboard input runs through the InputMap into the HUD vectors
+	Controls.set_device(Controls.KEYS)
+	var x0 := p.global_position.x
+	await _press("move_right", 0.5)
+	if p.global_position.x <= x0 + 4.0:
+		fails += 1
+		print("[platform] FAIL move_right did not move Tallow")
+	var shots := 0
+	Input.action_press("shoot_up")
+	for i in 20:
+		await get_tree().physics_frame
+		for s in w.fx_layer.get_children():
+			if s is Shot and s.friendly:
+				shots += 1
+	Input.action_release("shoot_up")
+	if shots == 0:
+		fails += 1
+		print("[platform] FAIL shoot_up fired nothing")
+	var b0: int = p.bombs
+	await _press("bomb", 0.1)
+	if p.bombs != b0 - 1:
+		fails += 1
+		print("[platform] FAIL bomb %d -> %d" % [b0, p.bombs])
+	await _press("move_left", 0.9)
+	await _wait(1.2)
+	await _shot("play_keyboard_" + tag)
+	# a real gamepad press: Start pauses (and switches the HUD to gamepad), the d-pad moves, B resumes
+	await _pad(JOY_BUTTON_START)
+	await _wait(0.5)
+	if not w.paused or Controls.device != Controls.PAD:
+		fails += 1
+		print("[platform] FAIL Start: paused=%s device=%s" % [w.paused, Controls.device])
+	await _shot("pause_gamepad_" + tag)
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	var f := get_viewport().gui_get_focus_owner()
+	if not (f is Button and (f as Button).text == "Settings"):
+		fails += 1
+		print("[platform] FAIL d-pad down focus: ", f)
+	await _shot("pause_gamepad_down_" + tag)
+	await _pad(JOY_BUTTON_B)
+	await _wait(0.3)
+	if w.paused:
+		fails += 1
+		print("[platform] FAIL B did not resume")
+	Achievements.show_toast("boss_cellar")
+	await _wait(0.45)
+	await _shot("toast_" + tag)
+	await _wait(2.4)
+	# giving up ends the run, and the saved run with it
+	w.toggle_pause()
+	await _wait(0.2)
+	w.give_up()
+	await _wait(4.5)
+	await _shot("results_" + tag)
+	if RunSave.has_snapshot():
+		fails += 1
+		print("[platform] FAIL the snapshot survived the end of the run")
+	# back, back: results -> title -> "blow out the candle?" (desktop)
+	await _ui("ui_cancel")
+	await _wait(1.4)
+	await _ui("ui_cancel")
+	await _wait(0.4)
+	await _shot("quit_prompt_" + tag)
+	print("[platform] DONE fails=%d" % fails)

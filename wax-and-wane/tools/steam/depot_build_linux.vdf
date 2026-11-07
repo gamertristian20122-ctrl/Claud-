@@ -1,0 +1,11 @@
+// Linux / Steam Deck depot (template): everything from build/WaxAndWane_<ver>_linux.zip
+"DepotBuild"
+{
+	"DepotID" "1000002"
+	"FileMapping"
+	{
+		"LocalPath" "linux\*"
+		"DepotPath" "."
+		"Recursive" "1"
+	}
+}

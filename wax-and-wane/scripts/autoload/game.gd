@@ -24,6 +24,9 @@ var settings := {
 	"swap_sticks": false,
 	"candle": "tallow",
 	"gentle": false,
+	"fullscreen": false,        # desktop only
+	"mouse_aim": true,          # desktop: hold the left button to fire at the cursor
+	"touch_controls": "auto",   # auto (shown after a touch) / on / off
 }
 var records := {
 	"runs": 0,
@@ -37,6 +40,8 @@ var records := {
 	"daily_date": "",
 	"daily_first": 0,
 	"daily_best": 0,
+	"achievements": {},   # id -> unix time it was earned (see scripts/autoload/achievements.gd)
+	"rites_done": [],     # every Candle Rite ever completed
 }
 
 
@@ -82,6 +87,19 @@ func set_setting(key: String, value) -> void:
 func apply_settings() -> void:
 	_set_bus("Music", settings["music"])
 	_set_bus("SFX", settings["sfx"])
+	_apply_window()
+
+
+## Desktop: fullscreen or a window (a maximised window stays maximised).
+func _apply_window() -> void:
+	if not OS.has_feature("pc") or DisplayServer.get_name() == "headless":
+		return
+	var mode := DisplayServer.window_get_mode()
+	var full := mode == DisplayServer.WINDOW_MODE_FULLSCREEN or mode == DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN
+	if settings.get("fullscreen", false) and not full:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	elif not settings.get("fullscreen", false) and full:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 
 
 func _set_bus(bus: String, v: float) -> void:
@@ -116,8 +134,14 @@ func unlock(key: String) -> bool:
 
 
 func vibrate(ms: int) -> void:
-	if settings["vibration"] and OS.has_feature("mobile"):
+	if not settings["vibration"]:
+		return
+	if OS.has_feature("mobile"):
 		Input.vibrate_handheld(ms)
+	# gamepads rumble too (strength grows with the length of the buzz)
+	var k := clampf(ms / 80.0, 0.2, 1.0)
+	for pad in Input.get_connected_joypads():
+		Input.start_joy_vibration(pad, 0.5 * k, 0.8 * k, ms / 1000.0)
 
 
 ## 0..120 minutes after midnight -> "12:47 AM" / "1:05 AM" / "2:00 AM".

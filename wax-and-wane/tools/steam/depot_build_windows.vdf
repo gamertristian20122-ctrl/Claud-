@@ -1,0 +1,12 @@
+// Windows depot (template): everything from build/WaxAndWane_<ver>_windows.zip
+"DepotBuild"
+{
+	"DepotID" "1000001"
+	"FileMapping"
+	{
+		"LocalPath" "windows\*"
+		"DepotPath" "."
+		"Recursive" "1"
+	}
+	"FileExclusion" "*.pdb"
+}

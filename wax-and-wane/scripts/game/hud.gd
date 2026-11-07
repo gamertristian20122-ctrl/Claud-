@@ -48,9 +48,14 @@ var boss_frac := 1.0
 var _flame_t := 0.0
 var _flame_frames: Array[Texture2D] = []
 
-# touch state
+# input: the world reads move_vec / aim_vec every physics tick. They merge the touch sticks with
+# the keyboard, gamepad and mouse (Controls autoload); the touch handlers below fill _touch_*.
 var move_vec := Vector2.ZERO
 var aim_vec := Vector2.ZERO
+var _touch_move := Vector2.ZERO
+var _touch_aim := Vector2.ZERO
+var _mouse_block := false        # the left button went down on a HUD button, not to fire
+var keep_key: Label
 var _l_idx := -1
 var _r_idx := -1
 var _l_origin := Vector2.ZERO
@@ -191,8 +196,23 @@ func _ready() -> void:
 	stick_r = _make_stick()
 	root.add_child(stick_l)
 	root.add_child(stick_r)
+	# keyboard / gamepad key under the keepsake pips ("Q", "LB")
+	keep_key = UI.label("", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	keep_key.size = Vector2(30, 10)
+	keep_key.position = Vector2(0, 30)
+	keep_btn.add_child(keep_key)
+	for b in [pause_btn, bomb_btn]:
+		b.focus_mode = Control.FOCUS_NONE
+	process_physics_priority = -10      # read input before the world moves Tallow
 	get_viewport().size_changed.connect(_layout)
+	Controls.device_changed.connect(_on_device)
+	Game.settings_changed.connect(_refresh_touch)
 	_layout()
+	_refresh_touch()
+
+
+func _exit_tree() -> void:
+	Controls.want_crosshair(false)
 
 
 func _icon(path: String, fallback: String) -> TextureRect:
@@ -232,9 +252,16 @@ func safe_insets() -> Vector2:
 	return Vector2(maxf(0.0, safe.position.x * k), maxf(0.0, (win.x - safe.end.x) * k)).floor()
 
 
+## True on 16:9 / 16:10 screens (monitors, Steam Deck: 384 px wide), where the room leaves only a
+## 56 px gutter at each side: the floor name stacks into the gutter, the minimap stays off the floor.
+var _narrow := false
+
+
 func _layout() -> void:
 	var vs := view_size()
 	var ins := safe_insets()
+	_narrow = vs.x - ins.x - ins.y < 432.0
+	minimap.size = Vector2(72, 40 if _narrow else 48)
 	bar.position = Vector2(6 + ins.x, 9)
 	clock_label.position = Vector2(8 + ins.x, 21)
 	streak_box.position = Vector2(66 + ins.x, 22)
@@ -333,7 +360,7 @@ func _process(dt: float) -> void:
 		want = (0.35 + 0.25 * sin(_flame_t * 4.5)) * (1.0 - p.wax / 20.0) + 0.15
 	vignette.modulate.a = move_toward(vignette.modulate.a, want, dt * 2.0)
 	clock_label.add_theme_color_override("font_color", UI.RED if low and fmod(_flame_t, 0.8) < 0.4 else UI.CREAM)
-	floor_label.text = world.floor_title()
+	floor_label.text = world.floor_title().replace("  -  ", "\n") if _narrow else world.floor_title()
 	streak_box.visible = world.streak >= 2
 	if world.streak >= 2:
 		streak_label.text = "x%d" % world.streak
@@ -344,7 +371,9 @@ func _process(dt: float) -> void:
 	keep_btn.visible = p.keepsake != ""
 	keep_btn.queue_redraw()
 	minimap.queue_redraw()
-	move_vec = Vector2.ZERO if _l_idx < 0 else move_vec
+	if _l_idx < 0:
+		_touch_move = Vector2.ZERO
+	Controls.want_crosshair(not world.paused and not world.finished and not p.dead and Controls.uses_kbm())
 	stick_l.queue_redraw()
 	stick_r.queue_redraw()
 	if ghost_sticks:
@@ -406,7 +435,7 @@ func _draw_bar() -> void:
 
 
 func _draw_ghosts() -> void:
-	if not ghost_sticks:
+	if not ghost_sticks or not Controls.touch_visible():
 		return
 	var vs := view_size()
 	var base := Art.tex("ui/stick_base")
@@ -490,15 +519,76 @@ func _draw_minimap() -> void:
 			minimap.draw_rect(Rect2(pos + Vector2(3, 1), Vector2(3, 4)), mark)
 
 
-# ---------------------------------------------------------------- touch input
+# ---------------------------------------------------------------- input
+
+## Merges every device into move_vec / aim_vec (touch sticks win, then keys / gamepad, then the
+## mouse) and handles the bomb and keepsake buttons. Runs before the world's physics tick.
+func _physics_process(_dt: float) -> void:
+	var p: Player = world.player
+	if p == null:
+		return
+	var mv := _touch_move
+	if mv == Vector2.ZERO:
+		mv = Controls.move_vector()
+	var aim := _touch_aim
+	if aim == Vector2.ZERO:
+		aim = Controls.aim_vector()
+	if aim == Vector2.ZERO:
+		aim = _mouse_aim(p)
+	move_vec = mv
+	aim_vec = aim
+	if world.paused or world.finished:
+		return
+	if Input.is_action_just_pressed("bomb") and p.bombs > 0:
+		world.place_bomb()
+		_bump(bomb_btn)
+	if Input.is_action_just_pressed("keepsake"):
+		world.use_keepsake()
+
+
+## Mouse aim: hold the left button to fire from the candle toward the cursor.
+func _mouse_aim(p: Player) -> Vector2:
+	if not Game.settings.get("mouse_aim", true) or not Controls.uses_kbm() or _mouse_block or world.paused:
+		return Vector2.ZERO
+	if Input.emulate_touch_from_mouse or not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		return Vector2.ZERO
+	var from := p.get_global_transform_with_canvas().origin + Vector2(0, -6)
+	var d := get_viewport().get_mouse_position() - from
+	return d.normalized() if d.length() > 3.0 else Vector2.ZERO
+
+
+func _bump(b: Control) -> void:
+	b.scale = Vector2(0.9, 0.9)
+	b.create_tween().tween_property(b, "scale", Vector2.ONE, 0.12)
+
+
+func _on_device(_dev: String) -> void:
+	_refresh_touch()
+
+
+## Touch sticks and the bomb button show only while touch is the device in use (or always / never,
+## from Settings > Controls > Touch). The keepsake button stays: it is also the charge display.
+func _refresh_touch() -> void:
+	var on := Controls.touch_visible()
+	bomb_btn.visible = on
+	if not on:
+		release_sticks()
+	keep_key.text = "" if on else Controls.glyph("keepsake")
+	root.queue_redraw()
+
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
-		world.toggle_pause()
+	if event.is_action_pressed("pause") or (world.paused and event.is_action_pressed("ui_cancel")):
+		get_viewport().set_input_as_handled()
+		if world.paused:
+			world.on_back()     # closes Settings / a confirm first, then resumes
+		else:
+			world.toggle_pause()
 		return
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Q and not world.paused:
-		world.use_keepsake()
-		return
+	var real_touch: bool = (event is InputEventScreenTouch or event is InputEventScreenDrag) \
+		and event.device != InputEvent.DEVICE_ID_EMULATION
+	if real_touch and Controls.device != Controls.TOUCH:
+		Controls.set_device(Controls.TOUCH)
 	if world.paused:
 		# Godot only turns the first finger into clicks; let any finger tap menu buttons
 		if event is InputEventScreenTouch and not event.pressed and event.index != 0:
@@ -509,6 +599,26 @@ func _input(event: InputEvent) -> void:
 		return
 	if world.player == null:
 		return
+	# mouse: a click on the pause button pauses; anywhere else the left button fires (mouse aim)
+	if event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed and Rect2(pause_btn.position, pause_btn.size).grow(2).has_point(event.position):
+			_mouse_block = true
+			world.toggle_pause()
+			get_viewport().set_input_as_handled()
+			return
+		if event.pressed and keep_btn.visible and Rect2(keep_btn.position, keep_btn.size).has_point(event.position):
+			_mouse_block = true
+			world.use_keepsake()
+			get_viewport().set_input_as_handled()
+			return
+		if not event.pressed:
+			_mouse_block = false
+	if (event is InputEventScreenTouch or event is InputEventScreenDrag) and not Controls.touch_enabled():
+		# touch controls are off (e.g. a gamepad on a phone): the pause button still works
+		if event is InputEventScreenTouch and event.pressed and Rect2(pause_btn.position, pause_btn.size).grow(4).has_point(event.position):
+			world.toggle_pause()
+			get_viewport().set_input_as_handled()
+		return
 	if event is InputEventScreenTouch and event.index == _keep_idx and not event.pressed:
 		_keep_idx = -1
 		if Time.get_ticks_msec() - _keep_ms < 450 and Rect2(keep_btn.position, keep_btn.size).grow(6).has_point(event.position):
@@ -518,8 +628,7 @@ func _input(event: InputEvent) -> void:
 		_bomb_idx = -1
 		if Time.get_ticks_msec() - _bomb_ms < 450 and Rect2(bomb_btn.position, bomb_btn.size).grow(6).has_point(event.position):
 			world.place_bomb()
-			bomb_btn.scale = Vector2(0.9, 0.9)
-			bomb_btn.create_tween().tween_property(bomb_btn, "scale", Vector2.ONE, 0.12)
+			_bump(bomb_btn)
 		return
 	if event is InputEventScreenDrag and event.index == _keep_idx and event.position.distance_to(_keep_press) > 8.0:
 		_keep_idx = -1
@@ -552,7 +661,7 @@ func _input(event: InputEvent) -> void:
 				_keep_ms = Time.get_ticks_msec()
 				get_viewport().set_input_as_handled()
 				return
-			if Rect2(bomb_btn.position, bomb_btn.size).grow(4).has_point(pos) and world.player.bombs > 0 and _bomb_idx < 0:
+			if bomb_btn.visible and Rect2(bomb_btn.position, bomb_btn.size).grow(4).has_point(pos) and world.player.bombs > 0 and _bomb_idx < 0:
 				_bomb_idx = event.index
 				_bomb_press = pos
 				_bomb_ms = Time.get_ticks_msec()
@@ -576,11 +685,11 @@ func _input(event: InputEvent) -> void:
 		else:
 			if event.index == _l_idx:
 				_l_idx = -1
-				move_vec = Vector2.ZERO
+				_touch_move = Vector2.ZERO
 				stick_l.visible = false
 			elif event.index == _r_idx:
 				_r_idx = -1
-				aim_vec = Vector2.ZERO
+				_touch_aim = Vector2.ZERO
 				stick_r.visible = false
 	elif event is InputEventScreenDrag:
 		var pos: Vector2 = event.position
@@ -591,9 +700,9 @@ func _input(event: InputEvent) -> void:
 				_l_origin = pos - d.normalized() * STICK_R
 				stick_l.position = _l_origin
 				d = pos - _l_origin
-			move_vec = d / STICK_R
-			if move_vec.length() < 0.15:
-				move_vec = Vector2.ZERO
+			_touch_move = d / STICK_R
+			if _touch_move.length() < 0.15:
+				_touch_move = Vector2.ZERO
 			stick_l.set_meta("knob", d)
 		elif event.index == _r_idx:
 			var d := pos - _r_origin
@@ -601,7 +710,7 @@ func _input(event: InputEvent) -> void:
 				_r_origin = pos - d.normalized() * STICK_R
 				stick_r.position = _r_origin
 				d = pos - _r_origin
-			aim_vec = d / STICK_R if d.length() > 5.0 else Vector2.ZERO
+			_touch_aim = d / STICK_R if d.length() > 5.0 else Vector2.ZERO
 			stick_r.set_meta("knob", d)
 
 
@@ -628,6 +737,8 @@ func _over_button(pos: Vector2) -> bool:
 func release_sticks() -> void:
 	_l_idx = -1
 	_r_idx = -1
+	_touch_move = Vector2.ZERO
+	_touch_aim = Vector2.ZERO
 	move_vec = Vector2.ZERO
 	aim_vec = Vector2.ZERO
 	stick_l.visible = false
@@ -649,24 +760,53 @@ func open_pause() -> void:
 	var p: Player = world.player
 	if not p.relics.is_empty():
 		var row := HFlowContainer.new()
-		row.custom_minimum_size = Vector2(150, 0)
+		row.custom_minimum_size = Vector2(198, 0)
+		row.alignment = FlowContainer.ALIGNMENT_CENTER
 		row.add_theme_constant_override("h_separation", 1)
-		var relic_info := UI.label("Tap a relic to read it", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+		row.add_theme_constant_override("v_separation", 1)
+		var relic_info := UI.label("Tap a relic to read it" if Controls.device == Controls.TOUCH else "Select a relic to read it",
+			8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 		for r in p.relics:
 			var tb := TextureButton.new()
 			tb.texture_normal = Art.tex(Items.icon(r))
 			tb.custom_minimum_size = Vector2(18, 18)
 			tb.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
 			tb.ignore_texture_size = true
+			UI.focusable_slot(tb)
 			var rid: String = r
-			tb.pressed.connect(func(): relic_info.text = "%s - %s" % [Items.display_name(rid), Items.desc(rid)])
+			var read := func(): relic_info.text = "%s - %s" % [Items.display_name(rid), Items.desc(rid)]
+			tb.pressed.connect(read)
+			tb.focus_entered.connect(read)
 			row.add_child(tb)
 		v.add_child(row)
 		v.add_child(relic_info)
-	v.add_child(UI.button("Resume", func(): world.toggle_pause()))
+	var resume := UI.button("Resume", func(): world.toggle_pause())
+	resume.set_meta("default_focus", true)
+	v.add_child(resume)
 	v.add_child(UI.button("Settings", func(): SettingsPanel.open(root)))
-	v.add_child(UI.button("Give up", _confirm_give_up))
+	var row2 := HBoxContainer.new()
+	row2.add_theme_constant_override("separation", 6)
+	row2.add_child(UI.button("Save & quit", _confirm_save_quit, 96))
+	row2.add_child(UI.button("Give up", _confirm_give_up, 96))
+	v.add_child(row2)
 	Audio.play("ui_open")
+
+
+## Leave now, continue later from the start of this floor (title screen: Continue).
+func _confirm_save_quit() -> void:
+	var m := UI.modal(root, "REST FOR NOW?")
+	var r: Control = m[0]
+	r.process_mode = Node.PROCESS_MODE_ALWAYS
+	var v: VBoxContainer = m[1]
+	v.add_child(UI.label("Continue later from the start of floor %d." % world.floor_num, 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(UI.button("Keep burning", func(): r.queue_free(), 100))
+	row.add_child(UI.button("Save & quit", func():
+		RunSave.flush()
+		world.main.goto("title"), 90))
+	v.add_child(row)
 
 
 func _confirm_give_up() -> void:

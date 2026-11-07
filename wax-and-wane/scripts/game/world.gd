@@ -139,7 +139,7 @@ func _ready() -> void:
 	Game.unlocked_now.connect(_on_unlock)
 	Game.records["runs"] += 1
 	Game.save()
-	_start_floor(1)
+	_start_floor(RunSave.begin(self))   # floor 1, or the saved floor when continuing
 	if not Game.records["seen_intro"] and main.autotest == null:
 		_intro()
 
@@ -174,7 +174,7 @@ func _intro() -> void:
 			"Your wax is your life - and your time.",
 			"Every hit melts you. Wax drippings mend you.",
 			"",
-			"Left thumb moves. Right thumb aims and fires."]:
+			Controls.intro_line()]:
 		v.add_child(UI.label(line, 8, UI.CREAM if line != "" else UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	v.add_child(UI.button("Light the wick", func():
 		Game.records["seen_intro"] = true
@@ -182,7 +182,7 @@ func _intro() -> void:
 		root.queue_free()
 		paused = false
 		get_tree().paused = false
-		hud.show_hint("Left thumb: move    Right thumb: aim + shoot", 8.0), 120))
+		hud.show_hint(Controls.controls_hint(false), 8.0), 120))
 
 
 # ---------------------------------------------------------------- floors & rooms
@@ -247,7 +247,8 @@ func _start_floor(n: int) -> void:
 	if omen != "":
 		hud.show_hint("%s: %s" % [OMENS[omen]["name"], OMENS[omen]["desc"]], 5.0)
 	if n == 1 and (Game.records["seen_intro"] or main.autotest != null):
-		hud.show_hint("Left thumb: move    Right thumb: aim + shoot    Wax = health = time", 7.0)
+		hud.show_hint(Controls.controls_hint(), 7.0)
+	RunSave.on_floor_start(self)   # Save & Continue: snapshot the start of this floor
 
 
 func _cam_target(r: Room) -> Vector2:
@@ -931,7 +932,7 @@ func charge_keepsake(n: int) -> void:
 func on_keepsake_taken(id: String, pos: Vector2, rec: Dictionary) -> void:
 	Audio.play("item_get")
 	if Game.tip("keepsake"):
-		hud.show_hint("Keepsake: clear rooms to fill its pips, then tap its button", 3.5)
+		hud.show_hint(Controls.keepsake_hint(), 3.5)
 	hud.show_banner(Items.display_name(id).to_upper(), Items.desc(id), 2.0)
 	fx_ring(pos + Vector2(0, -16), UI.GOLD)
 	var group: String = rec.get("group", "")
@@ -1150,21 +1151,9 @@ func clock_minutes() -> float:
 func _physics_process(dt: float) -> void:
 	if player == null:
 		return
-	# input: touch sticks + keyboard (WASD move, arrows shoot, space/E bomb)
+	# input: the HUD merges touch sticks, keyboard, mouse and gamepad (and handles bomb / keepsake)
 	var mv := hud.move_vec
 	var aim := hud.aim_vec
-	var k := Vector2(float(Input.is_physical_key_pressed(KEY_D)) - float(Input.is_physical_key_pressed(KEY_A)),
-		float(Input.is_physical_key_pressed(KEY_S)) - float(Input.is_physical_key_pressed(KEY_W)))
-	if k != Vector2.ZERO:
-		mv = k.normalized()
-	var a := Vector2(float(Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_LEFT)),
-		float(Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_UP)))
-	if a != Vector2.ZERO:
-		aim = a.normalized()
-	var bomb_key := Input.is_physical_key_pressed(KEY_SPACE) or Input.is_physical_key_pressed(KEY_E)
-	if bomb_key and not _kb_bomb_held:
-		place_bomb()
-	_kb_bomb_held = bomb_key
 	if main.autotest and main.autotest.has_method("drive"):
 		var drv: Array = main.autotest.drive(self)
 		if not drv.is_empty():
