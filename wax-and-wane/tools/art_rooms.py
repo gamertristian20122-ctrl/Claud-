@@ -576,43 +576,36 @@ def door_bottom(state, variant):
     return im
 
 
-# ---- side doors, 16x32 (left; the right one is the mirror).  The side wall is seen
-# edge-on: two sandstone posts stand in the wall line, the corridor runs off into the dark,
-# and when closed the leaf (seen from above, iron straps across it) fills the wall line.
-_SIDE_POST = [".......AAAAAAAAA", ".......ACCBBBBBA", ".......ACBBBBBBA", ".......ABBBBBBBA",
-              ".......ACCCCCCCA", ".......ADDDDDDDA", ".......AEEEEEEEA", ".......AAAAAAAAA"]
-_SIDE_OPEN = ["GFFFFFFfffffffff"] * 16
-_SIDE_CLOSED = [
-    "GFFFFFFffAHHHIAf",   # y8
-    "GFFFFFFffAHHIIAf",
-    "GFFFFFFfAAAAAAAf",
-    "GFFFFFFfAKJJKJAf",
-    "GFFFFFFfAAAAAAAf",
-    "GFFFFFFffAHIHIAf",
-    "GFFFFFFffAHHHIAf",
-    "GFFFFFFffAHHIIAf",
-    "GFFFFFFffAHHHIAf",   # y16
-    "GFFFFFFffAHIHIAf",
-    "GFFFFFFffAHHHIAf",
-    "GFFFFFFfAAAAAAAf",
-    "GFFFFFFfAKJJKJAf",
-    "GFFFFFFfAAAAAAAf",
-    "GFFFFFFffAHHIIAf",
-    "GFFFFFFffAHHHIAf",   # y23
-]
+# ---- side doors, 16x32 (left; the right one is the mirror).  The side wall is the thin
+# 5 px strip at x 11..15 (seen from above, like the top caps); x 0..10 is the void outside
+# the room, so every opaque pixel stays inside x 11..15.  The door is an archway cut into
+# that strip: a 2 px jamb cap at each end in the cap colours (B fill + C lip, between 'A'
+# joints that line up with the strip's own joints at room y 88 and 119), and between them a
+# 1 px #21141b frame ('x') around the opening.  Open: the opening is solid #111111 ('G').
+# Closed: a plank leaf with iron bands sits inset in the frame.  Boss/gold recolour the
+# caps (red / gilded) and the iron, and set a bone stud / gem in each cap.
+_SIDE_CAP_TOP = ["AAAAA", "ABBBA", "ACCCA"]          # y 0..2
+_SIDE_CAP_BOT = ["ABBBA", "ACCCA", "AAAAA"]          # y 29..31
+_SIDE_OPEN = ["xxxxx"] + ["xGGGx"] * 24 + ["xxxxx"]  # y 3..28
+_SIDE_CLOSED = ["xxxxx", "xGGGx"] + [
+    "xHHIx", "xHHIx", "xHIIx", "xAAAx", "xKJJx", "xAAAx", "xHHIx", "xHHIx", "xIHIx",
+    "xHHIx", "xHHIx", "xHIIx", "xHHIx", "xHHIx", "xIHIx", "xHHIx", "xAAAx", "xKJJx",
+    "xAAAx", "xHHIx", "xHIIx", "xHHIx", "xHHIx"] + ["xxxxx"]
+SIDE_STUD = {"normal": None, "boss": "#fdf7ed", "gold": "#72d6ce"}
 
 
 def door_side(state, variant, side="left"):
     mid = _SIDE_CLOSED if state == "closed" else _SIDE_OPEN
-    # the room's floor shows through the transparent cells at x 15 next to the leaf
-    rows = _SIDE_POST + mid + _SIDE_POST
-    im = render_door(rows, variant, "left")
-    if variant == "boss":
-        paste(im, grid(BOSS_SKULL_SMALL, BONE), 8, 0)
-        paste(im, grid(BOSS_SKULL_SMALL, BONE), 8, 24)
-    if variant == "gold":
-        paste(im, grid(GOLD_GEM_SMALL, GOLDX), 8, 1)
-        paste(im, grid(GOLD_GEM_SMALL, GOLDX), 8, 25)
+    strip = _SIDE_CAP_TOP + mid + _SIDE_CAP_BOT
+    assert len(strip) == 32, len(strip)
+    rows = ["." * 11 + r for r in strip]
+    pal = dict(DOOR_PAL[variant])
+    pal["x"] = "#21141b"
+    im = grid(rows, pal)
+    stud = SIDE_STUD[variant]
+    if stud:                       # one accent pixel in the middle of each jamb cap
+        im.putpixel((13, 1), rgb(stud) + (255,))
+        im.putpixel((13, 30), rgb(stud) + (255,))
     if side == "right":
         im = im.transpose(Image.FLIP_LEFT_RIGHT)
     return im
@@ -749,8 +742,36 @@ PIT = G("""
 """)
 
 
+# Pit autotile: pit_<mask>.png, mask = N 1 | E 2 | S 4 | W 8 (bit set = that neighbour is a
+# pit too).  Every tile is a full 16x16 #111111 hole; the rim is drawn only on the sides that
+# face solid floor, so a cluster of pit cells reads as one continuous hole: a 1 px #222222 rim and
+# a 3 px cliff face (#483b3a over #2b2929, the far wall of the hole) along the top, a 1 px #775c55 lip (the
+# near floor edge catching the light) along the bottom and a 1 px #222222 edge left / right.
+PIT_N, PIT_E, PIT_S, PIT_W = 1, 2, 4, 8
+_PIT_FACE = ["AAAAAAAAAAAAAAAA",      # 1 px #222222 rim (like the left/right edges)
+             "EEEEEEEEEEEEEEEE",      # 3 px cliff face, #483b3a over #2b2929
+             "FEEFEEEFEEFEEEFE",
+             "FFFFFFFFFFFFFFFF"]
+
+
+def pit_tile(mask):
+    rows = [["k"] * 16 for _ in range(16)]
+    if not mask & PIT_N:
+        for y, r in enumerate(_PIT_FACE):
+            rows[y] = list(r)
+    if not mask & PIT_S:
+        rows[15] = ["D"] * 16
+    for x, bit in ((0, PIT_W), (15, PIT_E)):
+        if not mask & bit:
+            for y in range(16):
+                rows[y][x] = "A"
+    return grid(["".join(r) for r in rows], PROP)
+
+
 def build_props():
     out = {}
+    for m in range(16):
+        out["pit_%d" % m] = pit_tile(m)
     out["rock"] = grid(ROCK, PROP)
     out["rock_b"] = grid(ROCK_B, PROP)
     out["urn"] = grid(URN, PROP)
