@@ -503,7 +503,12 @@ static func tour(at: Node) -> void:
 	await at._wait(5.2)
 	for i in 4:
 		await at._shot("ending_card_%d" % (i + 1))
-		await at._wait(Ending.CARD)
+		if i == 3:   # the dawn, and the little flame going out
+			await at._wait(3.0)
+			await at._shot("ending_dawn")
+			await at._wait(Ending.CARD - 3.0)
+		else:
+			await at._wait(Ending.CARD)
 	await at._wait(3.0)
 	await at._shot("ending_credits")
 	await at._wait(10.0)
