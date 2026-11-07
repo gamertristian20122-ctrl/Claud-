@@ -130,7 +130,7 @@ const DEFS := {
 }
 
 ## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
-const FLOOR_HP := [1.0, 1.2, 1.7, 2.2]
+const FLOOR_HP := [1.0, 1.25, 1.7, 2.2]
 ## Contact damage per floor for creatures without their own "touch" (bosses: 8). Balance: polish.md.
 const TOUCH := [5, 6, 7, 7]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
