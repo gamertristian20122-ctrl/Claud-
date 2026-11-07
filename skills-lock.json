@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "agent-browser": {
+      "source": "vercel-labs/agent-browser",
+      "sourceType": "github",
+      "skillPath": "skills/agent-browser/SKILL.md",
+      "computedHash": "60a9cbe5af176150582c019e16e5d3703a41bb02d88438e881349876120d7944"
+    },
     "build-awwwards-quality-sites": {
       "source": "mengto/skills",
       "sourceType": "github",
@@ -37,6 +43,30 @@
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "89496d5dd00f4810205f351759594fc2742bf8eea85a2f2b2d1de59f4bd91576"
     },
+    "game-feel": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/disciplines/game-feel/SKILL.md",
+      "computedHash": "190f588bf95cd2b06b737465a29deaf82b20f185248bad827d1c3135d8953a99"
+    },
+    "godot-animation": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-animation/SKILL.md",
+      "computedHash": "ae61cc2a2776ccac494530eefc56bc9322b7680bee91896377b48651cc07ed5e"
+    },
+    "godot-nodes-scenes": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-nodes-scenes/SKILL.md",
+      "computedHash": "2d472883cc50896d09b4704058d302cd264b7a6cd90aec5d249e801d79cc4628"
+    },
+    "godot-ui-control": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-ui-control/SKILL.md",
+      "computedHash": "37da5807c8a6df555ff560beaf26313fdf588c1149208123ca380932e808ec56"
+    },
     "gsap-core": {
       "source": "greensock/gsap-skills",
       "sourceType": "github",
@@ -61,6 +91,12 @@
       "skillPath": ".agents/skills/impeccable/SKILL.md",
       "computedHash": "6974dbfbd18485b5c8aac0b84b33f1dd2d9eb4dba83d45efdc6964591773098d"
     },
+    "memory-management": {
+      "source": "anthropics/knowledge-work-plugins",
+      "sourceType": "github",
+      "skillPath": "productivity/skills/memory-management/SKILL.md",
+      "computedHash": "8178769b6efe5ef38b1e0eeea682b83ff79a1e3b93acb96aa203ebcfb96d9b98"
+    },
     "scroll-world": {
       "source": "oso95/scroll-world",
       "sourceType": "github",
@@ -72,6 +108,12 @@
       "sourceType": "github",
       "skillPath": "skills/seo-audit/SKILL.md",
       "computedHash": "9a94c66cb3098b03037f072b6f561cca75410c6d8611e50646baf9e8a5dabe8f"
+    },
+    "steam-publish": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/workflows/steam-publish/SKILL.md",
+      "computedHash": "54504d64f766e064eade730c537da466ad34e4e8a3fea863782098a28d9ac039"
     },
     "threejs-fundamentals": {
       "source": "cloudai-x/threejs-skills",

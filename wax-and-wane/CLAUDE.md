@@ -27,3 +27,8 @@ Read `README.md` (content, layout, commands) and `DESIGN.md` (asset contract, pa
 Godot 4.7.2 + export templates, Android SDK at `/usr/lib/android-sdk` (build-tools 34, platform 34),
 a JDK (17 or 21) — set `export/android/android_sdk_path` and `java_sdk_path` in Godot's editor settings.
 `xvfb-run` for screenshots, Python 3 + Pillow + numpy + scipy for the asset tools, ffmpeg for audio.
+Browser automation (agent-browser skill in the repo's .agents/skills): `npm i -g agent-browser && agent-browser install`.
+
+## Installed skills (repo-level, in /.agents/skills and /.claude/skills)
+agent-browser (real browser), memory-management, game-feel, godot-animation, godot-ui-control,
+godot-nodes-scenes, steam-publish (+ find-skills and the web/design skills already there).
