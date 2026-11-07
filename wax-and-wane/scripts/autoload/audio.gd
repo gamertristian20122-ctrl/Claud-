@@ -17,6 +17,7 @@ extends Node
 ##   set_low_wax(on, frac)                       heartbeat + ticking layer while the candle is nearly out
 ##   set_space(floor_num)                        per-floor reverb on world sounds (0 = none)
 ##   loop_start(name, follow, volume_db, pitch) -> id, loop_stop(id, fade)   looping sounds (beam_loop ...)
+##   stop_all()                                  silence everything (e.g. before quitting)
 
 const SFX_DIR := "res://assets/audio/sfx/"
 const MUSIC_DIR := "res://assets/audio/music/"
@@ -29,6 +30,7 @@ const THROTTLE := {
 	"coin_pickup": 0.04, "wax_pickup": 0.05, "step": 0.12, "tick": 0.2, "ui_click": 0.03, "ui_move": 0.04,
 	"splash": 0.06, "splat": 0.05, "gib": 0.06, "sizzle": 0.12, "fire_crackle": 0.3, "moth_flutter": 0.15,
 	"wax_bubble": 0.15, "web": 0.08, "page_flip": 0.06, "clock_tick_fast": 0.1, "dodge": 0.08,
+	"boss_sting": 2.0,
 }
 ## Level trim per sound, in dB (the files are loudness-matched by tools/make_audio.py; this sets the mix).
 const VOLUME := {
@@ -342,6 +344,23 @@ func _stop_all_loops() -> void:
 		loop_stop(id, 0.2)
 
 
+## Silence everything at once (before quitting, so no playback is left running at exit).
+func stop_all() -> void:
+	for p in _pool:
+		p.stop()
+	for m in _music:
+		m.stop()
+	_heart.stop()
+	for id in _loops.keys():
+		var lp: AudioStreamPlayer = _loops[id][0]
+		if is_instance_valid(lp):
+			lp.stop()
+			lp.queue_free()
+	_loops.clear()
+	current_music = ""
+	low_wax = false
+
+
 # ---------------------------------------------------------------- music
 
 func _is_resumable(n: String) -> bool:
@@ -352,8 +371,9 @@ func music(n: String, fade := 1.2) -> void:
 	if n == current_music:
 		return
 	var old := _music[_active]
-	if _is_resumable(current_music) and old.playing:
-		_positions[current_music] = old.get_playback_position()
+	var prev := current_music
+	if _is_resumable(prev) and old.playing:
+		_positions[prev] = old.get_playback_position()
 	current_music = n
 	if n.begins_with("floor_"):
 		_floor_music = n
@@ -375,6 +395,8 @@ func music(n: String, fade := 1.2) -> void:
 		return
 	if stream is AudioStreamOggVorbis:
 		(stream as AudioStreamOggVorbis).loop = not n.ends_with("jingle")
+	if (n == "boss" or n == "final_boss") and not (prev == "boss" or prev == "final_boss"):
+		play("boss_sting")   # every boss reveal gets the stab (throttled, so an extra call does not double it)
 	_active = 1 - _active
 	var nw := _music[_active]
 	nw.stop()
