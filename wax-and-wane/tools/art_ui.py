@@ -421,6 +421,308 @@ KXXXXXXXXXXXXXXddK
 KNOB_ALPHA = {"K": 170, "w": 220, "X": 150, "d": 200}
 
 
+# ==========================================================================
+# TITLE LOGO  "WAX & WANE"
+# Hand-lettered slab-serif capitals in the 0x72 wax colours. Thick strokes
+# go down-right, thin strokes up-right (like hand-cut wood type). Each glyph
+# below is a silhouette ('#'); MELT gives, per column, the last row covered
+# by the cream top layer (melted wax pooling on top and running down the
+# strokes as drips). DRIPS hang off the bottom of a few letters. The & is
+# brass (Tallow's holder colours) with Tallow's own flame burning on top.
+# Build: soften slab corners -> cream/tan fill -> shading (light top-left)
+# -> 2 px slab depth below every face -> hanging drips -> 1 px #21141b outline.
+# ==========================================================================
+GLYPH_W = """
+##########....#########....#######
+##########....#########....#######
+.########......#######......#####.
+..######........#####........###..
+...######......#######......###...
+...######......#######......###...
+...######......#######......###...
+...######......#######......###...
+....######....###.#####....###....
+....######....###.#####....###....
+....######....###.#####....###....
+....######....###.#####....###....
+.....######..###...#####..###.....
+.....######..###...#####..###.....
+.....######..###...#####..###.....
+.....######..###...#####..###.....
+......#########.....########......
+......#########.....########......
+......#########.....########......
+......#########.....########......
+.......#######.......######.......
+.......#######.......######.......
+.......#######.......######.......
+.......#######.......######.......
+"""
+GLYPH_A = """
+.........######.........
+.........######.........
+.........######.........
+........########........
+........########........
+........########........
+.......##########.......
+.......##########.......
+.......##########.......
+......####..######......
+......####..######......
+......####..######......
+.....####....######.....
+.....####....######.....
+.....##############.....
+....################....
+....####......######....
+....####......######....
+...####........######...
+...####........######...
+...####........######...
+.#######......#########.
+#########....###########
+#########....###########
+"""
+GLYPH_X = """
+#########....#######.
+#########....#######.
+.########....######..
+...######....####....
+....######..####.....
+....######..####.....
+.....##########......
+.....##########......
+......########.......
+......########.......
+.......######........
+.......######........
+........######.......
+........######.......
+.......########......
+.......########......
+......##########.....
+......##########.....
+.....####..######....
+.....####..######....
+....####....######...
+..######....########.
+.########...#########
+.########...#########
+"""
+GLYPH_N = """
+##########......########
+##########......########
+.########........######.
+..#######.........####..
+..########........####..
+..########........####..
+..#########.......####..
+..#########.......####..
+..##########......####..
+..##########......####..
+..####.######.....####..
+..####.######.....####..
+..####..######....####..
+..####..######....####..
+..####...######...####..
+..####...######...####..
+..####....######..####..
+..####....######..####..
+..####.....######.####..
+..####.....######.####..
+..####......##########..
+.######.....##########..
+########.....#########..
+########.....#########..
+"""
+GLYPH_E = """
+##################.
+##################.
+##################.
+##################.
+..######.......###.
+..######.......###.
+..######.......###.
+..######...........
+..######...##......
+..######...##......
+..###########......
+..###########......
+..###########......
+..######...##......
+..######...##......
+..######...........
+..######...........
+..######.......###.
+..######.......###.
+..######.......###.
+##################.
+##################.
+##################.
+##################.
+"""
+
+GLYPH_AMP = """
+.....######......
+....########.....
+....###..###.....
+....###..###.....
+....###..###.....
+.....######......
+.....#####.......
+....#######...###
+...###.####..###.
+..###...####.###.
+..###....######..
+.###......####...
+.###......#####..
+.###.....###.###.
+..###...###...###
+...#######.....##
+....#####........
+"""
+
+# Last cream row per column (-1 = no cream in that column).
+MELT = {
+    "W": [2, 3, 3, 4, 6, 10, 11, 9, 4, 3, -1, -1, -1, -1, 3, 3, 4, 3, 5, 12, 13, 11, 4,
+          -1, -1, -1, -1, 3, 3, 5, 7, 6, 3, 2],
+    "A": [-1, -1, -1, -1, -1, -1, -1, -1, 4, 4, 3, 3, 4, 10, 11, 7, 4, -1, -1, -1, -1, -1, -1, -1],
+    "X": [2, 3, 3, 4, 7, 8, 6, 3, 2, -1, -1, -1, -1, 2, 3, 5, 4, 3, 3, 2, -1],
+    "N": [2, 3, 4, 11, 12, 5, 3, 5, 6, 3, -1, -1, -1, -1, -1, -1, 2, 3, 3, 8, 7, 3, 3, 2],
+    "E": [3, 3, 4, 9, 10, 7, 4, 3, 2, 3, 3, 2, 2, 3, 2, 5, 6, 3, -1],
+}
+
+# Wax drips hanging below letters: (char, x within the letter, sprite).
+DRIP_LONG = """
+wXd
+wXd
+wX.
+wX.
+wXd
+wXd
+.d.
+"""
+DRIP_SHORT = """
+wd
+wd
+Xd
+"""
+DRIPS = [(1, 3, DRIP_LONG), (2, 16, DRIP_SHORT), (5, 15, DRIP_SHORT), (6, 4, DRIP_LONG), (7, 11, DRIP_SHORT)]
+
+LOGO_TEXT = ["W", "A", "X", "&", "W", "A", "N", "E"]
+LOGO_KERN = {("W", "A"): -5}
+LOGO_GAP = 2
+AMP_SPACE = 4          # extra space on each side of the &
+CAP_TOP = 12           # canvas row of the cap line
+WAX_COLOURS = {"top": "w", "body": "X", "shade": "d", "topshade": "X", "depth1": "D", "depth2": "F"}
+BRASS_COLOURS = {"top": "y", "body": "o", "shade": "c", "topshade": "o", "depth1": "R", "depth2": "m"}
+
+
+def glyph_rows(name):
+    if name == "&":
+        return rows_of(GLYPH_AMP)
+    return rows_of(globals()["GLYPH_" + name])
+
+
+def build_logo():
+    # 1) place the silhouettes
+    placed = []
+    x = 1
+    prev = None
+    for ch in LOGO_TEXT:
+        rows = glyph_rows(ch)
+        w = len(rows[0])
+        if prev is not None:
+            x += LOGO_GAP + LOGO_KERN.get((prev, ch), 0)
+            if "&" in (prev, ch):
+                x += AMP_SPACE
+        y = CAP_TOP + (24 - len(rows))          # everything sits on the baseline
+        placed.append((ch, x, y, rows))
+        x += w
+        prev = ch
+    W = x + 3
+    Hh = CAP_TOP + 24 + 12
+    face = {}      # (x, y) -> role ('top' / 'body'), plus colour set
+    for i, (ch, gx, gy, rows) in enumerate(placed):
+        cols = BRASS_COLOURS if ch == "&" else WAX_COLOURS
+        melt = MELT.get(ch)
+        h = len(rows)
+        for r, row in enumerate(rows):
+            for c, v in enumerate(row):
+                if v != "#":
+                    continue
+                # soften the outer corners of the first and last slab rows
+                if r in (0, h - 1):
+                    left = c == 0 or row[c - 1] != "#"
+                    right = c == len(row) - 1 or row[c + 1] != "#"
+                    if left or right:
+                        continue
+                if melt is not None:
+                    role = "top" if r <= melt[c] else "body"
+                else:
+                    role = "top" if r <= 2 else "body"
+                face[(gx + c, gy + r)] = (role, cols)
+    # 2) shade faces (light from the top-left)
+    pix = {}
+    for (fx, fy), (role, cols) in face.items():
+        right = face.get((fx + 1, fy))
+        above = face.get((fx, fy - 1))
+        left = face.get((fx - 1, fy))
+        if role == "top":
+            ch = cols["topshade"] if right is None else cols["top"]
+        else:
+            shaded = right is None or (above and above[0] == "top") or (left and left[0] == "top")
+            ch = cols["shade"] if shaded else cols["body"]
+        pix[(fx, fy)] = ch
+    # 3) slab depth: two rows straight down below every face pixel
+    for (fx, fy), (role, cols) in face.items():
+        for k, key in ((1, "depth1"), (2, "depth2")):
+            p = (fx, fy + k)
+            if p in face:
+                break
+            if p not in pix or (key == "depth1" and pix[p] == cols["depth2"]):
+                pix[p] = cols[key]
+    # 4) hanging drips (start on the face's bottom row, cover the slab depth)
+    for (gi, dx, spr) in DRIPS:
+        ch, gx, gy, rows = placed[gi]
+        top = gy + len(rows) - 1
+        for r, row in enumerate(rows_of(spr)):
+            for c, v in enumerate(row):
+                if v != ".":
+                    pix[(gx + dx + c, top + r)] = v
+    # 5) Tallow's flame burns on top of the &
+    amp = [p for p in placed if p[0] == "&"][0]
+    flame = Image.open(os.path.join(ART, "hero", "flame_f0.png")).convert("RGBA")
+    im = Image.new("RGBA", (W, Hh), (0, 0, 0, 0))
+    out = im.load()
+    for (px_, py_), ch in pix.items():
+        out[px_, py_] = rgba(PAL[ch])
+    # 6) outline
+    solid = set(pix)
+    ol = rgba(PAL["K"])
+    for y in range(Hh):
+        for xx in range(W):
+            if (xx, y) in solid:
+                continue
+            if any((xx + dx, y + dy) in solid for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                out[xx, y] = ol
+    # flame: wick pixel lands one row above the &'s top loop
+    fx = amp[1] + 8 - 4
+    fy = amp[2] - 1 - 12
+    im.alpha_composite(flame, (fx, fy))
+    # crop to content (+0 margin)
+    bbox = im.getbbox()
+    return im.crop(bbox)
+
+
+def make_logo():
+    im = build_logo()
+    assert im.width <= 220 and im.height <= 60, im.size
+    save(im, "title_logo.png")
+
+
+
 def bar_mock(frac, ghost=0.0, inner=128, wax_max=120.0):
     """Assemble the bar exactly like hud.gd::_draw_bar does (for review)."""
     left = Image.open(os.path.join(UI, "bar_frame_left.png"))
@@ -504,6 +806,10 @@ def write_review(d):
     room.alpha_composite(fade, (8, 15))
     room.alpha_composite(knob, (8 + 20 - 9 + 6, 15 + 20 - 9 - 4))
     sheet(os.path.join(d, "sticks.png"), [base, knob, room], scale=6)
+    logo = ld("title_logo.png")
+    sheet(os.path.join(d, "logo6.png"), [logo], scale=6)
+    sheet(os.path.join(d, "logo1.png"), [logo], scale=1, pad=12)
+    sheet(os.path.join(d, "logo3.png"), [logo], scale=3, pad=8)
 
 
 def main():
@@ -515,6 +821,7 @@ def main():
     make_buttons()
     make_boxes()
     make_sticks()
+    make_logo()
     for p in OUT:
         print(os.path.relpath(p, ROOT), Image.open(p).size)
     if review:

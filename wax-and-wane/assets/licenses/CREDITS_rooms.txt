@@ -1,0 +1,22 @@
+Wax & Wane - room art credits (assets/art/rooms/)
+================================================
+
+All room art is built by tools/art_rooms.py (re-runnable: python3 tools/art_rooms.py).
+
+Base: "16x16 DungeonTileset II" by 0x72, CC0 1.0 (public domain),
+https://0x72.itch.io/dungeontileset-ii - licence: assets/licenses/0x72_DungeonTilesetII_CC0.txt.
+Only colours from that tileset's palette are used.
+
+room_<cellar|crypt|chapel|belfry>.png: assembled from 0x72 wall and floor frames (recoloured per theme).
+door_*.png, rock.png, rock_b.png, urn.png, urn_broken.png, pit.png: original hand-placed pixel art
+(character grids in the script) in the 0x72 style and palette; the open doors sample a darkened
+0x72 floor_1 for the corridor.
+
+Candelabra, trapdoor and floor decals (added 2026-11-07)
+--------------------------------------------------------
+candelabra_unlit.png, candelabra_lit_f0..f3.png (16x24), trapdoor_closed.png, trapdoor_open.png
+(32x32), decal_crack_0..3.png, decal_cobweb.png, decal_bones.png, decal_wax_puddle.png:
+original pixel art made for this game, every pixel hand-placed as character grids in
+tools/art_rooms.py (no generated or traced images). 0x72 palette only. Style references from the
+0x72 set (no pixels copied): floor_ladder (the ladder fading into a dark hole), skull (bone colours
+and no-outline floor look), the floor tiles' cracks. Free to use as part of the game.

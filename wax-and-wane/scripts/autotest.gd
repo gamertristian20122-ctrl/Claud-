@@ -44,6 +44,8 @@ func _ready() -> void:
 
 
 func _next_run() -> void:
+	while main._busy:
+		await get_tree().process_frame
 	var params := {}
 	if args.has("seed"):
 		params["seed"] = int(args["seed"]) + results.size()
@@ -284,6 +286,15 @@ func _wait(s: float) -> void:
 	await get_tree().create_timer(s, true, false, true).timeout
 
 
+func _jump(w: Node, c: Vector2i) -> void:
+	w.cur_cell = c
+	w.room.dispose()
+	w.room = w._build_room(c)
+	w.player.position = w.room.center() + Vector2(0, 40)
+	w.cam.position = w._cam_target(w.room)
+	w._on_enter_room()
+
+
 func _tour() -> void:
 	DirAccess.make_dir_recursive_absolute(_shots_dir)
 	await _wait(1.0)
@@ -301,6 +312,17 @@ func _tour() -> void:
 	await _wait(0.4)
 	await _shot("pause")
 	w.toggle_pause()
+	args.erase("drive")
+	for t in ["treasure", "shop"]:
+		for c in w.layout["cells"].keys():
+			if w.layout["cells"][c]["type"] == t:
+				_jump(w, c)
+				await _wait(1.2)
+				w.player.position = w.room.center() + Vector2(-26, 22)
+				await _wait(0.6)
+				await _shot(t)
+				break
+	args["drive"] = true
 	# jump straight to the final boss for a look
 	w.player.wax = 60.0
 	w._start_floor(4)

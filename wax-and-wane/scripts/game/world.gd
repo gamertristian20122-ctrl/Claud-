@@ -2,10 +2,10 @@ extends Node2D
 ## One run: floors, rooms, the candle, enemies, drops, the clock and every effect.
 
 const FLOORS := {
-	1: {"name": "The Cellar", "theme": "cellar", "dark": Color(0.22, 0.17, 0.18), "music": "floor_1", "boss": "big_zombie"},
-	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.15, 0.17, 0.23), "music": "floor_2", "boss": "ogre"},
-	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.18, 0.14, 0.23), "music": "floor_3", "boss": "necro_boss"},
-	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.22, 0.13, 0.13), "music": "floor_4", "boss": "big_demon"},
+	1: {"name": "The Cellar", "theme": "cellar", "dark": Color(0.28, 0.22, 0.23), "music": "floor_1", "boss": "big_zombie"},
+	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.2, 0.22, 0.29), "music": "floor_2", "boss": "ogre"},
+	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.23, 0.19, 0.29), "music": "floor_3", "boss": "necro_boss"},
+	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.28, 0.18, 0.17), "music": "floor_4", "boss": "big_demon"},
 }
 const POOLS := {
 	1: {"e": ["tiny_zombie", "goblin", "tiny_slug", "tiny_zombie"], "h": ["muddy", "slug", "skelet"], "f": ["imp"]},

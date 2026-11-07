@@ -3,7 +3,9 @@
 
 Re-runnable:  python3 tools/art_rooms.py            (writes assets/art/rooms/)
               python3 tools/art_rooms.py --review   (also writes contact sheets + previews
-                                                     to /tmp/claude-0/review_rooms/)
+                                                     to /tmp/claude-0/review_rooms/ and, for the
+                                                     candelabra / trapdoor / decals, to
+                                                     /tmp/claude-0/review_rooms2/)
 
 Everything is built from the CC0 0x72 DungeonTileset II frames in assets/0x72/frames/
 (walls, floors, door leaf, banners, skull ...) plus hand-placed pixel art defined below
@@ -838,11 +840,11 @@ def candelabra(frame=None):
 
 # --------------------------------------------------------------------------- trapdoor
 # 32x32 hatch set in a sandstone frame (same stone + plank + cyan iron colours as the
-# doors, so it reads as part of the same house in every theme).  Hinges on the far (top)
-# edge, planks run left-right, two hinge straps run down from the hinges, ring pull near
-# the front.  Open: the leaf is gone, the shaft's far wall catches a little light and a
-# ladder runs down into the dark (0x72 floor_ladder idea at 2x2 tiles: the ladder wood
-# darkens with depth).
+# doors, so it reads as part of the same house in every theme).  Closed: like a door leaf
+# lying in the floor - vertical planks, two riveted hinge straps from knuckles on the left
+# frame edge, ring pull on the right.  Open: the leaf is gone (only the knuckles remain),
+# the shaft's far wall catches a little light and a ladder runs down into the dark (0x72
+# floor_ladder idea at 2x2 tiles: the ladder wood darkens with depth).
 TRAP_PAL = {
     "A": "#222222", "B": "#aa8d7a", "C": "#d3bfa9", "D": "#775c55", "E": "#483b3a",
     "G": "#111111", "H": "#8f4029", "I": "#62232f", "P": "#c56025", "J": "#72d6ce",

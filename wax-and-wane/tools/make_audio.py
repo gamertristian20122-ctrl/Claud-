@@ -818,9 +818,8 @@ class Song:
             for k in range(0, len(out), self.loop_len):
                 seg = out[k:k + self.loop_len]
                 y[:len(seg)] += seg
-        else:
-            e = np.where(np.max(np.abs(out), 1) > peak(out) * db(-70))[0][-1] + 1
-            y = out[:e]
+        else:  # one-shot: cut at the requested length with a smooth fade
+            y = out[:self.loop_len].copy()
             fl = min(secs(0.6), len(y) // 4)
             y[-fl:] *= np.linspace(1, 0, fl)[:, None] ** 2
         return master(y, self.loop, target_rms, ceiling)
@@ -959,7 +958,7 @@ def waltz(cfg):
             bar_s = 3 * spb
             # --- bass "oom" (pizzicato) + a long, soft bowed bass under it
             s.add("bass", b0, pizz(bass, 1.0), cfg.get("pizz", 0.42))
-            s.add("pad", b0, strings(bass - 12, bar_s, 1.0, bright=500, attack=0.3, release=0.8, seed=bar), cfg.get("lowstr", 0.22))
+            s.add("pad", b0, strings(bass - 12, bar_s, 1.0, bright=500, attack=0.3, release=0.8, seed=bar), cfg.get("lowstr", 0.16))
             # --- pad
             pk = cfg.get("pad", "strings")
             for i, m in enumerate(pad):
@@ -1094,19 +1093,19 @@ def boss(final=False):
         # ostinato, 3+3+2 accents
         for k, iv in enumerate((0, 0, 12, 0, 0, 12, 7, 12)):
             acc = k in (0, 3, 6)
-            s.add("ost", b0 + k * 0.5, spiccato(R + iv, 0.5 * spb * 0.8, 1.0 if acc else 0.55, bright=2000), 0.30, pan=-0.15)
-            if acc:
-                s.add("ost", b0 + k * 0.5, pizz(R - 12, 0.8), 0.35)
+            s.add("ost", b0 + k * 0.5, spiccato(R + iv, 0.5 * spb * 0.8, 1.0 if acc else 0.55, bright=2000), 0.5, pan=-0.15)
+            if acc:  # octave-up ghost for presence on small speakers
+                s.add("ost", b0 + k * 0.5, spiccato(R + iv + 12, 0.5 * spb * 0.7, 0.8, bright=3500), 0.16, pan=0.25)
         # drums: toms on the accents, deep drum each phrase, fills
-        for pos, f0, g in ((0, 82, 0.9), (1.5, 82, 0.65), (3, 82, 0.7)):
-            s.add("drums", b0 + pos, tom(f0, 1.0, seed=bar), g)
+        for pos, f0, g in ((0, 96, 0.3), (1.5, 96, 0.2), (3, 96, 0.24)):
+            s.add("drums", b0 + pos, tom(f0, 1.0, 0.15, seed=bar), g)
         if bar % 2 == 1:
-            s.add("drums", b0 + 3.5, tom(125, 1.0, 0.2, seed=bar + 50), 0.45, pan=0.3)
+            s.add("drums", b0 + 3.5, tom(125, 1.0, 0.2, seed=bar + 50), 0.28, pan=0.3)
         if bar % 4 == 0:
-            s.add("drums", b0, tom(52, 1.0, 0.5, seed=bar + 90), 0.9)
+            s.add("drums", b0, tom(58, 1.0, 0.35, seed=bar + 90), 0.26)
         if bar % 8 == 7 or (final and bar % 4 == 3):
             for i, f0 in enumerate((170, 160, 140, 130, 115, 105, 95, 85)):
-                s.add("drums", b0 + 2 + i * 0.25, tom(f0, 1.0, 0.18, seed=bar * 9 + i), 0.35 + 0.05 * i, pan=0.4 - 0.1 * i)
+                s.add("drums", b0 + 2 + i * 0.25, tom(f0, 1.0, 0.18, seed=bar * 9 + i), 0.2 + 0.03 * i, pan=0.4 - 0.1 * i)
         if sec >= 1:
             for beat in (1, 3):
                 s.add("drums", b0 + beat, norm(hp(rng(bar + beat).standard_normal(secs(0.12)), 1800)) * env_ad(secs(0.12), 0.001, 0.03),
@@ -1115,27 +1114,27 @@ def boss(final=False):
         pad = voice(pcs, req, prev_pad, 50, 64)
         prev_pad = pad
         for i, m in enumerate(pad):
-            s.add("pad", b0, strings(m, 4 * spb, 1.0, bright=900, attack=0.25, release=0.5, seed=bar * 3 + i), 0.08, pan=(i - 1) * 0.5)
+            s.add("pad", b0, strings(m, 4 * spb, 1.0, bright=1200, attack=0.25, release=0.5, seed=bar * 3 + i), 0.10, pan=(i - 1) * 0.5)
         # tense high tremolo strings
         if sec >= 1:
             hi = voice(pcs, req, prev_hi, 69, 82)
             prev_hi = hi
             for i, m in enumerate(hi):
                 s.add("trem", b0, strings(m, 4 * spb, 1.0, bright=3000, attack=0.15, release=0.4, trem=0.6, trem_hz=11,
-                                          seed=bar * 7 + i), 0.045 + 0.01 * sec, pan=-0.5 + 0.5 * i)
+                                          seed=bar * 7 + i), 0.08 + 0.015 * sec, pan=-0.5 + 0.5 * i)
         # theme: low brass + strings, octave doubling in the last section
         if sec >= 2:
             for beat, m, d in theme[bar % 4]:
-                s.add("brass", b0 + beat, brass(m - 12, d * spb * 0.92), 0.17, pan=0.1)
+                s.add("brass", b0 + beat, brass(m - 12, d * spb * 0.92), 0.30, pan=0.1)
                 s.add("lead", b0 + beat, strings(m, d * spb * 0.95, 1.0, bright=3200, attack=0.04, release=0.25, vib=0.006,
-                                                 seed=bar * 11 + int(beat * 2)), 0.11, pan=-0.1)
+                                                 seed=bar * 11 + int(beat * 2)), 0.20, pan=-0.1)
                 if sec == 3:
                     s.add("lead", b0 + beat, strings(m + 12, d * spb * 0.95, 1.0, bright=4000, attack=0.04, release=0.25,
-                                                     vib=0.006, seed=bar * 13 + int(beat * 2)), 0.05, pan=0.3)
+                                                     vib=0.006, seed=bar * 13 + int(beat * 2)), 0.09, pan=0.3)
         # the waltz motif on a music box, eerily, over the ostinato
         if sec == 0 and bar >= 4 or sec == 1 and final:
             for beat, m, d in theme[bar % 4]:
-                s.add("box", b0 + beat, music_box(m + 12, 0.9), 0.22, pan=0.35)
+                s.add("box", b0 + beat, music_box(m + 12, 0.9), 0.35, pan=0.35)
         # final boss: the bell tolls, the clock ticks, high 16th arpeggios
         if final:
             if bar % 4 == 0:
@@ -1148,7 +1147,7 @@ def boss(final=False):
                 tones = sorted({m for m in range(74, 92) if m % 12 in pcs})[:4]
                 for k in range(16):
                     m = tones[(0, 1, 2, 3, 2, 1, 2, 3)[k % 8]]
-                    s.add("arp", b0 + k * 0.25, spiccato(m, 0.2 * spb, 0.8 if k % 4 == 0 else 0.5, bright=4500), 0.05,
+                    s.add("arp", b0 + k * 0.25, spiccato(m, 0.2 * spb, 0.8 if k % 4 == 0 else 0.5, bright=4500), 0.09,
                           pan=0.4 * np.sin(k))
         else:
             if sec >= 2:
@@ -1169,7 +1168,7 @@ def song_final_boss():
 
 
 def song_victory_jingle():
-    s = Song(60, 5, 1, loop=False, tail=4.0, length_s=4.6)
+    s = Song(60, 5, 1, loop=False, tail=4.0, length_s=4.3)
     seq = [(0.0, ["Bb"], (62, 65, 70)), (0.45, ["C"], (64, 67, 72)), (0.9, ["D"], (66, 69, 74, 78))]
     for t0, (cn,), notes in seq:
         bpc, pcs, req = chord(cn, 0)
@@ -1191,7 +1190,7 @@ def song_victory_jingle():
 
 
 def song_death_jingle():
-    s = Song(60, 4, 1, loop=False, tail=3.0, length_s=3.4)
+    s = Song(60, 4, 1, loop=False, tail=3.0, length_s=3.3)
     # the music box winds down: notes come later and later and sag in pitch
     times = (0.0, 0.32, 0.68, 1.10, 1.62)
     notes = (81, 77, 74, 73, 62)
