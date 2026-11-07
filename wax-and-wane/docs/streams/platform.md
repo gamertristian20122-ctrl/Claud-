@@ -155,6 +155,9 @@ achievement (to do in R3 with the store kit).
 - `./tools/build_desktop.sh` -> `build/WaxAndWane_<ver>_windows.zip` and `_linux.zip` (exe + licences +
   a short README), then boots the Linux build headless with the bot (`--quit-after`) and fails on any
   script error. `SKIP_SMOKE=1` skips the boot test.
+- Saves (`save.cfg` = settings + records + achievements, `run.cfg` = the saved run) live in
+  `%APPDATA%\Godot\app_userdata\Wax & Wane\` on Windows and `~/.local/share/godot/app_userdata/Wax & Wane/`
+  on Linux / Steam Deck: use those two files for Steam Auto-Cloud (`*.cfg` in that folder).
 - Steam (R3): one depot per OS from those zips' contents; launch options `WaxAndWane.exe` (Windows) and
   `WaxAndWane.x86_64` (Linux). Templates for `steamcmd` are in `tools/steam/` (fill in the App and
   Depot IDs). The Steam Deck checklist items we already meet: full controller play with no setting

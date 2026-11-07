@@ -396,6 +396,16 @@ func _ui(action: String) -> void:
 	await _wait(0.2)
 
 
+func _pad(b: JoyButton) -> void:
+	for pressed in [true, false]:
+		var ev := InputEventJoypadButton.new()
+		ev.button_index = b
+		ev.pressed = pressed
+		Input.parse_input_event(ev)
+		await get_tree().process_frame
+	await _wait(0.2)
+
+
 func _layout_sig(w: Node) -> String:
 	var parts: Array = []
 	for c in w.layout["cells"].keys():
@@ -492,19 +502,24 @@ func _platform_tour() -> void:
 	await _press("move_left", 0.9)
 	await _wait(1.2)
 	await _shot("play_keyboard_" + tag)
-	# gamepad focus in the pause menu
-	Controls.set_device(Controls.PAD)
-	await _wait(0.3)
-	w.toggle_pause()
+	# a real gamepad press: Start pauses (and switches the HUD to gamepad), the d-pad moves, B resumes
+	await _pad(JOY_BUTTON_START)
 	await _wait(0.5)
+	if not w.paused or Controls.device != Controls.PAD:
+		fails += 1
+		print("[platform] FAIL Start: paused=%s device=%s" % [w.paused, Controls.device])
 	await _shot("pause_gamepad_" + tag)
-	await _ui("ui_down")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	var f := get_viewport().gui_get_focus_owner()
+	if not (f is Button and (f as Button).text == "Settings"):
+		fails += 1
+		print("[platform] FAIL d-pad down focus: ", f)
 	await _shot("pause_gamepad_down_" + tag)
-	await _ui("ui_cancel")
+	await _pad(JOY_BUTTON_B)
 	await _wait(0.3)
 	if w.paused:
 		fails += 1
-		print("[platform] FAIL B / Esc did not resume")
+		print("[platform] FAIL B did not resume")
 	Achievements.show_toast("boss_cellar")
 	await _wait(0.45)
 	await _shot("toast_" + tag)
@@ -518,4 +533,10 @@ func _platform_tour() -> void:
 	if RunSave.has_snapshot():
 		fails += 1
 		print("[platform] FAIL the snapshot survived the end of the run")
+	# back, back: results -> title -> "blow out the candle?" (desktop)
+	await _ui("ui_cancel")
+	await _wait(1.4)
+	await _ui("ui_cancel")
+	await _wait(0.4)
+	await _shot("quit_prompt_" + tag)
 	print("[platform] DONE fails=%d" % fails)

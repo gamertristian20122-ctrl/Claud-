@@ -43,6 +43,7 @@ func _ready() -> void:
 	if not OS.has_feature("mobile"):
 		Input.emulate_touch_from_mouse = "--touchmouse" in OS.get_cmdline_user_args()
 	get_viewport().gui_focus_changed.connect(_on_focus_changed)
+	get_window().window_input.connect(_detect_device)
 	Input.joy_connection_changed.connect(_on_joy_connection)
 	get_viewport().size_changed.connect(_refresh_cursors)
 	Game.settings_changed.connect(_refresh_cursors)
@@ -130,12 +131,13 @@ func aim_vector() -> Vector2:
 
 # ---------------------------------------------------------------- devices
 
-func _input(event: InputEvent) -> void:
+## Every event passes here before any node sees it (nodes may consume it), so the last device is
+## always right.
+func _detect_device(event: InputEvent) -> void:
 	var dev := ""
 	if event is InputEventKey:
 		if event.pressed:
 			dev = KEYS
-			_hotkeys(event)
 	elif event is InputEventJoypadButton:
 		if event.pressed:
 			dev = PAD
@@ -153,6 +155,11 @@ func _input(event: InputEvent) -> void:
 			dev = MOUSE
 	if dev != "" and dev != device:
 		set_device(dev, false)
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		_hotkeys(event)
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down") or event.is_action_pressed("ui_left") \
 			or event.is_action_pressed("ui_right") or event.is_action_pressed("ui_focus_next") or event.is_action_pressed("ui_focus_prev"):
 		_nav_ms = Time.get_ticks_msec()
