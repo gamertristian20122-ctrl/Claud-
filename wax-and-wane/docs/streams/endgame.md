@@ -122,8 +122,9 @@ Records: `tower_seen`, `true_endings`, `true_best` (earliest true-ending clock m
 | + every phase is seen (damage waits at each threshold) | `--god --keeper` 2 | both still it, ~46 s fights | |
 
 The tower rooms are the main filter (a bad room costs 20-40 minutes); the Keeper fight costs a typical run
-30-60 minutes. Full game `--god --runs=2`: see the report (both runs climb the ladder, still the Keeper and end on
-TRUE ENDING; a god run carries ~18 relics and stills the Keeper in seconds, which is why each phase now holds).
+30-60 minutes. Full game `--playtest --speed=4 --runs=2 --god`: both runs climbed the ladder, stilled the Keeper
+and ended on TRUE ENDING (12:24 AM and 12:05 AM, 18 and 16 relics, no script errors). A god run stilled the Keeper in
+7-12 s, which is why each phase now holds until the Keeper has changed phase.
 Knobs: `Tower.ARRIVAL_WAX`, `Tower.UNLOCK_CLOCK`, `Enemy.FLOOR_HP[4]`, `DEFS["keeper"]["hp"]`, `Keeper.HAND_HIT`,
 the per-phase cooldown tables in `Keeper.tower_keeper`, `chime_t`, `MAX_SENTRIES`.
 
