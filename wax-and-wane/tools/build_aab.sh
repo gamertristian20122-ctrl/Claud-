@@ -108,15 +108,16 @@ prepare() {
   else
     echo "Template $gv already installed"
   fi
-  if [ "$MAVEN_MIRROR" != "none" ] && ! grep -q "build_aab.sh mirror" android/build/settings.gradle; then
-    # Ask Gradle to try a Maven Central mirror before repo.maven.apache.org (which rate-limits
-    # with HTTP 429). Same artifacts, same checksums; mavenCentral() stays as the fallback.
-    local f
-    for f in android/build/settings.gradle android/build/build.gradle; do
+  # Ask Gradle to try a Maven Central mirror before repo.maven.apache.org (which rate-limits with
+  # HTTP 429). Same artifacts, same checksums; mavenCentral() stays as the fallback.
+  local f
+  for f in android/build/settings.gradle android/build/build.gradle; do
+    sed -i '/build_aab.sh mirror/d' "$f"
+    if [ "$MAVEN_MIRROR" != "none" ]; then
       sed -i -E "s#^([[:space:]]*)mavenCentral\(\)#\1maven { url \"$MAVEN_MIRROR\" } // build_aab.sh mirror\n\1mavenCentral()#" "$f"
-    done
-    echo "Gradle: Maven Central mirror $MAVEN_MIRROR"
-  fi
+    fi
+  done
+  [ "$MAVEN_MIRROR" != "none" ] && echo "Gradle: Maven Central mirror $MAVEN_MIRROR" || echo "Gradle: no mirror"
 
   say "Versions"
   local a p code name
