@@ -375,7 +375,7 @@ func _tour() -> void:
 		w.boss.take_hit(99999.0, Vector2.ZERO)
 		await _wait(0.5)
 		await _shot("boss_finale")
-		await _wait(1.0)
+		await _wait(1.2)
 		await _shot("boss_splat")
 	await _wait(6.0)
 	await _shot("results")
@@ -384,10 +384,13 @@ func _tour() -> void:
 
 ## Juice tour shots: gibs in flight, floor stains, a relic held aloft, the melt-down.
 func _tour_juice(w: Node) -> void:
+	var pick: Vector2i = w.cur_cell
 	for c in w.layout["cells"].keys():
 		if w.layout["cells"][c]["type"] == "normal" and c != w.cur_cell:
-			_jump(w, c)
-			break
+			pick = c
+			if not w.layout["cells"][c]["cleared"]:
+				break   # an uncleared room, so the clear burst shows too
+	_jump(w, pick)
 	await _wait(0.8)
 	for e in w.enemies:
 		if is_instance_valid(e):

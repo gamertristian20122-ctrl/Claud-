@@ -305,7 +305,7 @@ func boss_finale(e: Node2D) -> void:
 		if not world.finished:
 			Engine.time_scale = Game.base_time_scale)
 	var fin := create_tween()
-	fin.tween_interval(0.95)
+	fin.tween_interval(0.8)
 	fin.tween_callback(func():
 		var st := stains_here()
 		if st:
@@ -528,7 +528,7 @@ class LightRing extends Node2D:
 
 	func _process(dt: float) -> void:
 		t += dt
-		r = 4.0 + 110.0 * (1.0 - pow(1.0 - minf(t / 0.6, 1.0), 2.0))
+		r = 4.0 + 78.0 * (1.0 - pow(1.0 - minf(t / 0.6, 1.0), 2.0))
 		if t >= 0.6:
 			queue_free()
 		queue_redraw()
@@ -540,9 +540,10 @@ class LightRing extends Node2D:
 		var y := 0
 		var err := 1 - x
 		var n := 0
+		var gap := 3 if t < 0.3 else 2   # the ring thins out as it spreads
 		while x >= y:
 			n += 1
-			if n % 3 != 0:
+			if n % gap != 0:
 				for q in [Vector2(x, y), Vector2(y, x), Vector2(-y, x), Vector2(-x, y), Vector2(-x, -y), Vector2(-y, -x), Vector2(y, -x), Vector2(x, -y)]:
 					draw_rect(Rect2(q, Vector2.ONE), c)
 			y += 1

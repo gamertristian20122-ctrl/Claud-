@@ -191,7 +191,7 @@ func _intro_step(dt: float) -> void:
 		var k := clampf((_it - 0.35) / 0.45, 0.0, 1.0)
 		var e := 1.0 - pow(1.0 - k, 3.0)
 		var start := hero.position + Vector2(40, -8)
-		var goal := _wick_point() + Vector2(4, 2)
+		var goal := _wick_point() + Vector2(3, -1)
 		match_spr.position = start.lerp(goal, e).round()
 		match_light.energy = lerpf(1.6, 0.9, k) * (1.0 + 0.1 * sin(_it * 40.0))
 		if k >= 1.0:
