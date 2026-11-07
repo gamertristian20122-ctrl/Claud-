@@ -158,8 +158,8 @@ func boss_sexton(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 		"toss":
 			if e.t <= 0:
 				e.spr.frame = 1
-				var n := 3 if e.phase < 3 else 5
-				_fan(e, e.global_position + Vector2(6, -16), to_p.angle(), n, 0.24, 88.0, "bolt_bone")
+				var n := 3 if e.phase < 3 else 4
+				_fan(e, e.global_position + Vector2(6, -16), to_p.angle(), n, 0.26, 84.0, "bolt_bone")
 				Audio.play("enemy_shoot", 0.0, 0.05, 0.9)
 				if e.phase >= 2:
 					e.later(0.35, func():
@@ -195,13 +195,13 @@ func boss_sexton(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				e.play_anim("atk", 0.6)
 				e.spr.pause()
 				e.spr.frame = 1
-				e.world.burst(e.global_position + Vector2(0, -8), 10 + 2 * e.phase, 70.0, "bolt_bone", randf() * TAU)
+				e.world.burst(e.global_position + Vector2(0, -8), 8 + 2 * e.phase, 66.0, "bolt_bone", randf() * TAU)
 				e.world.shake(4.0)
 				Audio.play("explosion", -4.0, 0.05, 0.7)
 				for k in 4:
 					e.world.fx_debris(e.global_position + Vector2(randf_range(-10, 10), 0), "R")
-				if dist < e.radius + 12.0 and not p.dead:
-					p.hurt(8.0 * e.world.enemy_dmg_mult(), to_p)
+				if dist < e.radius + 8.0 and not p.dead:
+					p.hurt(6.0 * e.world.enemy_dmg_mult(), to_p)
 				e.state = "rest"
 				e.t = 0.9
 		"raise":
@@ -210,7 +210,7 @@ func boss_sexton(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				for m in e.world.enemies:
 					if is_instance_valid(m) and m.alive and m.kind == "grave_hand":
 						hands += 1
-				for i in mini(2, 3 - hands):
+				for i in mini(2, 2 - hands):
 					e.world.spawn_enemy("grave_hand", e.free_spot(p.global_position, 40.0, 110.0))
 				Audio.play("urn_break", -2.0, 0.05, 0.5)
 				e.state = "rest"
