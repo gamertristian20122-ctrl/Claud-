@@ -74,10 +74,13 @@ Deed an unbeaten champion's room shows a red mark.
   `Specials.prop_shot` (rings the bell).
 - `pickup.gd`: a paid `cost_wax` record with a `"pact"` key calls `Specials.on_pact()` instead of setting
   `world.pact = "smoke"` (so the mirror does not count as a Smoke Altar pact).
+  The preview's cost line is shorter ("15 max min for good, up to 7 now") so long relic names fit at 480 px.
 - `room_decor.gd`: special rooms get 2 fewer decor lights (their prop has a light), like shops.
 - `hud.gd`: `_draw_minimap` -> `Specials.draw_map_mark(minimap, world, d, pos)`.
 - `achievements.gd`: six entries in `LIST`.
 - `autotest.gd`: `--tour --specials`, and in `drive()` `Specials.bot_target(w)`.
+- `floor_gen.gd`: `--nospecials` (test-only command-line flag) skips special rooms and champions, for a
+  balance baseline.
 - `enemy.gd`: untouched. The champion is an ordinary `Enemy` scaled after `_ready` (frames, hp, radius,
   shadow, light); its extra attack runs from `Specials` on enemy time (`e.later`, `time_scale_enemies`).
 
