@@ -1,6 +1,6 @@
 class_name Main
 extends Node
-## Root: owns the current screen, fade transitions, the Android back button and the FPS overlay.
+## Root: owns the current screen, the paper-burn screen transitions, the Android back button and the FPS overlay.
 
 const SCREENS := {
 	"title": "res://scripts/ui/title.gd",
@@ -10,6 +10,7 @@ const SCREENS := {
 
 var current: Node
 var _fade: ColorRect
+var _burn: ShaderMaterial
 var _fps: Label
 var _busy := false
 var autotest: Node
@@ -31,6 +32,9 @@ func _ready() -> void:
 	_fade.color = Color(0.035, 0.027, 0.035, 1.0)
 	_fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# screen changes burn like paper: a glowing ember edge eats the old screen, then the dark burns away
+	_burn = Juice.burn_material()
+	_fade.material = _burn
 	top.add_child(_fade)
 	_fps = UI.label("", 8)
 	_fps.position = Vector2(2, 200)
@@ -73,7 +77,8 @@ func goto(screen: String, params := {}) -> void:
 	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
 	var tw := create_tween()
 	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tw.tween_property(_fade, "color:a", 1.0, 0.3 if current else 0.0)
+	Juice.burn_prepare(_burn, false, _fade.size)
+	tw.tween_property(_fade, "color:a", 1.0, 0.42 if current else 0.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	await tw.finished
 	get_tree().paused = false
 	Engine.time_scale = Game.base_time_scale
@@ -89,7 +94,8 @@ func goto(screen: String, params := {}) -> void:
 	move_child(current, 0)
 	var tw2 := create_tween()
 	tw2.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	tw2.tween_property(_fade, "color:a", 0.0, 0.35)
+	Juice.burn_prepare(_burn, true, _fade.size)
+	tw2.tween_property(_fade, "color:a", 0.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await tw2.finished
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_busy = false

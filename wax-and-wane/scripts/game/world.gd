@@ -269,6 +269,7 @@ func _build_room(c: Vector2i) -> Room:
 				pass
 	rooms_layer.add_child(r)
 	r.build(self, c, layout["cells"][c], FLOORS[floor_num]["theme"], neighbours)
+	Juice.of(self).attach_stains(r)
 	# restore persistent pickups
 	for rec in layout["cells"][c]["pickups"]:
 		_spawn_pickup_node(r, rec)
@@ -376,7 +377,7 @@ func _start_boss() -> void:
 	var name: String = Enemy.DEFS[kind]["name"]
 	Audio.music("final_boss" if floor_num == LAST_FLOOR else "boss")
 	Audio.play("boss_roar")
-	hud.show_banner(name, "Floor %d guardian" % floor_num, 1.6)
+	Juice.of(self).boss_card(kind, name)
 	var tw := create_tween()
 	tw.tween_interval(0.9)
 	tw.tween_callback(func():
@@ -419,6 +420,7 @@ func descend() -> void:
 	transitioning = true
 	player.frozen = true
 	Audio.play("trapdoor")
+	Juice.of(self).descended()
 	var tw := create_tween()
 	tw.tween_property(player, "scale", Vector2(0.2, 0.2), 0.35)
 	tw.parallel().tween_property(_fade, "color:a", 1.0, 0.45)
@@ -440,6 +442,7 @@ func _clear_room() -> void:
 		charge_keepsake(2 if run_time - room_t0 <= 8.0 + 2.5 * floor_num else 1)
 	room.set_open(true)
 	room.light_candles()
+	Juice.of(self).room_cleared()
 	Audio.play("room_clear")
 	Audio.set_intensity(0.5)
 	if player.hourglass > 0:
@@ -579,6 +582,7 @@ func collect_item(id: String, pos: Vector2, rec := {}) -> void:
 		return
 	var was_done := Items.rite_of(id) in player.rites
 	Items.apply(id, player, self)
+	Juice.of(self).relic_taken(id)
 	Audio.play("item_get")
 	var rite := Items.check_rite(id, player, self)
 	if rite == "":
@@ -645,6 +649,7 @@ func on_enemy_killed(e: Enemy) -> void:
 	Audio.play("enemy_die")
 	fx_poof(e.global_position + Vector2(0, -6), false, 1.4)
 	_kindle(e.global_position)
+	Juice.of(self).enemy_killed(e)
 	if e.boss:
 		_boss_down(e)
 		return
@@ -776,6 +781,7 @@ func on_boss_phase(ph: int) -> void:
 
 func _boss_down(e: Enemy) -> void:
 	hud.set_boss_frac(0)
+	Juice.of(self).boss_finale(e)
 	Audio.play("boss_die")
 	shake(7.0)
 	hitstop(0.35, 0.15)
@@ -934,6 +940,7 @@ func charge_keepsake(n: int) -> void:
 
 func on_keepsake_taken(id: String, pos: Vector2, rec: Dictionary) -> void:
 	Audio.play("item_get")
+	Juice.of(self).relic_taken(id)
 	if Game.tip("keepsake"):
 		hud.show_hint(Controls.keepsake_hint(), 3.5)
 	hud.show_banner(Items.display_name(id).to_upper(), Items.desc(id), 2.0)
@@ -1022,12 +1029,7 @@ func _explode(pos: Vector2, r: Room) -> void:
 	ex.add_child(l)
 	var lt := l.create_tween()
 	lt.tween_property(l, "energy", 0.0, 0.5)
-	if Art.has("fx/scorch"):
-		var sc := Sprite2D.new()
-		sc.texture = Art.tex("fx/scorch")
-		sc.position = pos - r.position
-		sc.modulate.a = 0.8
-		r.floor_layer.add_child(sc)
+	fx_scorch(pos)
 	r.blast(pos, bomb_radius)
 	var hd := r.reveal_near(pos, bomb_radius)
 	if hd != Vector2i.ZERO and layout["cells"].has(r.cell + hd):
@@ -1097,7 +1099,7 @@ func on_player_died() -> void:
 	Audio.play("snuff_out")
 	Audio.play("bell_toll", 0.0, 0.0, 0.9)
 	_clear_shots()
-	fx_smoke(player.global_position + Vector2(0, -18))
+	Juice.of(self).player_died()
 	Engine.time_scale = 0.35 * Game.base_time_scale
 	var tw := create_tween().set_ignore_time_scale(true)
 	tw.tween_interval(1.0)
@@ -1297,8 +1299,10 @@ func on_focus_lost() -> void:
 
 # ---------------------------------------------------------------- effects
 
+## Screen shake in pixels (Juice turns it into smooth noise: small hits subtle, big moments strong,
+## scaled by the Screen shake setting).
 func shake(amount: float) -> void:
-	_shake = maxf(_shake, amount)
+	Juice.of(self).shake(amount)
 
 
 func hitstop(dur: float, scale_ := 0.05) -> void:
@@ -1352,16 +1356,9 @@ func fx_debris(pos: Vector2, ch: String) -> void:
 		tw.tween_callback(r.queue_free)
 
 
+## A splash of melted wax: it arcs out and leaves a dot on the floor where it lands.
 func fx_drop(pos: Vector2, v: Vector2) -> void:
-	var r := ColorRect.new()
-	r.color = Color("#fdf7ed") if randf() < 0.5 else Color("#d3bfa9")
-	r.size = Vector2(2, 2)
-	r.position = pos
-	fx_layer.add_child(r)
-	var tw := r.create_tween()
-	tw.tween_property(r, "position", pos + v * 0.3 + Vector2(0, 14), 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tw.tween_property(r, "modulate:a", 0.0, 0.4)
-	tw.tween_callback(r.queue_free)
+	Juice.of(self).lit.emit(pos, v + Vector2(0, -20), randf_range(0.32, 0.45), FxParts.WAX, 260.0, 0.0, 2 if randf() < 0.4 else 1)
 
 
 func fx_text(pos: Vector2, text: String, col: Color) -> void:
@@ -1387,3 +1384,38 @@ func fx_ring(pos: Vector2, col: Color) -> void:
 	tw.tween_method(func(v): st["r"] = v; n.queue_redraw(), 2.0, 26.0, 0.4)
 	tw.parallel().tween_property(n, "modulate:a", 0.0, 0.4)
 	tw.tween_callback(n.queue_free)
+
+
+## Bomb scorch, baked into the floor stains (it stays for the floor).
+func fx_scorch(pos: Vector2) -> void:
+	Juice.of(self).scorch(pos)
+
+
+## Sparks thrown back off a wall (dir = which way they fly).
+func fx_sparks(pos: Vector2, dir: Vector2, n := 4, blue := false) -> void:
+	Juice.of(self).sparks(pos, dir, n, blue)
+
+
+## A tiny puff where Tallow's shot leaves.
+func fx_muzzle(pos: Vector2, dir: Vector2, blue := false) -> void:
+	Juice.of(self).muzzle(pos, dir, blue)
+
+
+## A drip falling off the candle: it leaves a wax dot on the floor.
+func fx_wax_drop(pos: Vector2, v := Vector2.ZERO) -> void:
+	Juice.of(self).wax_drop(pos, v)
+
+
+## A thread of smoke from a guttering wick.
+func fx_wisp(pos: Vector2) -> void:
+	Juice.of(self).wisp(pos)
+
+
+## Gold sparkles (a relic is put away).
+func fx_glint(pos: Vector2) -> void:
+	Juice.of(self).glint(pos)
+
+
+## A persistent splat on this room's floor ("goo", "ash", "blood", "red", "wax", "soot", ...).
+func fx_stain(pos: Vector2, mat := "wax", big := false) -> void:
+	Juice.of(self).splat(pos, mat, big)

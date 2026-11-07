@@ -164,7 +164,7 @@ func _ready() -> void:
 
 
 func _physics_process(dt: float) -> void:
-	if not alive:
+	if not alive or Juice.holding(world):
 		return
 	_flash = maxf(0.0, _flash - dt * 6.0)
 	mat.set_shader_parameter("flash", _flash)

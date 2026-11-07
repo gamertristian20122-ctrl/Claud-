@@ -25,6 +25,10 @@ var lob_t := 0.0
 var lob_dur := 0.9
 ## Ember lights are capped so a room never exceeds the renderer's per-item light limit.
 static var _lights := 0
+var _blue := false
+var _tr_t := 0.0
+const TRAIL := [Color("#ee8e2e"), Color("#da4e38"), Color("#8f4029")]
+const TRAIL_BLUE := [Color("#72d6ce"), Color("#5698cc"), Color("#5956bd")]
 
 
 func setup(w: Node, pos: Vector2, v: Vector2, kind: String, is_friendly: bool) -> void:
@@ -38,6 +42,9 @@ func setup(w: Node, pos: Vector2, v: Vector2, kind: String, is_friendly: bool) -
 	spr.material = Art.unshaded
 	add_child(spr)
 	z_index = 5
+	_blue = kind.contains("blue")
+	if friendly:
+		material = Art.unshaded   # the spark trail glows like the ember
 	if friendly and _lights < 6:
 		_lights += 1
 		tree_exiting.connect(func(): _lights -= 1)
@@ -52,7 +59,7 @@ func setup(w: Node, pos: Vector2, v: Vector2, kind: String, is_friendly: bool) -
 func _physics_process(dt: float) -> void:
 	if _dead:
 		return
-	if not friendly and world.freeze_t > 0.0:
+	if not friendly and (world.freeze_t > 0.0 or Juice.holding(world)):
 		return
 	if lob:
 		_lob_step(dt)
@@ -66,6 +73,8 @@ func _physics_process(dt: float) -> void:
 	life -= dt
 	var room: Room = world.room
 	if room and room.shot_hits(global_position + Vector2(0, 6), dmg):
+		if friendly and world.has_method("fx_sparks"):
+			world.fx_sparks(global_position, -vel.normalized(), 4, _blue)
 		end()
 		Audio.play("hit_wall", -3.0)
 		return
@@ -76,6 +85,8 @@ func _physics_process(dt: float) -> void:
 			if (e.global_position + Vector2(0, -e.half_h - e._jump_h)).distance_squared_to(global_position) < pow(e.radius + radius + 1.0, 2):
 				_hit[e] = true
 				e.take_hit(dmg, vel.normalized() * knock, burn)
+				if world.has_method("fx_sparks"):
+					world.fx_sparks(global_position, vel.normalized(), 2, _blue)
 				if pierce <= 0:
 					end()
 					return
@@ -88,6 +99,23 @@ func _physics_process(dt: float) -> void:
 			return
 	if life <= 0:
 		end()
+	if friendly:
+		_tr_t += dt
+		queue_redraw()
+
+
+## A short spark trail behind player embers (3 pixels, cooling as they trail off).
+func _draw() -> void:
+	if not friendly or _dead or vel.length_squared() < 100.0:
+		return
+	var back := -vel.normalized()
+	var cols: Array = TRAIL_BLUE if _blue else TRAIL
+	var flick := int(_tr_t * 30.0) % 2
+	for i in 3:
+		if i == 2 and flick == 1:
+			continue
+		var p := (back * (4.0 + 3.0 * i)).round()
+		draw_rect(Rect2(p, Vector2.ONE), cols[i])
 
 
 func _lob_step(dt: float) -> void:
