@@ -115,6 +115,7 @@ func _ready() -> void:
 	_gbox.add_child(_grid)
 	var right := UI.panel()
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.clip_contents = true
 	body.add_child(right)
 	_detail = VBoxContainer.new()
 	_detail.add_theme_constant_override("separation", 2)
@@ -154,8 +155,8 @@ func close() -> void:
 
 static func _tab_box(on: bool) -> StyleBox:
 	var sb: StyleBox = UI._box("ui/button_9_pressed" if on else "ui/button_9", 6, Color(0.2, 0.14, 0.14, 1))
-	sb.content_margin_left = 6
-	sb.content_margin_right = 6
+	sb.content_margin_left = 5
+	sb.content_margin_right = 5
 	return sb
 
 
@@ -221,6 +222,9 @@ func _fill(grab: bool) -> void:
 		s.custom_minimum_size = L[2]
 		_grid.add_child(s)
 		_slots.append(s)
+	# the same minimum size as the last tab sends no change signal: re-sort the column by hand
+	_grid.update_minimum_size()
+	_gbox.queue_sort.call_deferred()
 	_page_lbl.text = "%d / %d" % [page + 1, _pages()]
 	_prev.disabled = _pages() <= 1
 	_next.disabled = _pages() <= 1
@@ -230,6 +234,8 @@ func _fill(grab: bool) -> void:
 	sel = clampi(sel, from, maxi(from, mini(entries.size(), from + _per_page()) - 1))
 	_select(sel, false)
 	var k := sel - from
+	if k >= 0 and k < _slots.size():
+		(_slots[k] as Control).set_meta("default_focus", true)   # Controls.focus_first lands here, not on a tab
 	if grab and k >= 0 and k < _slots.size():
 		(_slots[k] as Control).grab_focus(not Controls.uses_buttons())
 
@@ -501,7 +507,10 @@ func _head(pic: Control, title: String, subs: Array, title_col := UI.GOLD) -> vo
 		if s is Control:
 			col.add_child(s)
 		else:
-			col.add_child(UI.label(str(s[0]), 8, s[1]))
+			var l := UI.label(str(s[0]), 8, s[1])
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			l.custom_minimum_size = Vector2(110, 0)
+			col.add_child(l)
 
 
 func _text(s: String, col := UI.CREAM) -> Label:

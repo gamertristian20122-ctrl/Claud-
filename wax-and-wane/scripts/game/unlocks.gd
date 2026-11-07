@@ -61,6 +61,8 @@ static func fixed(w: Node) -> bool:
 
 
 static func _ok(w: Node, id: String) -> bool:
+	if force_all:
+		return true
 	return (not TABLE.has(id)) if fixed(w) else is_unlocked(id)
 
 
