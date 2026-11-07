@@ -143,6 +143,7 @@ func _ready() -> void:
 	glow.energy = 0.55
 	glow.texture_scale = 0.22
 	add_child(glow)
+	add_child(Costumes.new())
 
 
 func _set_flame_frames() -> void:
@@ -246,6 +247,7 @@ func _move(d: Vector2) -> void:
 
 
 func _fire(dir: Vector2) -> void:
+	if RelicFx.before_fire(self, dir): return
 	dir = world.assist_aim(global_position, dir)
 	var n := shots
 	var dmg := damage
@@ -258,11 +260,13 @@ func _fire(dir: Vector2) -> void:
 		world.shoot_player(global_position + Vector2(0, -6) + dir * 4 + off, dir.rotated(deg_to_rad(k * 2.5)), self, dmg)
 	Audio.play("shoot", 0.0, 0.08)
 	_recoil = 0.08
+	RelicFx.after_fire(self, dir)
 
 
 func hurt(amount: float, from_dir: Vector2) -> void:
 	if dead or invuln > 0 or frozen:
 		return
+	if RelicFx.on_hurt(self, amount, from_dir): return
 	if wax_coat and coat_ready:
 		coat_ready = false
 		invuln = 0.8

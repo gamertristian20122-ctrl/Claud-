@@ -66,6 +66,7 @@ func _physics_process(dt: float) -> void:
 	life -= dt
 	var room: Room = world.room
 	if room and room.shot_hits(global_position + Vector2(0, 6), dmg):
+		if RelicFx.shot_wall(self): return
 		end()
 		Audio.play("hit_wall", -3.0)
 		return
@@ -76,6 +77,7 @@ func _physics_process(dt: float) -> void:
 			if (e.global_position + Vector2(0, -e.half_h - e._jump_h)).distance_squared_to(global_position) < pow(e.radius + radius + 1.0, 2):
 				_hit[e] = true
 				e.take_hit(dmg, vel.normalized() * knock, burn)
+				RelicFx.shot_hit(self, e)
 				if pierce <= 0:
 					end()
 					return

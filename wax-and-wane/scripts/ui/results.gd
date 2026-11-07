@@ -64,8 +64,9 @@ func _ready() -> void:
 			v.add_child(UI.label(nxt, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	var relics: Array = params.get("relics", [])
 	if not relics.is_empty():
-		var row := HBoxContainer.new()
-		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		var row := HFlowContainer.new()
+		row.alignment = FlowContainer.ALIGNMENT_CENTER
+		row.custom_minimum_size = Vector2(mini(relics.size(), 18) * 16, 0)
 		for r in relics:
 			var tr := TextureRect.new()
 			tr.texture = Art.tex(Items.icon(r))
