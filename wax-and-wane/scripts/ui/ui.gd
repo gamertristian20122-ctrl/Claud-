@@ -25,6 +25,14 @@ static func label(text: String, size := 16, color := CREAM, align := HORIZONTAL_
 	return l
 
 
+## A crisp 1 px dark outline (outline_size 2 on the 8 px pixel font) for text drawn over the floor,
+## where a drop shadow alone gets lost on bright chapel tiles.
+static func outlined(l: Label) -> Label:
+	l.add_theme_color_override("font_outline_color", INK)
+	l.add_theme_constant_override("outline_size", 2)
+	return l
+
+
 static func _box(path: String, margin: int, fallback: Color, content_v := 2) -> StyleBox:
 	if Art.has(path):
 		var sb := StyleBoxTexture.new()

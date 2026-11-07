@@ -85,7 +85,7 @@ func _ready() -> void:
 	var wax_cost: int = int(record.get("cost_wax", 0)) if record else 0
 	if wax_cost > 0:
 		# Smoke Altar: paid in minutes cut from the top of the candle
-		var lbl := UI.label("%d" % wax_cost, 8, UI.RED, HORIZONTAL_ALIGNMENT_CENTER)
+		var lbl := UI.outlined(UI.label("%d" % wax_cost, 8, UI.RED, HORIZONTAL_ALIGNMENT_CENTER))
 		lbl.position = Vector2(-12, 3)
 		lbl.size = Vector2(24, 8)
 		lbl.material = Art.unshaded
@@ -96,7 +96,7 @@ func _ready() -> void:
 		add_child(lbl)
 		add_child(ic)
 	if price > 0:
-		price_label = UI.label("%d" % price, 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+		price_label = UI.outlined(UI.label("%d" % price, 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
 		price_label.position = Vector2(-12, 3)
 		price_label.size = Vector2(24, 8)
 		var coin := Sprite2D.new()

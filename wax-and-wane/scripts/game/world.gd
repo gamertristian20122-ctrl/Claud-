@@ -1391,7 +1391,7 @@ var _texts: Array = []   # live fx_text labels: a new one stacks clear of them i
 
 
 func fx_text(pos: Vector2, text: String, col: Color) -> void:
-	var l := UI.label(text, 8, col, HORIZONTAL_ALIGNMENT_CENTER)
+	var l := UI.outlined(UI.label(text, 8, col, HORIZONTAL_ALIGNMENT_CENTER))
 	l.material = Art.unshaded
 	l.size = Vector2(60, 10)
 	l.position = Vector2(pos.x - 30, _free_text_y(pos))
