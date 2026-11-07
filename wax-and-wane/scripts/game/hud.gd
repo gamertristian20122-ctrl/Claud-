@@ -22,6 +22,8 @@ var stick_l: Control
 var stick_r: Control
 var pause_layer: Control
 var vignette: TextureRect
+var preview: Label
+var _preview_t := 0.0
 
 var shown_wax := 120.0
 var ghost_wax := 120.0
@@ -137,6 +139,9 @@ func _ready() -> void:
 	banner_sub = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
 	banner_sub.modulate.a = 0
 	root.add_child(banner_sub)
+	preview = UI.label("", 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	preview.modulate.a = 0
+	root.add_child(preview)
 	hint = UI.label("", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	hint.modulate.a = 0
 	root.add_child(hint)
@@ -199,6 +204,8 @@ func _layout() -> void:
 	banner.position = Vector2(0, 48)
 	banner_sub.size = Vector2(vs.x, 10)
 	banner_sub.position = Vector2(0, 66)
+	preview.size = Vector2(vs.x, 10)
+	preview.position = Vector2(0, vs.y - 38)
 	hint.size = Vector2(vs.x, 10)
 	hint.position = Vector2(0, vs.y - 26)
 
@@ -211,6 +218,13 @@ func show_banner(title: String, sub := "", dur := 2.4) -> void:
 		tw.tween_property(l, "modulate:a", 1.0, 0.2)
 		tw.tween_interval(dur)
 		tw.tween_property(l, "modulate:a", 0.0, 0.6)
+
+
+## Shown while standing next to a relic / shop item.
+func preview_item(title: String, sub: String) -> void:
+	preview.text = "%s  -  %s" % [title.to_upper(), sub]
+	preview.modulate.a = 1.0
+	_preview_t = 0.3
 
 
 func show_hint(text: String, dur := 6.0) -> void:
@@ -248,6 +262,9 @@ func _process(dt: float) -> void:
 	if _ghost_hold <= 0:
 		ghost_wax = move_toward(ghost_wax, p.wax, 30.0 * dt)
 	_flame_t += dt
+	_preview_t -= dt
+	if _preview_t <= 0.0 and preview.modulate.a > 0.0:
+		preview.modulate.a = move_toward(preview.modulate.a, 0.0, dt * 4.0)
 	bar.queue_redraw()
 	clock_label.text = Game.clock_text(world.clock_minutes())
 	var low := p.wax < 20.0

@@ -73,7 +73,8 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 	if data["type"] == "boss":
 		spots += [Vector2i(0, 8), Vector2i(14, 8)]
 	for sp in spots:
-		if data["grid"][sp.y][sp.x] == ".":
+		var cch: String = data["grid"][sp.y][sp.x]
+		if cch == "." or cch == "K":
 			data["grid"][sp.y][sp.x] = "K"
 			_add_candelabra(sp)
 	# obstacles
@@ -151,6 +152,16 @@ func _add_obstacle(c: Vector2i, ch: String) -> void:
 	if ch == "X":
 		s.offset.y += 9   # the column sprite has empty rows below its base
 	holder.add_child(s)
+	if ch == "R":
+		var rr := RandomNumberGenerator.new()
+		rr.seed = int(data["seed"]) + c.x * 31 + c.y * 7
+		if rr.randf() < 0.14:
+			holder.set_meta("waxy", true)
+			var drip := Sprite2D.new()
+			drip.texture = Art.tex("rooms/decal_wax_puddle") if Art.has("rooms/decal_wax_puddle") else Art.tex("pickups/wax_small")
+			drip.position = Vector2(0, -9)
+			drip.scale = Vector2(0.75, 0.75)
+			holder.add_child(drip)
 	var occ := LightOccluder2D.new()
 	var poly := OccluderPolygon2D.new()
 	poly.polygon = PackedVector2Array([Vector2(-7, -13), Vector2(7, -13), Vector2(7, -2), Vector2(-7, -2)])
@@ -231,7 +242,11 @@ func _process(dt: float) -> void:
 		return
 	spike_t += dt
 	var period := 2.4
-	var up := fmod(spike_t, period) < period * 0.55
+	var ph := fmod(spike_t, period)
+	var up := ph < period * 0.55
+	if not up and ph > period - 0.3:
+		for s in spikes:
+			s.frame = 1   # rattle: they are about to come up
 	if up != spikes_up:
 		spikes_up = up
 		for s in spikes:
@@ -368,8 +383,11 @@ func break_obstacle(c: Vector2i) -> void:
 	var node: Node2D = obstacle_nodes.get(c)
 	obstacle_nodes.erase(c)
 	var wp := cell_center(c)
+	var waxy: bool = node != null and node.get_meta("waxy", false)
 	if node:
 		node.queue_free()
+	if waxy and world:
+		world.add_pickup("wax_big" if world.rng.randf() < 0.6 else "chest", wp + Vector2(0, 4))
 	match ch:
 		"U":
 			Audio.play("urn_break")
@@ -398,7 +416,7 @@ func blast(wp: Vector2, radius: float) -> void:
 
 
 func spike_hurts(wp: Vector2) -> bool:
-	if spikes.is_empty() or not spikes_up:
+	if spikes.is_empty() or not spikes_up or fmod(spike_t, 2.4) < 0.3:
 		return false
 	return char_at(cell_of(wp - position)) == "S"
 

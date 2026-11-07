@@ -105,6 +105,8 @@ func drive(w: Node) -> Array:
 		_room_t = 0.0
 	_room_t += dt
 	var pos := p.global_position
+	if args.has("trace") and Engine.get_physics_frames() % 30 == 0:
+		print("[trace] cell=%s lp=%s exit=%s open=%s doors=%s frozen=%s trans=%s" % [w.cur_cell, pos - w.room.position, w.room.door_exit(pos), w.room.is_open, w.room.doors.keys(), p.frozen, w.transitioning])
 	# stuck handling
 	if pos.distance_to(_last_pos) < 0.3:
 		_stuck_t += dt
@@ -181,7 +183,7 @@ func drive(w: Node) -> Array:
 			exit_pt = w.room.position + Vector2(268, 106)
 	var room: Room = w.room
 	var my_cell := room.cell_of(pos - room.position)
-	if my_cell == door_cell:
+	if my_cell == door_cell or my_cell.x < 0 or my_cell.y < 0 or my_cell.x >= Room.COLS or my_cell.y >= Room.ROWS:
 		return [(exit_pt - pos).normalized(), Vector2.ZERO]
 	var wp := _path_next(room, my_cell, door_cell)
 	var goal: Vector2 = room.cell_center(wp) + Vector2(0, 2)

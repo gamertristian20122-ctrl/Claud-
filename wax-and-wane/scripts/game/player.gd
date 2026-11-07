@@ -185,10 +185,11 @@ func _fire(dir: Vector2) -> void:
 	var dmg := damage
 	if witching and wax < 30.0:
 		dmg *= 1.6
-	var total := spread * (n - 1)
+	# extra flames fire in near-parallel lanes so they all reach the same target
 	for i in n:
-		var a := deg_to_rad(-total / 2.0 + spread * i) if n > 1 else 0.0
-		world.shoot_player(global_position + Vector2(0, -6) + dir * 4, dir.rotated(a), self, dmg)
+		var k := i - (n - 1) / 2.0
+		var off := dir.orthogonal() * k * 4.0
+		world.shoot_player(global_position + Vector2(0, -6) + dir * 4 + off, dir.rotated(deg_to_rad(k * 2.5)), self, dmg)
 	Audio.play("shoot", 0.0, 0.08)
 	# small recoil squash on the flame
 	flame.scale = Vector2(1.25, 0.8)

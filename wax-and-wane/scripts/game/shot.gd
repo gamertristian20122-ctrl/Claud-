@@ -70,7 +70,7 @@ func _physics_process(dt: float) -> void:
 		for e in world.enemies:
 			if not is_instance_valid(e) or not e.alive or not e.active or _hit.has(e):
 				continue
-			if (e.global_position + Vector2(0, -e.half_h)).distance_squared_to(global_position) < pow(e.radius + radius + 1.0, 2):
+			if (e.global_position + Vector2(0, -e.half_h - e._jump_h)).distance_squared_to(global_position) < pow(e.radius + radius + 1.0, 2):
 				_hit[e] = true
 				e.take_hit(dmg, vel.normalized() * knock, burn)
 				if pierce <= 0:

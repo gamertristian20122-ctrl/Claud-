@@ -1,0 +1,49 @@
+Wax & Wane - audio credits
+==========================
+
+All audio is built by tools/make_audio.py (re-runnable).
+
+MUSIC (assets/audio/music/): original compositions, synthesized from scratch in numpy for this game
+(no samples). No third-party material. Free to use as part of the game.
+
+SOUND EFFECTS (assets/audio/sfx/): layered, trimmed, faded, mono-mixed and loudness-balanced from the
+Kenney audio packs below (all CC0 1.0, public domain - credit appreciated, not required) plus original
+numpy synthesis. Licences: assets/licenses/Kenney_Foley_Sounds_CC0.txt, assets/licenses/Kenney_Impact_Sounds_CC0.txt, assets/licenses/Kenney_Interface_Sounds_CC0.txt, assets/licenses/Kenney_Retro_Sounds_1_CC0.txt, assets/licenses/Kenney_Retro_Sounds_2_CC0.txt, assets/licenses/Kenney_RPG_Audio_CC0.txt
+
+Packs used: Kenney Foley Sounds (www.kenney.nl, CC0); Kenney Impact Sounds (www.kenney.nl, CC0); Kenney Interface Sounds (www.kenney.nl, CC0); Kenney Retro Sounds 1 (www.kenney.nl, CC0); Kenney Retro Sounds 2 (www.kenney.nl, CC0); Kenney RPG Audio (www.kenney.nl, CC0)
+
+Per-file sources:
+  shoot.ogg        Foley Sounds: woosh4.ogg + synthesis
+  hit_wall.ogg     Impact Sounds: impactSoft_medium_000.ogg, Impact Sounds: impactWood_light_002.ogg + synthesis
+  hit_enemy.ogg    Foley Sounds: drip3.ogg, Impact Sounds: impactPunch_medium_002.ogg + synthesis
+  enemy_die.ogg    Foley Sounds: drip2.ogg, Foley Sounds: woosh3.ogg, Impact Sounds: impactPunch_heavy_002.ogg + synthesis
+  enemy_shoot.ogg  Foley Sounds: woosh7.ogg + synthesis
+  player_hurt.ogg  Foley Sounds: woosh6.ogg, Impact Sounds: impactPunch_medium_003.ogg + synthesis
+  wax_pickup.ogg   Interface Sounds: drop_002.ogg + synthesis
+  coin_pickup.ogg  Interface Sounds: glass_002.ogg, RPG Audio: handleCoins2.ogg + synthesis
+  bomb_pickup.ogg  Impact Sounds: impactMetal_heavy_002.ogg, RPG Audio: cloth2.ogg + synthesis
+  bomb_place.ogg   Impact Sounds: impactPlate_light_000.ogg + synthesis
+  explosion.ogg    Foley Sounds: rockHit2.ogg, Foley Sounds: stonesHit1.ogg, Foley Sounds: stonesHit2.ogg, Impact Sounds: impactMining_000.ogg, Impact Sounds: impactPunch_heavy_000.ogg, Retro Sounds 2: explosion2.ogg + synthesis
+  door_open.ogg    RPG Audio: creak2.ogg, RPG Audio: doorOpen_1.ogg + synthesis
+  door_close.ogg   Impact Sounds: impactWood_heavy_000.ogg, RPG Audio: doorClose_4.ogg, RPG Audio: metalLatch.ogg + synthesis
+  room_clear.ogg   original synthesis (numpy)
+  item_get.ogg     original synthesis (numpy)
+  chest_open.ogg   RPG Audio: creak1.ogg, RPG Audio: metalLatch.ogg + synthesis
+  urn_break.ogg    Foley Sounds: rockHit2.ogg, Foley Sounds: stonesHit1.ogg, Impact Sounds: impactGlass_heavy_001.ogg, Impact Sounds: impactGlass_heavy_003.ogg, Impact Sounds: impactGlass_light_000.ogg + synthesis
+  crate_break.ogg  Impact Sounds: impactPlank_medium_000.ogg, Impact Sounds: impactWood_light_000.ogg, Impact Sounds: impactWood_light_003.ogg, Impact Sounds: impactWood_medium_002.ogg, RPG Audio: chop.ogg + synthesis
+  boss_roar.ogg    Foley Sounds: stoneDrag1.ogg, Retro Sounds 1: rumble1.ogg + synthesis
+  boss_die.ogg     Impact Sounds: impactMining_004.ogg, Impact Sounds: impactPunch_heavy_001.ogg, Retro Sounds 2: explosion1.ogg + synthesis
+  bell_toll.ogg    original synthesis (numpy)
+  tick.ogg         original synthesis (numpy)
+  ui_click.ogg     Interface Sounds: select_002.ogg + synthesis
+  ui_back.ogg      Interface Sounds: back_002.ogg + synthesis
+  ui_open.ogg      RPG Audio: bookFlip3.ogg, RPG Audio: bookOpen.ogg + synthesis
+  low_wax.ogg      original synthesis (numpy)
+  snuff_out.ogg    original synthesis (numpy)
+  victory.ogg      original synthesis (numpy)
+  shop_buy.ogg     RPG Audio: handleCoins.ogg + synthesis
+  step.ogg         Impact Sounds: footstep_carpet_000.ogg + synthesis
+  charge.ogg       original synthesis (numpy)
+  teleport.ogg     Foley Sounds: woosh2.ogg + synthesis
+  splash.ogg       Foley Sounds: drip2.ogg, Foley Sounds: sinkWater1.ogg + synthesis
+  trapdoor.ogg     Foley Sounds: woosh3.ogg, Impact Sounds: impactWood_heavy_000.ogg, RPG Audio: creak2.ogg, RPG Audio: doorClose_3.ogg + synthesis

@@ -68,6 +68,9 @@ var _jump_h := 0.0
 var _spin := 0.0
 var _pattern := 0
 var target_pos := Vector2.ZERO
+var _hand_base := 0.0
+var shadow: Sprite2D
+static var _shadow_tex: Texture2D
 
 
 func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
@@ -76,7 +79,7 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 	def = DEFS[k]
 	position = pos
 	var f := float(floor_num - 1)
-	max_hp = float(def["hp"]) * (1.0 + 0.32 * f) if not def.get("boss", false) else float(def["hp"])
+	max_hp = float(def["hp"]) * (1.0 + 0.25 * f) if not def.get("boss", false) else float(def["hp"])
 	hp = max_hp
 	speed = float(def["speed"]) * (1.0 + 0.05 * f)
 	radius = float(def["r"])
@@ -103,6 +106,19 @@ func _ready() -> void:
 	var sc: float = def.get("scale", 1.0)
 	spr.scale = Vector2(sc, sc)
 	half_h = tex.get_height() * sc * 0.4
+	if _shadow_tex == null:
+		var img := Image.create(10, 3, false, Image.FORMAT_RGBA8)
+		var c := Color(0.13, 0.08, 0.1, 0.45)
+		for x in range(2, 8):
+			img.set_pixel(x, 0, c)
+			img.set_pixel(x, 2, c)
+		for x in 10:
+			img.set_pixel(x, 1, c)
+		_shadow_tex = ImageTexture.create_from_image(img)
+	shadow = Sprite2D.new()
+	shadow.texture = _shadow_tex
+	shadow.position = Vector2(0, -1)
+	add_child(shadow)
 	mat = ShaderMaterial.new()
 	var sh := Shader.new()
 	sh.code = FLASH_SHADER
@@ -155,7 +171,7 @@ func _physics_process(dt: float) -> void:
 	if absf(to_p.x) > 2 and state != "charge":
 		spr.flip_h = to_p.x < 0
 	# contact damage
-	if not p.dead and _jump_h < 4.0 and dist < radius + 5.0:
+	if not p.dead and (flying or _jump_h < 4.0) and dist < radius + 5.0:
 		p.hurt((8.0 if boss else 6.0) * world.enemy_dmg_mult(), to_p)
 	# gentle separation
 	for e in world.enemies:
@@ -166,6 +182,9 @@ func _physics_process(dt: float) -> void:
 		if l > 0.01 and l < radius + e.radius:
 			_move(d / l * (radius + e.radius - l) * 0.3)
 	spr.position.y = -_jump_h
+	if shadow:
+		var k := clampf(1.0 - _jump_h / 40.0, 0.4, 1.0)
+		shadow.scale = Vector2(k, k) * (radius / 5.0)
 
 
 ## Collision is checked in world coordinates (our parent layer sits at the room's origin).
@@ -474,6 +493,7 @@ func _ai_boss_vicar(ddt: float, to_p: Vector2, dist: float) -> void:
 						state = "spiral"
 						t = 2.2 + 0.4 * phase
 						_spin = randf() * TAU
+						_wob = 0.35
 						_telegraph(Color(0.8, 0.5, 1.0))
 		"spiral":
 			_wob -= ddt
@@ -523,24 +543,28 @@ func _ai_boss_fiend(ddt: float, to_p: Vector2, dist: float) -> void:
 					opts.append("toll")
 				state = opts[_pattern % opts.size()]
 				match state:
-					"fan": t = 0.45
+					"fan":
+						t = 0.45
+						dir = to_p.normalized()
 					"dash":
 						t = 0.5
 						dir = to_p.normalized()
 						Audio.play("boss_roar", -6.0, 0.05, 1.1)
 					"hands":
 						t = 3.0
-						_spin = to_p.angle()
+						_spin = 0.0
+						_wob = 0.5
+						_hand_base = to_p.angle() + PI * 0.5
 					"toll":
 						t = 2.4
-						_wob = 0.0
+						_wob = 0.4
 				_telegraph(Color(1, 0.4, 0.3))
 		"fan":
 			if t <= 0:
-				var base := to_p.angle()
-				var n := 5 + phase * 2
+				var base := dir.angle()
+				var n := 5 + phase
 				for i in n:
-					world.enemy_shot(global_position + Vector2(0, -18), Vector2.from_angle(base + (i - (n - 1) / 2.0) * 0.17) * (80.0 + 10 * phase), "bullet_purple")
+					world.enemy_shot(global_position + Vector2(0, -18), Vector2.from_angle(base + (i - (n - 1) / 2.0) * 0.24) * (85.0 + 5 * phase), "bullet_purple")
 				Audio.play("enemy_shoot", 3.0, 0.05, 0.7)
 				state = "idle"
 				cd = 1.3 - 0.2 * phase
@@ -558,11 +582,11 @@ func _ai_boss_fiend(ddt: float, to_p: Vector2, dist: float) -> void:
 		"hands":
 			# two clock hands sweep the room
 			_wob -= ddt
-			_spin += ddt * (1.4 + 0.3 * phase)
+			_spin += ddt * (0.85 + 0.15 * phase)
 			if _wob <= 0:
 				_wob = 0.09
 				for k in 2:
-					var a := _spin * (1.0 if k == 0 else -0.6) + k * PI
+					var a := _hand_base + k * PI + _spin * (1.0 if k == 0 else 0.5)
 					world.enemy_shot(global_position + Vector2(0, -18), Vector2.from_angle(a) * 95.0, "bullet_purple")
 			if t <= 0:
 				state = "idle"
@@ -610,7 +634,13 @@ func _damage(dmg: float, sound: bool) -> void:
 func _die() -> void:
 	alive = false
 	if def.get("death_burst", false):
-		world.burst(global_position + Vector2(0, -6), 6, 65.0, "bullet_water", 0.0)
+		var at := global_position + Vector2(0, -6)
+		var off: float = (world.player.global_position - global_position).angle() + PI / 6.0
+		world.fx_ring(at, Color("#72d6ce"))
+		var w := world
+		get_tree().create_timer(0.4, false).timeout.connect(func():
+			if is_instance_valid(w) and not w.finished:
+				w.burst(at, 6, 65.0, "bullet_water", off))
 	world.on_enemy_killed(self)
 	if boss:
 		return   # the world plays the boss death sequence and frees us

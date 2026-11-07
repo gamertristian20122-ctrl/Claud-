@@ -115,6 +115,12 @@ func _physics_process(dt: float) -> void:
 		return
 	var p: Player = world.player
 	var d := p.global_position.distance_to(global_position)
+	if kind in ["relic", "tonic", "wax_big"] and d < 30.0 and (kind != "wax_big" or price > 0):
+		var nm := Items.display_name(item) if kind != "wax_big" else "Fresh Candle Stub"
+		var ds := Items.desc(item) if kind != "wax_big" else "+18 minutes of wax"
+		if price > 0:
+			ds += "   -   %d coins" % int(round(price * world.shop_discount))
+		world.hud.preview_item(nm, ds)
 	var reach := 9.0 if kind in ["relic", "tonic", "chest"] else 8.0
 	if kind == "trapdoor":
 		reach = 7.0

@@ -15,7 +15,7 @@ const POOLS := {
 }
 const LAST_FLOOR := 4
 ## Base melt: a full candle (120 wax) lasts ~13 minutes if you never get hit.
-const DRAIN_PER_SEC := 120.0 / (13.0 * 60.0)
+const DRAIN_PER_SEC := 120.0 / (11.5 * 60.0)
 
 var main: Node
 var floor_num := 1
@@ -51,6 +51,8 @@ var _heartbeat := 0.0
 var _fade: ColorRect
 var _kb_bomb_held := false
 var room_hits := 0
+var room_t0 := 0.0
+var _intro_root: Control
 
 
 func setup(params: Dictionary) -> void:
@@ -80,7 +82,7 @@ func _ready() -> void:
 	hud.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(hud)
 	var fl := CanvasLayer.new()
-	fl.layer = 50
+	fl.layer = 9
 	add_child(fl)
 	_fade = ColorRect.new()
 	_fade.color = Color(0.035, 0.027, 0.035, 0.0)
@@ -104,6 +106,7 @@ func _intro() -> void:
 	get_tree().paused = true
 	var m := UI.modal(hud.root, "12:00 AM")
 	var root: Control = m[0]
+	_intro_root = root
 	root.process_mode = Node.PROCESS_MODE_ALWAYS
 	var v: VBoxContainer = m[1]
 	for line in ["The old house wakes when the clock strikes twelve.",
@@ -196,6 +199,7 @@ func _on_enter_room() -> void:
 			if not d.get("stocked", false):
 				d["stocked"] = true
 				_stock_shop()
+			_spawn_keeper()
 			if not d.get("greeted", false):
 				d["greeted"] = true
 				hud.show_banner("THE TALLOW MERCHANT", "Coins for wax and wonders", 1.6)
@@ -223,6 +227,8 @@ func _spawn_room_enemies() -> void:
 			else:
 				add_pickup("chest", pos)
 			continue
+		if pos.distance_to(player.global_position) < 56.0:
+			pos = random_free_spot(player.global_position, 72.0)
 		var list: Array = pool[letter]
 		spawn_enemy(list[rng.randi() % list.size()], pos)
 	# deeper rooms get one extra guest
@@ -230,6 +236,7 @@ func _spawn_room_enemies() -> void:
 		var list2: Array = pool["e"]
 		spawn_enemy(list2[rng.randi() % list2.size()], random_free_spot(player.global_position, 80.0))
 	room_spawned = true
+	room_t0 = run_time
 	if count_enemies() == 0:
 		_clear_room()
 
@@ -260,7 +267,6 @@ func go_through(dir: Vector2i) -> void:
 		return
 	transitioning = true
 	player.frozen = true
-	hud.release_sticks()
 	_clear_shots()
 	var old := room
 	var nr := _build_room(next)
@@ -311,6 +317,10 @@ func _clear_room() -> void:
 		if room_hits == 0:
 			player.heal(2.0)
 			fx_text(player.global_position + Vector2(0, -34), "CLEAN  +2 min", UI.GOLD)
+		var par := 8.0 + 2.5 * floor_num
+		if run_time - room_t0 <= par:
+			player.heal(3.0)
+			fx_text(player.global_position + Vector2(0, -44), "QUICK  +3 min", UI.EMBER)
 
 
 func _room_reward(pos: Vector2) -> void:
@@ -322,7 +332,7 @@ func _room_reward(pos: Vector2) -> void:
 	elif roll < 0.45:
 		add_pickup("wax_big", pos)
 	elif roll < 0.72:
-		for i in rng.randi_range(1, 3):
+		for i in rng.randi_range(2, 4):
 			add_pickup("coin", pos, "", 0, Vector2.from_angle(rng.randf() * TAU) * 40.0)
 	elif roll < 0.88:
 		add_pickup("bomb", pos)
@@ -341,10 +351,14 @@ func _next_relic() -> String:
 
 func _stock_shop() -> void:
 	var c := room.center()
-	add_pickup("relic", c + Vector2(-40, -4), _next_relic(), 15)
+	add_pickup("relic", c + Vector2(-40, -4), _next_relic(), 10 + 2 * floor_num)
 	var tonics := Items.TONICS.keys()
-	add_pickup("tonic", c + Vector2(0, -4), tonics[rng.randi() % tonics.size()], 6)
-	add_pickup("wax_big", c + Vector2(40, 0), "", 5)
+	add_pickup("tonic", c + Vector2(0, -4), tonics[rng.randi() % tonics.size()], 5)
+	add_pickup("wax_big", c + Vector2(40, 0), "", 4)
+
+
+func _spawn_keeper() -> void:
+	var c := room.center()
 	var keeper := AnimatedSprite2D.new()
 	keeper.sprite_frames = Art.creature("dwarf_m")
 	keeper.play("idle")
@@ -458,7 +472,7 @@ func on_enemy_killed(e: Enemy) -> void:
 	var luck := player.luck
 	if r < 0.06 + luck * 0.04:
 		add_pickup("wax_small", e.global_position)
-	elif r < 0.15 + luck * 0.1:
+	elif r < 0.19 + luck * 0.1:
 		add_pickup("coin", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 25.0)
 	elif r < 0.165:
 		add_pickup("bomb", e.global_position)
@@ -487,6 +501,8 @@ func _boss_down(e: Enemy) -> void:
 			fx_poof(m.global_position + Vector2(0, -6), false)
 			m.queue_free()
 	var pos := e.global_position
+	if floor_num >= LAST_FLOOR:
+		player.frozen = true
 	var tw := create_tween()
 	tw.tween_property(e, "modulate", Color(3, 2, 1.5, 0.0), 1.2)
 	tw.tween_callback(e.queue_free)
@@ -499,6 +515,10 @@ func _boss_down(e: Enemy) -> void:
 		add_pickup("relic", room.center() + Vector2(-24, 0), _next_relic())
 		add_pickup("wax_big", room.center() + Vector2(24, 4))
 		add_pickup("trapdoor", room.center() + Vector2(0, 36))
+		for i in 4:
+			add_pickup("coin", room.center() + Vector2(0, 14), "", 0, Vector2.from_angle(rng.randf() * TAU) * 50.0)
+		player.damage += 0.15
+		fx_text(room.center() + Vector2(0, -30), "Your flame grows", UI.GOLD)
 		Audio.music(FLOORS[floor_num]["music"]))
 	for i in 6:
 		var t2 := create_tween()
@@ -574,7 +594,7 @@ func assist_aim(pos: Vector2, dir: Vector2) -> Vector2:
 	for e in enemies:
 		if not is_instance_valid(e) or not e.alive or not e.active:
 			continue
-		var to: Vector2 = e.global_position + Vector2(0, -e.half_h) - pos
+		var to: Vector2 = e.global_position + Vector2(0, -e.half_h - e._jump_h) - pos
 		if to.length() > player.shot_range * 1.3:
 			continue
 		var a := absf(dir.angle_to(to))
@@ -731,6 +751,8 @@ func on_player_died() -> void:
 
 
 func _victory() -> void:
+	if finished:
+		return
 	finished = true
 	player.frozen = true
 	hud.release_sticks()
@@ -795,7 +817,7 @@ func _physics_process(dt: float) -> void:
 	player.aim_input = aim
 	if finished:
 		return
-	if not transitioning and not player.dead:
+	if not transitioning and not player.dead and not player.frozen:
 		run_time += dt
 		player.wax -= DRAIN_PER_SEC * player.drain_mult * dt
 		if player.wax <= 0.0:
@@ -805,7 +827,7 @@ func _physics_process(dt: float) -> void:
 		var exit := room.door_exit(player.global_position)
 		if exit != Vector2i.ZERO:
 			go_through(exit)
-	if room_spawned and not room.data["cleared"] and count_enemies() == 0 and not transitioning:
+	if room_spawned and not room.data["cleared"] and count_enemies() == 0 and not transitioning and room.data["type"] != "boss":
 		_clear_room()
 	enemies = enemies.filter(func(e): return is_instance_valid(e) and (e.alive or e.boss))
 	_update_hazards(dt)
@@ -889,6 +911,13 @@ func toggle_pause() -> void:
 
 
 func on_back() -> void:
+	if is_instance_valid(_intro_root):
+		return
+	# close a settings panel first, if one is open over the pause menu
+	var top: Node = hud.root.get_child(hud.root.get_child_count() - 1)
+	if paused and top != hud.pause_layer and top.get_meta("modal", false):
+		top.queue_free()
+		return
 	toggle_pause()
 
 

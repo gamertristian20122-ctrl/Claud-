@@ -114,4 +114,8 @@ func _credits() -> void:
 
 
 func on_back() -> void:
+	var top: Node = root.get_child(root.get_child_count() - 1)
+	if top.get_meta("modal", false):
+		top.queue_free()
+		return
 	get_tree().quit()

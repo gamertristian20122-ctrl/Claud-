@@ -22,6 +22,7 @@ FRAMES = os.path.join(ROOT, "assets", "0x72", "frames")
 SHEET = os.path.join(ROOT, "art_source", "0x72_DungeonTilesetII_v1.7.png")
 OUT = os.path.join(ROOT, "assets", "art", "rooms")
 REVIEW = "/tmp/claude-0/review_rooms"
+REVIEW2 = "/tmp/claude-0/review_rooms2"      # candelabra / trapdoor / decals
 
 ROOM_W, ROOM_H = 272, 192
 SLOTS = {  # door sprite top-left inside the room image + size (DESIGN.md)
@@ -756,6 +757,390 @@ def build_props():
     return out
 
 
+# --------------------------------------------------------------------------- candelabra
+# 16x24 floor candelabra (anchored bottom-centre by the game).  Old brass stand, lit from
+# the top-left (o lit edge, q body, r shade, d deepest, a few Y glints), three cream
+# candles (W/V/U like the hero's wax), 1 px #222222 outline, solid contact shadow 'x'.
+# Unlit: a dark wick pixel above each candle.  Lit: the wick glows (#8f4029, like the base
+# of the hero flame) and a tiny flame (FLAME_SHAPES) sits on top of it.
+CANDELABRA = G("""
+................
+................
+................
+.......A........
+......AWVA......
+......AWUA......
+..A...AVUA...A..
+AWVA..AVUA..AWVA
+AWUA.AoYoqA.AWUA
+AVUA..ArdA..AVUA
+AVUA..AoqA..AVUA
+AoYqA.AoqA.AoYqA
+.ArdA.AoqA.ArdA.
+..AqA.AoqA.AqA..
+..AqAAAoqAAAqA..
+..AoqqqYqqqqrA..
+...ArrrqrrrrA...
+....AAAqrAAA....
+......AoqA......
+.....AoYqrA.....
+......ArdA......
+....AAoqqrAA....
+..AAoYqqqqrrAA..
+..xxAAAAAAAAxx..
+""")
+# wick pixel of each candle (left, centre, right) and whether its flame is mirrored so the
+# flame's core sits over the wick (left candle: wick on its inner = right wax column).
+CANDLE_WICKS = [(2, 6, True), (7, 3, False), (13, 6, False)]
+# tiny flames, 2 px wide, 2-3 px tall: W = white-yellow core, Y = #facb3e, o = #ee8e2e.
+# Drawn bottom-aligned on the row above the wick, core column over the wick.
+FLAME_SHAPES = [
+    G("""
+    o.
+    YY
+    WY
+    """),
+    G("""
+    .o
+    Yo
+    WY
+    """),
+    G("""
+    Yo
+    WY
+    """),
+    G("""
+    o.
+    Wo
+    YY
+    """),
+]
+FLAME_PHASE = [2, 0, 3]   # per candle (left, centre, right) so they never flicker in unison
+FLAME_PAL = {"W": "#fdf7ed", "Y": "#facb3e", "o": "#ee8e2e"}
+WICK_LIT = "#8f4029"
+
+
+def candelabra(frame=None):
+    """frame None -> unlit; 0..3 -> lit loop frame."""
+    im = grid(CANDELABRA, PROP)
+    if frame is None:
+        return im
+    px = im.load()
+    for (wx, wy, mirrored), ph in zip(CANDLE_WICKS, FLAME_PHASE):
+        px[wx, wy] = rgb(WICK_LIT) + (255,)
+        shape = FLAME_SHAPES[(frame + ph) % len(FLAME_SHAPES)]
+        if mirrored:
+            shape = mirror_rows(shape)
+        fl = grid(shape, FLAME_PAL)
+        paste(im, fl, wx - 1 if mirrored else wx, wy - len(shape))
+    return im
+
+
+# --------------------------------------------------------------------------- trapdoor
+# 32x32 hatch set in a sandstone frame (same stone + plank + cyan iron colours as the
+# doors, so it reads as part of the same house in every theme).  Hinges on the far (top)
+# edge, planks run left-right, two hinge straps run down from the hinges, ring pull near
+# the front.  Open: the leaf is gone, the shaft's far wall catches a little light and a
+# ladder runs down into the dark (0x72 floor_ladder idea at 2x2 tiles: the ladder wood
+# darkens with depth).
+TRAP_PAL = {
+    "A": "#222222", "B": "#aa8d7a", "C": "#d3bfa9", "D": "#775c55", "E": "#483b3a",
+    "G": "#111111", "H": "#8f4029", "I": "#62232f", "P": "#c56025", "J": "#72d6ce",
+    "K": "#fdf7ed", "k": "#111111", "Q": "#38262d", "Z": "#23151d",
+    "3": "#3b3332", "2": "#302c2b", "F": "#2b2929",
+}
+# frame, ',' = the 24x24 opening (x 4..27, y 4..27)
+TRAP_FRAME = G("""
+.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
+ACCCCCCCCCCACCCCCCCCACCCCCCCCCBA
+ACBBBBBBBBBABBBBBBBBABBBBBBBBBDA
+ACBAAAAAAAAAAAAAAAAAAAAAAAAAABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+AAAA,,,,,,,,,,,,,,,,,,,,,,,,AAAA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+AAAA,,,,,,,,,,,,,,,,,,,,,,,,AAAA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBA,,,,,,,,,,,,,,,,,,,,,,,,ABDA
+ACBAAAAAAAAAAAAAAAAAAAAAAAAAABDA
+ACBBBBBBBBBABBBBBBBBABBBBBBBBBDA
+ABDDDDDDDDDADDDDDDDDADDDDDDDDDDA
+.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.
+""")
+# closed leaf (24x24): six vertical planks (H H, I shade, G seam) like the door leaves;
+# the top row and left column sit in the frame's shadow, a dark gap runs along the right
+# and bottom edges.  A few hand-placed I streaks for grain.
+TRAP_LEAF = G("""
+IIIGIIIGIIIGIIIGIIIGIIIG
+IHIGHHIGHHIGHHIGHHIGHHIG
+IHIGHHIGHIIGHHIGHHIGHHIG
+IHIGHHIGHIIGHHIGHHIGHHIG
+IHIGHHIGHHIGHHIGHHIGHHIG
+IHIGHHIGHHIGHHIGHHIGHHIG
+IHIGHHIGHHIGHHIGIHIGHHIG
+IHIGIHIGHHIGHHIGIHIGHHIG
+IHIGIHIGHHIGHHIGHHIGHHIG
+IHIGHHIGHHIGHIIGHHIGHHIG
+IHIGHHIGHHIGHIIGHHIGHHIG
+IIIGHHIGHHIGHHIGHHIGHIIG
+IHIGHHIGHHIGHHIGHHIGHIIG
+IHIGHHIGHHIGHHIGHHIGHHIG
+IHIGHHIGHIIGHHIGHHIGHHIG
+IHIGHHIGHIIGHHIGHHIGHHIG
+IHIGHHIGHHIGHHIGHHIGHHIG
+IHIGHIIGHHIGHHIGHHIGHHIG
+IHIGHIIGHHIGHHIGIHIGHHIG
+IHIGHHIGHHIGHHIGIHIGHHIG
+IHIGHHIGHHIGHHIGHHIGHHIG
+IHIGHHIGHHIGHIIGHHIGIHIG
+IHIGHHIGHHIGHHIGHHIGHHIG
+GGGGGGGGGGGGGGGGGGGGGGGG
+""")
+# iron on the closed leaf ('_' keeps the wood): two hinge straps from the left frame edge
+# (riveted on every plank, tapered ends) and a ring pull on the right, as on the doors.
+TRAP_IRON = G("""
+________________________
+________________________
+________________________
+AAAAAAAAAAAAAAA_________
+JKJJJKJJJKJJJKJA________
+AAAAAAAAAAAAAAA_________
+________________________
+________________________
+________________________
+_________________AAJAA__
+________________AJJJJJA_
+________________AJAAAJA_
+________________AKAAAKA_
+________________AAKKKAA_
+_________________AAAAA__
+________________________
+________________________
+AAAAAAAAAAAAAAA_________
+JKJJJKJJJKJJJKJA________
+AAAAAAAAAAAAAAA_________
+________________________
+________________________
+________________________
+________________________
+""")
+# hinge knuckles on the left frame edge (both states), level with the straps
+TRAP_HINGES = [(1, 7), (1, 21)]
+TRAP_HINGE = {"closed": G("""
+AAA
+KJJ
+AAA
+"""), "open": G("""
+AA.
+KJ.
+AA.
+""")}
+# open: the shaft (24x24).  Far wall: two courses of dark stone, then black.
+TRAP_SHAFT = G("""
+EEEEEEEFEEEEEEEFEEEEEEEF
+3333333F3333333F3333333F
+FFFFFFFFFFFFFFFFFFFFFFFF
+222F2222222F2222222F2222
+FFFFFFFFFFFFFFFFFFFFFFFF
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+kkkkkkkkkkkkkkkkkkkkkkkk
+""")
+# ladder over the shaft ('_' keeps the shaft): rails x 6..7 / 16..17, a rung every 4 rows,
+# wood darkening with depth P/H -> H/I -> I/Q -> Q/Z, gone in the dark near the bottom.
+# On the lit far wall the ladder has an outline and each rung throws a shadow.
+TRAP_LADDER = G("""
+_____APHA______APHA_____
+_____APHPPPPPPPPPHA_____
+_____APHAAAAAAAAPHA_____
+_____APHA______APHA_____
+_____APHA______APHA_____
+_____AHIHHHHHHHHHIA_____
+______HI________HI______
+______HI________HI______
+______HI________HI______
+______IQIIIIIIIIIQ______
+______IQ________IQ______
+______IQ________IQ______
+______IQ________IQ______
+______QZQQQQQQQQQZ______
+______QZ________QZ______
+______QZ________QZ______
+______QZ________QZ______
+______ZkZZZZZZZZZk______
+______Z_________Z_______
+______Z_________Z_______
+________________________
+________________________
+________________________
+________________________
+""")
+# the rail tops stick up out of the hole over the frame's inner edge (sprite row 3)
+TRAP_LADDER_TOP = [(10, 3, "P"), (11, 3, "H"), (20, 3, "P"), (21, 3, "H")]
+
+
+def trapdoor(state):
+    rows = list(TRAP_FRAME)
+    inner = overlay_rows(TRAP_LEAF, TRAP_IRON) if state == "closed" else \
+        overlay_rows(TRAP_SHAFT, TRAP_LADDER)
+    for i, r in enumerate(inner):
+        y = 4 + i
+        rows[y] = rows[y][:4] + r + rows[y][28:]
+    if state == "open":
+        for x, y, c in TRAP_LADDER_TOP:
+            rows[y] = rows[y][:x] + c + rows[y][x + 1:]
+    im = grid(rows, TRAP_PAL)
+    for hx, hy in TRAP_HINGES:
+        paste(im, grid(TRAP_HINGE[state], TRAP_PAL), hx, hy)
+    return im
+
+
+# --------------------------------------------------------------------------- decals
+# Flat floor decals: subtle, no contact shadow.  Cracks use only the floor's own dark
+# (#222222) and a deeper #111111 chip so they work on every theme's floor; bones copy the
+# 0x72 skull (no outline, #d3bfa9 / #aa8d7a, #222222 underside); web = dusty steel threads.
+DECAL = {"A": "#222222", "k": "#111111", "s": "#d3bfa9", "t": "#aa8d7a", "g": "#7b8994",
+         "b": "#b6cbcf", "W": "#fdf7ed", "V": "#e2b694", "U": "#d8a57d", "T": "#b58057"}
+DECAL_CRACKS = [
+    G("""
+    .........A
+    .......AA.
+    ......A...
+    ...AAA....
+    ..A..A....
+    AA....A...
+    """),
+    G("""
+    .............A
+    ...........AA.
+    .......AAAA...
+    ......Ak......
+    ...AAA.A......
+    ..A.....A.....
+    AA.......A....
+    """),
+    G("""
+    A...........
+    .A..........
+    .A..........
+    ..AA........
+    ....A.......
+    ....A..A....
+    .....AA.....
+    ......A.....
+    .......AA...
+    .........A..
+    .........A..
+    ..........AA
+    """),
+    G("""
+    ..............A
+    ............AA.
+    .....A.....A...
+    ......A...A....
+    ......AkAA.....
+    ....AAk........
+    ..AA..A........
+    .A.....A.......
+    A.......AA.....
+    ..........A....
+    """),
+]
+# corner web for the TOP-LEFT floor corner (the game mirrors it): a small bright hub in
+# the corner, five radials (both walls, 26/45/63 degrees) and three rings that sag
+# between the radials, so the outer edge is scalloped.  Threads never clump.
+DECAL_COBWEB = G("""
+bbggg....g....g.
+bb..g...g....g..
+g.b.gg..g...g...
+g..g..ggg...g...
+ggg.g...gg..g...
+..g..g.g..ggg...
+...g..g.....g...
+...g.g.g...g....
+.gggg...g..g....
+g...g....gg.....
+.....g...gg.....
+.....g.gg.......
+..ggggg.........
+.g..............
+g...............
+................
+""")
+# a femur, a smaller bone and a chip, coloured like the 0x72 skull
+DECAL_BONES = G("""
+.............ss
+............sst
+...........st..
+..........st...
+.........st....
+........st.....
+.......sts.....
+.......tt......
+ss.......ss....
+.sssssssss.....
+.ttttttttt..st.
+ttAAAAAAAtt..t.
+""")
+# a flat, lobed pool of spilt wax: one body tone (no dome shading), the front edge a
+# shade darker, a two-pixel glint and one stray drop
+DECAL_WAX = G("""
+..VVV..VV....
+.VWWVVVVVV...
+VVVVVVVVVVV..
+.UVVVVVVVVU.V
+..UUVVUUUU...
+""")
+
+
+def build_room_extras():
+    out = {}
+    out["candelabra_unlit"] = candelabra(None)
+    for f in range(4):
+        out["candelabra_lit_f%d" % f] = candelabra(f)
+    out["trapdoor_closed"] = trapdoor("closed")
+    out["trapdoor_open"] = trapdoor("open")
+    for i, rows in enumerate(DECAL_CRACKS):
+        out["decal_crack_%d" % i] = grid(rows, DECAL)
+    out["decal_cobweb"] = grid(DECAL_COBWEB, DECAL)
+    out["decal_bones"] = grid(DECAL_BONES, DECAL)
+    out["decal_wax_puddle"] = grid(DECAL_WAX, DECAL)
+    return out
+
+
 # --------------------------------------------------------------------------- review
 def contact(items, path, scale=6, cols=6, bg=(26, 20, 24, 255), label=True):
     """items: list of (name, image).  Nearest-neighbour contact sheet."""
@@ -796,6 +1181,39 @@ def compose_preview(made, theme, doors, props=()):
     return im
 
 
+def review_extras(made):
+    """Contact sheet (8x on #1a1418) + cellar composites for the candelabra/trapdoor/decals."""
+    names = list(build_room_extras().keys())
+    contact([(n, made[n]) for n in names], os.path.join(REVIEW2, "extras_8x.png"),
+            scale=8, cols=6)
+    # the same sprites on the cellar floor colour, closer to how they are seen in game
+    contact([(n, on_bg(made[n], (72, 59, 58, 255))) for n in names],
+            os.path.join(REVIEW2, "extras_on_floor_8x.png"), scale=8, cols=6)
+    web_r = made["decal_cobweb"].transpose(Image.FLIP_LEFT_RIGHT)
+    for tag, lit, trap in (("lit", True, "trapdoor_open"), ("unlit", False, "trapdoor_closed")):
+        im = compose_preview(made, "cellar", {"top": "_open" if lit else "_closed",
+                                              "bottom": "_open" if lit else "_closed",
+                                              "left": "_open" if lit else "_closed",
+                                              "right": "_open" if lit else "_closed"})
+        im.alpha_composite(made["decal_cobweb"], (16, 32))
+        im.alpha_composite(web_r, (256 - 16, 32))
+        # the bottom corners show the web on its own (mirrored as the game would)
+        im.alpha_composite(made["decal_cobweb"].transpose(Image.FLIP_TOP_BOTTOM), (16, 160))
+        im.alpha_composite(web_r.transpose(Image.FLIP_TOP_BOTTOM), (240, 160))
+        for name, x, y in (("decal_crack_0", 60, 140), ("decal_crack_1", 190, 70),
+                           ("decal_crack_2", 90, 60), ("decal_crack_3", 200, 150),
+                           ("decal_bones", 44, 92), ("decal_wax_puddle", 30, 56),
+                           ("decal_wax_puddle", 112, 150), (trap, 144, 112)):
+            im.alpha_composite(made[name], (x, y))
+        cand = made["candelabra_lit_f0" if lit else "candelabra_unlit"]
+        for cx in (24, 248):                     # bottom-centre on the floor, top corners
+            im.alpha_composite(cand, (cx - 8, 52 - 24))
+        im.resize((ROOM_W * 4, ROOM_H * 4), Image.NEAREST).save(
+            os.path.join(REVIEW2, "cellar_extras_%s_4x.png" % tag))
+        im.crop((0, 0, 136, 96)).resize((136 * 8, 96 * 8), Image.NEAREST).save(
+            os.path.join(REVIEW2, "cellar_extras_%s_corner_8x.png" % tag))
+
+
 def main():
     review = "--review" in sys.argv
     pal = sheet_palette()
@@ -810,6 +1228,7 @@ def main():
             made["door_left%s_%s" % (suf, state)] = door_side(state, variant, "left")
             made["door_right%s_%s" % (suf, state)] = door_side(state, variant, "right")
     made.update(build_props())
+    made.update(build_room_extras())
     for name, im in made.items():
         a = np.array(im)
         assert set(np.unique(a[:, :, 3])) <= {0, 255}, name + " has semi-transparent pixels"
@@ -840,6 +1259,7 @@ def main():
         contact(props, os.path.join(REVIEW, "props.png"), scale=8, cols=6)
         doors = [(n, on_bg(im)) for n, im in made.items() if n.startswith("door_")]
         contact(doors, os.path.join(REVIEW, "doors.png"), scale=8, cols=6)
+        review_extras(made)
     print("wrote %d files to %s" % (len(made), OUT))
 
 

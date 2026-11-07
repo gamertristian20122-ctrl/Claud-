@@ -67,8 +67,7 @@ static func apply(id: String, p: Player, world: Node) -> void:
 			p.wax_max += 25.0
 			p.heal(25.0)
 		"twin_wick":
-			p.shots = maxi(p.shots, 2)
-			p.spread = 9.0
+			p.shots += 1
 		"blue_flame":
 			p.damage *= 1.6
 			p.set_blue(true)
@@ -96,8 +95,7 @@ static func apply(id: String, p: Player, world: Node) -> void:
 		"hourglass":
 			p.hourglass += 4.0
 		"candelabra":
-			p.shots = 3
-			p.spread = 14.0
+			p.shots += 2
 			p.damage *= 0.85
 		"hot_drip":
 			p.hot_drip = true

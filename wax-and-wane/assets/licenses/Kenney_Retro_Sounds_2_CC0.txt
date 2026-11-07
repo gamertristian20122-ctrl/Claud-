@@ -1,0 +1,12 @@
+Retro Sounds 2 by Kenney
+
+Created/distributed by Kenney (www.kenney.nl)
+
+License: (Creative Commons Zero, CC0)
+http://creativecommons.org/publicdomain/zero/1.0/
+
+This content is free to use in personal, educational and commercial projects.
+Support us by crediting Kenney or www.kenney.nl (this is not mandatory)
+
+Source: kenney-retro-sounds-2 (as downloaded to /opt/assets/packs/kenney-retro-sounds-2). The License.txt shipped in that download was empty,
+so this file restates Kenney's standard CC0 licence for the pack.

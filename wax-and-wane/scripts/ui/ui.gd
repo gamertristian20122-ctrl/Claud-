@@ -121,6 +121,7 @@ static func slider_row(text: String, value: float, cb: Callable) -> HBoxContaine
 ## Full-screen dim layer with a centred VBox inside a panel; returns [root Control, vbox].
 static func modal(parent: Node, title := "") -> Array:
 	var root := Control.new()
+	root.set_meta("modal", true)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
 	var dim := ColorRect.new()
