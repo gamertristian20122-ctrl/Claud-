@@ -130,7 +130,9 @@ const DEFS := {
 }
 
 ## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
-const FLOOR_HP := [1.0, 1.28, 1.75, 2.25]
+const FLOOR_HP := [1.0, 1.25, 1.7, 2.2]
+## Contact damage per floor for creatures without their own "touch" (bosses: 8). Balance: polish.md.
+const TOUCH := [5, 6, 7, 7]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
 
@@ -188,6 +190,7 @@ static var _shadow_big: Texture2D
 static var _house: HouseAI
 static var _bosses: BossAI
 static var _frames_cache := {}
+static var _champ_lights := 0   # marked foes with a glow light; past 3 the tint alone shows it (light budget)
 
 
 ## A flat pixel ellipse used as a ground shadow (never scaled).
@@ -274,13 +277,16 @@ func _ready() -> void:
 	if champ != "":
 		max_hp *= 1.6 if champ == "sooty" else 2.0
 		hp = max_hp
-		var gl := PointLight2D.new()
-		gl.texture = Art.light_tex
-		gl.texture_scale = 0.3
-		gl.energy = 0.55
-		gl.color = CHAMP_TINT[champ]
-		gl.position = Vector2(0, -8)
-		add_child(gl)
+		if _champ_lights < 3:
+			_champ_lights += 1
+			tree_exiting.connect(func(): _champ_lights -= 1)
+			var gl := PointLight2D.new()
+			gl.texture = Art.light_tex
+			gl.texture_scale = 0.3
+			gl.energy = 0.55
+			gl.color = CHAMP_TINT[champ]
+			gl.position = Vector2(0, -8)
+			add_child(gl)
 	half_h = tex.get_height() * 0.4
 	if _shadow_tex == null:
 		_shadow_tex = _blob(10, 3)
@@ -408,7 +414,7 @@ func _physics_process(dt: float) -> void:
 	elif absf(to_p.x) > 2 and state != "charge" and state != "still":
 		spr.flip_h = to_p.x < 0
 	# contact damage
-	var touch: float = def.get("touch", 8.0 if boss else (6.0 if world.floor_num <= 2 else 7.0))
+	var touch: float = def.get("touch", 8.0 if boss else float(TOUCH[clampi(world.floor_num, 1, 4) - 1]))
 	if touch > 0.0 and not buried and not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
 		if champ == "chilled" and not p.dead:
 			if p.chill_t <= 0.0:

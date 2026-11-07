@@ -67,6 +67,7 @@ func apply_candle(id: String) -> void:
 	speed *= d["speed"]
 	damage *= d["damage"]
 	fire_delay *= d["fire_delay"]
+	hit_mult *= d.get("hit", 1.0)
 	shots = d["shots"]
 	body_w = d["body_w"]
 	var cs: Array = d["colours"]

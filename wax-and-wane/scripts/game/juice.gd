@@ -116,7 +116,8 @@ func _process(dt: float) -> void:
 	var p: Node2D = world.get("player")
 	var room: Node2D = world.get("room")
 	if room and is_instance_valid(room):
-		dust.position = room.position
+		if dust.position != room.position:
+			dust.move_to(room.position)   # the old room keeps its motes while the camera pans away
 		if _cur_stains == null or not is_instance_valid(_cur_stains) or _cur_stains.room != room:
 			_cur_stains = room.get_meta("stains") if room.has_meta("stains") else null
 			gibs.clear()
@@ -354,6 +355,8 @@ func room_cleared() -> void:
 	var p: Node2D = world.player
 	var ring := LightRing.new()
 	ring.position = p.global_position + Vector2(0, -8)
+	# the ring stays on the floor: never over the walls or out into the dark margin
+	ring.clip = Rect2(r.global_position + Room.IN - ring.position, Vector2(Room.COLS * Room.TILE, Room.ROWS * Room.TILE))
 	world.fx_layer.add_child(ring)
 	var l := PointLight2D.new()
 	l.texture = Art.light_tex
@@ -491,22 +494,50 @@ class Dust extends Node2D:
 	var ph := PackedFloat32Array()
 	var col: Array[Color] = [Color("#fdf7ed"), Color("#d3bfa9"), Color("#aa8d7a")]
 	var _t := 0.0
+	# the motes of the room we just left (drawn where that room is) until the camera pan is over
+	var old_pts := PackedVector2Array()
+	var old_off := Vector2.ZERO
+	var _old_t := 0.0
+	var _placed := false
 
 	func _ready() -> void:
+		_scatter()
+
+	func _scatter() -> void:
+		pts.clear()
+		ph.clear()
 		for i in DUST_MOTES:
 			pts.append(Vector2(randf_range(16, 256), randf_range(32, 176)))
 			ph.append(randf() * TAU)
 
-	func _process(dt: float) -> void:
-		_t += dt
-		for i in pts.size():
-			var p := pts[i]
+	## A new room: its own motes; the old ones stay put in the old room (no snap at the pan start).
+	func move_to(origin: Vector2) -> void:
+		if _placed:
+			old_pts = pts.duplicate()
+			old_off = position - origin
+			_old_t = 0.6
+		_placed = true
+		position = origin
+		_scatter()
+
+	func _drift(arr: PackedVector2Array, dt: float) -> void:
+		for i in arr.size():
+			var p := arr[i]
 			p += Vector2(sin(_t * 0.31 + ph[i]) * 2.2, -1.1 - 0.6 * sin(ph[i] * 3.0)) * dt
 			if p.y < 30.0:
 				p.y = 176.0
 				p.x = randf_range(16, 256)
 			p.x = wrapf(p.x, 16.0, 256.0)
-			pts[i] = p
+			arr[i] = p
+
+	func _process(dt: float) -> void:
+		_t += dt
+		_drift(pts, dt)
+		if _old_t > 0.0:
+			_old_t -= dt
+			_drift(old_pts, dt)
+			if _old_t <= 0.0:
+				old_pts.clear()
 		queue_redraw()
 
 	func _draw() -> void:
@@ -514,12 +545,16 @@ class Dust extends Node2D:
 			# motes twinkle as they turn: brighter for part of their cycle
 			var k := int(fposmod(_t * 0.5 + ph[i], 3.0))
 			draw_rect(Rect2(pts[i].round(), Vector2.ONE), col[k])
+		for i in old_pts.size():
+			var k := int(fposmod(_t * 0.5 + ph[i], 3.0))
+			draw_rect(Rect2((old_pts[i] + old_off).round(), Vector2.ONE), col[k])
 
 
 ## An expanding 1 px ring of warm light (room clear).
 class LightRing extends Node2D:
 	var r := 4.0
 	var t := 0.0
+	var clip := Rect2(-9999, -9999, 19998, 19998)   # ring-local area the ring may draw in
 	const COLS: Array[Color] = [Color("#fdf7ed"), Color("#facb3e"), Color("#ee8e2e"), Color("#8f4029")]
 
 	func _ready() -> void:
@@ -545,7 +580,8 @@ class LightRing extends Node2D:
 			n += 1
 			if n % gap != 0:
 				for q in [Vector2(x, y), Vector2(y, x), Vector2(-y, x), Vector2(-x, y), Vector2(-x, -y), Vector2(-y, -x), Vector2(y, -x), Vector2(x, -y)]:
-					draw_rect(Rect2(q, Vector2.ONE), c)
+					if clip.has_point(q):
+						draw_rect(Rect2(q, Vector2.ONE), c)
 			y += 1
 			if err < 0:
 				err += 2 * y + 1

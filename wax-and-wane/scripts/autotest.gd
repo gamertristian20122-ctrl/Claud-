@@ -1,10 +1,13 @@
 extends Node
 ## Automated play-test bot + screenshot tour.
 ##   -- --autotest --playtest [--runs=N] [--speed=4] [--seed=N]   plays full runs, prints a summary
+##        [--god] [--stress] [--unlockall --candle=id] [--relics=a,b] [--savecycle: Save & quit + Continue each floor]
 ##   -- --autotest --tour --shots=/abs/dir                         screenshots of every screen
 ##   -- --autotest --audiotest                                     audio catalogue + live-mix check (audio_check.gd)
 ##   -- --autotest --herosheet --shots=/abs/dir                    Tallow in every juice state (pixel check)
 ##   -- --autotest --tour --rooms --shots=/abs/dir                 three dressed rooms on every floor
+##   -- --autotest --bench [--secs=6] [--seed=N] [--ablate]        busiest rooms: CPU per physics step / frame, lights, leaks
+##                                                                 (--ablate: floor 1 again with each script group switched off)
 
 var main: Node
 var args := {}
@@ -38,6 +41,8 @@ func _ready() -> void:
 			Controls.set_device(Controls.TOUCH)   # the main tour shows the phone HUD
 	if args.has("audiotest"):
 		mode = "audiotest"
+	if args.has("bench"):
+		mode = "bench"
 	runs_left = int(args.get("runs", "1"))
 	_shots_dir = str(args.get("shots", ""))
 	Game.base_time_scale = float(args.get("speed", "1"))
@@ -52,6 +57,8 @@ func _ready() -> void:
 		_tour()
 	elif mode == "audiotest":
 		add_child(load("res://scripts/audio_check.gd").new())
+	elif mode == "bench":
+		_bench()
 	else:
 		_next_run()
 
@@ -66,9 +73,14 @@ func _next_run() -> void:
 		params["candle"] = str(args["candle"])
 	if args.has("seed"):
 		params["seed"] = int(args["seed"]) + results.size()
+	_cycled = -1
 	main.goto("game", params)
 	if args.has("relics") or args.has("keepsake"):
-		await get_tree().create_timer(0.4).timeout
+		# wait for the new run (the screen fade can take longer than a fixed delay)
+		var waited := 0.0
+		while waited < 8.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null and not main._busy):
+			await get_tree().create_timer(0.1).timeout
+			waited += 0.1
 		_grant(main.current)
 
 
@@ -77,8 +89,11 @@ func _grant(w: Node) -> void:
 	if w == null or w.get("player") == null:
 		return
 	for id in str(args.get("relics", "")).split(",", false):
-		if Items.RELICS.has(id) and not id in w.player.relics:
+		if not Items.RELICS.has(id):
+			print("[playtest] unknown relic ", id)
+		elif not id in w.player.relics:
 			w.collect_item(id, w.player.global_position)
+	print("[playtest] granted ", w.player.relics)
 	if args.has("keepsake") and Items.KEEPSAKES.has(str(args["keepsake"])):
 		w.player.keepsake = str(args["keepsake"])
 		w.player.charge = int(Items.KEEPSAKES[w.player.keepsake]["pips"])
@@ -86,6 +101,30 @@ func _grant(w: Node) -> void:
 
 var _status_t := 0.0
 var _stress_cell := Vector2i(-99, -99)
+var _cycled := -1
+var _cycling := false
+
+
+func _save_cycle() -> void:
+	_cycling = true
+	await get_tree().create_timer(0.8).timeout
+	var w: Node = main.current
+	# compare with the floor-start snapshot (relics picked up since then are not in it, by design)
+	var pd: Dictionary = RunSave.snap.get("player", {})
+	var before: String = "snapshot relics %d wax %.0f" % [pd.get("relics", []).size(), float(pd.get("wax", 0.0))]
+	RunSave.flush()
+	main.goto("title")
+	await get_tree().create_timer(1.6).timeout
+	RunSave.continue_run(main)
+	var waited := 0.0
+	while waited < 8.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null and not main._busy):
+		await get_tree().create_timer(0.1).timeout
+		waited += 0.1
+	await get_tree().create_timer(0.5).timeout
+	w = main.current
+	_stress_cell = w.cur_cell   # the restored run must match its snapshot exactly (no stress relic yet)
+	print("[savecycle] floor %d: %s -> %s (floor %d)" % [_cycled, before, "relics %d wax %.0f" % [w.player.relics.size(), w.player.wax], w.floor_num])
+	_cycling = false
 
 
 func _process(dt: float) -> void:
@@ -94,11 +133,18 @@ func _process(dt: float) -> void:
 	var cur: Node = main.current
 	_status_t += dt
 	# --stress: a random relic in every new room, so every combination gets played
-	if args.has("stress") and cur and cur.name == "Game" and cur.get("player") and not cur.finished and cur.cur_cell != _stress_cell:
+	if args.has("stress") and not _cycling and cur and cur.name == "Game" and cur.get("player") and not cur.finished and cur.cur_cell != _stress_cell:
 		_stress_cell = cur.cur_cell
 		var left: Array = Items.RELICS.keys().filter(func(k): return not k in cur.player.relics)
 		if not left.is_empty():
 			cur.collect_item(left[randi() % left.size()], cur.player.global_position)
+	# --savecycle: at the start of floors 2-4, Save & quit to the title and Continue (Save & Continue
+	# gets played with whatever the run holds; with --stress that is a lot of relics)
+	if args.has("savecycle") and not _cycling and cur and cur.name == "Game" and cur.get("player") and not cur.finished \
+			and cur.floor_num >= 2 and cur.floor_num != _cycled and RunSave.has_snapshot() \
+			and int(RunSave.snap["run"].get("floor", 0)) == cur.floor_num:
+		_cycled = cur.floor_num
+		_save_cycle()
 	if _status_t > 10.0 and cur and cur.name == "Game":
 		_status_t = 0.0
 		var w: Node = cur
@@ -116,6 +162,17 @@ func _process(dt: float) -> void:
 		print("[playtest] run %d: %s floor=%d clock=%s kills=%d rooms=%d time=%.0fs relics=%s" % [
 			results.size(), "WIN" if p["won"] else "LOSS", p["floor"], Game.clock_text(p["clock"]), p["kills"], p["rooms"], p["time"], p["relics"]])
 		print("[playtest]    best streak x%d, hits %d" % [p.get("streak", 0), p.get("hits", 0)])
+		var parts: Array = []
+		for f in _diag.keys():
+			var d: Array = _diag[f]
+			parts.append("f%d %ds hits %d lost %d gained %d" % [f, d[0], d[1], d[2], d[3]])
+		print("[diag]    ", " | ".join(parts))
+		var src: Array = _diag_src.keys()
+		src.sort_custom(func(a, b): return _diag_src[a] > _diag_src[b])
+		print("[diag]    hit by ", src.slice(0, 6).map(func(k): return "%s %d" % [k, _diag_src[k]]))
+		_diag_src = {}
+		_diag = {}
+		_diag_wax = -1.0
 		runs_left -= 1
 		if runs_left > 0:
 			await get_tree().create_timer(0.5).timeout
@@ -138,6 +195,7 @@ func drive(w: Node) -> Array:
 	var p: Player = w.player
 	if args.has("god") and p:
 		p.wax = maxf(p.wax, 80.0)
+	_diag_tick(w, p)
 	if p == null or p.dead or w.transitioning:
 		return [Vector2.ZERO, Vector2.ZERO]
 	var dt := w.get_physics_process_delta_time()
@@ -147,6 +205,8 @@ func drive(w: Node) -> Array:
 		_room_t = 0.0
 		_room_t_total = 0.0
 	_room_t_total += dt
+	if _room_t_total > 120.0 and _room_t_total - dt <= 120.0:   # a soft-lock shows up in the log
+		print("[stuck] 120 s in floor %d room %s (%s, cleared=%s, enemies %d)" % [w.floor_num, w.cur_cell, w.room.data["type"], w.room.data["cleared"], w.count_enemies()])
 	if w.count_enemies() > 0:
 		_room_t = 0.0
 	_room_t += dt
@@ -249,6 +309,43 @@ func drive(w: Node) -> Array:
 	var wp := _path_next(room, my_cell, door_cell)
 	var goal: Vector2 = room.cell_center(wp) + Vector2(0, 2)
 	return [(goal - pos).normalized(), Vector2.ZERO]
+
+
+## Per floor: seconds, hits, wax lost to hits and wax gained back (printed with each result).
+var _diag := {}
+var _diag_wax := -1.0
+var _diag_floor := 0
+var _diag_src := {}   # what hit us: the touching foe's kind, or "shot or hazard" (shots are gone by the next frame)
+
+
+func _hit_source(w: Node, p: Player) -> String:
+	var at: Vector2 = p.global_position
+	for e in w.enemies:
+		if is_instance_valid(e) and e.alive and e.global_position.distance_to(at) < e.radius + 8.0:
+			return e.kind
+	for sh in w.enemy_shots:
+		if is_instance_valid(sh) and (sh.global_position - (at + Vector2(0, -6))).length() < 14.0:
+			return "shot:" + str(sh.get("kind")) if sh.get("kind") != null else "shot"
+	return "shot or hazard"
+
+
+func _diag_tick(w: Node, p: Player) -> void:
+	if p == null or p.dead or mode != "playtest":
+		return
+	var f: int = w.floor_num
+	var d: Array = _diag.get(f, [0.0, 0, 0.0, 0.0])
+	if _diag_wax >= 0.0 and f == _diag_floor:
+		var dw: float = p.wax - _diag_wax
+		if dw < -0.5:
+			d[1] += 1
+			d[2] += -dw
+			_diag_src[_hit_source(w, p)] = int(_diag_src.get(_hit_source(w, p), 0)) + 1
+		elif dw > 0.05:
+			d[3] += dw
+	d[0] += w.get_physics_process_delta_time()
+	_diag[f] = d
+	_diag_floor = f
+	_diag_wax = p.wax
 
 
 ## The living foe with the most max HP (a summoner that keeps a room from ever clearing).
@@ -944,3 +1041,255 @@ func _relic_tour() -> void:
 	await _wait(6.0)
 	await _shot("relic_results")
 	get_tree().quit()
+
+
+# ---------------------------------------------------------------- bench (--bench)
+# The busiest room of every floor (most static lights, every candelabra lit), a crowd of foes kept
+# at 20+, a moth swarm, Blowlamp + Tinderbox + Twin Wick + Candelabra + helpers, and the floor stain
+# image filled to its cap; the bot fights in god mode. Per room: average / worst process and physics
+# frame times, node / light / particle counts. Then three trips through the four floors with node and
+# object counts after each floor: a leak shows up as steady growth from trip to trip.
+
+var _bench_rows: Array = []
+
+
+func _bench() -> void:
+	args["god"] = true
+	# headless Godot sleeps this long after every frame (no window can draw); measure the bare CPU work
+	OS.low_processor_usage_mode_sleep_usec = 0
+	var secs := float(args.get("secs", "6"))
+	if args.has("ablate"):
+		await _bench_measure(main.current, "TITLE baseline", 3.0)
+	main.goto("game", {"seed": int(args.get("seed", "5"))})
+	await _wait(1.6)
+	var w: Node = main.current
+	_give(w, ["blowlamp", "tinderbox", "twin_wick", "candelabra", "matchling", "warming_pan", "paper_lantern", "moth_friend", "dust_bunny"])
+	await _wait(1.2)
+	print("[bench] physics %d Hz, relics %s" % [Engine.physics_ticks_per_second, w.player.relics])
+	for n in [1, 2, 3, 4]:
+		w._start_floor(n)
+		await _wait(0.4)
+		var best := _bench_busiest(w)
+		w.layout["cells"][best]["cleared"] = false
+		_jump(w, best)
+		w.room.light_candles(true)
+		await _wait(0.6)
+		_bench_crowd(w, 20)
+		var st: Stains = Juice.of(w).stains_here()
+		var mats := ["goo", "ash", "blood", "wax", "soot", "red"]
+		var k := 0
+		while st and st.stamps < Stains.MAX_STAMPS and k < 2000:
+			k += 1
+			st.splat(w.room.position + Vector2(randf_range(20, 252), randf_range(36, 172)), mats[k % mats.size()], k % 3 == 0)
+		await _bench_measure(w, "floor %d %s %s" % [n, w.FLOORS[n]["theme"], w.room.data.get("tpl", best)], secs)
+		if args.has("ablate"):
+			for grp in ["Enemy", "Shot", "Player", "world", "juice", "relic", "room", "hud"]:
+				var off: Array = []
+				_ablate_collect(get_tree().root, grp, off)
+				for o in off:
+					o.set_physics_process(false)
+					o.set_process(false)
+				await _bench_measure(w, "  without %s (%d nodes)" % [grp, off.size()], secs)
+				for o in off:
+					if is_instance_valid(o):
+						o.set_physics_process(true)
+						o.set_process(true)
+			break
+	print("[bench] ---- leak check: three trips through the four floors (counts after each floor)")
+	var first := {}
+	for trip in [1, 2, 3]:
+		for n in [1, 2, 3, 4]:
+			w._start_floor(n)
+			for i in 3:   # walk through a few rooms so they get built, stained and disposed
+				var cells := _normal_cells(w)
+				_jump(w, cells[i % cells.size()])
+				await _wait(0.5)
+				_bench_crowd(w, 8)
+				await _wait(1.0)
+			await _wait(0.5)
+			var nodes := int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+			var objs := int(Performance.get_monitor(Performance.OBJECT_COUNT))
+			var orphans := int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
+			var res := int(Performance.get_monitor(Performance.OBJECT_RESOURCE_COUNT))
+			var line := "[bench] trip %d floor %d: nodes=%d objects=%d orphans=%d resources=%d fx=%d enemies=%d hazards=%d" % [
+				trip, n, nodes, objs, orphans, res, w.fx_layer.get_child_count(), w.enemies.size(), w.hazards.size()]
+			if trip > 1:
+				line += "  (vs trip %d: nodes %+d, objects %+d)" % [trip - 1, nodes - first[n][0], objs - first[n][1]]
+			first[n] = [nodes, objs]
+			print(line)
+	print("[bench] SUMMARY")
+	for r in _bench_rows:
+		print("[bench]   ", r)
+	Audio.stop_all()
+	await _wait(0.3)
+	get_tree().quit()
+
+
+## The normal room of this floor with the most static lights (decor + candelabras + hearths).
+func _bench_busiest(w: Node) -> Vector2i:
+	var best: Vector2i = w.cur_cell
+	var most := -1
+	for c in _normal_cells(w):
+		var r: Room = w._build_room(c)
+		var n: int = r.decor.lights.size() + r.candles.size() + r._fires.size()
+		r.dispose()
+		if n > most:
+			most = n
+			best = c
+	return best
+
+
+## Top the room up to `n` live foes (a moth swarm included), at most `most` new ones per call.
+func _bench_crowd(w: Node, n: int, most := 40) -> int:
+	var pool: Dictionary = w.POOLS[w.floor_num]
+	var have: int = w.count_enemies()
+	var made := 0
+	var i := 0
+	while have < n and i < most:
+		i += 1
+		var list: Array = pool["f"] if i % 4 == 0 else (pool["h"] if i % 3 == 0 else pool["e"])
+		var e: Enemy = w.spawn_enemy(list[randi() % list.size()], w.random_free_spot(w.player.global_position, 60.0), ["", "", "", "ember"][i % 4])
+		if e:
+			e.active = true
+			have += 1
+			made += 1
+	if not w.enemies.any(func(e): return is_instance_valid(e) and e.kind == "moth"):
+		for j in 3:
+			w.spawn_enemy("moth", w.random_free_spot(w.player.global_position, 60.0))
+			made += 1
+	return made
+
+
+## Counts live lights (out[0]), shadowed lights (out[1]) and CPU particles (out[2]); `by` tallies the
+## lights by the script / class of the node that owns them.
+func _bench_lights(n: Node, out: Array, by: Dictionary) -> void:
+	for c in n.get_children():
+		if c is PointLight2D and c.enabled and c.is_visible_in_tree():
+			out[0] += 1
+			if c.shadow_enabled:
+				out[1] += 1
+			var o: Node = c.get_parent()
+			var sc: Script = o.get_script()
+			var key: String = sc.resource_path.get_file().get_basename() if sc else o.get_class()
+			by[key] = int(by.get(key, 0)) + 1
+		if c is CPUParticles2D and c.emitting:
+			out[2] += c.amount
+		_bench_lights(c, out, by)
+
+
+## CPU cost per physics step (physics_frame signal -> the next process_frame) and per process-only
+## frame (frames without a physics step), wall clock, with the headless frame sleep switched off;
+## plus the engine's own per-second worst process / physics times.
+var _ph_t0 := 0
+var _ph_on := false
+
+
+func _bench_ph_begin() -> void:
+	_ph_t0 = Time.get_ticks_usec()
+	_ph_on = true
+
+
+func _bench_stats(a: Array[float]) -> Array:
+	var sum := 0.0
+	for x in a:
+		sum += x
+	var srt := a.duplicate()
+	srt.sort()
+	if srt.is_empty():
+		return [0.0, 0.0, 0.0]
+	return [sum / srt.size(), srt[int(srt.size() * 0.95)], srt.back()]
+
+
+func _bench_measure(w: Node, label: String, secs: float) -> void:
+	var t := 0.0
+	var proc: Array[float] = []
+	var phys: Array[float] = []
+	var proc_max := 0.0
+	var phys_max := 0.0
+	var lights_max := 0
+	var shadows_max := 0
+	var cpu_parts_max := 0
+	var parts_max := 0
+	var nodes_max := 0
+	var shots_max := 0
+	var enemies_min := 999
+	var by_max := {}
+	var refill := 0.0
+	var game: bool = w.get("player") != null
+	var j: Juice = Juice.of(w) if game else null
+	var frames := 0
+	var spawn_ms: Array[float] = []
+	if not get_tree().physics_frame.is_connected(_bench_ph_begin):
+		get_tree().physics_frame.connect(_bench_ph_begin)
+	await get_tree().process_frame
+	var last := Time.get_ticks_usec()
+	while t < secs:
+		_ph_on = false
+		await get_tree().process_frame
+		var now := Time.get_ticks_usec()
+		var real := (now - last) / 1000.0
+		frames += 1
+		if frames > 5:   # the first frames still carry the room build
+			if _ph_on:
+				phys.append((now - _ph_t0) / 1000.0)
+			else:
+				proc.append(real)
+		last = now
+		t += real / 1000.0
+		proc_max = maxf(proc_max, Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0)
+		phys_max = maxf(phys_max, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0)
+		if frames % 60 == 0 and game:
+			var o := [0, 0, 0]
+			var by := {}
+			_bench_lights(w, o, by)
+			if o[0] > lights_max:
+				lights_max = o[0]
+				by_max = by
+			shadows_max = maxi(shadows_max, o[1])
+			cpu_parts_max = maxi(cpu_parts_max, o[2])
+			parts_max = maxi(parts_max, j.hot.count() + j.lit.count())
+			nodes_max = maxi(nodes_max, int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)))
+			var shots := 0
+			for s in w.fx_layer.get_children():
+				if s is Shot:
+					shots += 1
+			shots_max = maxi(shots_max, shots)
+			enemies_min = mini(enemies_min, w.count_enemies())
+			last = Time.get_ticks_usec()   # keep the bench's own bookkeeping out of the next sample
+		refill -= real / 1000.0
+		if refill <= 0.0 and game:
+			refill = 0.25   # a trickle, like summoners and wave rooms (a big batch would read as a spike)
+			var t0 := Time.get_ticks_usec()
+			var made := _bench_crowd(w, 20, 2)
+			if made > 0:
+				spawn_ms.append((Time.get_ticks_usec() - t0) / 1000.0 / made)
+			last = Time.get_ticks_usec()
+	get_tree().physics_frame.disconnect(_bench_ph_begin)
+	var pr := _bench_stats(proc)
+	var ph := _bench_stats(phys)
+	var sp := _bench_stats(spawn_ms)
+	var static_l: int = (w.room.decor.lights.size() + w.room.candles.size() + w.room._fires.size()) if game else 0
+	var row := "%s: physics step avg %.2f ms p95 %.2f max %.2f | process frame avg %.2f p95 %.2f max %.2f (%d steps, %d frames; engine worst/s %.1f / %.1f) | spawn %.2f ms per foe (max %.2f) | static lights %d/%d, live lights max %d (shadowed %d) %s | particles %d (+%d cpu) shots %d nodes %d foes min %d" % [
+		label, ph[0], ph[1], ph[2], pr[0], pr[1], pr[2], phys.size(), proc.size(), phys_max, proc_max, sp[0], sp[2], static_l, RoomDecor.LIGHT_BUDGET,
+		lights_max, shadows_max, by_max, parts_max, cpu_parts_max, shots_max, nodes_max, enemies_min]
+	_bench_rows.append(row)
+	print("[bench] ", row)
+
+
+func _ablate_collect(n: Node, grp: String, out: Array) -> void:
+	for c in n.get_children():
+		var sc: Script = c.get_script()
+		var f: String = sc.resource_path.get_file().to_lower() if sc else ""
+		var hit := false
+		match grp:
+			"Enemy": hit = c is Enemy
+			"Shot": hit = c is Shot
+			"Player": hit = f == "player.gd"
+			"world": hit = f == "world.gd"
+			"juice": hit = f.begins_with("juice") or f.begins_with("fx_") or f == "stains.gd"
+			"relic": hit = f.begins_with("relic") or f.begins_with("familiar") or f.begins_with("costume")
+			"room": hit = f.begins_with("room")
+			"hud": hit = f == "hud.gd"
+		if hit:
+			out.append(c)
+		_ablate_collect(c, grp, out)
