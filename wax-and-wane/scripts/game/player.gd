@@ -205,7 +205,7 @@ func hurt(amount: float, from_dir: Vector2) -> void:
 		return
 	amount *= hit_mult
 	wax -= amount
-	invuln = 1.0
+	invuln = 1.2
 	_hurt_face = 0.6
 	vel += from_dir.normalized() * 140.0
 	Audio.play("player_hurt")

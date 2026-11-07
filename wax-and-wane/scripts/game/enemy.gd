@@ -156,7 +156,7 @@ func _physics_process(dt: float) -> void:
 		spr.flip_h = to_p.x < 0
 	# contact damage
 	if not p.dead and _jump_h < 4.0 and dist < radius + 5.0:
-		p.hurt((10.0 if boss else 8.0) * world.enemy_dmg_mult(), to_p)
+		p.hurt((8.0 if boss else 6.0) * world.enemy_dmg_mult(), to_p)
 	# gentle separation
 	for e in world.enemies:
 		if e == self or not is_instance_valid(e) or not e.alive:
@@ -168,17 +168,22 @@ func _physics_process(dt: float) -> void:
 	spr.position.y = -_jump_h
 
 
+## Collision is checked in world coordinates (our parent layer sits at the room's origin).
 func _move(d: Vector2) -> bool:
 	var room: Room = world.room
+	if room == null:
+		return false
 	var moved := false
-	var np := position + Vector2(d.x, 0)
+	var gp := global_position
+	var np := gp + Vector2(d.x, 0)
 	if not room.blocked(np, radius, flying):
-		position = np
+		gp = np
 		moved = true
-	np = position + Vector2(0, d.y)
+	np = gp + Vector2(0, d.y)
 	if not room.blocked(np, radius, flying):
-		position = np
+		gp = np
 		moved = true
+	global_position = gp
 	return moved
 
 
@@ -213,9 +218,8 @@ func _ai_chase(ddt: float, to_p: Vector2, _dist: float) -> void:
 func _ai_fly(ddt: float, to_p: Vector2, _dist: float) -> void:
 	_wob += ddt * 4.0
 	var want := to_p.normalized() + to_p.normalized().orthogonal() * sin(_wob) * 1.1
-	position += want.normalized() * speed * ddt
 	var r: Rect2 = world.room.inner_rect().grow(-4)
-	position = position.clamp(r.position, r.end)
+	global_position = (global_position + want.normalized() * speed * ddt).clamp(r.position, r.end)
 	_jump_h = 5.0 + sin(_wob * 1.7) * 2.0
 
 
@@ -313,7 +317,7 @@ func _ai_jumper(ddt: float, to_p: Vector2, _dist: float) -> void:
 			var k := 1.0 - t / 0.55
 			var np: Vector2 = (dir as Vector2).lerp(target_pos, clampf(k, 0, 1))
 			if not world.room.blocked(np, radius, true):
-				position = np
+				global_position = np
 			_jump_h = sin(clampf(k, 0, 1) * PI) * 22.0
 			if t <= 0:
 				_jump_h = 0.0
@@ -360,7 +364,7 @@ func _ai_summoner(ddt: float, to_p: Vector2, dist: float) -> void:
 func _teleport() -> void:
 	var spot: Vector2 = world.random_free_spot(global_position, 70.0)
 	world.fx_smoke(global_position + Vector2(0, -8))
-	position = spot
+	global_position = spot
 	world.fx_smoke(global_position + Vector2(0, -8))
 	Audio.play("teleport", -2.0)
 	cd = maxf(cd, 0.8)

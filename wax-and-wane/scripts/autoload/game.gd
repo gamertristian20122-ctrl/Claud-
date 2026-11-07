@@ -10,6 +10,9 @@ const SAVE_PATH := "user://save.cfg"
 const START_MINUTES := 0.0      # 12:00 AM
 const END_MINUTES := 120.0      # 2:00 AM
 
+## 1.0 normally; the play-test bot raises it to run faster than real time.
+var base_time_scale := 1.0
+
 var settings := {
 	"music": 0.7,
 	"sfx": 0.85,

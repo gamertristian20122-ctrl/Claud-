@@ -33,7 +33,8 @@ func _ready() -> void:
 		mode = "tour"
 	runs_left = int(args.get("runs", "1"))
 	_shots_dir = str(args.get("shots", ""))
-	Engine.time_scale = float(args.get("speed", "1"))
+	Game.base_time_scale = float(args.get("speed", "1"))
+	Engine.time_scale = Game.base_time_scale
 	Game.settings["aim_assist"] = true
 	await get_tree().create_timer(0.8).timeout
 	if mode == "tour":
@@ -121,26 +122,32 @@ func drive(w: Node) -> Array:
 	var tgt: Enemy = w.nearest_enemy(pos)
 	if tgt:
 		var to: Vector2 = tgt.global_position + Vector2(0, -tgt.half_h) - (pos + Vector2(0, -6))
-		var mv := Vector2.ZERO
 		var d := to.length()
-		if _room_t_total > 12.0 and d > 20:
+		var mv := Vector2.ZERO
+		if _room_t_total > 12.0 and d > 30:
 			mv = to.normalized()
-		elif d < 45:
-			mv = -to.normalized()
-		elif d > 80:
-			mv = to.normalized()
+		elif d > 85:
+			mv = to.normalized() * 0.7
 		else:
-			mv = to.normalized().orthogonal() * (1.0 if int(Time.get_ticks_msec() / 1500) % 2 == 0 else -1.0)
-		# dodge the closest incoming bullet
-		var best_d := 40.0
-		for s in w.enemy_shots:
-			if not is_instance_valid(s):
+			mv = to.normalized().orthogonal() * (1.0 if int(Time.get_ticks_msec() / 1500) % 2 == 0 else -1.0) * 0.6
+		# keep away from every enemy body (contact damage) ...
+		for e in w.enemies:
+			if not is_instance_valid(e) or not e.alive:
 				continue
-			var rel: Vector2 = pos + Vector2(0, -8) - s.global_position
+			var rel: Vector2 = pos - e.global_position
 			var dd := rel.length()
-			if dd < best_d and s.vel.dot(rel) > 0:
-				best_d = dd
-				mv = s.vel.normalized().orthogonal() * signf(s.vel.normalized().orthogonal().dot(rel) + 0.001)
+			var safe: float = 34.0 + e.radius * 2.0
+			if dd < safe and dd > 0.1:
+				mv += rel / dd * (safe - dd) / safe * 2.2
+		# ... and from bullets heading our way
+		for sh in w.enemy_shots:
+			if not is_instance_valid(sh):
+				continue
+			var rel2: Vector2 = pos + Vector2(0, -8) - sh.global_position
+			var d2 := rel2.length()
+			if d2 < 36 and sh.vel.dot(rel2) > 0:
+				var side: Vector2 = sh.vel.normalized().orthogonal()
+				mv += side * signf(side.dot(rel2) + 0.001) * (36.0 - d2) / 36.0 * 2.5
 		# drift back toward the middle so we do not hug walls
 		var c: Vector2 = w.room.center()
 		if pos.distance_to(c) > 80:
@@ -157,19 +164,52 @@ func drive(w: Node) -> Array:
 	var dir := _next_dir(w)
 	if dir == Vector2i.ZERO:
 		return [Vector2.ZERO, Vector2.ZERO]
-	var door_pt: Vector2
+	var door_cell: Vector2i
+	var exit_pt: Vector2
 	match dir:
-		Vector2i.UP: door_pt = w.room.position + Vector2(136, 20)
-		Vector2i.DOWN: door_pt = w.room.position + Vector2(136, 190)
-		Vector2i.LEFT: door_pt = w.room.position + Vector2(4, 106)
-		_: door_pt = w.room.position + Vector2(268, 106)
-	var lane: Vector2 = door_pt
-	# line up with the door lane first
-	if dir.x == 0 and absf(pos.x - door_pt.x) > 3:
-		lane = Vector2(door_pt.x, pos.y)
-	elif dir.y == 0 and absf(pos.y - door_pt.y) > 3:
-		lane = Vector2(pos.x, door_pt.y)
-	return [(lane - pos).normalized(), Vector2.ZERO]
+		Vector2i.UP:
+			door_cell = Vector2i(7, 0)
+			exit_pt = w.room.position + Vector2(136, 20)
+		Vector2i.DOWN:
+			door_cell = Vector2i(7, 8)
+			exit_pt = w.room.position + Vector2(136, 190)
+		Vector2i.LEFT:
+			door_cell = Vector2i(0, 4)
+			exit_pt = w.room.position + Vector2(4, 106)
+		_:
+			door_cell = Vector2i(14, 4)
+			exit_pt = w.room.position + Vector2(268, 106)
+	var room: Room = w.room
+	var my_cell := room.cell_of(pos - room.position)
+	if my_cell == door_cell:
+		return [(exit_pt - pos).normalized(), Vector2.ZERO]
+	var wp := _path_next(room, my_cell, door_cell)
+	var goal: Vector2 = room.cell_center(wp) + Vector2(0, 2)
+	return [(goal - pos).normalized(), Vector2.ZERO]
+
+
+## BFS over the room grid; returns the next cell to walk to (or the goal itself).
+func _path_next(room: Room, from: Vector2i, to: Vector2i) -> Vector2i:
+	var prev := {from: from}
+	var q: Array[Vector2i] = [from]
+	while not q.is_empty():
+		var c: Vector2i = q.pop_front()
+		if c == to:
+			break
+		for d in FloorGen.DIRS:
+			var n: Vector2i = c + d
+			if prev.has(n) or n.x < 0 or n.y < 0 or n.x >= Room.COLS or n.y >= Room.ROWS:
+				continue
+			if room.char_at(n) in Room.SOLID:
+				continue
+			prev[n] = c
+			q.append(n)
+	if not prev.has(to):
+		return to
+	var step := to
+	while prev[step] != from:
+		step = prev[step]
+	return step
 
 
 func _best_pickup(w: Node, p: Player) -> Node2D:

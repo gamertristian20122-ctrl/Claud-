@@ -50,6 +50,7 @@ var _bells := {}
 var _heartbeat := 0.0
 var _fade: ColorRect
 var _kb_bomb_held := false
+var room_hits := 0
 
 
 func setup(params: Dictionary) -> void:
@@ -148,7 +149,7 @@ func _start_floor(n: int) -> void:
 	cam.position = _cam_target(room)
 	_on_enter_room()
 	Audio.music(FLOORS[n]["music"])
-	hud.show_banner(FLOORS[n]["name"].to_upper(), "Floor %d of %d" % [n, LAST_FLOOR], 2.2)
+	hud.show_banner(FLOORS[n]["name"].to_upper(), "Floor %d of %d   -   %s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes())], 2.2)
 	if n == 1:
 		hud.show_hint("Left thumb: move    Right thumb: shoot    Wax = health = time", 7.0)
 
@@ -180,11 +181,17 @@ func _on_enter_room() -> void:
 			layout["cells"][cur_cell + dd]["seen"] = true
 	player.coat_ready = true
 	room_spawned = false
+	room_hits = 0
 	match d["type"]:
 		"treasure":
 			if not d.get("stocked", false):
 				d["stocked"] = true
-				add_pickup("relic", room.center() + Vector2(0, 2), _next_relic())
+				# a choice of two: take one, the other crumbles
+				var a := add_pickup("relic", room.center() + Vector2(-26, 2), _next_relic())
+				var b := add_pickup("relic", room.center() + Vector2(26, 2), _next_relic())
+				a.record["group"] = "treasure"
+				b.record["group"] = "treasure"
+				hud.show_hint("Choose one relic. The other will crumble.", 3.0)
 		"shop":
 			if not d.get("stocked", false):
 				d["stocked"] = true
@@ -198,6 +205,7 @@ func _on_enter_room() -> void:
 				return
 	if not d["cleared"]:
 		room.set_open(false, true)
+		Audio.play("door_close", -3.0)
 		var tw := create_tween()
 		tw.tween_interval(0.25)
 		tw.tween_callback(_spawn_room_enemies)
@@ -300,6 +308,9 @@ func _clear_room() -> void:
 		fx_text(player.global_position + Vector2(0, -26), "+%d min" % int(player.hourglass), UI.GOLD)
 	if d["type"] == "normal":
 		_room_reward(room.center() + Vector2(0, 4))
+		if room_hits == 0:
+			player.heal(2.0)
+			fx_text(player.global_position + Vector2(0, -34), "CLEAN  +2 min", UI.GOLD)
 
 
 func _room_reward(pos: Vector2) -> void:
@@ -368,7 +379,17 @@ func forget_pickup(rec: Dictionary) -> void:
 		room.data["pickups"].erase(rec)
 
 
-func collect_item(id: String, pos: Vector2) -> void:
+func collect_item(id: String, pos: Vector2, rec := {}) -> void:
+	var group: String = rec.get("group", "")
+	if group != "" and room:
+		for o in room.objects.get_children():
+			if o is Pickup and not o.taken and o.record and o.record.get("group", "") == group and o.record != rec:
+				o.taken = true
+				forget_pickup(o.record)
+				fx_smoke(o.global_position + Vector2(0, -14))
+				var tw := o.create_tween()
+				tw.tween_property(o, "modulate:a", 0.0, 0.4)
+				tw.tween_callback(o.queue_free)
 	Items.apply(id, player, self)
 	Audio.play("item_get")
 	hud.show_banner(Items.display_name(id).to_upper(), Items.desc(id), 2.0)
@@ -408,6 +429,9 @@ func roll_obstacle_drop(pos: Vector2) -> void:
 func spawn_enemy(kind: String, pos: Vector2) -> Enemy:
 	if room == null:
 		return null
+	var r: float = Enemy.DEFS[kind]["r"]
+	if not Enemy.DEFS[kind].get("fly", false) and room.blocked(pos, r):
+		pos = free_spot_near(pos, r)
 	var e := Enemy.new()
 	e.setup(self, kind, pos - room.position, floor_num)
 	room.objects.add_child(e)
@@ -561,19 +585,38 @@ func assist_aim(pos: Vector2, dir: Vector2) -> Vector2:
 
 
 func enemy_dmg_mult() -> float:
-	return 1.0 + 0.1 * (floor_num - 1)
+	return 1.0 + 0.12 * (floor_num - 1)
 
 
 func time_scale_enemies() -> float:
 	return 1.0 - player.slow_aura
 
 
+## The nearest walkable point to `pos` (spawns must never land inside rocks or columns).
+func free_spot_near(pos: Vector2, r := 6.0) -> Vector2:
+	var best := room.center()
+	var bd := 1e9
+	for y in Room.ROWS:
+		for x in Room.COLS:
+			var c := Vector2i(x, y)
+			if room.char_at(c) in Room.SOLID or room.char_at(c) == "S":
+				continue
+			var p := room.cell_center(c) + Vector2(0, 4)
+			if room.blocked(p, r):
+				continue
+			var d := p.distance_squared_to(pos)
+			if d < bd:
+				bd = d
+				best = p
+	return best
+
+
 func random_free_spot(away_from: Vector2, min_d: float) -> Vector2:
 	for i in 40:
 		var c := Vector2i(rng.randi_range(1, 13), rng.randi_range(1, 7))
 		if room.char_at(c) in [".", "e", "h", "f", "T"]:
-			var p := room.cell_center(c) + Vector2(0, 6)
-			if p.distance_to(away_from) >= min_d:
+			var p := room.cell_center(c) + Vector2(0, 4)
+			if p.distance_to(away_from) >= min_d and not room.blocked(p, 7.0):
 				return p
 	return room.center()
 
@@ -660,6 +703,7 @@ func add_moth() -> void:
 # ---------------------------------------------------------------- player events
 
 func on_player_hurt(amount: float) -> void:
+	room_hits += 1
 	shake(3.0)
 	hitstop(0.06, 0.05)
 	hud.on_hurt()
@@ -678,10 +722,10 @@ func on_player_died() -> void:
 	Audio.play("bell_toll", 0.0, 0.0, 0.9)
 	_clear_shots()
 	fx_smoke(player.global_position + Vector2(0, -18))
-	Engine.time_scale = 0.35
+	Engine.time_scale = 0.35 * Game.base_time_scale
 	var tw := create_tween().set_ignore_time_scale(true)
 	tw.tween_interval(1.0)
-	tw.tween_callback(func(): Engine.time_scale = 1.0)
+	tw.tween_callback(func(): Engine.time_scale = Game.base_time_scale)
 	tw.tween_interval(1.4)
 	tw.tween_callback(func(): _end_run(false))
 
@@ -862,12 +906,12 @@ func shake(amount: float) -> void:
 func hitstop(dur: float, scale_ := 0.05) -> void:
 	if finished:
 		return
-	Engine.time_scale = scale_
+	Engine.time_scale = scale_ * Game.base_time_scale
 	var tw := create_tween().set_ignore_time_scale(true)
 	tw.tween_interval(dur)
 	tw.tween_callback(func():
 		if not finished:
-			Engine.time_scale = 1.0)
+			Engine.time_scale = Game.base_time_scale)
 
 
 func fx_poof(pos: Vector2, warm := true, sc := 1.0) -> void:

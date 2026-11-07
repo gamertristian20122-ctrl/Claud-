@@ -71,7 +71,7 @@ func goto(screen: String, params := {}) -> void:
 	tw.tween_property(_fade, "color:a", 1.0, 0.3 if current else 0.0)
 	await tw.finished
 	get_tree().paused = false
-	Engine.time_scale = 1.0
+	Engine.time_scale = Game.base_time_scale
 	if current:
 		current.queue_free()
 		await get_tree().process_frame

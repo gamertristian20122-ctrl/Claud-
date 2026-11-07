@@ -95,9 +95,9 @@ func _sprite(path: String, off: Vector2) -> Sprite2D:
 func _physics_process(dt: float) -> void:
 	_t += dt
 	if vel.length() > 1:
-		var np := position + vel * dt
+		var np := global_position + vel * dt
 		if world.room and not world.room.blocked(np, 3.0):
-			position = np
+			global_position = np
 		else:
 			vel = -vel * 0.4
 		vel = vel.move_toward(Vector2.ZERO, 220 * dt)
@@ -121,7 +121,7 @@ func _physics_process(dt: float) -> void:
 	if d < reach and _t > 0.35:
 		_collect(p)
 	elif kind in ["coin", "wax_small", "wax_big", "bomb"] and d < 22.0 and p.luck > 0.0 and _t > 0.5:
-		position = position.move_toward(p.global_position, 40.0 * dt)
+		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
 
 
 func _collect(p: Player) -> void:
@@ -155,7 +155,7 @@ func _collect(p: Player) -> void:
 			world.fx_text(global_position + Vector2(0, -14), "+%d min" % int(amt), UI.WAX)
 			_take()
 		"relic", "tonic":
-			world.collect_item(item, global_position)
+			world.collect_item(item, global_position, record if record else {})
 			_take()
 		"chest":
 			if opened:

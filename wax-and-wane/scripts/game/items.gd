@@ -27,7 +27,6 @@ const RELICS := {
 	"snuffer_cap": {"name": "Snuffer Cap", "desc": "Enemy hits melt less wax"},
 	"tallow_heart": {"name": "Tallow Heart", "desc": "Refill your wax"},
 	"spare_wick": {"name": "Spare Wick", "desc": "More damage"},
-	"wax_seal": {"name": "Wax Seal", "desc": "Everything costs less in the shop"},
 }
 
 const TONICS := {

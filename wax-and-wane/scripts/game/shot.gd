@@ -80,7 +80,7 @@ func _physics_process(dt: float) -> void:
 	else:
 		var p: Player = world.player
 		if p and not p.dead and (p.global_position + Vector2(0, -8)).distance_squared_to(global_position) < pow(radius + 4.0, 2):
-			p.hurt(6.0 * world.enemy_dmg_mult(), vel)
+			p.hurt(5.0 * world.enemy_dmg_mult(), vel)
 			end()
 			return
 	if life <= 0:

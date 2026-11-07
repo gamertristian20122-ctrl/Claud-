@@ -21,6 +21,7 @@ var bomb_btn: TextureButton
 var stick_l: Control
 var stick_r: Control
 var pause_layer: Control
+var vignette: TextureRect
 
 var shown_wax := 120.0
 var ghost_wax := 120.0
@@ -50,6 +51,25 @@ func _ready() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 	_flame_frames = Art.seq("hero/flame")
+	# low-wax vignette (drawn under everything else in the HUD)
+	var g := Gradient.new()
+	g.set_color(0, Color(0.5, 0.05, 0.02, 0.0))
+	g.set_color(1, Color(0.45, 0.04, 0.02, 0.85))
+	g.add_point(0.55, Color(0.5, 0.05, 0.02, 0.0))
+	var gt := GradientTexture2D.new()
+	gt.gradient = g
+	gt.fill = GradientTexture2D.FILL_RADIAL
+	gt.fill_from = Vector2(0.5, 0.5)
+	gt.fill_to = Vector2(1.05, 0.5)
+	gt.width = 128
+	gt.height = 72
+	vignette = TextureRect.new()
+	vignette.texture = gt
+	vignette.stretch_mode = TextureRect.STRETCH_SCALE
+	vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vignette.modulate.a = 0.0
+	root.add_child(vignette)
 	# --- wax bar
 	bar = Control.new()
 	bar.position = Vector2(6, 5)
@@ -87,7 +107,7 @@ func _ready() -> void:
 	pause_btn.ignore_texture_size = true
 	pause_btn.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
 	pause_btn.size = Vector2(22, 22)
-	pause_btn.pressed.connect(func(): world.toggle_pause())
+	pause_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(pause_btn)
 	# --- bomb button (right edge, middle)
 	bomb_btn = TextureButton.new()
@@ -95,7 +115,8 @@ func _ready() -> void:
 	bomb_btn.ignore_texture_size = true
 	bomb_btn.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
 	bomb_btn.size = Vector2(30, 30)
-	bomb_btn.pressed.connect(func(): world.place_bomb())
+	bomb_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bomb_btn.pivot_offset = Vector2(15, 15)
 	root.add_child(bomb_btn)
 	# --- boss bar
 	boss_box = Control.new()
@@ -230,6 +251,10 @@ func _process(dt: float) -> void:
 	bar.queue_redraw()
 	clock_label.text = Game.clock_text(world.clock_minutes())
 	var low := p.wax < 20.0
+	var want := 0.0
+	if p.wax < 20.0 and not p.dead:
+		want = (0.35 + 0.25 * sin(_flame_t * 4.5)) * (1.0 - p.wax / 20.0) + 0.15
+	vignette.modulate.a = move_toward(vignette.modulate.a, want, dt * 2.0)
 	clock_label.add_theme_color_override("font_color", UI.RED if low and fmod(_flame_t, 0.8) < 0.4 else UI.CREAM)
 	floor_label.text = world.floor_title()
 	coin_label.text = "%d" % p.coins
@@ -327,13 +352,26 @@ func _draw_minimap() -> void:
 # ---------------------------------------------------------------- touch input
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		world.toggle_pause()
+		return
 	if world.paused or world.player == null:
 		return
 	var swap: bool = Game.settings["swap_sticks"]
 	if event is InputEventScreenTouch:
 		var pos: Vector2 = event.position
 		if event.pressed:
-			if _over_button(pos):
+			# HUD buttons are handled here so they work with any finger (Godot only turns the
+			# first finger into mouse clicks, and that finger is usually on the move stick)
+			if Rect2(pause_btn.position, pause_btn.size).grow(4).has_point(pos):
+				world.toggle_pause()
+				get_viewport().set_input_as_handled()
+				return
+			if Rect2(bomb_btn.position, bomb_btn.size).grow(4).has_point(pos):
+				world.place_bomb()
+				bomb_btn.scale = Vector2(0.9, 0.9)
+				bomb_btn.create_tween().tween_property(bomb_btn, "scale", Vector2.ONE, 0.12)
+				get_viewport().set_input_as_handled()
 				return
 			var left_side := pos.x < view_size().x * 0.5
 			if swap:
