@@ -432,7 +432,7 @@ def paint_flagstones(floor, rng):
 
 
 def paint_worn(floor, rng):
-    """Cellar: the classic tiles, more broken, with packed-dirt patches and stray straw."""
+    """Cellar: the classic tiles, more broken, with patches of packed dirt."""
     px = floor.load()
     for _ in range(4):
         c, r = rng.randrange(1, 14), rng.randrange(1, 8)
@@ -446,12 +446,7 @@ def paint_worn(floor, rng):
                 d = (((xx - cx) / 1.4) ** 2 + (yy - cy) ** 2) ** 0.5
                 if d < rad and px[xx, yy][:3] == rgb(S1):
                     px[xx, yy] = rgb("#3b3332" if d < rad - 1.2 else "#302c2b") + (255,)
-        for _ in range(rng.randrange(3, 6)):
-            sx, sy = cx + rng.randrange(-rad, rad), cy + rng.randrange(-rad // 2, rad // 2)
-            col = rng.choice(["#b58057", "#d8a57d"])
-            for k in range(3):
-                if FX0 < sx + k < FX1 - 1 and px[sx + k, sy][:3] != rgb(O):
-                    px[sx + k, sy] = rgb(col) + (255,)
+
 
 
 GLYPHS = [
@@ -530,8 +525,8 @@ def paint_inlay(floor, rng):
         _crack(px, rng.randrange(FX0 + 8, FX1 - 8), rng.randrange(FY0 + 6, FY1 - 20), rng, rng.randrange(4, 10))
 
 
-CARPET = {"field": "#9f294e", "deep": "#62232f", "gold": "#ee8e2e", "hi": "#facb3e", "lo": "#c56025",
-          "dot": "#da4e38"}
+CARPET = {"field": "#62232f", "deep": "#38262d", "gold": "#c56025", "hi": "#ee8e2e", "lo": "#8f4029",
+          "dot": "#9f294e"}
 
 
 def paint_carpet(floor, rng):
@@ -581,7 +576,8 @@ def paint_checker(floor, rng):
                             px[x, y] = rgb(S1) + (255,)
 
 
-WOOD = {"hi": "#8f4029", "fill": "#62232f", "grain": "#38262d", "gap": "#21141b", "nail": "#545454"}
+# boards in the base ramp so the theme remap colours them like the rest of the belfry
+WOOD = {"hi": S2, "fill": S1, "grain": "#302c2b", "gap": O, "nail": "#3f3f3f"}
 
 
 def _planks(px, rng, x0, y0, x1, y1):
@@ -612,8 +608,8 @@ def _planks(px, rng, x0, y0, x1, y1):
             x += ln
 
 
-WOOD_RING = {WOOD["hi"]: WOOD["fill"], WOOD["grain"]: WOOD["gap"]}
-WOOD_DARK = {WOOD["fill"]: WOOD["grain"], WOOD["hi"]: WOOD["grain"], WOOD["grain"]: WOOD["gap"]}
+WOOD_RING = {}
+WOOD_DARK = {}
 
 
 def paint_planks(floor, rng):

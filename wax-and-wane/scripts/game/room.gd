@@ -315,6 +315,27 @@ func _light_hearth(holder: Node2D, c: Vector2i) -> void:
 	l.position = Vector2(0, -12)
 	holder.add_child(l)
 	_fires.append([l, 0.95, float(c.x * 1.3 + c.y)])
+	# a few sparks lift off the coals
+	var em := CPUParticles2D.new()
+	em.name = "Embers"
+	em.amount = 4
+	em.lifetime = 0.9
+	em.position = Vector2(0, -14)
+	em.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	em.emission_rect_extents = Vector2(4, 1)
+	em.direction = Vector2(0, -1)
+	em.spread = 22.0
+	em.gravity = Vector2(0, -8)
+	em.initial_velocity_min = 9.0
+	em.initial_velocity_max = 17.0
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color("#facb3e"))
+	ramp.set_color(1, Color("#da4e38"))
+	em.color_ramp = ramp
+	em.material = Art.unshaded
+	em.seed = int(data["seed"]) + c.x * 17 + c.y
+	em.use_fixed_seed = true
+	holder.add_child(em)
 
 
 func _add_candelabra(c: Vector2i) -> void:
@@ -576,9 +597,10 @@ func douse_hearth(c: Vector2i) -> void:
 	var wp := cell_center(c)
 	if node:
 		(node.get_child(0) as Sprite2D).texture = Art.tex("decor/prop_hearth_cold")
-		var f := node.get_node_or_null("Fire")
-		if f:
-			f.queue_free()
+		for nm in ["Fire", "Embers"]:
+			var f := node.get_node_or_null(nm)
+			if f:
+				f.queue_free()
 		var l: PointLight2D = node.get_node_or_null("Glow")
 		if l:
 			for F in _fires:

@@ -14,24 +14,25 @@ const SIDE_Y := [40, 136]        # side wall slots (y of a 16 px piece), away fr
 const SCONCE := {
 	"cellar": {"flame": "torch", "top": [Vector2(8, 6)], "side": [Vector2(6, 3)], "col": Color(1.0, 0.6, 0.3), "e": 0.95, "s": 0.62},
 	"crypt": {"flame": "glass", "top": [Vector2(8, 10)], "side": [Vector2(5, 10)], "col": Color(0.95, 0.78, 0.52), "e": 0.8, "s": 0.55},
-	"chapel": {"flame": "candle", "top": [Vector2(4, 6), Vector2(12, 6)], "side": [Vector2(6, 4)], "col": Color(1.0, 0.74, 0.45), "e": 0.8, "s": 0.55},
+	"chapel": {"flame": "candle", "top": [Vector2(8, 4)], "side": [Vector2(6, 4)], "col": Color(1.0, 0.74, 0.45), "e": 0.8, "s": 0.55},
 	"belfry": {"flame": "glass", "top": [Vector2(8, 9)], "side": [Vector2(5, 8)], "col": Color(1.0, 0.66, 0.36), "e": 0.9, "s": 0.6},
 }
-## theme -> top wall pieces: [name, width in tiles, x offset, y]
+## theme -> top wall pieces: [name, width in tiles, x offset, y]. The first is the theme's signature
+## piece and is tried first in most rooms.
 const WALL := {
 	"cellar": [["wall_shelf", 2, 0, 16], ["wall_herbs", 1, 0, 16], ["wall_winerack", 2, 0, 16], ["wall_herbs", 1, 0, 16]],
 	"crypt": [["wall_niche_skull", 1, 0, 16], ["wall_niche_urn", 1, 0, 16], ["wall_niche_candle", 1, 0, 16],
 		["wall_chains", 1, 0, 16], ["wall_niche_skull", 1, 0, 16]],
 	"chapel": [["wall_banner_torn", 1, 0, 16], ["wall_votives", 2, 0, 16], ["wall_banner_torn", 1, 0, 16]],
-	"belfry": [["wall_gear", 1, 0, 16], ["wall_rope", 1, 4, 10], ["wall_clock", 2, 4, 10], ["wall_gear", 1, 0, 16]],
+	"belfry": [["wall_clock", 2, 4, 10], ["wall_gear", 1, 0, 16], ["wall_rope", 1, 4, 10], ["wall_gear", 1, 0, 16]],
 }
 const SIDE := {"cellar": "side_herbs", "crypt": "side_chains", "chapel": "side_banner", "belfry": "side_rope"}
 const CORNER_WEBS := ["cellar", "crypt"]
 ## theme -> flat floor decals (any floor cell) and wall-foot decals (row 0, leaning on the top wall)
 const FLOOR := {
-	"cellar": ["decor/floor_straw_0", "decor/floor_straw_1", "decor/floor_puddle", "decor/floor_grain", "rooms/decal_crack_0", "rooms/decal_crack_1", "rooms/decal_wax_puddle"],
+	"cellar": ["decor/floor_straw_0", "decor/floor_straw_1", "decor/floor_puddle", "decor/floor_grain", "rooms/decal_crack_0", "rooms/decal_crack_1"],
 	"crypt": ["decor/floor_ribs", "decor/floor_bone_bits", "rooms/decal_bones", "decor/floor_slab", "rooms/decal_crack_2", "rooms/decal_crack_3", "decor/floor_bone_bits"],
-	"chapel": ["decor/floor_pages_0", "decor/floor_pages_1", "decor/floor_book", "rooms/decal_wax_puddle", "rooms/decal_crack_1", "decor/floor_pages_1"],
+	"chapel": ["decor/floor_pages_0", "decor/floor_pages_1", "decor/floor_book", "rooms/decal_crack_1", "decor/floor_pages_1"],
 	"belfry": ["decor/floor_feathers_0", "decor/floor_feathers_1", "decor/floor_cog", "decor/floor_rope_coil", "rooms/decal_crack_0", "decor/floor_feathers_0"],
 }
 const FOOT := {"cellar": ["decor/floor_sack"], "crypt": ["decor/floor_candle_stubs"],
@@ -113,19 +114,24 @@ func setup(r: Room, used_lights: int) -> void:
 	var tries := 0
 	var placed := 0
 	var goal := rng.randi_range(2, 4)
+	var signature := rng.randf() < 0.7
 	while placed < goal and tries < 24 and not free_top.is_empty():
 		tries += 1
-		var it: Array = pool[rng.randi() % pool.size()]
+		var it: Array = pool[0] if signature else pool[rng.randi() % pool.size()]
 		var w: int = it[1]
-		var t4: int = free_top[rng.randi() % free_top.size()]
-		if w == 2 and not ((t4 + 1) in free_top and (t4 <= 4 or t4 >= 9)):
+		var spots: Array = free_top
+		if w == 2:
+			spots = free_top.filter(func(t): return (t + 1) in free_top and (t <= 4 or t >= 9))
+		signature = false
+		if spots.is_empty():
 			continue
+		var t4: int = spots[rng.randi() % spots.size()]
 		var nm: String = "decor/" + it[0]
 		if not Art.has(nm):
 			continue
 		_add(Art.tex(nm), Vector2(16 + 16 * t4 + int(it[2]), int(it[3])), rng.randf() < 0.5 and w == 1 and it[0] != "wall_clock")
 		if it[0] == "wall_niche_candle":
-			_flame("candle", Vector2(16 + 16 * t4 + 7, 16 + 6), false)
+			_flame("candle", Vector2(16 + 16 * t4 + 8, 16 + 6), false)
 		if it[0] == "wall_votives" and budget > 0:
 			_votives(Vector2(16 + 16 * t4, 16))
 			budget -= 1
@@ -253,6 +259,25 @@ func _window(tile: int, style: String) -> void:
 	var l := _light(pos + Vector2(14, 40), WINDOW_LIGHT[style], 0.75, 1.0, 0.03, pool)
 	if pool == null:
 		l.texture_scale = 0.35
+	# dust drifting through the beam (lit by it, nearly invisible outside it)
+	var motes := CPUParticles2D.new()
+	motes.amount = 5
+	motes.lifetime = 5.0
+	motes.preprocess = 5.0
+	motes.position = pos + Vector2(14, 44)
+	motes.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	motes.emission_rect_extents = Vector2(9, 22)
+	motes.direction = Vector2(0.3, 1)
+	motes.spread = 180.0
+	motes.gravity = Vector2(0, 1.2)
+	motes.initial_velocity_min = 1.5
+	motes.initial_velocity_max = 3.5
+	motes.color = Color("#cae6f5")
+	motes.z_index = -10
+	motes.randomness = 1.0
+	motes.seed = rng.randi()
+	motes.use_fixed_seed = true
+	room.add_child(motes)
 
 
 func _votives(pos: Vector2) -> void:
