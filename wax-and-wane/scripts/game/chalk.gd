@@ -8,7 +8,7 @@ extends Node2D
 ## Attached by Records.on_room (one line at the end of Room.build). Stains and pits draw over it
 ## (z -17: above the floor art and decor, below the floor layer).
 
-const ALPHA := 0.42
+const ALPHA := 0.5
 ## Where each drawing sits, room-local (the floor is (16, 32) .. (256, 176); Tallow starts at (136, 112)).
 const SPOTS := {
 	"wax_time": Vector2(136, 52),

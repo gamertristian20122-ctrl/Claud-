@@ -15,6 +15,9 @@ var sel := "tallow"
 var sub: Label
 var sel_name: Label
 var play_btn: Button
+var journal_btn: Button
+const MENU_W := 120
+const MENU_H := 20
 # ---- opening
 var logo: TextureRect
 var menu: VBoxContainer
@@ -95,20 +98,34 @@ func _ready() -> void:
 	sub.size = Vector2(300, 10)
 	sub.position = Vector2(-150, 70)
 	root.add_child(sub)
+	# ---- the menu: [Continue] / Light the wick / Tonight's Candle / Journal | Seed / Settings | Credits
+	Unlocks.take_new()   # anything unlocked since the last visit gets its Journal dot
 	menu = VBoxContainer.new()
-	menu.add_theme_constant_override("separation", 3)
+	menu.add_theme_constant_override("separation", 2)
 	menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	menu.position = Vector2(-30, -98)
+	menu.position = Vector2(-6, -18 - (MENU_H * 4 + 2 * 3))
 	root.add_child(menu)
-	play_btn = UI.button("Light the wick", _play, 110)
+	play_btn = _menu_btn("Light the wick", _play, MENU_W)
 	menu.add_child(play_btn)
-	menu.add_child(UI.button("Tonight's Candle", _daily, 110))
+	menu.add_child(_menu_btn("Tonight's Candle", _daily, MENU_W))
+	var half := (MENU_W - 2) / 2
+	var row1 := HBoxContainer.new()
+	row1.add_theme_constant_override("separation", 2)
+	journal_btn = _menu_btn("Journal", func(): Journal.open(root).tree_exited.connect(journal_btn.queue_redraw), half)
+	journal_btn.draw.connect(func():
+		if Records.any_new():
+			Journal._dot(journal_btn, Vector2(journal_btn.size.x - 9, 4)))
+	row1.add_child(journal_btn)
+	row1.add_child(_menu_btn("Seed", open_seed_pad, half))
+	menu.add_child(row1)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 2)
-	row.add_child(UI.button("Settings", func(): SettingsPanel.open(root), 54))
-	row.add_child(UI.button("Credits", _credits, 54))
+	row.add_child(_menu_btn("Settings", func(): SettingsPanel.open(root), half))
+	row.add_child(_menu_btn("Credits", _credits, half))
 	menu.add_child(row)
-	RunSave.add_continue_button(menu, main)   # "Continue / Floor N - 12:41 AM" when a run is saved
+	var cont := RunSave.add_continue_button(menu, main)   # "Continue / Floor N - 12:41 AM" when a run is saved
+	if cont:
+		cont.custom_minimum_size.x = MENU_W
 	# --- the Candle Box: pick which candle to light
 	box = HBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
@@ -338,16 +355,113 @@ func _daily() -> void:
 func _credits() -> void:
 	var m := UI.modal(root, "CREDITS")
 	var v: VBoxContainer = m[1]
+	v.add_theme_constant_override("separation", 3)
 	for line in [
-		"Design, code: made for you with Claude",
-		"Dungeon art: 0x72 - DungeonTileset II (CC0)",
-		"Fonts: Kenney Pixel & Mini (CC0)",
-		"Sounds: Kenney audio packs, Ninja Adventure (CC0)",
-		"Music: Ninja Adventure by Pixel-boy & AAA (CC0)",
-		"Engine: Godot Engine (MIT)",
+		["Design, code, pixel art, jingles", "made for this game with Claude"],
+		["Dungeon tiles and creatures", "0x72 - 16x16 DungeonTileset II (CC0)"],
+		["Fonts", "Kenney Pixel and Kenney Mini by Kenney (CC0)"],
+		["Sound effects", "Kenney audio packs, Ninja Adventure (CC0)"],
+		["Music", "Ninja Adventure by Pixel-boy and AAA (CC0)"],
+		["Engine", "Godot Engine (MIT)"],
 	]:
-		v.add_child(UI.label(line, 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))
-	v.add_child(UI.button("Back", func(): m[0].queue_free()))
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 5)
+		var k := UI.label(line[0], 8, UI.EMBER, HORIZONTAL_ALIGNMENT_RIGHT)
+		k.custom_minimum_size = Vector2(120, 0)
+		row.add_child(k)
+		var val := UI.label(line[1], 8, UI.CREAM)
+		val.custom_minimum_size = Vector2(170, 0)
+		row.add_child(val)
+		v.add_child(row)
+	v.add_child(UI.label("Free for any use. Licences are in assets/licenses.", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
+	var back := UI.button("Back", func(): m[0].queue_free())
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	v.add_child(back)
+
+
+## Menu buttons are 20 px tall so Continue + four rows fit under the logo on a 216 px screen.
+func _menu_btn(text: String, cb: Callable, w: int) -> Button:
+	var b := UI.button(text, cb, w)
+	b.custom_minimum_size.y = MENU_H
+	return b
+
+
+# ---------------------------------------------------------------- a seeded run (the keypad)
+
+## Light a house from a number a friend read out (results screen / Journal: "Seed 4821 7730").
+## Seeded runs use the house's default relic pool, so the same seed is the same run for everyone.
+func open_seed_pad() -> void:
+	var m := UI.modal(root, "LIGHT A SEED")
+	var mr: Control = m[0]
+	var v: VBoxContainer = m[1]
+	v.add_theme_constant_override("separation", 3)
+	var st := {"digits": ""}
+	var last: Array = Game.records.get("run_history", [])
+	var shown := UI.label("", 16, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	shown.custom_minimum_size = Vector2(150, 16)
+	v.add_child(shown)
+	var hint := UI.label("", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	v.add_child(hint)
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 2)
+	grid.add_theme_constant_override("v_separation", 2)
+	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var go := UI.button("Light", func(): pass, 30)
+	var refresh := func():
+		var d: String = st["digits"]
+		shown.text = (Records.seed_text(int(d)) if d != "" else "") + ("_" if d.length() < 10 else "")
+		if d != "":
+			hint.text = "Same seed, same house, for anyone"
+		elif not last.is_empty():
+			hint.text = "Your last run: " + Records.seed_text(int(last[0].get("seed", 0)))
+		else:
+			hint.text = "Type the number a friend gave you"
+		go.disabled = d == ""
+		go.modulate.a = 0.4 if d == "" else 1.0
+	var press := func(k: String):
+		var d: String = st["digits"]
+		if k == "<":
+			d = d.substr(0, maxi(0, d.length() - 1))
+		elif d.length() < 10 and not (d == "" and k == "0"):
+			d += k
+		st["digits"] = d
+		refresh.call()
+	var light := func():
+		if st["digits"] == "":
+			return
+		Audio.play("ui_open")
+		main.goto("game", {"seed": int(st["digits"]), "candle": sel if Candles.is_unlocked(sel) else "tallow"})
+	go.pressed.connect(light)
+	for k in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "<", "0"]:
+		var b := UI.button(k if k != "<" else "Del", press.bind(k), 30)
+		b.custom_minimum_size.y = 18
+		if k == "1":
+			b.set_meta("default_focus", true)
+		grid.add_child(b)
+	go.custom_minimum_size.y = 18
+	grid.add_child(go)
+	v.add_child(grid)
+	var back := UI.button("Back", func(): mr.queue_free(), 70)
+	back.custom_minimum_size.y = 20
+	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	v.add_child(back)
+	refresh.call()
+	# a keyboard can type the number straight in
+	var catcher := Node.new()
+	catcher.set_script(preload("res://scripts/ui/key_catcher.gd"))
+	catcher.set_meta("cb", func(ev: InputEventKey):
+		var kc: int = ev.keycode
+		if kc >= KEY_0 and kc <= KEY_9:
+			press.call(str(kc - KEY_0))
+		elif kc >= KEY_KP_0 and kc <= KEY_KP_9:
+			press.call(str(kc - KEY_KP_0))
+		elif kc == KEY_BACKSPACE:
+			press.call("<")
+		elif kc == KEY_KP_ENTER:
+			light.call())
+	mr.add_child(catcher)
 
 
 func on_back() -> void:

@@ -274,10 +274,10 @@ static func death_line(k: String) -> String:
 
 
 ## A small picture of the killer: the creature's first idle frame, or a prop.
-static func killer_icon(k: String) -> Texture2D:
+static func killer_icon(k: String, big := true) -> Texture2D:
 	if k.begins_with("m:"):
 		var kind := k.substr(2)
-		if Art.has("specials/mini_%s_idle_f0" % kind):
+		if big and Art.has("specials/mini_%s_idle_f0" % kind):
 			return Art.tex("specials/mini_%s_idle_f0" % kind)
 		k = "e:" + kind
 	if k.begins_with("e:"):

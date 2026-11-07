@@ -785,7 +785,11 @@ func open_pause() -> void:
 	var resume := UI.button("Resume", func(): world.toggle_pause())
 	resume.set_meta("default_focus", true)
 	v.add_child(resume)
-	v.add_child(UI.button("Settings", func(): SettingsPanel.open(root)))
+	var row1 := HBoxContainer.new()   # Journal | Settings
+	row1.add_theme_constant_override("separation", 6)
+	row1.add_child(UI.button("Journal", func(): Journal.open(root), 96))
+	row1.add_child(UI.button("Settings", func(): SettingsPanel.open(root), 96))
+	v.add_child(row1)
 	var row2 := HBoxContainer.new()
 	row2.add_theme_constant_override("separation", 6)
 	row2.add_child(UI.button("Save & quit", _confirm_save_quit, 96))
