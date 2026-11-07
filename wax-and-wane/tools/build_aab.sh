@@ -193,14 +193,14 @@ verify_aab() {
   local m="$chk/AndroidManifest.xml"
   grep -q "package=\"$PKG\"" "$m" && ok "package $PKG" || bad "package is not $PKG"
   local vc vn
-  vc="$(grep -o 'android:versionCode="[0-9]*"' "$m" | grep -o '[0-9]*')"
-  vn="$(grep -o 'android:versionName="[^"]*"' "$m" | cut -d'"' -f2)"
+  vc="$(grep -o 'android:versionCode="[0-9]*"' "$m" | grep -o '[0-9]*' || true)"
+  vn="$(grep -o 'android:versionName="[^"]*"' "$m" | cut -d'"' -f2 || true)"
   [ -n "${VERSION_CODE:-}" ] && [ "$vc" != "$VERSION_CODE" ] && bad "versionCode $vc (expected $VERSION_CODE)" || ok "versionCode $vc, versionName $vn"
   grep -q "android:targetSdkVersion=\"$TARGET_SDK\"" "$m" && ok "targetSdkVersion $TARGET_SDK" || bad "targetSdkVersion is not $TARGET_SDK"
   grep -q "android:minSdkVersion=\"$MIN_SDK\"" "$m" && ok "minSdkVersion $MIN_SDK" || bad "minSdkVersion is not $MIN_SDK"
   grep -q 'android:debuggable="true"' "$m" && bad "debuggable=true" || ok "not debuggable"
   local perms
-  perms="$(grep -o 'android:name="android.permission[^"]*"' "$m" | cut -d'"' -f2 | sort -u | tr '\n' ' ')"
+  perms="$(grep -o 'android:name="android.permission[^"]*"' "$m" | cut -d'"' -f2 | sort -u | tr '\n' ' ' || true)"
   echo "        permissions: ${perms:-none}"
   for p in $perms; do
     case "$p" in
@@ -234,7 +234,7 @@ verify_aab() {
   mkdir -p "$chk/so"
   unzip -o -q "$aab" 'base/lib/*' -d "$chk/so" 2>/dev/null || true
   local so n=0 abis
-  abis="$(cd "$chk/so/base/lib" 2>/dev/null && ls | tr '\n' ' ')"
+  abis="$(cd "$chk/so/base/lib" 2>/dev/null && ls | tr '\n' ' ' || true)"
   [ "$abis" = "arm64-v8a " ] && ok "native code: arm64-v8a only" || echo "        ABIs: ${abis:-none}"
   local al min
   while IFS= read -r so; do
