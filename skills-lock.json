@@ -43,6 +43,12 @@
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "89496d5dd00f4810205f351759594fc2742bf8eea85a2f2b2d1de59f4bd91576"
     },
+    "game-audio": {
+      "source": "playableintelligence/game-creator",
+      "sourceType": "github",
+      "skillPath": "skills/game-audio/SKILL.md",
+      "computedHash": "6375c20972b4c59831ea21be26136851738f46f7902e1bcbba9e350806dd81b3"
+    },
     "game-feel": {
       "source": "gamedev-skills/awesome-gamedev-agent-skills",
       "sourceType": "github",
@@ -54,6 +60,12 @@
       "sourceType": "github",
       "skillPath": "skills/godot/godot-animation/SKILL.md",
       "computedHash": "ae61cc2a2776ccac494530eefc56bc9322b7680bee91896377b48651cc07ed5e"
+    },
+    "godot-export": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/godot/godot-export/SKILL.md",
+      "computedHash": "9f95f8c1eb0782f9b0a5644e5337a49a58c5b707013c6a3ef4d7bc3063cc971c"
     },
     "godot-nodes-scenes": {
       "source": "gamedev-skills/awesome-gamedev-agent-skills",
@@ -96,6 +108,18 @@
       "sourceType": "github",
       "skillPath": "productivity/skills/memory-management/SKILL.md",
       "computedHash": "8178769b6efe5ef38b1e0eeea682b83ff79a1e3b93acb96aa203ebcfb96d9b98"
+    },
+    "pixel-art-sprites": {
+      "source": "omer-metin/skills-for-antigravity",
+      "sourceType": "github",
+      "skillPath": "skills/pixel-art-sprites/SKILL.md",
+      "computedHash": "6d7f3d45af2fa94e0fe9abe08575e859aa0f24297305ee8b89ac64a7534c9825"
+    },
+    "roguelike": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/genres/roguelike/SKILL.md",
+      "computedHash": "c25acb2dd9a20cd1a2f618bdf4452fba85b2b07b653e0380fa2ff06ec6c8665c"
     },
     "scroll-world": {
       "source": "oso95/scroll-world",
