@@ -130,7 +130,7 @@ const DEFS := {
 }
 
 ## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
-const FLOOR_HP := [1.0, 1.2, 1.6, 2.05]
+const FLOOR_HP := [1.0, 1.2, 1.7, 2.2]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
 
