@@ -152,7 +152,7 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 		"idle":
 			if e.cd <= 0:
 				e._pattern += 1
-				var opts := ["fan", "ring", "fan"] if e.phase < 3 else ["fan", "fan", "ring"]
+				var opts := ["fan", "ring", "fan"] if e.phase < 3 else ["fan"]   # in phase 3 the chimes are the rings
 				e.state = opts[e._pattern % opts.size()]
 				e.t = 0.5 if e.state == "fan" else 0.6
 				e.play_anim("atk", e.t + 0.15)
@@ -161,7 +161,7 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 				e.dir = to_p.normalized()
 		"fan":
 			if e.t <= 0:
-				var n := 3 + e.phase
+				var n := mini(3 + e.phase, 5)
 				var base: float = (w.player.global_position + Vector2(0, -6) - face).angle()
 				for i in n:
 					w.enemy_shot(face, Vector2.from_angle(base + (i - (n - 1) / 2.0) * 0.21) * (74.0 + 6.0 * e.phase), "bolt_cog")
@@ -280,7 +280,7 @@ func _chime(e: Enemy, to_p: Vector2) -> void:
 	w.shake(2.5)
 	w.fx_ring(face, PALE)
 	# a ring of sound with a gap where you stand: keep still and it passes you by
-	var n := 16
+	var n := 12
 	var gap := to_p.angle() + PI
 	for i in n:
 		var a := gap + TAU * (i + 0.5) / n
@@ -292,7 +292,7 @@ func _chime(e: Enemy, to_p: Vector2) -> void:
 		if is_instance_valid(m) and m.alive and m.kind == "cog_sentry":
 			sentries += 1
 	e.mem["chimes"] = e.mem.get("chimes", 0) + 1
-	if sentries < MAX_SENTRIES and e.mem["chimes"] % 2 == 1:
+	if sentries < MAX_SENTRIES and e.mem["chimes"] % 3 == 1:
 		var spot: Vector2 = w.random_free_spot(w.player.global_position, 70.0)
 		var s: Enemy = w.spawn_enemy("cog_sentry", spot)
 		if s:
@@ -397,6 +397,7 @@ func _end_stop(e: Enemy) -> void:
 	e.cd = 1.0
 	e.mem["pips"] = -1
 	e.mem["marks"] = []
+	e._anim_lock = minf(e._anim_lock, 0.3)   # its arms come down as time moves again
 	w.player.z_index = 0
 	Audio.play("bell_toll", -2.0, 0.0, 1.35)
 	Audio.play("thud_heavy", -4.0)
