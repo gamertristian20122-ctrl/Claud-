@@ -35,7 +35,7 @@ func _ready() -> void:
 	add_child(fw)
 	hero = Player.new()
 	hero.world = fw
-	hero.position = Vector2(0, 30)
+	hero.position = Vector2(-78, 44)
 	hero.wax = 105.0
 	add_child(hero)
 	hero.set_physics_process(false)
@@ -68,7 +68,7 @@ func _ready() -> void:
 	var menu := VBoxContainer.new()
 	menu.add_theme_constant_override("separation", 3)
 	menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	menu.position = Vector2(-48, -82)
+	menu.position = Vector2(-30, -98)
 	root.add_child(menu)
 	menu.add_child(UI.button("Light the wick", _play, 110))
 	menu.add_child(UI.button("Settings", func(): SettingsPanel.open(root), 110))

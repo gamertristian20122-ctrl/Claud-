@@ -116,7 +116,7 @@ func _ready() -> void:
 	pause_btn.texture_normal = Art.tex("ui/btn_pause")
 	pause_btn.ignore_texture_size = true
 	pause_btn.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
-	pause_btn.size = Vector2(22, 22)
+	pause_btn.size = Vector2(23, 23)
 	pause_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(pause_btn)
 	# --- bomb button (right edge, middle)
@@ -166,7 +166,7 @@ func _icon(path: String, fallback: String) -> TextureRect:
 	var tr := TextureRect.new()
 	tr.texture = Art.tex(path) if Art.has(path) else Art.tex(fallback)
 	tr.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	tr.custom_minimum_size = Vector2(10, 12)
+	tr.custom_minimum_size = Vector2(11, 13)
 	return tr
 
 
@@ -202,12 +202,12 @@ func safe_insets() -> Vector2:
 func _layout() -> void:
 	var vs := view_size()
 	var ins := safe_insets()
-	bar.position = Vector2(6 + ins.x, 5)
-	clock_label.position = Vector2(8 + ins.x, 17)
-	floor_label.position = Vector2(66 + ins.x, 22)
-	(coin_label.get_parent() as Control).position = Vector2(8 + ins.x, 34)
+	bar.position = Vector2(6 + ins.x, 9)
+	clock_label.position = Vector2(8 + ins.x, 21)
+	floor_label.position = Vector2(8 + ins.x, 52)
+	(coin_label.get_parent() as Control).position = Vector2(8 + ins.x, 37)
 	minimap.position = Vector2(vs.x - minimap.size.x - 28 - ins.y, 4)
-	pause_btn.position = Vector2(vs.x - 25 - ins.y, 3)
+	pause_btn.position = Vector2(vs.x - 26 - ins.y, 3)
 	bomb_btn.position = Vector2(vs.x - 33 - ins.y, 54)
 	boss_box.position = Vector2((vs.x - 170) / 2.0, vs.y - 12)
 	banner.size = Vector2(vs.x, 16)

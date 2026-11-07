@@ -3,9 +3,11 @@
 launcher icons) plus a mock HUD preview.
 
 Every sprite is hand-authored pixel art written as character grids (one
-character = one pixel, see PAL). The only computed shapes are the joystick
-rings (plain midpoint pixel circles) and the flat glow bands behind the app
-icon; nothing is random, so running this script always gives identical PNGs.
+character = one pixel, see PAL). The title letters are hand-drawn
+silhouettes + hand-placed drips; a fixed rule pass adds their shading, slab
+depth and outline. The only computed shapes are the joystick rings (plain
+midpoint pixel circles) and the flat glow bands behind the app icon.
+Nothing is random, so running this script always gives identical PNGs.
 
 Colours: 0x72 DungeonTileset II palette only (see DESIGN.md). Outlines are
 1 px #21141b (HUD) / #222222 (0x72-style objects). Light from the top-left.
@@ -154,8 +156,8 @@ def make_bar():
 # ==========================================================================
 # SMALL ICONS (9x9, 0x72 style: #222222 outline, light from the top-left)
 # ==========================================================================
-# Gold coin with an engraved inner ring (dark on the lit side, light on the
-# shaded side) and a cream glint.
+# Gold coin: cream glint on the lit rim, orange on the shaded rim, and a
+# vertical stamped bar (like the 0x72 coin's light stripe).
 ICON_COIN = """
 ...kkk...
 .kkwyykk.
@@ -973,6 +975,13 @@ def write_review(d):
     ld = lambda n: Image.open(os.path.join(UI, n)).convert("RGBA")
     sheet(os.path.join(d, "bar.png"),
           [bar_mock(1.0), bar_mock(0.62, 0.75), bar_mock(0.2), bar_mock(0.02)], scale=5, cols=1)
+    sheet(os.path.join(d, "all_small_6x.png"),
+          [ld("bar_frame_left.png"), ld("bar_wax_fill.png"), ld("bar_wax_empty.png"),
+           ld("bar_frame_right.png"), ld("icon_coin.png"), ld("icon_bomb.png"), ld("btn_pause.png"),
+           ld("btn_bomb.png"), ld("stick_knob.png"), ld("stick_base.png"), ld("panel_9.png"),
+           ld("button_9.png"), ld("button_9_pressed.png")], scale=6, cols=9)
+    sheet(os.path.join(d, "bar_6x.png"), [bar_mock(1.0), bar_mock(0.62, 0.75), bar_mock(0.2), bar_mock(0.02)],
+          scale=6, cols=2)
     sheet(os.path.join(d, "bar_parts.png"),
           [ld("bar_frame_left.png"), ld("bar_wax_fill.png"), ld("bar_wax_empty.png"),
            ld("bar_frame_right.png"), ld("icon_coin.png"), ld("icon_bomb.png"),
@@ -1022,6 +1031,10 @@ def main():
     make_logo()
     make_app_icons()
     make_preview()
+    # Kenney fonts licence (CC0) next to the other licences
+    lic = "/opt/assets/packs/kenney-fonts/fonts/License.txt"
+    if os.path.exists(lic):
+        shutil.copyfile(lic, os.path.join(ROOT, "assets", "licenses", "Kenney_Fonts_CC0.txt"))
     for p in OUT:
         print(os.path.relpath(p, ROOT), Image.open(p).size)
     if review:
