@@ -375,6 +375,10 @@ func relic_taken(id: String) -> void:
 	var p = world.get("player")
 	if p == null or not p.has_method("hold_aloft"):
 		return
+	if Items.TONICS.has(id):
+		# tonics are small change: a quick sparkle, no pause
+		glint(p.global_position + Vector2(0, -20))
+		return
 	p.hold_aloft(Art.tex(Items.icon(id)))
 
 
