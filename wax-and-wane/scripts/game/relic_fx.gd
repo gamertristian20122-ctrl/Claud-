@@ -340,6 +340,7 @@ func _swarm(s: Shot) -> void:
 		var c := _child(s.global_position, Vector2.from_angle(a), s.dmg * (0.35 if _big else 1.0), "items/fx/spark_blue" if p.blue else "items/fx/spark")
 		if c:
 			c.life = s.life if not _big else 1.6
+			c.vel *= randf_range(0.85, 1.12)   # so the swarm never flies in a neat line
 			c.set_meta("swarm", randf() * TAU)
 			_steer.append(c)
 			n += 1
