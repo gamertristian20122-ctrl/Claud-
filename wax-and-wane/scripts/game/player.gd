@@ -39,6 +39,42 @@ var slow_aura := 0.0
 var witching := false
 var hot_drip := false
 var hit_mult := 1.0
+var charred := 0.0        # max wax sold at the Smoke Altar (shown burnt on the bar)
+var gutter_used := false  # once per floor a killing hit leaves you at 1 minute
+var chill_t := 0.0        # touched by a chilled foe: melt faster for a while
+var keepsake := ""        # held charge item
+var charge := 0
+var rites: Array[String] = []
+# ---- which candle this is (Candle Box)
+var candle_id := "tallow"
+var body_w := 10
+var c_hi := WAX_HI
+var c_wax := WAX
+var c_sh := WAX_SH
+var c_deep := WAX_DEEP
+var stripes := false
+var foil := false
+
+
+func apply_candle(id: String) -> void:
+	candle_id = id
+	var d: Dictionary = Candles.def_of(id)
+	wax = d["wax"]
+	wax_max = d["wax"]
+	drain_mult *= d["drain"]
+	speed *= d["speed"]
+	damage *= d["damage"]
+	fire_delay *= d["fire_delay"]
+	shots = d["shots"]
+	body_w = d["body_w"]
+	var cs: Array = d["colours"]
+	c_hi = Color(cs[0])
+	c_wax = Color(cs[1])
+	c_sh = Color(cs[2])
+	c_deep = Color(cs[3])
+	stripes = d.get("stripes", false)
+	foil = d.get("foil", false)
+	queue_redraw()
 
 # ---- state
 var wax := 120.0
@@ -111,6 +147,25 @@ func _ready() -> void:
 
 func _set_flame_frames() -> void:
 	flame.sprite_frames = Art.anim("hero/flame_blue" if blue else "hero/flame", 10.0)
+
+
+var flame2: AnimatedSprite2D
+
+
+func refresh_rite_look() -> void:
+	if "wick" in rites and flame2 == null:
+		flame2 = AnimatedSprite2D.new()
+		flame2.centered = false
+		flame2.offset = Vector2(-4, -12)
+		flame2.z_index = 2
+		flame2.material = flame.material
+		flame2.sprite_frames = flame.sprite_frames
+		flame2.play("default")
+		flame2.frame = 3
+		add_child(flame2)
+	if "hearth" in rites and not blue:
+		light.color = Color(1.0, 0.55, 0.25)
+	queue_redraw()
 
 
 func set_blue(b: bool) -> void:
@@ -212,6 +267,16 @@ func hurt(amount: float, from_dir: Vector2) -> void:
 		Audio.play("hit_wall", 2.0, 0.05, 0.7)
 		return
 	amount *= hit_mult
+	if wax - amount <= 0.0 and not gutter_used and wax > 1.0:
+		# Guttering: the flame clings on once per floor
+		gutter_used = true
+		amount = wax - 1.0
+		wax = 1.0
+		invuln = 1.6
+		world.fx_text(global_position + Vector2(0, -34), "GUTTERING!", UI.EMBER)
+		Audio.play("low_wax")
+		world.on_player_hurt(amount)
+		return
 	wax -= amount
 	invuln = 1.2
 	_hurt_face = 0.6
@@ -278,8 +343,15 @@ func _process(dt: float) -> void:
 	var flick := 1.0 + 0.045 * sin(t * 13.0) + 0.03 * sin(t * 23.7 + 1.3) + randf_range(-0.015, 0.015)
 	var wf := clampf(wax / 120.0, 0.0, 1.0)
 	light.texture_scale = lerpf(0.95, 1.5, wf) * flick
+	if world and world.get("omen") == "smoky_halls":
+		light.texture_scale = maxf(0.95, light.texture_scale * 0.85)
 	light.energy = (lerpf(0.95, 1.2, wf) * flick) if not dead else move_toward(light.energy, 0.0, dt * 1.5)
 	light.position = flame.position + Vector2(0, -4)
+	if flame2:
+		flame2.position = flame.position + Vector2(3, 2)
+		flame2.visible = flame.visible
+	if "hearth" in rites:
+		light.texture_scale *= 1.12
 	glow.position = light.position
 	glow.energy = 0.0 if dead else 0.55
 	if h != _shown_h or bob != 0:
@@ -296,27 +368,53 @@ func _draw() -> void:
 	var bob := -1 if sin(_bob) > 0.3 else 0
 	var base := -5 + bob   # body bottom sits inside the dish
 	var top := base - h
-	# body: 10 px wide, x -5..4
-	draw_rect(Rect2(-5, top, 10, h), OUTLINE)
-	draw_rect(Rect2(-4, top + 1, 8, h - 1), WAX)
-	draw_rect(Rect2(-4, top + 1, 1, h - 1), WAX_HI)
-	draw_rect(Rect2(1, top + 1, 2, h - 1), WAX_SH)
-	draw_rect(Rect2(3, top + 1, 1, h - 1), WAX_DEEP)
+	# body: body_w px wide, centred on x = 0 (Tallow is 10 px: x -5..4)
+	var L := -body_w / 2
+	var R := L + body_w
+	draw_rect(Rect2(L, top, body_w, h), OUTLINE)
+	draw_rect(Rect2(L + 1, top + 1, body_w - 2, h - 1), c_wax)
+	draw_rect(Rect2(L + 1, top + 1, 1, h - 1), c_hi)
+	if body_w >= 10:
+		draw_rect(Rect2(R - 4, top + 1, 2, h - 1), c_sh)
+	else:
+		draw_rect(Rect2(R - 3, top + 1, 1, h - 1), c_sh)
+	draw_rect(Rect2(R - 2, top + 1, 1, h - 1), c_deep)
+	if stripes:
+		var row := top + 3
+		while row < base - 1:
+			draw_rect(Rect2(L + 1, row, body_w - 2, 1), c_sh)
+			draw_rect(Rect2(R - 2, row, 1, 1), c_deep)
+			row += 3
 	# melted rim + pool
-	draw_rect(Rect2(-4, top + 1, 8, 1), WAX_HI)
-	draw_rect(Rect2(-3, top + 1, 6, 1), POOL)
-	draw_rect(Rect2(-2, top + 2, 4, 1), WAX_SH)
+	draw_rect(Rect2(L + 1, top + 1, body_w - 2, 1), c_hi)
+	draw_rect(Rect2(L + 2, top + 1, body_w - 4, 1), POOL)
+	if body_w >= 8:
+		draw_rect(Rect2(L + 3, top + 2, body_w - 6, 1), c_sh)
 	# drips over the rim (fixed pattern so they read as wax, not noise)
 	if h >= 6:
-		draw_rect(Rect2(-5, top + 1, 1, 3), OUTLINE)
-		draw_rect(Rect2(-6, top + 2, 1, 3), OUTLINE)
-		draw_rect(Rect2(-5, top + 2, 1, 2), WAX_HI)
-		draw_rect(Rect2(-6, top + 5, 2, 1), OUTLINE)
-		draw_rect(Rect2(4, top + 1, 1, 4), OUTLINE)
-		draw_rect(Rect2(5, top + 3, 1, 3), OUTLINE)
-		draw_rect(Rect2(4, top + 3, 1, 2), WAX_SH)
-	if h >= 11:
-		draw_rect(Rect2(0, top + 2, 1, h / 2), WAX_SH)
-		draw_rect(Rect2(-1, top + 2 + h / 2, 3, 1), WAX_SH)
+		draw_rect(Rect2(L, top + 1, 1, 3), OUTLINE)
+		draw_rect(Rect2(L - 1, top + 2, 1, 3), OUTLINE)
+		draw_rect(Rect2(L, top + 2, 1, 2), c_hi)
+		draw_rect(Rect2(L - 1, top + 5, 2, 1), OUTLINE)
+		draw_rect(Rect2(R - 1, top + 1, 1, 4), OUTLINE)
+		draw_rect(Rect2(R, top + 3, 1, 3), OUTLINE)
+		draw_rect(Rect2(R - 1, top + 3, 1, 2), c_sh)
+	if h >= 11 and body_w >= 10:
+		draw_rect(Rect2(0, top + 2, 1, h / 2), c_sh)
+		draw_rect(Rect2(-1, top + 2 + h / 2, 3, 1), c_sh)
+	if foil:
+		# a tea light's foil cup
+		draw_rect(Rect2(L - 1, base - 4, body_w + 2, 5), OUTLINE)
+		draw_rect(Rect2(L, base - 3, body_w, 3), Color("#b6cbcf"))
+		draw_rect(Rect2(L, base - 1, body_w, 1), Color("#7b8994"))
+		draw_rect(Rect2(L + 1, base - 3, 1, 2), Color("#fdf7ed"))
 	# wick
 	draw_rect(Rect2(0, top - 2, 1, 3), OUTLINE)
+	if "wick" in rites:
+		draw_rect(Rect2(3, top, 1, 3), OUTLINE)
+	if "clock" in rites:
+		# a little brass gear on the dish
+		draw_rect(Rect2(5, -5, 3, 3), Color("#facb3e"))
+		draw_rect(Rect2(6, -6, 1, 5), Color("#c56025"))
+		draw_rect(Rect2(4, -4, 5, 1), Color("#c56025"))
+		draw_rect(Rect2(6, -4, 1, 1), Color("#21141b"))

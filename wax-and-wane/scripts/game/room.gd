@@ -30,6 +30,7 @@ var spike_t := 0.0
 var spikes_up := true
 var is_open := true
 var floor_layer: Node2D
+var hidden_dirs: Array = []
 
 
 func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictionary) -> void:
@@ -57,6 +58,10 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 	for dir in neighbours.keys():
 		var kind := "normal"
 		var ntype: String = neighbours[dir]
+		if ntype == "hidden":
+			hidden_dirs.append(dir)
+			_hollow_hint(dir)
+			continue
 		if ntype == "boss" or data["type"] == "boss":
 			kind = "boss"
 		elif ntype == "treasure" or data["type"] == "treasure":
@@ -108,6 +113,60 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 	set_open(data["cleared"], true)
 	if data["cleared"]:
 		light_candles(true)
+
+
+## Cracks and seeping wax mark a hollow wall.
+func _hollow_hint(dir: Vector2i) -> void:
+	var crack := Sprite2D.new()
+	crack.centered = false
+	crack.z_index = -11
+	match dir:
+		Vector2i.UP:
+			crack.texture = Art.tex("0x72/wall_hole_1")
+			crack.position = DOOR_POS[dir] + Vector2(8, 16)
+		Vector2i.DOWN:
+			crack.texture = Art.tex("rooms/decal_crack_2")
+			crack.position = DOOR_POS[dir] + Vector2(8, 0)
+		Vector2i.LEFT:
+			crack.texture = Art.tex("rooms/decal_crack_1")
+			crack.position = Vector2(4, 98)
+		Vector2i.RIGHT:
+			crack.texture = Art.tex("rooms/decal_crack_1")
+			crack.position = Vector2(252, 98)
+			crack.flip_h = true
+	add_child(crack)
+	var puddle := Sprite2D.new()
+	puddle.texture = Art.tex("rooms/decal_wax_puddle")
+	puddle.z_index = -14
+	match dir:
+		Vector2i.UP: puddle.position = Vector2(136, 40)
+		Vector2i.DOWN: puddle.position = Vector2(136, 170)
+		Vector2i.LEFT: puddle.position = Vector2(24, 106)
+		Vector2i.RIGHT: puddle.position = Vector2(248, 106)
+	floor_layer.add_child(puddle)
+
+
+## A bomb near a hollow wall: returns its direction (or ZERO).
+func reveal_near(wp: Vector2, r: float) -> Vector2i:
+	var lp := wp - position
+	var centres := {Vector2i.UP: Vector2(136, 28), Vector2i.DOWN: Vector2(136, 178), Vector2i.LEFT: Vector2(10, 106), Vector2i.RIGHT: Vector2(262, 106)}
+	for d in hidden_dirs:
+		if lp.distance_to(centres[d]) < r + 14.0:
+			return d
+	return Vector2i.ZERO
+
+
+## Open a doorway in this room (used when a hollow wall is blown open).
+func add_door(dir: Vector2i, kind := "normal") -> void:
+	hidden_dirs.erase(dir)
+	door_kind[dir] = kind
+	var s := Sprite2D.new()
+	s.centered = false
+	s.position = DOOR_POS[dir]
+	s.z_index = -12
+	add_child(s)
+	doors[dir] = s
+	set_open(is_open, true)
 
 
 func _fallback_bg() -> Texture2D:

@@ -47,6 +47,10 @@ func _next_run() -> void:
 	while main._busy:
 		await get_tree().process_frame
 	var params := {}
+	if args.has("unlockall"):
+		Game.records["unlocked"] = Candles.ORDER.duplicate()
+	if args.has("candle"):
+		params["candle"] = str(args["candle"])
 	if args.has("seed"):
 		params["seed"] = int(args["seed"]) + results.size()
 	main.goto("game", params)
@@ -76,6 +80,7 @@ func _process(dt: float) -> void:
 		results.append(p)
 		print("[playtest] run %d: %s floor=%d clock=%s kills=%d rooms=%d time=%.0fs relics=%s" % [
 			results.size(), "WIN" if p["won"] else "LOSS", p["floor"], Game.clock_text(p["clock"]), p["kills"], p["rooms"], p["time"], p["relics"]])
+		print("[playtest]    best streak x%d, hits %d" % [p.get("streak", 0), p.get("hits", 0)])
 		runs_left -= 1
 		if runs_left > 0:
 			await get_tree().create_timer(0.5).timeout
@@ -158,6 +163,8 @@ func drive(w: Node) -> Array:
 		var c: Vector2 = w.room.center()
 		if pos.distance_to(c) > 80:
 			mv += (c - pos).normalized() * 0.5
+		if w.keepsake_full() and (w.count_enemies() >= 3 or (w.boss and is_instance_valid(w.boss))):
+			w.use_keepsake()
 		if w.boss and is_instance_valid(w.boss) and p.bombs > 0 and _bomb_cd <= 0 and pos.distance_to(w.boss.global_position) < 30:
 			_bomb_cd = 3.0
 			w.place_bomb()
@@ -232,6 +239,8 @@ func _best_pickup(w: Node, p: Player) -> Node2D:
 			continue
 		if o.price > 0 and p.coins < int(round(o.price * w.shop_discount)):
 			continue
+		if o.record and int(o.record.get("cost_wax", 0)) > 0 and p.wax_max - int(o.record["cost_wax"]) < 90:
+			continue
 		var d: float = o.global_position.distance_to(p.global_position)
 		if d < bd:
 			bd = d
@@ -253,6 +262,8 @@ func _next_dir(w: Node) -> Vector2i:
 	var boss_cell := Vector2i(-1, -1)
 	while not q.is_empty():
 		var c: Vector2i = q.pop_front()
+		if cells[c]["type"] == "secret" and not cells[c].get("revealed", false):
+			continue
 		if c != start and not cells[c]["visited"]:
 			if cells[c]["type"] == "boss":
 				boss_cell = c

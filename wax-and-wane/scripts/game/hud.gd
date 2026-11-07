@@ -31,6 +31,12 @@ var _bomb_press := Vector2.ZERO
 var _bomb_ms := 0
 var ghost_sticks := false
 var banner_band: ColorRect
+var keep_btn: Control
+var _keep_idx := -1
+var _keep_press := Vector2.ZERO
+var _keep_ms := 0
+var streak_box: Control
+var streak_label: Label
 var hint_band: ColorRect
 var _banner_tw: Tween
 var _hint_tw: Tween
@@ -90,6 +96,13 @@ func _ready() -> void:
 	bar.size = Vector2(150, 14)
 	bar.draw.connect(_draw_bar)
 	root.add_child(bar)
+	streak_box = Control.new()
+	streak_box.size = Vector2(40, 16)
+	streak_box.draw.connect(_draw_streak)
+	root.add_child(streak_box)
+	streak_label = UI.label("", 16, UI.EMBER)
+	streak_label.position = Vector2(10, -1)
+	streak_box.add_child(streak_label)
 	clock_label = UI.label("12:00 AM", 16, UI.CREAM)
 	clock_label.position = Vector2(8, 17)
 	root.add_child(clock_label)
@@ -132,6 +145,12 @@ func _ready() -> void:
 	bomb_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bomb_btn.pivot_offset = Vector2(15, 15)
 	root.add_child(bomb_btn)
+	# --- keepsake button (above the bomb button)
+	keep_btn = Control.new()
+	keep_btn.size = Vector2(30, 30)
+	keep_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	keep_btn.draw.connect(_draw_keep)
+	root.add_child(keep_btn)
 	# --- boss bar
 	boss_box = Control.new()
 	boss_box.visible = false
@@ -218,11 +237,13 @@ func _layout() -> void:
 	var ins := safe_insets()
 	bar.position = Vector2(6 + ins.x, 9)
 	clock_label.position = Vector2(8 + ins.x, 21)
+	streak_box.position = Vector2(66 + ins.x, 22)
 	floor_label.position = Vector2(8 + ins.x, 52)
 	(coin_label.get_parent() as Control).position = Vector2(8 + ins.x, 37)
 	minimap.position = Vector2(vs.x - minimap.size.x - 28 - ins.y, 4)
 	pause_btn.position = Vector2(vs.x - 26 - ins.y, 3)
 	bomb_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 118)
+	keep_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 154)
 	boss_box.position = Vector2((vs.x - 170) / 2.0, vs.y - 12)
 	banner.size = Vector2(vs.x, 16)
 	banner.position = Vector2(0, 16)
@@ -313,9 +334,15 @@ func _process(dt: float) -> void:
 	vignette.modulate.a = move_toward(vignette.modulate.a, want, dt * 2.0)
 	clock_label.add_theme_color_override("font_color", UI.RED if low and fmod(_flame_t, 0.8) < 0.4 else UI.CREAM)
 	floor_label.text = world.floor_title()
+	streak_box.visible = world.streak >= 2
+	if world.streak >= 2:
+		streak_label.text = "x%d" % world.streak
+		streak_box.queue_redraw()
 	coin_label.text = "%d" % p.coins
 	bomb_label.text = "%d" % p.bombs
 	bomb_btn.modulate.a = 1.0 if p.bombs > 0 else 0.35
+	keep_btn.visible = p.keepsake != ""
+	keep_btn.queue_redraw()
 	minimap.queue_redraw()
 	move_vec = Vector2.ZERO if _l_idx < 0 else move_vec
 	stick_l.queue_redraw()
@@ -335,8 +362,9 @@ func _draw_bar() -> void:
 	var h: float = fill.get_height() if Art.has("ui/bar_wax_fill") else 10.0
 	var x0: float = left.get_width() if Art.has("ui/bar_frame_left") else 0.0
 	var inner := 128.0
-	var frac := clampf(shown_wax / p.wax_max, 0.0, 1.0)
-	var ghost := clampf(ghost_wax / p.wax_max, 0.0, 1.0)
+	var total := p.wax_max + p.charred     # minutes sold at the Smoke Altar stay burnt at the end
+	var frac := clampf(shown_wax / total, 0.0, 1.0)
+	var ghost := clampf(ghost_wax / total, 0.0, 1.0)
 	var wpx := roundf(inner * frac)
 	var gpx := roundf(inner * ghost)
 	var y0 := 0.0
@@ -350,9 +378,16 @@ func _draw_bar() -> void:
 		bar.draw_texture_rect(fill, Rect2(x0, y0, wpx, h), true)
 	else:
 		bar.draw_rect(Rect2(x0, y0 + 1, wpx, h - 2), Color("#fdf7ed"))
-	# quarter-hour notches (every 15 minutes of wax)
+	if p.charred > 0.0:
+		var cpx := roundf(inner * p.charred / total)
+		var cx := x0 + inner - cpx
+		bar.draw_rect(Rect2(cx, y0 + 1, cpx, h - 2), Color("#21141b"))
+		var i := 0
+		while i < int(cpx):
+			bar.draw_rect(Rect2(cx + i, y0 + 2 + (i % 4) * 2, 1, 1), Color("#483b3a"))
+			i += 2
 	# quarter-hour notches; the 1:00 AM notch is wider
-	var mins := p.wax_max
+	var mins := total
 	var k := 15.0
 	while k < mins:
 		var nx := x0 + roundf(inner * k / mins)
@@ -379,6 +414,37 @@ func _draw_ghosts() -> void:
 		root.draw_texture(base, Vector2(64, vs.y - 52) - base.get_size() / 2.0, Color(1, 1, 1, 0.3))
 	if _r_idx < 0:
 		root.draw_texture(base, Vector2(vs.x - 64, vs.y - 52) - base.get_size() / 2.0, Color(1, 1, 1, 0.3))
+
+
+func _draw_keep() -> void:
+	var p: Player = world.player
+	if p == null or p.keepsake == "":
+		return
+	var full := int(Items.KEEPSAKES[p.keepsake]["pips"])
+	var ready := p.charge >= full
+	var c := Vector2(15, 13)
+	keep_btn.draw_circle(c, 12, Color("#775c55") if not ready else Color("#facb3e"), true, -1.0, false)
+	keep_btn.draw_circle(c, 11, Color("#21141b"), true, -1.0, false)
+	var ic := Art.tex(Items.icon(p.keepsake))
+	var a := 1.0 if ready else 0.45
+	if ready:
+		a = 0.8 + 0.2 * sin(_flame_t * 8.0)
+	keep_btn.draw_texture(ic, (c - ic.get_size() / 2.0).floor(), Color(1, 1, 1, a))
+	var w := full * 5 - 1
+	var x0 := floorf(15 - w / 2.0)
+	for i in full:
+		keep_btn.draw_rect(Rect2(x0 + i * 5, 27, 4, 2), Color("#facb3e") if i < p.charge else Color("#483b3a"))
+
+
+func _draw_streak() -> void:
+	if world.streak < 2:
+		return
+	if not _flame_frames.is_empty():
+		var fr: Texture2D = _flame_frames[int(_flame_t * 12.0) % _flame_frames.size()]
+		streak_box.draw_texture(fr, Vector2(0, 0))
+	var w := roundf(20.0 * clampf(world.streak_t / 2.2, 0.0, 1.0))
+	streak_box.draw_rect(Rect2(10, 14, 20, 1), Color("#483b3a"))
+	streak_box.draw_rect(Rect2(10, 14, w, 1), UI.EMBER)
 
 
 func _draw_boss_bar() -> void:
@@ -430,6 +496,9 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		world.toggle_pause()
 		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Q and not world.paused:
+		world.use_keepsake()
+		return
 	if world.paused:
 		# Godot only turns the first finger into clicks; let any finger tap menu buttons
 		if event is InputEventScreenTouch and not event.pressed and event.index != 0:
@@ -439,6 +508,11 @@ func _input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 		return
 	if world.player == null:
+		return
+	if event is InputEventScreenTouch and event.index == _keep_idx and not event.pressed:
+		_keep_idx = -1
+		if Time.get_ticks_msec() - _keep_ms < 450 and Rect2(keep_btn.position, keep_btn.size).grow(6).has_point(event.position):
+			world.use_keepsake()
 		return
 	if event is InputEventScreenTouch and event.index == _bomb_idx and not event.pressed:
 		_bomb_idx = -1
@@ -463,6 +537,12 @@ func _input(event: InputEvent) -> void:
 			# first finger into mouse clicks, and that finger is usually on the move stick)
 			if Rect2(pause_btn.position, pause_btn.size).grow(4).has_point(pos):
 				world.toggle_pause()
+				get_viewport().set_input_as_handled()
+				return
+			if keep_btn.visible and Rect2(keep_btn.position, keep_btn.size).grow(4).has_point(pos) and _keep_idx < 0:
+				_keep_idx = event.index
+				_keep_press = pos
+				_keep_ms = Time.get_ticks_msec()
 				get_viewport().set_input_as_handled()
 				return
 			if Rect2(bomb_btn.position, bomb_btn.size).grow(4).has_point(pos) and world.player.bombs > 0 and _bomb_idx < 0:

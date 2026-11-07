@@ -46,6 +46,12 @@ var max_hp := 1.0
 var speed := 20.0
 var radius := 5.0
 var half_h := 6.0
+## Marked foes: tougher, glowing, and they pay out (set by the world before _ready).
+var champ := ""
+const CHAMP_TINT := {
+	"ember": Color(1.35, 0.65, 0.45), "gilded": Color(1.4, 1.2, 0.5),
+	"sooty": Color(0.55, 0.5, 0.62), "chilled": Color(0.7, 0.95, 1.35),
+}
 var alive := true
 var active := false
 var boss := false
@@ -118,7 +124,17 @@ func _ready() -> void:
 	var tex: Texture2D = spr.sprite_frames.get_frame_texture(anim, 0)
 	spr.centered = false
 	spr.offset = Vector2(-tex.get_width() / 2.0, -tex.get_height())
-	spr.modulate = def.get("tint", Color.WHITE)
+	spr.modulate = CHAMP_TINT.get(champ, def.get("tint", Color.WHITE))
+	if champ != "":
+		max_hp *= 1.6 if champ == "sooty" else 2.0
+		hp = max_hp
+		var gl := PointLight2D.new()
+		gl.texture = Art.light_tex
+		gl.texture_scale = 0.3
+		gl.energy = 0.55
+		gl.color = CHAMP_TINT[champ]
+		gl.position = Vector2(0, -8)
+		add_child(gl)
 	half_h = tex.get_height() * 0.4
 	if _shadow_tex == null:
 		_shadow_tex = _blob(10, 3)
@@ -182,7 +198,11 @@ func _physics_process(dt: float) -> void:
 	if absf(to_p.x) > 2 and state != "charge":
 		spr.flip_h = to_p.x < 0
 	# contact damage
-	if not p.dead and (flying or _jump_h < 4.0) and dist < radius + 5.0:
+	if not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
+		if champ == "chilled" and not p.dead:
+			if p.chill_t <= 0.0:
+				world.fx_text(p.global_position + Vector2(0, -30), "chilled", Color("#72d6ce"))
+			p.chill_t = 3.0
 		p.hurt((8.0 if boss else 6.0) * world.enemy_dmg_mult(), to_p)
 	# gentle separation
 	for e in world.enemies:
@@ -643,6 +663,18 @@ func _damage(dmg: float, sound: bool) -> void:
 
 func _die() -> void:
 	alive = false
+	if champ == "sooty":
+		var at2 := global_position + Vector2(0, -6)
+		world.fx_smoke(at2)
+		world.fx_ring(at2, Color("#7b8994"))
+		var w2 := world
+		get_tree().create_timer(0.4, false).timeout.connect(func():
+			if is_instance_valid(w2) and not w2.finished:
+				w2.burst(at2, 6, 65.0, "bullet_purple", randf() * TAU))
+	if burn_t > 0.0 and "hearth" in world.player.rites:
+		# Rite of the Hearth: burning foes burst into embers
+		for k in 4:
+			world.shoot_player(global_position + Vector2(0, -6), Vector2.from_angle(PI / 4 + k * PI / 2), world.player, world.player.damage * 0.6)
 	if def.get("death_burst", false):
 		var at := global_position + Vector2(0, -6)
 		var off: float = (world.player.global_position - global_position).angle() + PI / 6.0

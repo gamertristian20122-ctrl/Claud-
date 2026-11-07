@@ -14,6 +14,13 @@ const POOLS := {
 	4: {"e": ["chort", "wogol", "ice_zombie", "skelet"], "h": ["orc_shaman", "masked_orc", "necromancer", "doc"], "f": ["imp"]},
 }
 const LAST_FLOOR := 4
+## Omens of the Hour: floor twists that always pay you back.
+const OMENS := {
+	"draught": {"name": "Cold Draught", "desc": "You melt faster, but drippings are richer"},
+	"tallow_moon": {"name": "Tallow Moon", "desc": "Marked foes everywhere, and they pay double"},
+	"long_night": {"name": "Long Night", "desc": "A bigger floor with two treasure rooms"},
+	"smoky_halls": {"name": "Smoky Halls", "desc": "Your light is shorter, but rooms give twice"},
+}
 ## Base melt: a full candle (120 wax) lasts ~13 minutes if you never get hit.
 const DRAIN_PER_SEC := 120.0 / (11.5 * 60.0)
 
@@ -52,10 +59,33 @@ var _fade: ColorRect
 var _kb_bomb_held := false
 var room_hits := 0
 var room_t0 := 0.0
+# Kindling: quick kills chain and pour minutes back into the candle
+var streak := 0
+var streak_t := 0.0
+var best_streak := 0
+var room_streak_wax := 0.0
+# Smoke Altar / Vigil bookkeeping
+var floor_clean := 0
+var boss_hits := 0
+var pact := ""
+var declined_smoke := false
+var altar_floor := -1
+var hits_total := 0
+var freeze_t := 0.0
 var _intro_root: Control
 
 
+var candle_id := "tallow"
+var omen := ""
+var daily := false
+var unlocked_this_run: Array = []
+
+
 func setup(params: Dictionary) -> void:
+	candle_id = params.get("candle", Game.settings.get("candle", "tallow"))
+	if not Candles.is_unlocked(candle_id):
+		candle_id = "tallow"
+	daily = params.get("daily", false)
 	if params.has("seed"):
 		rng.seed = int(params["seed"])
 	else:
@@ -90,15 +120,36 @@ func _ready() -> void:
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fl.add_child(_fade)
 	relic_pool = Items.RELICS.keys()
-	relic_pool.shuffle()
+	FloorGen.shuffle(relic_pool, rng)
 	player = Player.new()
 	player.world = self
+	player.apply_candle(candle_id)
+	if Game.settings.get("gentle", false):
+		player.drain_mult *= 0.75
 	actors.add_child(player)
+	var cd: Dictionary = Candles.def_of(candle_id)
+	if cd.has("start_relic"):
+		Items.apply(cd["start_relic"], player, self)
+	if cd.has("start_keepsake"):
+		player.keepsake = cd["start_keepsake"]
+		player.charge = int(Items.KEEPSAKES[player.keepsake]["pips"])
+	Game.unlocked_now.connect(_on_unlock)
 	Game.records["runs"] += 1
 	Game.save()
 	_start_floor(1)
 	if not Game.records["seen_intro"] and main.autotest == null:
 		_intro()
+
+
+func _on_unlock(key: String) -> void:
+	unlocked_this_run.append(key)
+	hud.show_banner("NEW CANDLE: %s" % Candles.def_of(key)["name"].to_upper(), "Find it in the Candle Box on the title screen", 2.6)
+	Audio.play("victory", -4.0)
+
+
+func _exit_tree() -> void:
+	if Game.unlocked_now.is_connected(_on_unlock):
+		Game.unlocked_now.disconnect(_on_unlock)
 
 
 func _intro() -> void:
@@ -131,12 +182,34 @@ func _intro() -> void:
 # ---------------------------------------------------------------- floors & rooms
 
 func floor_title() -> String:
-	return "%s  -  %d/%d" % [FLOORS[floor_num]["name"], floor_num, LAST_FLOOR]
+	var t := "%s  -  %d/%d" % [FLOORS[floor_num]["name"], floor_num, LAST_FLOOR]
+	if omen != "":
+		t += "\n" + OMENS[omen]["name"]
+	return t
+
+
+## Wax pickups give more under the Cold Draught.
+func wax_bonus() -> float:
+	return 1.5 if omen == "draught" else 1.0
 
 
 func _start_floor(n: int) -> void:
 	floor_num = n
-	layout = FloorGen.generate(n, rng)
+	floor_clean = 0
+	if n == 2:
+		Game.unlock("tea_light")
+	player.gutter_used = false
+	var last := omen
+	omen = ""
+	if n >= 2 and rng.randf() < 0.4:
+		var keys: Array = OMENS.keys().filter(func(k): return k != last)
+		omen = keys[rng.randi() % keys.size()]
+	if omen == "long_night":
+		layout = FloorGen.generate(n, rng, 3, 2)
+		player.heal(8.0)
+	else:
+		layout = FloorGen.generate(n, rng)
+	shop_discount = (0.6 if player.relics.has("wax_seal") else 1.0) * (0.75 if omen == "smoky_halls" else 1.0)
 	dark.color = FLOORS[n]["dark"]
 	for c in layout["cells"].keys():
 		layout["cells"][c]["seen"] = false
@@ -155,7 +228,10 @@ func _start_floor(n: int) -> void:
 	cam.position = _cam_target(room)
 	_on_enter_room()
 	Audio.music(FLOORS[n]["music"])
-	hud.show_banner(FLOORS[n]["name"].to_upper(), "Floor %d of %d   -   %s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes())], 2.2)
+	var omen_txt := ("   -   Omen: %s" % OMENS[omen]["name"]) if omen != "" else ""
+	hud.show_banner(FLOORS[n]["name"].to_upper(), "Floor %d of %d   -   %s%s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes()), omen_txt], 2.6)
+	if omen != "":
+		hud.show_hint("%s: %s" % [OMENS[omen]["name"], OMENS[omen]["desc"]], 5.0)
 	if n == 1 and (Game.records["seen_intro"] or main.autotest != null):
 		hud.show_hint("Left thumb: move    Right thumb: aim + shoot    Wax = health = time", 7.0)
 
@@ -169,7 +245,12 @@ func _build_room(c: Vector2i) -> Room:
 	var neighbours := {}
 	for d in FloorGen.DIRS:
 		if layout["cells"].has(c + d):
-			neighbours[d] = layout["cells"][c + d]["type"]
+			var nc: Dictionary = layout["cells"][c + d]
+			neighbours[d] = nc["type"]
+			if nc["type"] == "secret" and not nc.get("revealed", false):
+				neighbours[d] = "hidden"
+			if layout["cells"][c]["type"] == "secret" and not layout["cells"][c].get("revealed", false):
+				pass
 	rooms_layer.add_child(r)
 	r.build(self, c, layout["cells"][c], FLOORS[floor_num]["theme"], neighbours)
 	# restore persistent pickups
@@ -184,17 +265,24 @@ func _on_enter_room() -> void:
 	d["seen"] = true
 	for dd in FloorGen.DIRS:
 		if layout["cells"].has(cur_cell + dd):
-			layout["cells"][cur_cell + dd]["seen"] = true
+			var nb: Dictionary = layout["cells"][cur_cell + dd]
+			if nb["type"] != "secret" or nb.get("revealed", false):
+				nb["seen"] = true
 	player.coat_ready = true
 	room_spawned = false
 	room_hits = 0
+	room_streak_wax = 0.0
 	match d["type"]:
 		"treasure":
 			if not d.get("stocked", false):
 				d["stocked"] = true
 				# a choice of two: take one, the other crumbles
 				var a := add_pickup("relic", room.center() + Vector2(-26, 2), _next_relic())
-				var b := add_pickup("relic", room.center() + Vector2(26, 2), _next_relic())
+				var b: Pickup
+				if floor_num == 1 and player.keepsake == "":
+					b = add_pickup("keepsake", room.center() + Vector2(26, 2), Items.KEEPSAKES.keys()[rng.randi() % Items.KEEPSAKES.size()])
+				else:
+					b = add_pickup("relic", room.center() + Vector2(26, 2), _next_relic())
 				a.record["group"] = "treasure"
 				b.record["group"] = "treasure"
 				hud.show_hint("Choose one relic. The other will crumble.", 3.0)
@@ -210,15 +298,27 @@ func _on_enter_room() -> void:
 			if not d["cleared"]:
 				_start_boss()
 				return
+		"secret":
+			if not d.get("stocked", false):
+				d["stocked"] = true
+				_stock_hollow()
 	if not d["cleared"]:
 		room.set_open(false, true)
 		Audio.play("door_close", -3.0)
+		if "clock" in player.rites:
+			freeze_t = 1.5
 		var tw := create_tween()
 		tw.tween_interval(0.25)
 		tw.tween_callback(_spawn_room_enemies)
 
 
+func champ_chance() -> float:
+	var c: float = [0.03, 0.06, 0.09, 0.12][floor_num - 1]
+	return c * (2.0 if candle_id == "black_taper" else 1.0)
+
+
 func _spawn_room_enemies() -> void:
+	var champs_left := 2 if omen == "tallow_moon" else 1
 	var pool: Dictionary = POOLS[floor_num]
 	var depth: int = room.data["dist"]
 	for slot in room.spawn_slots():
@@ -233,7 +333,11 @@ func _spawn_room_enemies() -> void:
 		if pos.distance_to(player.global_position) < 56.0:
 			pos = random_free_spot(player.global_position, 72.0)
 		var list: Array = pool[letter]
-		spawn_enemy(list[rng.randi() % list.size()], pos)
+		var champ := ""
+		if champs_left > 0 and rng.randf() < champ_chance() * (3.0 if omen == "tallow_moon" else 1.0):
+			champs_left -= 1
+			champ = ["ember", "gilded", "sooty", "chilled"][rng.randi() % 4]
+		spawn_enemy(list[rng.randi() % list.size()], pos, champ)
 	# deeper rooms get one extra guest
 	if depth >= 4 and rng.randf() < 0.5:
 		var list2: Array = pool["e"]
@@ -289,6 +393,8 @@ func go_through(dir: Vector2i) -> void:
 func descend() -> void:
 	if transitioning:
 		return
+	if altar_floor == floor_num and pact != "smoke":
+		declined_smoke = true
 	transitioning = true
 	player.frozen = true
 	Audio.play("trapdoor")
@@ -309,6 +415,8 @@ func _clear_room() -> void:
 		return
 	d["cleared"] = true
 	rooms_cleared += 1
+	if d["type"] == "normal":
+		charge_keepsake(2 if run_time - room_t0 <= 8.0 + 2.5 * floor_num else 1)
 	room.set_open(true)
 	room.light_candles()
 	Audio.play("room_clear")
@@ -317,7 +425,10 @@ func _clear_room() -> void:
 		fx_text(player.global_position + Vector2(0, -26), "+%d min" % int(player.hourglass), UI.GOLD)
 	if d["type"] == "normal":
 		_room_reward(room.center() + Vector2(0, 4))
+		if omen == "smoky_halls":
+			_room_reward(room.center() + Vector2(14, 4))
 		if room_hits == 0:
+			floor_clean += 1
 			player.heal(1.0)
 			fx_text(player.global_position + Vector2(0, -34), "CLEAN  +1 min", UI.GOLD)
 		var par := 8.0 + 2.5 * floor_num
@@ -327,6 +438,8 @@ func _clear_room() -> void:
 
 
 func _room_reward(pos: Vector2) -> void:
+	if player.keepsake != "" and rng.randf() < 0.08:
+		add_pickup("match", pos + Vector2(10, 0))
 	if rng.randf() > 0.6 + player.luck * 0.3:
 		return
 	var roll := rng.randf()
@@ -357,7 +470,29 @@ func _stock_shop() -> void:
 	add_pickup("relic", c + Vector2(-40, -4), _next_relic(), 10 + 2 * floor_num)
 	var tonics := Items.TONICS.keys()
 	add_pickup("tonic", c + Vector2(0, -4), tonics[rng.randi() % tonics.size()], 5)
-	add_pickup("wax_big", c + Vector2(40, 0), "", 4)
+	if floor_num >= 2 and rng.randf() < 0.35:
+		var ks: Array = Items.KEEPSAKES.keys().filter(func(k): return k != player.keepsake)
+		add_pickup("keepsake", c + Vector2(40, -4), ks[rng.randi() % ks.size()], 8)
+	else:
+		add_pickup("wax_big", c + Vector2(40, 0), "", 4)
+
+
+func _stock_hollow() -> void:
+	var c := room.center()
+	hud.show_banner("A HOLLOW", "Someone hid this from the dark", 1.6)
+	var roll := rng.randf()
+	if roll < 0.45:
+		add_pickup("wax_big", c + Vector2(-16, 0))
+		add_pickup("wax_big", c + Vector2(16, 0))
+		for i in 3:
+			add_pickup("coin", c + Vector2(0, 14), "", 0, Vector2.from_angle(rng.randf() * TAU) * 40.0)
+	elif roll < 0.8:
+		add_pickup("relic", c, _next_relic())
+	else:
+		for i in 2:
+			add_pickup("bomb", c + Vector2(-12 + 24 * i, 0))
+		add_pickup("match", c + Vector2(0, 16))
+		add_pickup("chest", c + Vector2(0, -20))
 
 
 func _spawn_keeper() -> void:
@@ -391,6 +526,17 @@ func _spawn_pickup_node(r: Room, rec: Dictionary) -> Pickup:
 	return p
 
 
+## A pickup that is never saved with the room (spilled wax).
+func add_loose(kind: String, pos: Vector2, value: float, pop_vel: Vector2) -> Pickup:
+	var p := Pickup.new()
+	p.setup(self, kind, pos - room.position, "", 0)
+	p.value = value
+	p.record = {}
+	room.objects.add_child(p)
+	p.pop(pop_vel)
+	return p
+
+
 func forget_pickup(rec: Dictionary) -> void:
 	if room:
 		room.data["pickups"].erase(rec)
@@ -407,9 +553,15 @@ func collect_item(id: String, pos: Vector2, rec := {}) -> void:
 				var tw := o.create_tween()
 				tw.tween_property(o, "modulate:a", 0.0, 0.4)
 				tw.tween_callback(o.queue_free)
+	if id == "":
+		return
 	Items.apply(id, player, self)
 	Audio.play("item_get")
-	hud.show_banner(Items.display_name(id).to_upper(), Items.desc(id), 2.0)
+	var rite := Items.check_rite(id, player, self)
+	if rite != "" and not Items.rite_of(id) in player.rites:
+		hud.show_banner(Items.display_name(id).to_upper(), "%s   (%s)" % [Items.desc(id), rite], 2.0)
+	elif rite == "":
+		hud.show_banner(Items.display_name(id).to_upper(), Items.desc(id), 2.0)
 	fx_ring(pos + Vector2(0, -16), Color(1.0, 0.8, 0.4))
 	player._happy_face = 1.5
 
@@ -443,7 +595,7 @@ func roll_obstacle_drop(pos: Vector2) -> void:
 
 # ---------------------------------------------------------------- enemies
 
-func spawn_enemy(kind: String, pos: Vector2) -> Enemy:
+func spawn_enemy(kind: String, pos: Vector2, champ := "") -> Enemy:
 	if room == null:
 		return null
 	var r: float = Enemy.DEFS[kind]["r"]
@@ -451,6 +603,7 @@ func spawn_enemy(kind: String, pos: Vector2) -> Enemy:
 		pos = free_spot_near(pos, r)
 	var e := Enemy.new()
 	e.setup(self, kind, pos - room.position, floor_num)
+	e.champ = champ
 	room.objects.add_child(e)
 	enemies.append(e)
 	return e
@@ -468,12 +621,36 @@ func on_enemy_killed(e: Enemy) -> void:
 	kills += 1
 	Audio.play("enemy_die")
 	fx_poof(e.global_position + Vector2(0, -6), false, 1.4)
+	_kindle(e.global_position)
 	if e.boss:
 		_boss_down(e)
 		return
+	for rep in (2 if omen == "tallow_moon" and e.champ != "" else 1):
+		_champ_drop(e)
+	if e.champ != "":
+		return
+	_plain_drop(e)
+
+
+func _champ_drop(e: Enemy) -> void:
+	match e.champ:
+		"ember":
+			for i in 2:
+				add_pickup("wax_small", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 30.0)
+		"gilded":
+			for i in 5:
+				add_pickup("coin", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 45.0)
+		"sooty":
+			add_pickup("bomb", e.global_position)
+		"chilled":
+			add_pickup("wax_big", e.global_position)
+
+
+func _plain_drop(e: Enemy) -> void:
 	var r := rng.randf()
 	var luck := player.luck
-	if r < 0.06 + luck * 0.04:
+	var need := 0.08 if player.wax < 25.0 else 0.0
+	if r < 0.04 + need + luck * 0.04:
 		add_pickup("wax_small", e.global_position)
 	elif r < 0.19 + luck * 0.1:
 		add_pickup("coin", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 25.0)
@@ -481,8 +658,75 @@ func on_enemy_killed(e: Enemy) -> void:
 		add_pickup("bomb", e.global_position)
 
 
+## Kindling streak: kills within 2.2 s of each other pour minutes back into the candle.
+func _kindle(pos: Vector2) -> void:
+	streak = streak + 1 if streak_t > 0.0 else 1
+	streak_t = 2.2
+	best_streak = maxi(best_streak, streak)
+	if streak >= 2:
+		Audio.play("tick", -2.0, 0.0, 1.0 + 0.08 * mini(streak, 10))
+	var gain := 0.0
+	if streak == 3:
+		gain = 1.0
+	elif streak == 5:
+		gain = 2.0
+	elif streak >= 6:
+		gain = 1.0
+	if gain > 0.0 and room_streak_wax < 6.0:
+		gain = minf(gain, 6.0 - room_streak_wax)
+		room_streak_wax += gain
+		player.heal(gain)
+		var word := "KINDLING" if streak < 5 else ("BLAZE" if streak < 8 else "INFERNO")
+		fx_text(player.global_position + Vector2(0, -40), "%s x%d  +%d min" % [word, streak, int(gain)], UI.EMBER)
+	if streak >= 8 and Game.has_method("unlock"):
+		Game.unlock("party")
+
+
 func on_boss_hp(e: Enemy) -> void:
 	hud.set_boss_frac(e.hp / e.max_hp)
+
+
+## After a floor boss: sometimes a Smoke Altar (relics for minutes), else a Vigil for struggling runs.
+func _offer_altar() -> void:
+	var chance := 0.2 + (0.3 if boss_hits == 0 else 0.0) + 0.05 * floor_clean
+	if candle_id == "black_taper":
+		chance = 1.0
+	chance = minf(chance, 0.85 if chance < 1.0 else 1.0)
+	var c := room.center()
+	if pact != "smoke" and (declined_smoke or player.wax < 48.0):
+		if rng.randf() < 0.6:
+			var a := add_pickup("relic", c + Vector2(-44, -34), _next_relic())
+			var gift := "vigil_candle" if rng.randf() < 0.65 or player.relics.has("wax_seal") else "wax_seal"
+			var b := add_pickup("relic", c + Vector2(44, -34), gift)
+			a.record["group"] = "vigil"
+			b.record["group"] = "vigil"
+			hud.show_banner("A VIGIL", "Take one gift. The other will crumble.", 2.0)
+		return
+	if rng.randf() < chance:
+		altar_floor = floor_num
+		var strong := ["twin_wick", "candelabra", "will_o_wisp", "blue_flame", "phoenix_feather"]
+		for side in [-1, 1]:
+			var id := _next_relic()
+			var p := add_pickup("relic", c + Vector2(48 * side, -34), id)
+			p.record["cost_wax"] = 25 if id in strong else 15
+			p.queue_free()
+			_spawn_pickup_node(room, p.record)
+		var altar := Sprite2D.new()
+		altar.texture = Art.tex("rooms/candelabra_unlit")
+		altar.offset = Vector2(0, -12)
+		altar.position = c + Vector2(0, -32) - room.position
+		room.objects.add_child(altar)
+		var l := PointLight2D.new()
+		l.texture = Art.light_tex
+		l.color = Color(0.8, 0.3, 0.45)
+		l.energy = 0.9
+		l.texture_scale = 0.6
+		l.position = Vector2(0, -16)
+		altar.add_child(l)
+		var tw := altar.create_tween().set_loops()
+		tw.tween_callback(func(): fx_smoke(altar.global_position + Vector2(0, -26)))
+		tw.tween_interval(0.6)
+		hud.show_banner("THE SMOKE ALTAR", "Pay in minutes. They never come back.", 2.4)
 
 
 func on_boss_phase(ph: int) -> void:
@@ -504,6 +748,8 @@ func _boss_down(e: Enemy) -> void:
 			fx_poof(m.global_position + Vector2(0, -6), false)
 			m.queue_free()
 	var pos := e.global_position
+	boss_hits = room_hits
+	charge_keepsake(99)
 	if floor_num >= LAST_FLOOR:
 		player.frozen = true
 	var tw := create_tween()
@@ -522,6 +768,9 @@ func _boss_down(e: Enemy) -> void:
 			add_pickup("coin", room.center() + Vector2(0, 14), "", 0, Vector2.from_angle(rng.randf() * TAU) * 50.0)
 		player.damage += 0.15
 		fx_text(room.center() + Vector2(0, -30), "Your flame grows", UI.GOLD)
+		if floor_num == 3:
+			Game.unlock("pillar")
+		_offer_altar()
 		Audio.music(FLOORS[floor_num]["music"]))
 	for i in 6:
 		var t2 := create_tween()
@@ -614,7 +863,49 @@ func enemy_dmg_mult() -> float:
 
 
 func time_scale_enemies() -> float:
+	if freeze_t > 0.0:
+		return 0.0
 	return 1.0 - player.slow_aura
+
+
+# ---------------------------------------------------------------- keepsakes & rites
+
+func keepsake_full() -> bool:
+	return player.keepsake != "" and player.charge >= int(Items.KEEPSAKES[player.keepsake]["pips"])
+
+
+func use_keepsake() -> void:
+	if paused or player.dead or transitioning or finished or not keepsake_full():
+		return
+	player.charge = 0
+	Items.use_keepsake(player.keepsake, player, self)
+	Game.vibrate(40)
+
+
+func charge_keepsake(n: int) -> void:
+	if player.keepsake == "":
+		return
+	var full := int(Items.KEEPSAKES[player.keepsake]["pips"])
+	var was_full := player.charge >= full
+	player.charge = mini(player.charge + n, full)
+	if not was_full and player.charge >= full:
+		Audio.play("tick", 0.0, 0.0, 1.8)
+		hud.show_hint("%s is ready" % Items.display_name(player.keepsake), 1.6)
+
+
+func on_keepsake_taken(id: String, pos: Vector2, rec: Dictionary) -> void:
+	Audio.play("item_get")
+	hud.show_banner(Items.display_name(id).to_upper(), Items.desc(id), 2.0)
+	fx_ring(pos + Vector2(0, -16), UI.GOLD)
+	var group: String = rec.get("group", "")
+	if group != "":
+		collect_item("", pos, rec)   # crumble the other choice
+
+
+func on_rite(r: String) -> void:
+	hud.show_banner(Items.RITES[r]["name"].to_upper(), Items.RITES[r]["desc"], 2.6)
+	fx_ring(player.global_position + Vector2(0, -12), UI.EMBER)
+	Audio.play("victory", -6.0)
 
 
 ## The nearest walkable point to `pos` (spawns must never land inside rocks or columns).
@@ -697,6 +988,15 @@ func _explode(pos: Vector2, r: Room) -> void:
 		sc.modulate.a = 0.8
 		r.floor_layer.add_child(sc)
 	r.blast(pos, bomb_radius)
+	var hd := r.reveal_near(pos, bomb_radius)
+	if hd != Vector2i.ZERO and layout["cells"].has(r.cell + hd):
+		layout["cells"][r.cell + hd]["revealed"] = true
+		layout["cells"][r.cell + hd]["seen"] = true
+		r.add_door(hd)
+		for i in 3:
+			fx_debris(pos + Vector2(randf_range(-8, 8), randf_range(-8, 4)), "R")
+		Audio.play("door_open")
+		hud.show_hint("A hollow in the wall!", 2.0)
 	for e in enemies:
 		if is_instance_valid(e) and e.alive and e.global_position.distance_to(pos) < bomb_radius + e.radius:
 			e.active = true
@@ -727,6 +1027,16 @@ func add_moth() -> void:
 
 func on_player_hurt(amount: float) -> void:
 	room_hits += 1
+	hits_total += 1
+	if streak >= 3:
+		fx_text(player.global_position + Vector2(0, -40), "doused", UI.DIM)
+	streak = 0
+	streak_t = 0.0
+	# Spilled Wax: half the melted wax splashes out; grab it back before it cools
+	if amount >= 2.0 and room:
+		var k := 3 if amount >= 8.0 else 2
+		for i in k:
+			add_loose("wax_warm", player.global_position, amount * 0.5 / k, Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(45.0, 70.0))
 	shake(3.0)
 	hitstop(0.06, 0.05)
 	hud.on_hurt()
@@ -757,6 +1067,7 @@ func _victory() -> void:
 	if finished:
 		return
 	finished = true
+	Game.unlock("black_taper")
 	player.frozen = true
 	hud.release_sticks()
 	Audio.music("victory_jingle", 0.3)
@@ -777,7 +1088,7 @@ func _end_run(won: bool) -> void:
 			Game.records["best_finish"] = maxf(t, 0.01)
 	Game.save()
 	main.goto("results", {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
-		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time})
+		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins})
 
 
 func give_up() -> void:
@@ -824,7 +1135,17 @@ func _physics_process(dt: float) -> void:
 		return
 	if not transitioning and not player.dead and not player.frozen:
 		run_time += dt
-		player.wax -= DRAIN_PER_SEC * player.drain_mult * dt
+		var melt := DRAIN_PER_SEC * player.drain_mult * (1.15 if omen == "draught" else 1.0)
+		if player.wax < 8.0:
+			melt *= 0.6       # the flame clings on when it is nearly out
+		if player.chill_t > 0.0:
+			melt *= 1.5
+		player.wax -= melt * dt
+		streak_t -= dt
+		if streak_t <= 0.0:
+			streak = 0
+		player.chill_t = maxf(0.0, player.chill_t - dt)
+		freeze_t = maxf(0.0, freeze_t - dt)
 		if player.wax <= 0.0:
 			player.wax = 0.0
 			player.die()
@@ -845,6 +1166,9 @@ func _clock_events() -> void:
 		if m >= mark and not _bells.has(mark):
 			_bells[mark] = true
 			Audio.play("bell_toll")
+			if "clock" in player.rites:
+				player.heal(4.0)
+				fx_text(player.global_position + Vector2(0, -34), "+4 min", UI.GOLD)
 			match int(mark):
 				60: hud.show_banner("1:00 AM", "The clock strikes one", 1.8)
 				90: hud.show_banner("1:30 AM", "Half past one. Hurry.", 1.6)
@@ -890,6 +1214,10 @@ func _update_moths(dt: float) -> void:
 			if is_instance_valid(e) and e.alive and e.active and (e.global_position + Vector2(0, -6)).distance_to(m.global_position) < 6 + e.radius:
 				if fmod(t, 0.3) < dt:
 					e.take_hit(0.6, Vector2.ZERO)
+		if "moth" in player.rites and fmod(t + i * 0.5, 1.0) < dt:
+			var tgt := nearest_enemy(m.global_position, 90.0)
+			if tgt:
+				shoot_player(m.global_position, (tgt.global_position + Vector2(0, -6) - m.global_position).normalized(), player, player.damage * 0.5)
 	enemy_shots = enemy_shots.filter(func(s): return is_instance_valid(s))
 
 

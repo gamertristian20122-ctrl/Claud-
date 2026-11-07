@@ -17,6 +17,8 @@ var opened := false
 var record: Dictionary   # the room's saved entry for this pickup (removed when taken)
 var price_label: Label
 var _last_coins := -1
+var value := 0.0          # wax_warm: minutes it gives back
+var life := 0.0           # wax_warm: seconds before it cools and vanishes
 
 
 func setup(w: Node, k: String, pos: Vector2, it := "", pr := 0) -> void:
@@ -45,9 +47,18 @@ func _ready() -> void:
 			spr = _sprite("0x72/bomb_f0", Vector2(0, -6))
 		"wax_small":
 			spr = _sprite("pickups/wax_small", Vector2(0, -5))
+		"wax_warm":
+			spr = _sprite("pickups/wax_small", Vector2(0, -5))
+			life = 4.0
 		"wax_big":
 			spr = _sprite("pickups/wax_big", Vector2(0, -7))
-		"relic", "tonic":
+		"match":
+			var a := AnimatedSprite2D.new()
+			a.sprite_frames = Art.anim("pickups/match", 8.0)
+			a.play("default")
+			a.offset = Vector2(0, -6)
+			spr = a
+		"relic", "tonic", "keepsake":
 			var ped := _sprite("pickups/pedestal", Vector2(0, -5))
 			add_child(ped)
 			spr = _sprite(Items.icon(item), Vector2(0, -18))
@@ -68,8 +79,21 @@ func _ready() -> void:
 			s.z_index = -14
 			spr = s
 	add_child(spr)
-	if kind in ["coin", "wax_small", "wax_big", "bomb"]:
+	if kind in ["coin", "wax_small", "wax_big", "bomb", "wax_warm"]:
 		spr.material = Art.unshaded
+	var wax_cost: int = int(record.get("cost_wax", 0)) if record else 0
+	if wax_cost > 0:
+		# Smoke Altar: paid in minutes cut from the top of the candle
+		var lbl := UI.label("%d" % wax_cost, 8, UI.RED, HORIZONTAL_ALIGNMENT_CENTER)
+		lbl.position = Vector2(-12, 3)
+		lbl.size = Vector2(24, 8)
+		lbl.material = Art.unshaded
+		var ic := Sprite2D.new()
+		ic.texture = Art.tex("pickups/wax_small")
+		ic.position = Vector2(-10, 7)
+		ic.material = Art.unshaded
+		add_child(lbl)
+		add_child(ic)
 	if price > 0:
 		price_label = UI.label("%d" % price, 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
 		price_label.position = Vector2(-12, 3)
@@ -112,9 +136,19 @@ func _physics_process(dt: float) -> void:
 		_z = maxf(0.0, _z + _vz * dt)
 		if _z == 0.0 and _vz < 0:
 			_vz = -_vz * 0.35 if absf(_vz) > 30 else 0.0
+	if kind == "wax_warm":
+		life -= dt
+		var k := clampf(1.0 - life / 4.0, 0.0, 1.0)
+		spr.modulate = Color("#ee8e2e").lerp(Color("#775c55"), k)
+		spr.visible = life > 1.2 or fmod(life, 0.2) > 0.08
+		if life <= 0.0 and not taken:
+			taken = true
+			world.fx_smoke(global_position + Vector2(0, -6))
+			queue_free()
+			return
 	if spr:
 		var bob := 0.0
-		if kind in ["relic", "tonic"]:
+		if kind in ["relic", "tonic", "keepsake"]:
 			bob = sin(_t * 3.0) * 1.5
 		spr.position.y = -_z + bob
 	if price_label and world.player and world.player.coins != _last_coins:
@@ -124,22 +158,43 @@ func _physics_process(dt: float) -> void:
 		return
 	var p: Player = world.player
 	var d := p.global_position.distance_to(global_position)
-	if kind in ["relic", "tonic", "wax_big"] and d < 30.0 and (kind != "wax_big" or price > 0):
+	if kind in ["relic", "tonic", "wax_big", "keepsake"] and d < 30.0 and (kind != "wax_big" or price > 0):
 		var nm := Items.display_name(item) if kind != "wax_big" else "Fresh Candle Stub"
 		var ds := Items.desc(item) if kind != "wax_big" else "+18 minutes of wax"
 		if price > 0:
 			ds += "   -   %d coins" % int(round(price * world.shop_discount))
+		if record and int(record.get("cost_wax", 0)) > 0:
+			ds += "   -   costs %d minutes, for good" % int(record["cost_wax"])
+		var rite := Items.rite_progress_text(item, p) if kind == "relic" else ""
+		if rite != "":
+			ds += "   [%s]" % rite
 		world.hud.preview_item(nm, ds)
-	var reach := 9.0 if kind in ["relic", "tonic", "chest"] else 8.0
+	var reach := 9.0 if kind in ["relic", "tonic", "chest", "keepsake"] else 8.0
 	if kind == "trapdoor":
 		reach = 7.0
 	if d < reach and _t > 0.35:
 		_collect(p)
 	elif kind in ["coin", "wax_small", "wax_big", "bomb"] and d < 22.0 and p.luck > 0.0 and _t > 0.5:
 		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
+	elif kind == "wax_warm" and d < 16.0 and _t > 0.3:
+		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
 
 
 func _collect(p: Player) -> void:
+	var wax_cost: int = int(record.get("cost_wax", 0)) if record else 0
+	if wax_cost > 0:
+		if p.wax_max - wax_cost < 50.0:
+			if _t > 1.0:
+				world.fx_text(global_position + Vector2(0, -28), "not enough wax", UI.RED)
+				_t = 0.36
+			return
+		p.wax_max -= wax_cost
+		p.charred += wax_cost
+		p.wax = minf(p.wax, p.wax_max)
+		world.pact = "smoke"
+		world.fx_text(global_position + Vector2(0, -30), "-%d max min" % wax_cost, UI.RED)
+		Audio.play("snuff_out", 0.0, 0.0, 0.7)
+		record["cost_wax"] = 0
 	if price > 0:
 		var cost := int(round(price * world.shop_discount))
 		if kind in ["wax_small", "wax_big"] and p.wax >= p.wax_max - 0.5:
@@ -164,13 +219,43 @@ func _collect(p: Player) -> void:
 		"wax_small", "wax_big":
 			if p.wax >= p.wax_max - 0.5:
 				return
-			var amt := 6.0 if kind == "wax_small" else 18.0
+			var amt: float = (6.0 if kind == "wax_small" else 18.0) * world.wax_bonus()
 			p.heal(amt)
 			Audio.play("wax_pickup")
 			world.fx_text(global_position + Vector2(0, -14), "+%d min" % int(amt), UI.WAX)
 			_take()
+		"wax_warm":
+			p.heal(value)
+			Audio.play("wax_pickup", 0.0, 0.05, 1.3)
+			world.fx_text(global_position + Vector2(0, -14), "+%.1f min" % value, UI.GOLD)
+			_take()
 		"relic", "tonic":
 			world.collect_item(item, global_position, record if record else {})
+			_take()
+		"keepsake":
+			if _t < 1.0:
+				return
+			var old := p.keepsake
+			var old_charge := p.charge
+			p.keepsake = item
+			p.charge = int(record.get("charge", 0)) if record else 0
+			world.on_keepsake_taken(item, global_position, record if record else {})
+			if old != "":
+				# swap: leave the old keepsake on this pedestal
+				item = old
+				(spr as Sprite2D).texture = Art.tex(Items.icon(old))
+				if record:
+					record["item"] = old
+					record["charge"] = old_charge
+				_t = 0.0
+			else:
+				_take()
+		"match":
+			if p.keepsake == "" or p.charge >= int(Items.KEEPSAKES[p.keepsake]["pips"]):
+				return
+			p.charge += 1
+			Audio.play("tick", 0.0, 0.0, 1.5)
+			world.fx_text(global_position + Vector2(0, -14), "+1 charge", UI.GOLD)
 			_take()
 		"chest":
 			if opened:

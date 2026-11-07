@@ -21,6 +21,7 @@ static func open(parent: Control) -> void:
 	grid.add_child(UI.toggle("Vibration", Game.settings["vibration"], func(b): Game.set_setting("vibration", b)))
 	grid.add_child(UI.toggle("Screen shake", Game.settings["shake"], func(b): Game.set_setting("shake", b)))
 	grid.add_child(UI.toggle("FPS counter", Game.settings["show_fps"], func(b): Game.set_setting("show_fps", b)))
+	grid.add_child(UI.toggle("Gentle burn", Game.settings.get("gentle", false), func(b): Game.set_setting("gentle", b)))
 	v.add_child(grid)
 	v.add_child(UI.button("Back", func():
 		Audio.play("ui_back")

@@ -47,8 +47,21 @@ func _ready() -> void:
 	var floors := ["", "The Cellar", "The Crypt", "The Chapel", "The Belfry"]
 	var f: int = params.get("floor", 1)
 	var t: float = params.get("time", 0.0)
-	var stats := "%s   Rooms %d   Foes %d   %d:%02d played" % [floors[clampi(f, 1, 4)], params.get("rooms", 0), params.get("kills", 0), int(t) / 60, int(t) % 60]
+	var stats := "%s   Rooms %d   Foes %d   Best streak x%d   %d:%02d played" % [floors[clampi(f, 1, 4)], params.get("rooms", 0), params.get("kills", 0), params.get("streak", 0), int(t) / 60, int(t) % 60]
 	v.add_child(UI.label(stats, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
+	for key in params.get("unlocked", []):
+		v.add_child(UI.label("NEW CANDLE: %s" % Candles.def_of(key)["name"].to_upper(), 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
+	if params.get("daily", false):
+		var score := _daily_score()
+		v.add_child(UI.label("Tonight's Candle: %d   (first try %d, best %d)" % [score, int(Game.records["daily_first"]), int(Game.records["daily_best"])], 8, UI.EMBER, HORIZONTAL_ALIGNMENT_CENTER))
+	else:
+		var nxt := ""
+		for k in Candles.ORDER:
+			if not Candles.is_unlocked(k):
+				nxt = "Next candle: %s - %s" % [Candles.def_of(k)["name"], Candles.def_of(k)["unlock_text"]]
+				break
+		if nxt != "":
+			v.add_child(UI.label(nxt, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	var relics: Array = params.get("relics", [])
 	if not relics.is_empty():
 		var row := HBoxContainer.new()
@@ -67,6 +80,26 @@ func _ready() -> void:
 	row2.add_child(UI.button("Light another", func(): main.goto("game")))
 	row2.add_child(UI.button("Title", func(): main.goto("title")))
 	v.add_child(row2)
+
+
+## Score for the nightly seeded run; only the first try of a date counts as "first".
+func _daily_score() -> int:
+	var won: bool = params.get("won", false)
+	var s := 1000 * int(params.get("floor", 1)) + 60 * int(params.get("rooms", 0)) + 5 * int(params.get("kills", 0)) + 10 * int(params.get("coins", 0)) - 40 * int(params.get("hits", 0))
+	if won:
+		s += int(25.0 * (120.0 - float(params.get("clock", 120.0))))
+	s = maxi(s, 0)
+	var today := Time.get_date_string_from_system()
+	if not params.get("scored", false):
+		params["scored"] = true
+		if Game.records.get("daily_date", "") != today:
+			Game.records["daily_date"] = today
+			Game.records["daily_first"] = s
+			Game.records["daily_best"] = s
+		else:
+			Game.records["daily_best"] = maxi(int(Game.records["daily_best"]), s)
+		Game.save()
+	return s
 
 
 func on_back() -> void:

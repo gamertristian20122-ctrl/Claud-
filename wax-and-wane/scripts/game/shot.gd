@@ -52,6 +52,8 @@ func setup(w: Node, pos: Vector2, v: Vector2, kind: String, is_friendly: bool) -
 func _physics_process(dt: float) -> void:
 	if _dead:
 		return
+	if not friendly and world.freeze_t > 0.0:
+		return
 	if lob:
 		_lob_step(dt)
 		return

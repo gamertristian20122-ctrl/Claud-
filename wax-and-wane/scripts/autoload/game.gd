@@ -2,6 +2,7 @@ extends Node
 ## Settings, records and the save file. Written atomically to user://save.cfg.
 
 signal settings_changed
+signal unlocked_now(key: String)
 
 const VERSION := "1.0.1"
 const SAVE_PATH := "user://save.cfg"
@@ -21,6 +22,8 @@ var settings := {
 	"aim_assist": true,
 	"show_fps": false,
 	"swap_sticks": false,
+	"candle": "tallow",
+	"gentle": false,
 }
 var records := {
 	"runs": 0,
@@ -29,6 +32,10 @@ var records := {
 	"best_finish": 0.0,   # earliest clock minute a run was won at (0 = never)
 	"kills": 0,
 	"seen_intro": false,
+	"unlocked": ["tallow"],
+	"daily_date": "",
+	"daily_first": 0,
+	"daily_best": 0,
 }
 
 
@@ -77,6 +84,18 @@ func _set_bus(bus: String, v: float) -> void:
 		return
 	AudioServer.set_bus_mute(idx, v <= 0.001)
 	AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(v, 0.001)))
+
+
+## Unlock a candle; returns true the first time.
+func unlock(key: String) -> bool:
+	var u: Array = records.get("unlocked", ["tallow"])
+	if key in u:
+		return false
+	u.append(key)
+	records["unlocked"] = u
+	save()
+	unlocked_now.emit(key)
+	return true
 
 
 func vibrate(ms: int) -> void:
