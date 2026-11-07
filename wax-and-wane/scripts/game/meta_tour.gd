@@ -147,6 +147,14 @@ static func tour(at: Node) -> void:
 		if cm.get_meta("modal", false):
 			cm.queue_free()
 		await at._wait(0.2)
+	# ---- the achievements list says what each one brings into the house
+	Achievements.open_list(title.root)
+	await at._wait(0.4)
+	await at._shot("achievements_brings")
+	var al: Node = title.root.get_child(title.root.get_child_count() - 1)
+	if al.get_meta("modal", false):
+		al.queue_free()
+	await at._wait(0.2)
 	# ---- the chalk start room, for each device
 	main.goto("game", {"seed": 4242})
 	await at._wait(3.2)

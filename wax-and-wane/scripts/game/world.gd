@@ -1450,9 +1450,10 @@ func fx_stain(pos: Vector2, mat := "wax", big := false) -> void:
 
 ## Save & Continue: run state that lives outside the player (relic knowledge, fog, charges).
 func save_extra() -> Dictionary:
-	return {"relic_fx": RelicFx.of(self).to_dict(), "specials": Specials.of(self).to_dict()}
+	return {"relic_fx": RelicFx.of(self).to_dict(), "specials": Specials.of(self).to_dict(), "records": Records.to_dict(self)}
 
 
 func load_extra(d: Dictionary) -> void:
 	RelicFx.of(self).from_dict(d.get("relic_fx", {}))
 	Specials.of(self).from_dict(d.get("specials", {}))
+	Records.from_dict(self, d.get("records", {}))

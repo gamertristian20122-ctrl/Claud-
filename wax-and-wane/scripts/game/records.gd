@@ -384,6 +384,27 @@ static func log_night(date: String, first: int, best: int, won: bool) -> void:
 		nights.pop_back()
 
 
+## "The Cellar" for floor 1 (any floor the world defines; "the House" past them).
+static func floor_name(n: int, lower_the := false) -> String:
+	var floors: Dictionary = preload("res://scripts/game/world.gd").FLOORS
+	var nm: String = str(floors[n]["name"]) if floors.has(n) else "The House"
+	return ("the " + nm.substr(4)) if lower_the and nm.begins_with("The ") else nm
+
+
+static func floor_count() -> int:
+	return int(preload("res://scripts/game/world.gd").LAST_FLOOR)
+
+
+## Save & Continue (world.save_extra / load_extra): the run-long bits the Journal needs.
+static func to_dict(w: Node) -> Dictionary:
+	return {"seeded": bool(w.get_meta("seeded", false))}
+
+
+static func from_dict(w: Node, d: Dictionary) -> void:
+	if d.get("seeded", false):
+		w.set_meta("seeded", true)
+
+
 ## "4821 7730" style grouping so a seed is easy to read out to a friend.
 static func seed_text(s: int) -> String:
 	var t := str(absi(s))

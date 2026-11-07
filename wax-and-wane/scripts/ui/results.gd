@@ -3,8 +3,6 @@ extends Control
 ## before two. The run's relics (select one to read it), the floor, clock, time played, kills, best
 ## streak, the seed (to share), Tonight's Candle score, and anything that just moved into the house.
 
-const FLOORS := ["", "The Cellar", "The Crypt", "The Chapel", "The Belfry"]
-
 var main: Node
 var params := {}
 var _info: Label
@@ -22,9 +20,10 @@ func _ready() -> void:
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	var won: bool = params.get("won", false)
-	var f := clampi(int(params.get("floor", 1)), 1, 4)
+	var f := maxi(1, int(params.get("floor", 1)))
+	var floors: Dictionary = preload("res://scripts/game/world.gd").FLOORS
 	var room := TextureRect.new()
-	room.texture = Art.tex("rooms/room_" + ["", "cellar", "crypt", "chapel", "belfry"][f])
+	room.texture = Art.tex("rooms/room_" + (str(floors[f]["theme"]) if floors.has(f) else "cellar"))
 	room.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 	room.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	room.modulate = Color(0.32, 0.26, 0.28)
@@ -42,7 +41,7 @@ func _ready() -> void:
 	var t: float = params.get("time", 0.0)
 	# (when snuffed the clock always reads 2:00 AM - the wax is the clock - so show the rooms instead)
 	var mid := Game.clock_text(float(params.get("clock", 120.0))) if won else "Rooms %d" % int(params.get("rooms", 0))
-	var stats := "%s %d/4   %s   Played %d:%02d   Foes %d   Kindling x%d" % [FLOORS[f], f, mid,
+	var stats := "%s %d/%d   %s   Played %d:%02d   Foes %d   Kindling x%d" % [Records.floor_name(f), f, Records.floor_count(), mid,
 		int(t) / 60, int(t) % 60, int(params.get("kills", 0)), int(params.get("streak", 0))]
 	v.add_child(UI.label(stats, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	# ---- the relics (select one to read it)
@@ -154,7 +153,7 @@ func _header(v: VBoxContainer, won: bool, f: int) -> void:
 		return
 	col.add_child(UI.label("SNUFFED OUT", 16, UI.RED))
 	col.add_child(UI.label(Records.death_line(killer), 8, UI.CREAM))
-	var where := "%s, floor %d of 4" % [FLOORS[f], f]
+	var where := "%s, floor %d of %d" % [Records.floor_name(f), f, Records.floor_count()]
 	col.add_child(UI.label(where, 8, UI.EMBER))
 
 

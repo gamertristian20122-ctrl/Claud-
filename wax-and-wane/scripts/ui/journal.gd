@@ -26,7 +26,6 @@ const SIL := Color("#483b3a")
 const LOCK := Color("#775c55")
 const POOL_NAMES := {"treasure": "treasure rooms", "shop": "the shop", "boss": "guardians", "altar": "the Smoke Altar",
 	"hollow": "hollows"}
-const FLOOR_NAMES := ["", "the Cellar", "the Crypt", "the Chapel", "the Belfry"]
 const PROPS := {"seance": "specials/bell_f0", "mirror": "specials/mirror_f0", "musicbox": "specials/musicbox_f0",
 	"study": "specials/lectern_f0", "font": "specials/font_6"}
 const TIER_NAMES := ["Trinket", "Common", "Fine", "Rare", "Treasure"]
@@ -610,10 +609,12 @@ func _d_relic(e: Dictionary) -> void:
 func _haunts(kind: String) -> String:
 	var fl: Array = []
 	var pools: Dictionary = preload("res://scripts/game/world.gd").POOLS
-	for n in [1, 2, 3, 4]:
+	var ns: Array = pools.keys()
+	ns.sort()
+	for n in ns:
 		for slot in pools[n].values():
-			if kind in slot and not FLOOR_NAMES[n] in fl:
-				fl.append(FLOOR_NAMES[n])
+			if kind in slot and not Records.floor_name(n, true) in fl:
+				fl.append(Records.floor_name(n, true))
 	if fl.is_empty():
 		return ""
 	if fl.size() == 1:
@@ -648,7 +649,7 @@ func _d_guardian(e: Dictionary) -> void:
 	var floors: Dictionary = preload("res://scripts/game/world.gd").FLOORS
 	for n in floors:
 		if kind in floors[n]["bosses"]:
-			fl = FLOOR_NAMES[n]
+			fl = Records.floor_name(n, true)
 	var subs: Array = [["Guardian of " + fl, UI.EMBER]]
 	_head(_creature_pic(kind, known), Records.title_case(str(d.get("name", kind))) if known else "???", subs, UI.GOLD if known else UI.DIM)
 	if not known:
@@ -691,7 +692,7 @@ func _d_mini(e: Dictionary) -> void:
 	else:
 		pic = _creature_pic(mk, known)
 	var from := str(Enemy.DEFS.get(mk, {}).get("name", mk))
-	_head(pic, Records.title_case(str(info["name"])) if known else "???", [["A house champion of " + FLOOR_NAMES[int(info["floor"])], UI.EMBER]], UI.GOLD if known else UI.DIM)
+	_head(pic, Records.title_case(str(info["name"])) if known else "???", [["A house champion of " + Records.floor_name(int(info["floor"]), true), UI.EMBER]], UI.GOLD if known else UI.DIM)
 	if not known:
 		_text("Twice the size of any %s. Not met yet." % from, UI.DIM)
 		return
@@ -742,7 +743,7 @@ func _d_totals() -> void:
 	var rec := Game.records
 	_head(_pic(Art.tex("ui/icon_medal"), 2), "The Ledger", [["Everything you have burnt through", UI.EMBER]])
 	var bf := int(rec.get("best_floor", 0))
-	_text("Runs %d   Wins %d   Deepest: %s" % [int(rec.get("runs", 0)), int(rec.get("wins", 0)), FLOOR_NAMES[clampi(bf, 0, 4)].capitalize() if bf > 0 else "-"], UI.CREAM)
+	_text("Runs %d   Wins %d   Deepest: %s" % [int(rec.get("runs", 0)), int(rec.get("wins", 0)), Records.floor_name(bf) if bf > 0 else "-"], UI.CREAM)
 	_text("Creatures snuffed %s   Best Kindling x%d" % [_num(int(rec.get("kills", 0))), int(rec.get("best_streak", 0))], UI.CREAM)
 	_text("Achievements %d / %d" % [Achievements.count(), Achievements.LIST.size()], UI.CREAM)
 	_text("Best finish, by candle", UI.EMBER)
@@ -772,11 +773,11 @@ func _d_run(r: Dictionary) -> void:
 	var killer := str(r.get("killer", ""))
 	var tex: Texture2D = Art.tex("ui/icon_medal") if won else Records.killer_icon(killer)
 	var k := 2 if tex and tex.get_width() <= 24 and tex.get_height() <= 24 else 1
-	var fl := clampi(int(r.get("floor", 1)), 1, 4)
+	var fl := maxi(1, int(r.get("floor", 1)))
 	var title := "Run %d" % int(r.get("n", 0))
 	var sub := ("Done by %s" % Game.clock_text(float(r.get("clock", 0.0)))) if won else Records.death_line(killer)
 	_head(_pic(tex, k), title, [[sub, UI.GOLD if won else UI.RED]], UI.GOLD)
-	var where := "%s - %s (%d/4)" % [Candles.def_of(str(r.get("candle", "tallow")))["name"], FLOOR_NAMES[fl].capitalize(), fl]
+	var where := "%s - %s (%d/%d)" % [Candles.def_of(str(r.get("candle", "tallow")))["name"], Records.floor_name(fl), fl, Records.floor_count()]
 	if won:
 		where += " - " + Game.clock_text(float(r.get("clock", 0.0)))
 	_text(where, UI.CREAM)
@@ -853,8 +854,7 @@ class JSlot extends Button:
 				line2 = "%d night%s" % [(Game.records.get("daily_history", []) as Array).size(), "" if (Game.records.get("daily_history", []) as Array).size() == 1 else "s"]
 			"run":
 				var r: Dictionary = e["run"]
-				var fl := clampi(int(r.get("floor", 1)), 1, 4)
-				line1 = "Run %d  %s" % [int(r.get("n", 0)), Journal.FLOOR_NAMES[fl].capitalize()]
+				line1 = "Run %d  %s" % [int(r.get("n", 0)), Records.floor_name(maxi(1, int(r.get("floor", 1))))]
 				if r.get("won", false):
 					line2 = "Done by " + Game.clock_text(float(r.get("clock", 0.0)))
 					c2 = UI.GOLD
