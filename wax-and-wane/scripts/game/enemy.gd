@@ -144,6 +144,9 @@ const FLOOR_HP := [1.0, 1.35, 1.85, 2.4, 2.5]
 const TOUCH := [5, 6, 7, 7, 7]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
+## A Hooded Mourner calls at most this many Shamblers in its life; then it is spent: no more
+## teleports, it only backs away. (Two of them in a locked Seance room used to summon forever.)
+const SUMMON_BUDGET := 6
 
 var world: Node
 var kind := ""
@@ -656,18 +659,20 @@ func _ai_caster(ddt: float, to_p: Vector2, _dist: float) -> void:
 
 
 func _ai_summoner(ddt: float, to_p: Vector2, dist: float) -> void:
-	_walk(ddt, -to_p if dist < 70 else to_p.orthogonal(), speed)
-	if dist < 36 and state != "tp":
+	var left: int = int(mem.get("summon_left", SUMMON_BUDGET))
+	_walk(ddt, -to_p if dist < 70 else to_p.orthogonal(), speed * (1.0 if left > 0 else 0.8))
+	if dist < 36 and state != "tp" and left > 0:
 		_teleport()
 	minions = minions.filter(func(m): return is_instance_valid(m) and m.alive)
 	if cd <= 0:
 		cd = 4.2
-		if minions.size() < 3:
+		if minions.size() < 3 and left > 0:
 			_telegraph(Color(0.5, 1.0, 0.6))
-			for i in 2:
+			for i in mini(2, left):
 				var m: Enemy = world.spawn_enemy("tiny_zombie", global_position + Vector2.from_angle(randf() * TAU) * 14.0)
 				if m:
 					minions.append(m)
+			mem["summon_left"] = left - mini(2, left)
 			Audio.play("teleport", -4.0, 0.1, 0.7)
 
 
