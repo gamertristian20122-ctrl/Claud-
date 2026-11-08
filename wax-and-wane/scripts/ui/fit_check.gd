@@ -41,15 +41,16 @@ static func _short(t: String) -> String:
 ## CanvasLayer. Text in the same group was laid out together and is not compared.
 static func _owner(n: Node) -> String:
 	var p := n
+	var group := ""
 	while p:
-		if p.has_meta("fit_group"):
-			return "%s#%d" % [p.get_meta("fit_group"), p.get_instance_id()]
-		if p.get_meta("modal", false):
+		if group == "" and p.has_meta("fit_group"):
+			group = str(p.get_meta("fit_group"))
+		if group == "" and p.get_meta("modal", false):
 			return "modal#%d" % p.get_instance_id()
 		if p is CanvasLayer:
-			return "layer#%d" % p.get_instance_id()
+			return "%s@layer#%d" % [group, p.get_instance_id()]
 		p = p.get_parent()
-	return "root"
+	return group + "@root"
 
 
 ## True for things drawn in the world (floating text over the room), not on the screen's UI.
@@ -75,6 +76,8 @@ static func _alpha(ci: CanvasItem) -> float:
 
 static func _collect(n: Node, items: Array, vs: Vector2) -> void:
 	if n is CanvasItem and not (n as CanvasItem).visible:
+		return
+	if n.get_meta("fit_skip", false):   # in motion on purpose (a toast sliding in)
 		return
 	if n is CanvasLayer and not (n as CanvasLayer).visible:
 		return

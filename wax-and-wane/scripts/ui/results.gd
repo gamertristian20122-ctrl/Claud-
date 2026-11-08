@@ -75,10 +75,14 @@ func _ready() -> void:
 	# ---- what moved into the house: two rows at most (a first win can bring seven), the rest in the Journal
 	var news: Array = []
 	for id in params.get("new_unlocks", []):
-		news.append([Art.tex(Items.icon(id)), "NEW IN THE HOUSE: " + Items.display_name(id).to_upper()])
+		news.append([Art.tex(Items.icon(id)), "NEW IN THE HOUSE: " + Items.display_name(id).to_upper(), Items.display_name(id).to_upper()])
 	for key in params.get("unlocked", []):
-		news.append([null, "NEW CANDLE: %s" % Candles.def_of(key)["name"].to_upper()])
-	if not news.is_empty():
+		news.append([null, "NEW CANDLE: %s" % Candles.def_of(key)["name"].to_upper(), ""])
+	var one_row := _news_row(news)   # two new relics side by side when they fit on one line
+	if one_row:
+		v.add_child(one_row)
+		Audio.play("unlock", -3.0)
+	elif not news.is_empty():
 		var last: HBoxContainer
 		for n in news.slice(0, MAX_NEWS):
 			last = HBoxContainer.new()
@@ -96,7 +100,8 @@ func _ready() -> void:
 		if news.size() > MAX_NEWS:
 			var more := UI.label("+%d more in the Journal" % (news.size() - MAX_NEWS), 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
 			more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			if last.get_combined_minimum_size().x + more.get_combined_minimum_size().x + 8 <= 320:
+			var n2: Array = news[MAX_NEWS - 1]
+			if (19.0 if n2[0] else 0.0) + _tw(n2[1]) + 11.0 + _tw(more.text) <= 320.0:
 				var gap := Control.new()
 				gap.custom_minimum_size = Vector2(5, 0)
 				last.add_child(gap)
@@ -104,6 +109,19 @@ func _ready() -> void:
 			else:
 				v.add_child(more)
 		Audio.play("unlock", -3.0)
+	# ---- achievements earned as the run ended: listed here, never toasted over this screen
+	var got := Achievements.take_pending()
+	if not got.is_empty():
+		var names: Array = []
+		for id in got.slice(0, 3):
+			names.append(Achievements.name_of(id))
+		var line := ("ACHIEVEMENT: %s" if got.size() == 1 else "ACHIEVEMENTS: %s") % ", ".join(names)
+		if got.size() > 3:
+			line += " +%d" % (got.size() - 3)
+		var al := UI.label(line, 8, UI.WAX, HORIZONTAL_ALIGNMENT_CENTER)
+		al.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		al.custom_minimum_size = Vector2(300, 0)
+		v.add_child(al)
 	# ---- Tonight's Candle, or the next candle to unlock
 	if params.get("daily", false):
 		var score := _daily_score()
@@ -131,6 +149,48 @@ func _ready() -> void:
 	_fit()
 	_fit.call_deferred()   # again once the flow rows and labels have their real sizes
 	get_viewport().size_changed.connect(_fit)
+
+
+## "NEW IN THE HOUSE:  [icon] DUST BUNNY  [icon] BELL ROPE  +5 more in the Journal" on one line,
+## when the first two pieces of news are relics and the line fits; else null (one row each).
+func _news_row(news: Array) -> HBoxContainer:
+	if news.size() < 2 or news[0][0] == null or news[1][0] == null:
+		return null
+	# measured with the font (a Label's minimum size is not reliable before it is in the tree)
+	var more_text := "  +%d more in the Journal" % (news.size() - 2) if news.size() > 2 else ""
+	var w := _tw("NEW IN THE HOUSE:") + 3.0
+	for n in news.slice(0, 2):
+		w += 3.0 + 3.0 + (n[0] as Texture2D).get_width() + 3.0 + _tw(n[2]) + 3.0
+	if more_text != "":
+		w += _tw(more_text)
+	if w > 330.0:
+		return null
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 3)
+	var head := UI.label("NEW IN THE HOUSE:", 8, UI.GOLD)
+	head.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(head)
+	for n in news.slice(0, 2):
+		var gap := Control.new()
+		gap.custom_minimum_size = Vector2(3, 0)
+		row.add_child(gap)
+		var ic := TextureRect.new()
+		ic.texture = n[0]
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		row.add_child(ic)
+		var l := UI.label(n[2], 8, UI.GOLD)
+		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(l)
+	if more_text != "":
+		var more := UI.label(more_text, 8, UI.GOLD)
+		more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(more)
+	return row
+
+
+static func _tw(text: String) -> float:
+	return Art.font_small.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 1.0
 
 
 ## The relic icons: one row of RELIC_ROW; with more, RELIC_ROW - 1 and a "+N" that shows them all.

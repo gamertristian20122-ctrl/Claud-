@@ -208,6 +208,12 @@ func _ready() -> void:
 	keep_btn.add_child(keep_key)
 	for b in [pause_btn, bomb_btn]:
 		b.focus_mode = Control.FOCUS_NONE
+	# FitCheck (--fit tours): which pieces of the HUD are laid out together
+	for pair in [[bar, "status"], [clock_label, "status"], [spare_label, "status"], [streak_box, "status"],
+			[floor_label, "status"], [coin_label.get_parent(), "status"], [minimap, "map"], [pause_btn, "map"],
+			[banner, "banner"], [banner_sub, "banner"], [hint, "hints"], [preview, "hints"],
+			[boss_box, "boss"], [bomb_btn, "buttons"], [keep_btn, "buttons"]]:
+		(pair[0] as Node).set_meta("fit_group", pair[1])
 	process_physics_priority = -10      # read input before the world moves Tallow
 	get_viewport().size_changed.connect(_layout)
 	Controls.device_changed.connect(_on_device)
