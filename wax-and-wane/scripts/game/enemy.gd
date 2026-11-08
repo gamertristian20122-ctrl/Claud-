@@ -30,7 +30,8 @@ void fragment() {
 ## its remains `stain` the floor (Color). Optional: `fly`, `heavy`, `touch` (contact damage), `swarm` (arrives
 ## in a group of N), `split` ([kind, n] on death), `small_fry` (kills do not feed Kindling), `glow` (unshaded),
 ## `face_dir` (faces where it goes), `no_flip`,
-## `sprite` (shared art), `tint`, `cd` (attack cooldown). Bosses add `title`, `phase_lines`, `victory`.
+## `sprite` (shared art), `tint`, `glow_px` (palette colours drawn unlit: eye-lights, lanterns; CreatureGlow),
+## `cd` (attack cooldown). Bosses add `title`, `phase_lines`, `victory`.
 const DEFS := {
 	# ---- the 0x72 lodgers
 	"tiny_zombie": {"hp": 4.0, "speed": 26.0, "ai": "chase", "r": 5.0, "name": "Coal-Bin Shambler",
@@ -113,7 +114,7 @@ const DEFS := {
 		"title": "Keeper of the crypt keys", "lore": "Locked the crypt every night for a hundred years. Tonight it locks you in.",
 		"stain": Color("#3d734f")},
 	"necro_boss": {"hp": 148.0, "speed": 24.0, "ai": "boss_vicar", "r": 10.0, "boss": true, "heavy": true, "name": "THE HOLLOW WARDEN",
-		"sprite": "ogre", "tint": Color(0.78, 0.74, 1.0), "title": "It watches the empty pews",
+		"glow_px": ["#cae6f5", "#72d6ce", "#fdf7ed", "#49a790"], "title": "It watches the empty pews",
 		"lore": "Nothing is left inside its robes but the habit of keeping watch.", "stain": Color("#5f2d56")},
 	"big_demon": {"hp": 230.0, "speed": 30.0, "ai": "boss_fiend", "r": 12.0, "boss": true, "heavy": true, "name": "THE HOUR FIEND",
 		"title": "It wants the clock to strike two", "victory": "THE HOUR FIEND IS SNUFFED",
@@ -779,12 +780,14 @@ func _ai_boss_vicar(ddt: float, to_p: Vector2, dist: float) -> void:
 						state = "summon"
 						t = 0.6
 						_telegraph(Color(0.5, 1.0, 0.6))
+						play_anim("atk", 0.9)   # lantern raised (fix/art)
 					_:
 						state = "spiral"
 						t = 2.2 + 0.4 * phase
 						_spin = randf() * TAU
 						_wob = 0.35
 						_telegraph(Color(0.8, 0.5, 1.0))
+						play_anim("atk", t)   # lantern raised for the whole spiral (fix/art)
 		"spiral":
 			_wob -= ddt
 			if _wob <= 0:

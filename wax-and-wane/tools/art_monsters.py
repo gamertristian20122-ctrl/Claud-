@@ -905,108 +905,14 @@ def build_gargoyle():
 
 
 # ==========================================================================
-# BOLTS (7x7 enemy shots, unshaded in game). Readable colours that never match
-# Tallow's own orange embers: paper white, sound-wave cyan, rose wax, tumbling bone.
+# BOLTS (7x7 enemy shots): drawn by tools/art_fx2.py, which owns every enemy shot (fix/art UX-02:
+# dark-rimmed, white-hot tokens that never read as Tallow's embers). Written here too so a run of
+# this tool alone leaves them current, and shown on the --review sheet.
 # ==========================================================================
-BOLTS = {
-    "bolt_page": [
-        """
-        .kkkkk.
-        kwwwwwk
-        kw555wk
-        kwwwwwk
-        kw55wwk
-        kwwwwwk
-        .kkkkk.
-        """,
-        """
-        .......
-        kkkkkkk
-        kw555wk
-        kwwwwwk
-        kw55w5k
-        kkkkkkk
-        .......
-        """,
-    ],
-    "bolt_ring": [
-        """
-        ..hhh..
-        .ht.th.
-        ht...th
-        h.....h
-        ht...th
-        .ht.th.
-        ..hhh..
-        """,
-        """
-        ..ttt..
-        .th.ht.
-        th...ht
-        t.....t
-        th...ht
-        .th.ht.
-        ..ttt..
-        """,
-    ],
-    # design pass: a hotter cream core (2.4:1 -> 3:1+ on the lit cellar floor, tools/design_contrast.py)
-    "bolt_wax": [
-        """
-        ...q...
-        ..qwq..
-        .qwwwq.
-        .qwwPp.
-        .PwPPp.
-        ..ppp..
-        .......
-        """,
-        """
-        ...q...
-        ..qwq..
-        .qwwPq.
-        .qwwPp.
-        .PPwPp.
-        ..ppp..
-        .......
-        """,
-    ],
-    "bolt_bone": [
-        """
-        ww.....
-        wAw....
-        .wAw...
-        ..wAw..
-        ...wAw.
-        ....wAw
-        .....ww
-        """,
-        """
-        .....ww
-        ....wAw
-        ...wAw.
-        ..wAw..
-        .wAw...
-        wAw....
-        ww.....
-        """,
-    ],
-}
-
-
 def build_bolts():
-    for name, frames in BOLTS.items():
-        for i, block in enumerate(frames):
-            rows = rows_of(block)
-            cv = Canvas(7, 7)
-            cv.blit(rows)
-            im = Image.new("RGBA", (7, 7), (0, 0, 0, 0))
-            px = im.load()
-            for y in range(7):
-                for x in range(7):
-                    ch = cv.c[y][x]
-                    if ch != ".":
-                        px[x, y] = rgba(PAL[ch])
-            save_fx(im, "%s_f%d" % (name, i))
+    import art_fx2
+    for n, im in art_fx2.enemy_shot_images(["bolt_page", "bolt_ring", "bolt_wax", "bolt_bone"]).items():
+        save_fx(im, n)
 
 
 # ==========================================================================
@@ -1023,6 +929,47 @@ def build_0x72_fixups():
         frames.append(Image.open(p).convert("RGBA"))
     save_anim("zombie", "idle", frames)
     save_anim("zombie", "run", [frames[1], frames[2], frames[3], frames[0]])
+
+
+# ==========================================================================
+# House touches on 0x72 lodgers (fix/art): the 0x72 frames with a few pixels of our own, written
+# under our naming so Enemy.frames_for() picks them up instead of the stock frames. Edits are placed
+# from each frame's top row, so they ride the stock idle/run bob exactly.
+# ==========================================================================
+def ox72_frames(name, anim):
+    """The stock frames of `anim` ("idle" / "run"; the single `_anim` set for creatures that have one)."""
+    out = []
+    for f in range(4):
+        for stem in ("%s_%s_anim_f%d" % (name, anim, f), "%s_anim_f%d" % (name, f)):
+            p = os.path.join(OX72, stem + ".png")
+            if os.path.exists(p):
+                out.append(Image.open(p).convert("RGBA"))
+                break
+    return out
+
+
+def top_row(im):
+    a = im.split()[3].load()
+    for y in range(im.height):
+        if any(a[x, y] for x in range(im.width)):
+            return y
+    return im.height
+
+
+def build_house_touches():
+    # Puddle Lump (muddy): coal dust and rainwater. A drop of rainwater glints in each eye hole, the one
+    # light thing on it, so it never vanishes on a dark floor (Enemy.DEFS glow_px #cae6f5, UX-03).
+    glint = rgba(PAL["h"])
+    for anim in ("idle", "run"):
+        frames = []
+        for im in ox72_frames("muddy", anim):
+            im = im.copy()
+            t = top_row(im)
+            for x in (6, 11):
+                im.putpixel((x, t + 3), glint)
+            frames.append(im)
+        if frames:
+            save_anim("muddy", anim, frames)
 
 
 # ==========================================================================
@@ -1051,11 +998,15 @@ def contact_sheet(path, names, bg=(36, 30, 36, 255), scale=4):
     sheet.resize((W * scale, H * scale), Image.NEAREST).save(path)
 
 
+TOWER_OWNED = ("cog_sentry_", "minute_wraith_", "keeper_")
+
+
 def main():
-    # clear old PNGs (keep Godot's .import files so re-running does not churn the import cache)
+    # clear old PNGs (keep Godot's .import files so re-running does not churn the import cache),
+    # but never the Clock Tower creatures: tools/art_tower.py writes those into the same folder
     os.makedirs(OUTDIR, exist_ok=True)
     for f in os.listdir(OUTDIR):
-        if f.endswith(".png"):
+        if f.endswith(".png") and not f.startswith(TOWER_OWNED):
             os.remove(os.path.join(OUTDIR, f))
     build_wax_blob()
     build_dribble()
@@ -1073,6 +1024,7 @@ def main():
     build_bosses()
     build_bolts()
     build_0x72_fixups()
+    build_house_touches()
     if "--review" in sys.argv:
         d = sys.argv[sys.argv.index("--review") + 1]
         os.makedirs(d, exist_ok=True)

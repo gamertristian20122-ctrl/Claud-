@@ -350,7 +350,126 @@ def build_pendulum():
     save_anim("pendulum", "atk", [pendulum_frame(0, True), pendulum_frame(2, True)])
 
 
-BOSS_NAMES = ["wax_mother", "sexton", "choir", "pendulum"]
+# --------------------------------------------------------------------------
+# THE HOLLOW WARDEN (36x40): empty vestments that still keep watch. A pewter cowl and robe
+# hovering over a ragged hem, a wine stole, nothing in the hood but two cold eye-lights, and
+# a brass lantern hanging from an empty sleeve. The eye-lights and the lantern glass use the
+# pale/cyan pair (h, t) that nothing else on it uses: the game draws exactly those colours
+# unlit (Enemy.DEFS["necro_boss"]["glow_px"]), so they shine in the dark chapel.
+# --------------------------------------------------------------------------
+LANTERN = """
+...o...
+..o.o..
+.yoooy.
+.chthc.
+.ctwtc.
+.ctwtc.
+.cTtTc.
+.yoooy.
+..ccc..
+"""
+
+
+def spans(cv, rows, x0, y0, ch):
+    """rows = [(left, right), ...] inclusive pixel spans, one per row from y0; None skips a row."""
+    for i, r in enumerate(rows):
+        if r:
+            for x in range(x0 + r[0], x0 + r[1] + 1):
+                cv.put(x, y0 + i, ch)
+
+
+def warden_frame(bob=0, hem=0, lean=0, swing=0, arm="hold", eyes="open"):
+    cv = Canvas(36, 40)
+    post = Canvas(36, 40)
+    d = bob
+    cx = 15
+    # the robe: a long bell from the shoulders to a ragged hem that never touches the floor
+    trapezoid(cv, cx + 0.5 + lean * 0.5, 19 + d, 34 + d, 15, 21, "i")
+    for x in range(cx - 10, cx + 12):
+        if cv.get(x, 34 + d) == "i":
+            ln = (1, 3, 4, 2, 3)[(x + hem) % 5]
+            for y in range(35 + d, 35 + d + ln):
+                cv.put(x, y, "i")
+    shade_body(cv, "i", hi="S", sh="s", deep="2")
+    for y in range(22 + d, 33 + d):                          # three long folds
+        cv.put(cx - 4 + lean, y, "s")
+    for y in range(24 + d, 34 + d):
+        cv.put(cx + 1 + lean, y, "s")
+    for y in range(27 + d, 35 + d):
+        cv.put(cx + 7, y, "s")
+    # the mantle: a short cape over the shoulders
+    hx = cx + lean
+    trapezoid(cv, hx + 0.5, 15 + d, 20 + d, 13, 18, "i")
+    for x in range(hx - 9, hx + 10):
+        if cv.get(x, 20 + d) == "i":
+            cv.put(x, 20 + d, "s")
+            if cv.get(x, 21 + d) in ("i", "S"):
+                cv.put(x, 21 + d, "2")
+    # the stole: two wine bands from the collar, gold fringe at the ends
+    for bx, y1 in ((cx - 2 + lean, 30), (cx + 3 + lean, 31)):
+        for y in range(16 + d, y1 + d):
+            cv.put(bx, y, "m" if bx < cx else "p")
+            cv.put(bx + 1, y, "p")
+        cv.put(bx, y1 + d, "y")
+        cv.put(bx + 1, y1 + d, "o")
+    # the cowl: a tall hood with its point falling back
+    spans(cv, [(-4, -3), (-5, -1), (-6, 2), (-6, 3), (-6, 4), (-6, 5), (-6, 5), (-6, 6), (-6, 6), (-6, 6),
+               (-6, 6), (-6, 6), (-6, 6), (-5, 6)], hx, 3 + d, "i")
+    shade_body(cv, "i", hi="S", sh="s", deep=None)
+    # nothing inside: a deep void with the cloth's pale front edge round it
+    spans(cv, [(1, 3), (0, 4), (-1, 5), (-1, 5), (-1, 5), (-1, 5), (-1, 5), (0, 5), (0, 4)], hx, 7 + d, "1")
+    for y in range(7 + d, 16 + d):
+        cv.put(hx + 6, y, "S")
+    ey = 11 + d
+    if eyes == "blink":
+        for ex in (hx, hx + 3):
+            cv.put(ex, ey + 1, "t")
+            cv.put(ex + 1, ey + 1, "t")
+    else:
+        for ex in (hx, hx + 3):
+            cv.put(ex, ey, "h")
+            cv.put(ex + 1, ey, "h")
+            if eyes == "flare":
+                cv.put(ex, ey + 1, "t")
+                cv.put(ex + 1, ey + 1, "t")
+    # the lantern arm: a wide empty sleeve reaching forward, the lantern hangs from inside it
+    if arm == "raise":
+        spans(cv, [(10, 13), (8, 13), (6, 13), (5, 12), (4, 11), (4, 9)], hx, 9 + d, "i")
+        for y in range(9 + d, 12 + d):
+            cv.put(hx + 13, y, "1")
+            cv.put(hx + 12, y, "1")
+        for y in range(10 + d, 15 + d):
+            if cv.get(hx + 5, y) == "i":
+                cv.put(hx + 5, y, "s")
+        top, lx = 12 + d, hx + 13 + swing
+    else:
+        spans(cv, [(5, 8), (5, 10), (5, 11), (5, 12), (6, 13), (8, 13)], hx, 18 + d, "i")
+        for y in range(20 + d, 24 + d):
+            cv.put(hx + 13, y, "1")
+        cv.put(hx + 12, 22 + d, "1")
+        cv.put(hx + 12, 23 + d, "1")
+        for x in range(hx + 6, hx + 12):
+            cv.put(x, 23 + d, "s")
+        top, lx = 24 + d, hx + 13 + swing
+    post.put(hx + 13, top, "S")
+    post.put(lx, top + 1, "S")
+    cv.blit(rows_of(LANTERN), lx - 3, top + 2)
+    return render(cv, post)
+
+
+def build_warden():
+    idle = [warden_frame(0, 0, swing=0), warden_frame(0, 1, swing=1),
+            warden_frame(1, 2, swing=0), warden_frame(1, 3, swing=-1, eyes="blink")]
+    run = [warden_frame(0, 0, 1, 1), warden_frame(1, 2, 1, 0),
+           warden_frame(0, 4, 1, -1), warden_frame(1, 1, 1, 0)]
+    atk = [warden_frame(0, 0, arm="raise", eyes="flare"), warden_frame(1, 2, arm="raise", swing=1, eyes="flare"),
+           warden_frame(0, 4, arm="raise", eyes="flare"), warden_frame(1, 1, arm="raise", swing=-1, eyes="flare")]
+    save_anim("necro_boss", "idle", idle)
+    save_anim("necro_boss", "run", run)
+    save_anim("necro_boss", "atk", atk)
+
+
+BOSS_NAMES = ["wax_mother", "sexton", "choir", "pendulum", "necro_boss"]
 
 
 def build_bosses():
@@ -358,3 +477,4 @@ def build_bosses():
     build_sexton()
     build_choir()
     build_pendulum()
+    build_warden()
