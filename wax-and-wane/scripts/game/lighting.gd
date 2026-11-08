@@ -7,8 +7,9 @@ extends Node
 ##    Room pieces (floor, walls, decor, obstacles, stains) get the room material, which also wanes;
 ##    Tallow, creatures and pickups get the actor material, which keeps their colour for readability.
 ##    Shadowed lights get hard (unfiltered) shadow edges so shadows are pixel-crisp too.
-##  - Waning world: below 40 % wax the room material loses colour step by step and a dithered dark
-##    vignette closes in (fire, embers, the flame, shots and the wax bar keep full colour).
+##  - Waning world: below 40 % wax the room material (surface and the light on it) loses colour step by
+##    step and a dithered dark vignette closes in on it (computed in the same material: no extra
+##    full-screen pass). Fire, embers, the flame, shots, Tallow, creatures and the wax bar keep colour.
 ##  - Heat haze over Tallow's flame, lit hearths and the Blowlamp; a shockwave ring on bomb blasts and
 ##    guardian phase changes (screen-reading, small patches, whole-pixel offsets only).
 ##  - Settings: "effects" = "full" / "lite" (Lite: no haze, no shockwaves, no vignette; banding and the
@@ -22,7 +23,6 @@ const LIT := preload("res://scripts/game/lit.gdshader")
 const LIT_FLASH := preload("res://scripts/game/lit_flash.gdshader")
 const HAZE := preload("res://scripts/game/heat_haze.gdshader")
 const SHOCK := preload("res://scripts/game/shockwave.gdshader")
-const VIGNETTE := preload("res://scripts/game/wane_vignette.gdshader")
 const DITHER := preload("res://scripts/game/dither_alpha.gdshader")
 
 ## Wax fraction where the waning starts, the most colour lost at an empty candle, and the steps.
@@ -39,9 +39,8 @@ static var _blank := {}
 
 var host: Node
 var _rooms: Node
-var _vig_layer: CanvasLayer
-var _vig: ColorRect
-var _vig_mat: ShaderMaterial
+var _vig_on := false
+var _vig_focus := Vector2(-1, -1)
 var _wane := 0.0
 var _wane_q := -1.0
 var _flame_haze: Node2D
@@ -97,25 +96,15 @@ func _ready() -> void:
 	get_tree().node_added.connect(_on_node_added)
 	_walk(host)
 	Game.settings_changed.connect(_on_settings)
-	# the dark closing in: a full-screen dithered overlay above the world, under the HUD (layer 10)
-	_vig_layer = CanvasLayer.new()
-	_vig_layer.layer = 8
-	add_child(_vig_layer)
-	_vig = ColorRect.new()
-	_vig.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_vig.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_vig_mat = ShaderMaterial.new()
-	_vig_mat.shader = VIGNETTE
-	_vig.material = _vig_mat
-	_vig.visible = false
-	_vig_layer.add_child(_vig)
 	room_material().set_shader_parameter("wane", 0.0)
+	room_material().set_shader_parameter("vig_amount", 0.0)
 
 
 func _exit_tree() -> void:
 	if get_tree().node_added.is_connected(_on_node_added):
 		get_tree().node_added.disconnect(_on_node_added)
 	room_material().set_shader_parameter("wane", 0.0)
+	room_material().set_shader_parameter("vig_amount", 0.0)
 
 
 func _walk(n: Node) -> void:
@@ -178,16 +167,23 @@ func _process(dt: float) -> void:
 	if q != _wane_q:
 		_wane_q = q
 		room_material().set_shader_parameter("wane", pow(q, 0.75) * WANE_MAX)
+	# the dark closing in (room material only, so it is not an extra full-screen pass): it centres
+	# between the screen and Tallow, in whole pixels
 	var vis := _wane > 0.01 and full()
-	_vig.visible = vis
+	var m := room_material()
 	if vis:
-		_vig_mat.set_shader_parameter("amount", floorf(_wane * 16.0 + 0.5) / 16.0)
-		var vp := get_viewport()
-		var sz := vp.get_visible_rect().size
-		var focus := Vector2(0.5, 0.5)
+		m.set_shader_parameter("vig_amount", floorf(_wane * 16.0 + 0.5) / 16.0)
+		var sz := get_viewport().get_visible_rect().size
+		var fpx := sz / 2.0
 		if p:
-			focus = focus.lerp((p.get_global_transform_with_canvas().origin + Vector2(0, -12)) / sz, 0.5)
-		_vig_mat.set_shader_parameter("focus", focus)
+			fpx = fpx.lerp(p.get_global_transform_with_canvas().origin + Vector2(0, -12), 0.5)
+		fpx = fpx.round()
+		if fpx != _vig_focus:
+			_vig_focus = fpx
+			m.set_shader_parameter("vig_focus", (fpx + Vector2(0.5, 0.5)) / sz)
+	elif _vig_on:
+		m.set_shader_parameter("vig_amount", 0.0)
+	_vig_on = vis
 
 
 ## How far the house has waned (0..1), for tests.

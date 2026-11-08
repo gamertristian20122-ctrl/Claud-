@@ -89,6 +89,12 @@ static func run(t: Node) -> void:
 	await _save(t, dir, "wane_100")
 	_render_counters(t, "wane_100")
 	await _fps(t, "wane_100")
+	Game.settings["effects"] = "lite"
+	Game.settings_changed.emit()
+	await _fps(t, "wane_100_lite")
+	Game.settings["effects"] = "full"
+	Game.settings_changed.emit()
+	await _fps(t, "wane_100_again")
 	t.get_tree().paused = false
 	w.player.wax = w.player.wax_max * 0.2
 	await t._wait(2.5)
