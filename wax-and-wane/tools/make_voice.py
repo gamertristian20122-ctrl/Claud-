@@ -17,6 +17,9 @@ Run it with the voice venv (tools/voice_setup.sh makes it once; tools/make_trail
         judges any folder of recordings with the script's file names, e.g. the owner's own voice in
         docs/marketing/voice/owner/ (any audio type: 01_this_is_tallow.wav, .m4a, .mp3 ...);
         --fix trims the silence at both ends and sets every line to -16 LUFS (writes .wav files)
+  make_voice.py mixcheck <video> [<video> ...]
+        hears the narration back from finished videos (music and effects included): every line must still
+        come through (WER <= 10%); line times come from the <video>.json that tools/trailer_edit.py writes
 """
 import argparse
 import json
@@ -163,12 +166,17 @@ def asr():
     return _asr
 
 
+## Words that sound exactly like a word of the script (a recogniser has to guess the spelling): the game's
+## title comes back as "Wax and Wayne" as often as "wane". Only true homophones belong here.
+HOMOPHONES = {"wayne": "wane", "wain": "wane"}
+
+
 def norm_words(text):
     from num2words import num2words
     t = text.lower().replace("&", " and ").replace("-", " ").replace("’", "'")
     t = re.sub(r"\d+", lambda m: " " + num2words(int(m.group(0))) + " ", t)
     t = re.sub(r"[^a-z' ]+", " ", t)
-    return [w.strip("'") for w in t.split() if w.strip("'")]
+    return [HOMOPHONES.get(w.strip("'"), w.strip("'")) for w in t.split() if w.strip("'")]
 
 
 def wer(ref, hyp):
@@ -445,6 +453,52 @@ def cmd_check(args):
     print("[voice] %d/%d lines pass%s" % (len(res) - len(bad), len(res), "" if not bad else ": check " + ", ".join(bad)))
 
 
+def cmd_mixcheck(args):
+    """The narration heard back from a finished video, music and effects and all: each line's words must
+    still come through (WER <= 10%). Line times come from <video>.json, written by tools/trailer_edit.py."""
+    allok = True
+    out = []
+    for v in args.videos:
+        side = os.path.splitext(v)[0] + ".json"
+        if not os.path.exists(v) or not os.path.exists(side):
+            print("[voice] mixcheck: no %s (or its .json)" % v)
+            allok = False
+            continue
+        with open(side) as f:
+            meta = json.load(f)
+        a, sr = load(v)
+        a = resample(a, sr, 16000)
+        rows = []
+        for ln in meta["lines"]:   # each placement on its own: its stretch of the finished mix, music and all
+            clip = a[max(0, int((ln["t0"] - 0.35) * 16000)):int((ln["t1"] + 0.35) * 16000)]
+            heard, _ = hear(clip, 16000)
+            k = ln.get("line", -1)
+            if rows and rows[-1]["line"] == k and k >= 0:   # a script line the edit split in two: judged whole
+                r = rows[-1]
+                r["heard"] = (r["heard"] + " " + heard).strip()
+                r["text"] = ln.get("script", r["text"] + " " + ln["text"])
+                r["at"] += " + %.1f s" % ln["t0"]
+            else:
+                rows.append({"line": k, "at": "%.1f s" % ln["t0"], "text": ln["text"], "heard": heard})
+        for r in rows:
+            r["wer"] = round(wer(r["text"], r["heard"]), 3)
+            r["pass"] = r["wer"] <= MAX_WER
+        ok = all(r["pass"] for r in rows)
+        allok = allok and ok
+        out.append({"video": os.path.basename(v), "lines": rows, "pass": ok})
+        print("\n### %s: the narration heard back from the finished mix (Whisper %s)\n" % (os.path.basename(v), ASR_MODEL))
+        print("| At | Line | Heard in the mix | WER | Pass |\n|---:|---|---|---:|---|")
+        for r in rows:
+            print("| %s | %s | %s | %.0f%% | %s |" % (r["at"], r["text"], r["heard"], r["wer"] * 100, "yes" if r["pass"] else "NO"))
+    if args.videos:
+        d = os.path.join(os.path.dirname(os.path.abspath(args.videos[0])), "check")
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, "narration_in_mix.json"), "w") as f:
+            json.dump(out, f, indent=2)
+    if not allok:
+        sys.exit("[voice] mixcheck: some narration is lost in the mix")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -458,8 +512,10 @@ def main():
     c = sub.add_parser("check")
     c.add_argument("dir")
     c.add_argument("--fix", action="store_true")
+    mc = sub.add_parser("mixcheck")
+    mc.add_argument("videos", nargs="+")
     args = ap.parse_args()
-    {"audition": cmd_audition, "make": cmd_make, "check": cmd_check}[args.cmd](args)
+    {"audition": cmd_audition, "make": cmd_make, "check": cmd_check, "mixcheck": cmd_mixcheck}[args.cmd](args)
 
 
 if __name__ == "__main__":

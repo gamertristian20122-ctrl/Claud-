@@ -16,8 +16,8 @@ extends Node
 
 const SS := preload("res://scripts/store_shots.gd")
 const SEED := 7
-const SCENES := ["title", "cellar", "hook", "floors", "build", "chapel", "seance", "cards", "boss", "clutch",
-	"ladder", "keeper", "dawn"]
+const SCENES := ["title", "intro", "cellar", "hook", "floors", "build", "chapel", "seance", "specials", "cards",
+	"boss", "clutch", "ladder", "keeper", "dawn"]
 ## the fire build of the "build" scene, in pickup order (Short B counts them)
 const BUILD := ["twin_wick", "ember_heart", "blue_flame", "bellows", "will_o_wisp", "hot_drip", "tinderbox"]
 
@@ -40,17 +40,21 @@ static func run(a: Node) -> void:
 
 func play() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_priority = 100   # after the HUD (see _process)
 	var scene := str(at.args.get("trailer", ""))
 	if not scene in SCENES:
 		print("[trailer] unknown scene '%s'; scenes: %s" % [scene, ", ".join(SCENES)])
 		return
 	seed(SEED)
 	Controls.set_device(Controls.MOUSE)   # the desktop HUD: no touch sticks over the room
+	_seasoned_profile()
 	if not at.args.has("trailermusic"):
 		AudioServer.set_bus_mute(AudioServer.get_bus_index("Music"), true)
 	_mark("start")
 	match scene:
 		"title": await _title()
+		"intro": await _intro()
+		"specials": await _specials()
 		"cellar": await _cellar()
 		"hook": await _hook()
 		"floors": await _floors()
@@ -71,9 +75,43 @@ func play() -> void:
 
 # ---------------------------------------------------------------- helpers
 
+## A seasoned save: every achievement and candle already earned and the first-run hints used up, so no
+## first-time toast, "NEW CANDLE" banner or controls hint lands on a shot. (make_trailer.sh records on its
+## own private profile, so a player's save is never touched.)
+func _seasoned_profile() -> void:
+	var rec: Dictionary = Achievements._records()
+	for a in Achievements.LIST:
+		rec[a["id"]] = 1
+	Game.records["unlocked"] = Candles.ORDER.duplicate()
+	Game.records["seen_intro"] = true
+	Game.records["runs"] = maxi(int(Game.records.get("runs", 0)), 12)
+
+
+## The hint line under the room (tips, "Hand Bell is ready"...) and the item line at the bottom never show
+## in the footage: the trailer's own text cards do that job. Runs after the HUD, before the tweens, so a new
+## hint never gets a frame.
+func _process(_dt: float) -> void:
+	if w == null or not is_instance_valid(w) or w.get("hud") == null:
+		return
+	var h: Node = w.hud
+	if h._hint_tw and h._hint_tw.is_valid():
+		h._hint_tw.kill()
+	h.hint.modulate.a = 0.0
+	h.preview.visible = false   # the item line at the bottom (it can run wider than the 384 px picture)
+
+
 func _mark(name: String) -> void:
 	marks[name] = Engine.get_frames_drawn()
 	print("[trailer] mark %s %d" % [name, marks[name]])
+
+
+## Where Tallow stands on the game's 384x216 picture (the edit crops a pixel-perfect close-up around it).
+func _mark_spot(name: String, node: Node2D = null) -> void:
+	if node == null:
+		node = w.player
+	var o: Vector2 = node.get_global_transform_with_canvas().origin
+	marks[name] = [int(round(o.x)), int(round(o.y))]
+	print("[trailer] spot %s %s" % [name, marks[name]])
 
 
 func _save_marks(scene: String) -> void:
@@ -264,9 +302,47 @@ func _title() -> void:
 		if l is CanvasItem:
 			(l as CanvasItem).visible = false
 	SS._hide_continue(t)
+	var hero: Variant = t.get("hero")
+	if hero is Node2D:
+		_mark_spot("tallow", hero)
 	await at._wait(1.6)
 	_mark("menu")
 	await at._wait(1.6)
+	_mark("out")
+
+
+## 12:00 AM in a dark Cellar room: Tallow alone in his own small circle of light (the edit's close-up),
+## then the house wakes up: lodgers come at him from every side and the fight starts.
+func _intro() -> void:
+	await _game(1)
+	var p: Player = w.player
+	p.coins = 23
+	p.bombs = 3
+	var c0: Vector2 = await _dark_room(4, "open_five")
+	_drop_boss()
+	w.room_spawned = false   # an empty, dark room must not count as cleared yet (its candles would catch)
+	w.room.set_open(true, true)   # the doors stand open while the house sleeps
+	p.position = c0 + Vector2(-8, 18)
+	p.wax = p.wax_max
+	wax_lo = 80.0
+	_quiet()
+	await at._wait(0.3)
+	_mark("in")
+	_mark_spot("tallow")
+	await at._wait(3.6)
+	# the house wakes up: the doors slam (as on entering any room) and the lodgers are there, all around
+	_mark("wake")
+	w.room.set_open(false, true)
+	Audio.play("door_close", -3.0)
+	w.shake(3.0)
+	var cast := [["tiny_zombie", Vector2(-70, -36)], ["goblin", Vector2(66, -40)], ["cinder_rat", Vector2(78, 30)],
+		["sootling", Vector2(-76, 38)], ["imp", Vector2(6, -58)], ["wax_blob", Vector2(52, -6)], ["skelet", Vector2(-40, 56)]]
+	for e in cast:
+		w.fx_ring(c0 + e[1], Color("#cae6f5"))
+	_spawn(c0, cast)
+	await at._wait(0.7)
+	at.args["drive"] = true
+	await at._wait(5.0)
 	_mark("out")
 
 
@@ -451,6 +527,41 @@ func _seance() -> void:
 	Specials.of(w)._ring()
 	at.args["drive"] = true
 	await at._wait(7.0)
+	_mark("out")
+
+
+## The special rooms on a Chapel floor: the Cracked Mirror's offer, the Wax Font drinking a few minutes of
+## wax, the Music Box cranked for a tune (each door has its own banner).
+func _specials() -> void:
+	await _game(3)
+	SS._kit(w)
+	var p: Player = w.player
+	p.coins = 30
+	wax_lo = 60.0
+	for t in ["mirror", "font", "musicbox"]:
+		var c: Vector2i = Specials._cell_of_type(w, t)
+		if c == Vector2i(-99, -99):
+			c = Specials._make_special(w, t)
+		if c == Vector2i(-99, -99):
+			print("[trailer] no room for a %s" % t)
+			continue
+		at._jump(w, c)
+		SS._clear_foes(w)
+		var prop: Vector2 = w.room.cell_center(Specials.PROP_CELL)
+		p.position = w.room.center() + Vector2(-20, 56)
+		p.wax = 96.0
+		_mark(t)
+		match t:
+			"mirror":
+				steer = prop + Vector2(-34, 26)
+			"font":
+				steer = prop + Vector2(-14, 6)
+			"musicbox":
+				steer = prop + Vector2(14, 6)
+		await at._wait(1.5)
+		steer = w.room.center() + Vector2(-30, 44)
+		await at._wait(1.3)
+		steer = null
 	_mark("out")
 
 
