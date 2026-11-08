@@ -4,6 +4,7 @@
 #   ./tools/make_trailer.sh                 record every scene, then edit everything (about 10 minutes)
 #   ./tools/make_trailer.sh --edit          edit only, from the footage already in build/trailer_raw/
 #   ./tools/make_trailer.sh --record a b    record only scenes a and b (then edit)
+#   ./tools/make_trailer.sh --record-only a b   record only, no edit
 #
 # 1. Each scene (scripts/trailer.gd) is played by the game itself under Godot's movie writer at a fixed
 #    60 fps: build/trailer_raw/<scene>/f########.png (the game's own 384x216 picture, lossless) + f.wav
@@ -44,7 +45,8 @@ mode="all"
 list=("${SCENES[@]}")
 if [ "${1:-}" = "--edit" ]; then
 	mode="edit"
-elif [ "${1:-}" = "--record" ]; then
+elif [ "${1:-}" = "--record" ] || [ "${1:-}" = "--record-only" ]; then
+	[ "$1" = "--record-only" ] && mode="record"
 	shift
 	list=("$@")
 fi
@@ -56,6 +58,7 @@ if [ "$mode" != "edit" ]; then
 	done
 fi
 
+[ "$mode" = "record" ] && exit 0
 python3 "$ROOT/tools/trailer_edit.py" --raw "$RAW" --out "$OUT"
 
 mkdir -p "$DOCS"

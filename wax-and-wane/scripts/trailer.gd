@@ -19,7 +19,7 @@ const SEED := 7
 const SCENES := ["title", "cellar", "hook", "floors", "build", "chapel", "seance", "cards", "boss", "clutch",
 	"ladder", "keeper", "dawn"]
 ## the fire build of the "build" scene, in pickup order (Short B counts them)
-const BUILD := ["twin_wick", "sharp_wick", "ember_heart", "hot_drip", "will_o_wisp", "tinderbox"]
+const BUILD := ["twin_wick", "ember_heart", "blue_flame", "bellows", "will_o_wisp", "hot_drip", "tinderbox"]
 
 var at: Node
 var w: Node
@@ -77,11 +77,10 @@ func _mark(name: String) -> void:
 
 
 func _save_marks(scene: String) -> void:
-	var args := OS.get_cmdline_args()
-	var i := args.find("--write-movie")
-	if i < 0 or i + 1 >= args.size():
+	var movie := Engine.get_write_movie_path()
+	if movie == "":
 		return
-	var f := FileAccess.open(str(args[i + 1]).get_base_dir() + "/marks.json", FileAccess.WRITE)
+	var f := FileAccess.open(movie.get_base_dir() + "/marks.json", FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify({"scene": scene, "fps": Engine.physics_ticks_per_second, "marks": marks}, "  "))
 		f.close()
@@ -139,9 +138,28 @@ func _quiet() -> void:
 	SS._settle_text(w, false)
 
 
+## Only the hint line goes (the floor or relic banner stays and fades out on its own).
+func _no_hint() -> void:
+	var h: Node = w.hud
+	if h._hint_tw:
+		h._hint_tw.kill()
+	h.hint.modulate.a = 0.0
+
+
+## The k-th ordinary room of this floor that is not a mini-boss's (sorted: the same room every time).
+func _plain(k: int) -> Vector2i:
+	var cells: Array = []
+	for c in w.layout["cells"].keys():
+		var d: Dictionary = w.layout["cells"][c]
+		if d["type"] == "normal" and not d.has("mini"):
+			cells.append(c)
+	cells.sort()
+	return cells[k % cells.size()] if not cells.is_empty() else w.layout["start"]
+
+
 ## The room's own lodgers are swapped for our cast (the room stays uncleared, so it lights up when they fall).
 func _dark_room(k: int, template: String) -> Vector2:
-	var c := SS._normal(w, k)
+	var c := _plain(k)
 	var d: Dictionary = w.layout["cells"][c]
 	var g := SS._template(template)
 	if not g.is_empty():
@@ -161,6 +179,14 @@ func _spawn(c0: Vector2, cast: Array) -> void:
 		w.spawn_enemy(s[0], c0 + s[1])
 	w.room_spawned = true
 	w.room_t0 = w.run_time
+
+
+## Sets the candle without the bells of the hours it skipped (no "1:45 AM" banner over a staged shot).
+func _set_wax(v: float) -> void:
+	w.player.wax = v
+	for mark in [60.0, 90.0, 105.0]:
+		if w.clock_minutes() >= mark:
+			w._bells[mark] = true
 
 
 ## A real contact hit from the nearest lodger (the bot dodges too well to be hit on cue).
@@ -233,7 +259,7 @@ func _boss_room(n: int, kind: String, card: bool) -> void:
 func _title() -> void:
 	marks["in"] = 0   # the boot intro started before this script ran (the strike is at ~0.4 s)
 	var t: Node = at.main.current
-	for k in ["stats", "ver"]:
+	for k in ["stats", "ver", "menu", "box"]:   # the trailer shows the logo and Tallow, not the menu
 		var l: Variant = t.get(k)
 		if l is CanvasItem:
 			(l as CanvasItem).visible = false
@@ -278,9 +304,10 @@ func _hook() -> void:
 	await _game(2)
 	SS._kit(w)
 	var c0: Vector2 = await _dark_room(2, "open_five")
+	_drop_boss()   # (in case the floor made this a mini-boss room)
 	var p: Player = w.player
 	p.position = c0 + Vector2(-58, 14)
-	p.wax = 3.4
+	_set_wax(3.4)
 	p.damage += 3.0   # one flame, one lodger: the streak needs quick kills
 	wax_lo = 1.6
 	_quiet()
@@ -303,24 +330,30 @@ func _floors() -> void:
 	for n in [1, 2, 3, 4, 5]:
 		w._start_floor(n)
 		await at._wait(0.1)
-		var c := SS._normal(w, 2)
+		var c := _plain(2)
 		w.layout["cells"][c]["cleared"] = false
 		at._jump(w, c)
+		w.hud.set_boss("", false)
+		_no_hint()
 		w.player.position = w.room.center() + Vector2(-64, 16)
 		w.player.wax = maxf(w.player.wax, 70.0)
 		_mark("f%d" % n)
-		await at._wait(2.6)
+		await at._wait(0.3)
+		_no_hint()
+		await at._wait(2.3)
 		SS._clear_foes(w)
 	_mark("out")
 
 
 ## A fire build, one relic at a time (each held aloft with its banner), then a full room melts.
 func _build() -> void:
-	await _game(2)
+	await _game(4)
 	var c0: Vector2 = await _dark_room(1, "open_five")
+	_drop_boss()
 	var p: Player = w.player
 	p.position = c0 + Vector2(-40, 10)
 	p.wax = 100.0
+	p.damage += 1.5   # a late-run candle (each guardian felled adds to the flame)
 	wax_lo = 70.0
 	_quiet()
 	# relic 0: one weak flame against two lodgers
@@ -344,7 +377,7 @@ func _build() -> void:
 		i += 1
 		_mark("r%d" % i)
 		w.collect_item(id, p.global_position)
-		await at._wait(1.7)
+		await at._wait(1.4)
 	_quiet()
 	# the full room: lodgers pour in from every side
 	_mark("wave")
@@ -479,7 +512,7 @@ func _clutch() -> void:
 	if b and is_instance_valid(b):
 		b.hp = b.max_hp * 0.5
 		w.on_boss_hp(b)
-	w.player.wax = 2.4
+	_set_wax(2.4)
 	wax_lo = 1.3
 	no_gutter = true
 	_quiet()
@@ -509,15 +542,19 @@ func _ladder() -> void:
 	_mark("in")
 	await _until(func(): return not _boss_alive(), 8.0)
 	_mark("kill")
-	var lad: Array = []
-	await _until(func():
-		lad = w.room.objects.get_children().filter(func(o): return o is Pickup and o.kind == "trapdoor")
-		return not lad.is_empty(), 4.0)
+	var lad: Node2D = null
+	var t := 0.0
+	while t < 4.0 and lad == null:
+		for o in w.room.objects.get_children():
+			if o is Pickup and o.kind == "trapdoor":
+				lad = o
+		await at._wait(0.05)
+		t += 0.05
 	_mark("ladder")
 	at.args.erase("drive")
-	await at._wait(2.2)
-	if not lad.is_empty():
-		steer = lad[0]
+	await at._wait(1.8)
+	if lad:
+		steer = lad
 	await _until(func(): return int(w.floor_num) == Tower.FLOOR, 5.0)
 	steer = null
 	_mark("tower")
