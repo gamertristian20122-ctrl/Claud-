@@ -56,9 +56,10 @@ all 64 at once. It ran clean.
 ## Notes for the other streams
 - **juice** (player.gd / shot.gd): keep the hook lines when you restyle `_fire` and the hit/wall code.
   `RelicFx` swaps `Shot.spr.sprite_frames` (ghost, ring, spark, big flame) and reads `Shot.vel`, `dmg`,
-  `life`, `pierce`, `radius`, `_hit`, `_dead`, `end()`. Costumes reads `Player.body_height()`, `body_w`,
-  `_bob`, `self_modulate`, `relics`, `rites`, `revives`, `light`, and sets `c_hi`/`c_wax`/`c_sh`/`c_deep`
-  (Pale Taper). If the body geometry changes, adjust `Costumes._geo()`.
+  `life`, `pierce`, `radius`, `_hit`, `_dead`, `end()`. Costumes reads `Player.geo()` (the shape:
+  rows, lip, eyes, cheek row, wick tip, lift), `self_modulate`, `relics`, `rites`, `revives`, `light`, and sets
+  `c_hi`/`c_wax`/`c_sh`/`c_deep` (Pale Taper). Pieces anchor to `Costumes._geo()`; check them with
+  `--herosheet --costumes`.
 - **bestiary** (enemy.gd): curses use only `alive`, `active`, `boss`, `speed`, `radius`, `half_h`, `kvel`,
   `spr`, `_move()`, `_damage()`, `take_hit()`, `set_physics_process()`, and `modulate` (the status tint),
   plus `_flash`/`mat` when they are there. Slow = the foe's physics runs every other frame; fear/stun =

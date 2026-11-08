@@ -726,6 +726,8 @@ func _d_candle(e: Dictionary) -> void:
 		_text("Locked: " + str(d["unlock_text"]), UI.EMBER)
 		return
 	_text(str(d["line"]), UI.CREAM)
+	if d.has("blurb"):
+		_text(str(d["blurb"]), UI.DIM)
 	var bits: Array = []
 	if float(d["speed"]) != 1.0:
 		bits.append("speed x%s" % str(snappedf(float(d["speed"]), 0.01)))

@@ -43,15 +43,23 @@ numbers with nearest-neighbour only.
 All PNG, RGBA, pixel-exact. `assets/art/...`, loaded with `Art.tex("folder/name")`. Animations are
 `<name>_f0..fN.png`. Each folder is written by a re-runnable tool (`python3 tools/art_<x>.py [--review DIR]`).
 
-### Hero (hero/) - `art_hero_fx_items.py`
-- `flame_f0..f5.png` 9x13: candle flame loop (white-yellow core, #facb3e, #ee8e2e, #da4e38 tips). Base of flame
-  (the wick point) is the bottom-centre pixel (4, 12).
-- `flame_blue_f0..f5.png` same, blue flame (#cae6f5 core, #72d6ce, #5698cc, #5956bd).
-- Candle body is drawn in code (wax colours #fdf7ed / #e2b694 / #d8a57d / #b58057 outline #483b3a); each
-  candle in `Candles.LIST` sets its own four colours.
-- `holder.png` 18x7: brass candle dish (#facb3e/#ee8e2e/#c56025/#8f4029) with a small ring handle on the right.
-- `face_open.png`, `face_blink.png`, `face_hurt.png`, `face_happy.png` 10x5: eyes (+tiny mouth) drawn on wax, transparent bg.
-- `drip_f0..f2.png` 3x6 wax drip that slides down the side.
+### Hero (hero/) - `art_hero_fx_items.py --hero` ("Tallow, reborn", concept in `art_source/hero_reborn/`)
+- The approved concept's `draw.py` is the source of truth: the tool imports it for the dish, faces and flames.
+- Tallow's wax body is drawn in code (`Player.shape()` / `Player.paint_body()`): a gumdrop 13 px wide (15 at
+  the belly) with an overhanging lip, a wavy melted edge, a wax tear on each side, two stub arms and rosy
+  cheeks; 1 px #21141b outline, light from the top-left. One row melts every 18 minutes of wax, from the
+  belly first (120 wax = 12 rows, 72 = 9, 30 = 7, then he sinks into the dish). Each candle in
+  `Candles.LIST` sets `body_w`, its four wax colours, `cheek`, and `ink` / `straight` / `foil` / `stripes`.
+  Tallow: #fdf7ed wax, #e2b694 shade, #c38d70 deep, #f78697 cheeks. He is self-lit (unshaded) while lit.
+- `flame_<idle|trail|flare|mid|small|blown>_f*.png`: 9x12 canvases, the wick tip at (4, 11) left transparent:
+  idle 7x10 (4 frames), trail (moving right; mirrored for left), flare (shot / happy), mid 5x8, small 3x5,
+  blown (hurt). `flame_blue_<kind>_f*.png` the same in #cae6f5 / #72d6ce / #5698cc / #5956bd.
+- `holder_back.png` 19x3 (drawn behind the body at (-9, -7)) and `holder.png` 23x5 (the bowl row, the rim and
+  the ring handle, over the body at (-9, -5)); `holder_full.png` 23x7 both. Brass #facb3e/#ee8e2e/#c56025/#8f4029.
+- `face_<open|blink|brave|shout|worried|blink_worried|tired|blink_tired|hurt|happy>.png` 11x6: 2x3 eyes and the
+  mouth; x = eye centre - 5, y = the eyes' top row. Cheeks are drawn in code in each candle's colour.
+- `hero_preview.png` 24x27: the full-wax idle frame (results screen).
+- `flame_f0..f5.png` 9x13 (the old flame) stays for the HUD wax bar, the Kindling streak and the title logo.
 
 ### FX (fx/) - `art_hero_fx_items.py`, `art_fx2.py`, `art_monsters.py`
 - `ember_f0..f3.png` 7x7 player shot, `ember_blue_f0..f3.png` blue version, `ember_big_f0..f3.png` 9x9.
@@ -127,7 +135,7 @@ opaque; the game draws them at one alpha (0.5), lit like the floor. Lines drop o
 - `room_keeper.png` 272x192 (the Keeper's room with the great floor dial); tower room backgrounds are
   `rooms/room_tower*.png`; sconces are `decor/sconce_tower_*`.
 - `gear_f0..5` 34x34 (wall gears), `window_slats` / `window_slats_glow` 16x16, floor bits `floor_<cogs|key|oil|
-  screws|spring|weight>`, `ladder_f0..3` 18x72 (the ladder of light), `holder_silver.png` 18x7 (Moonwick's dish).
+  screws|spring|weight>`, `ladder_f0..3` 18x72 (the ladder of light), `holder_silver.png` 23x5 + `holder_silver_back.png` 19x3 (Moonwick's dish, `art_tower.py --holder`).
 - True ending scenes `end_house`, `end_dial`, `end_window` 192x96 (shown at x2; moving parts drawn in code).
 - `tower/light/moon_slats.png` 64x88: striped moonlight (light texture).
 - Round things (gears, dials) are rasterised from fixed integer maths, never resampled.

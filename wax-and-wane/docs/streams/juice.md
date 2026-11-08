@@ -5,9 +5,11 @@ Branch `revamp/juice`. Everything here is visual or feedback only; no balance, l
 stays identical for everyone).
 
 ## What it adds
-- **Tallow** (`scripts/game/player.gd`): idle breathing, squash and stretch when starting and stopping,
-  a 1 px recoil and flame dip on every shot, a hurt squish with a white flash and the hurt face, wax drips
-  (`hero/drip_f0..2`) that run down the sides while walking and drop off as wax dots on the floor, a
+- **Tallow** (`scripts/game/player.gd`, 2.0 look "Tallow, reborn"): idle breathing (a belly row), squash and
+  stretch when starting and stopping (belly rows + 1 px width), little hops while running with swinging arms,
+  a 1 px recoil and a flare (or a dip of the smaller flames) on every shot, a hurt squish with a white flash,
+  the hurt face, flailing arms, a torn flame and wax knocked off, the side tears that run down while walking
+  and drop off as wax dots on the floor, the face following the clock (worried / tired), a
   guttering flame with smoke threads below 20% wax, "hold aloft" for 0.9 s when a relic, tonic or keepsake
   is taken (icon above the flame, gold glint; Tallow cannot move or be hurt meanwhile), and a 1.2 s melt-down
   on death (the body sinks into the dish, wax spills down and spreads on the floor, the flame shrinks and
@@ -70,7 +72,10 @@ scorch sprite block became `fx_scorch(pos)`), and `shake()` / `fx_drop()` in the
 - `--tour` now also shoots: `title_intro`, `burn_cover`, `burn_reveal`, `gibs`, `room_clear`, `stains`,
   `stains_return` (persistence), `relic_aloft`, `melt_1`, `melt_2`, `boss_card`, `boss_punch`,
   `boss_finale`, `boss_splat`.
-- `--autotest --herosheet --shots=DIR` writes `hero_states.png`: Tallow in every juice state at x6.
+- `--autotest --herosheet --shots=DIR` writes `hero_sheet_1x.png`, `hero_states.png` (row A = the concept sheet's
+  frames in order, row B = every other juice state, x6) and `hero_candles.png` (6 candles x 100/60/25 %);
+  `--herosheet --costumes` the costume line-up, `--herosheet --ingame` the real cellar crop like the concept's
+  `ingame.png`.
 - Art: `python3 tools/art_fx2.py [--review DIR]` writes `assets/art/fx/splat_0..9.png`, `gib_0..5.png`,
   `glint_f0..1.png` (all original, 0x72 palette, no anti-aliasing). No third-party assets were added.
 

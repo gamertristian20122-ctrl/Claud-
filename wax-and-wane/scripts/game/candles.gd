@@ -12,6 +12,7 @@ const LIST := {
 		"name": "Tallow", "line": "The last candle in the cellar.",
 		"wax": 120.0, "drain": 1.0, "speed": 1.0, "damage": 1.0, "fire_delay": 1.0, "shots": 1,
 		"body_w": 13, "colours": ["#fdf7ed", "#fdf7ed", "#e2b694", "#c38d70"], "cheek": "#f78697",
+		"blurb": "Stubby, brave, a little teary. Cries wax when he is scared and keeps going anyway.",
 		"unlock_text": "",
 	},
 	"tea_light": {

@@ -144,7 +144,7 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
     ... --tour --journal      every Journal tab, death note, seed keypad, credits, chalk start room
     ... --tour --tower        ladder, Clock Tower, the Keeper's phases, the four ending scenes, TRUE ENDING
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
-    ... --herosheet           Tallow in every state at x6 (hero_states.png)
+    ... --herosheet           Tallow in every state at x6 (hero_states.png, hero_candles.png; + --costumes / --ingame)
     ... --shots-store [--phone]   staged store screenshots (run at 1920x1080; 2160x1080 for --phone)
     ... --keyart [--keylayout=wide|tall]   the key-art scene, no HUD
 
