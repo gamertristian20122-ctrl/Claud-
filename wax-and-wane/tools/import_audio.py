@@ -80,6 +80,13 @@ MUSIC = {
     "final_boss": {"src": NINJA_MUSIC + "28 - Tension.ogg", "why":
                    "Hour Fiend: the densest usable track in the pack (4.89 onsets/s) and one of the two most percussive "
                    "(0.30) - the peak of the tension ramp."},
+    # endgame stream: the Clock Tower (secret floor 5) and the true ending
+    "floor_5": {"src": NINJA_MUSIC + "19 - Ascension.ogg", "why":
+                "Clock Tower (secret floor 5): a step sideways after the Belfry - low (MIDI 60), sparse (2.29 onsets/s), "
+                "unsettled (diss 0.21, B minor-ish) and moonlit-eerie; the Keeper of Hours still gets final_boss."},
+    "ending": {"src": NINJA_MUSIC + "15 - Credit Theme.ogg", "why":
+               "True ending cards and credits roll: the pack's own credits piece, high (MIDI 77) and consonant "
+               "(diss 0.04), C# minor but gentle; 68 s covers the four cards and the roll."},
 }
 # victory_jingle / death_jingle stay the original synthesized ones (tools/make_audio.py): they are 3-4 s long to fit
 # the victory banner and the snuff-out sequence, minor/major as needed and built from the game's own bell and music

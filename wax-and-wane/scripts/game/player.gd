@@ -77,6 +77,14 @@ func apply_candle(id: String) -> void:
 	c_deep = Color(cs[3])
 	stripes = d.get("stripes", false)
 	foil = d.get("foil", false)
+	pierce += int(d.get("pierce", 0))            # Moonwick's sparks pass through one foe
+	holder_tex = d.get("holder", "hero/holder")  # Moonwick's silver dish
+	moonlit = d.get("moon", false)              # ... and its cool light
+	if holder:
+		holder.texture = Art.tex(holder_tex)
+	if light and moonlit:
+		light.color = Color(0.8, 0.88, 1.0)
+		glow.color = Color(0.9, 0.94, 1.0)
 	queue_redraw()
 
 # ---- state
@@ -132,6 +140,8 @@ var _base := -5
 
 var flame: AnimatedSprite2D
 var holder: Sprite2D
+var holder_tex := "hero/holder"
+var moonlit := false   # Moonwick: a cool, moon-white light
 var face: Sprite2D
 var light: PointLight2D
 var glow: PointLight2D
@@ -140,7 +150,7 @@ var _shown_h := 14
 
 func _ready() -> void:
 	holder = Sprite2D.new()
-	holder.texture = Art.tex("hero/holder")
+	holder.texture = Art.tex(holder_tex)
 	holder.centered = false
 	holder.offset = Vector2(-9, -7)
 	add_child(holder)
@@ -160,7 +170,7 @@ func _ready() -> void:
 	flame.play("default")
 	light = PointLight2D.new()
 	light.texture = Art.light_tex
-	light.color = Color(1.0, 0.74, 0.44)
+	light.color = Color(1.0, 0.74, 0.44) if not moonlit else Color(0.8, 0.88, 1.0)
 	light.energy = 1.15
 	light.shadow_enabled = true
 	light.shadow_filter = PointLight2D.SHADOW_FILTER_PCF5
@@ -170,7 +180,7 @@ func _ready() -> void:
 	# a tight warm glow so the candle itself always reads in the dark
 	glow = PointLight2D.new()
 	glow.texture = Art.light_tex
-	glow.color = Color(1.0, 0.85, 0.6)
+	glow.color = Color(1.0, 0.85, 0.6) if not moonlit else Color(0.9, 0.94, 1.0)
 	glow.energy = 0.55
 	glow.texture_scale = 0.22
 	add_child(glow)

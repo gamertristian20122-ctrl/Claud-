@@ -116,6 +116,7 @@ func _ready() -> void:
 	row2.add_child(again)
 	row2.add_child(UI.button("Title", func(): main.goto("title")))
 	v.add_child(row2)
+	Tower.on_results(self, v, params)   # the Clock Tower: TRUE ENDING, its floor name, the hint after a first win
 
 
 ## The top of the note: who did it (portrait + "Snuffed by ..."), or the win.

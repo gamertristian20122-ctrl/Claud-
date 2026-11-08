@@ -35,6 +35,7 @@ const FLOOR_LIKES := {
 	2: {"pits": 2.0, "bones": 2.6, "furniture": 1.3, "webs": 1.4, "oil": 0.7},
 	3: {"furniture": 2.2, "fire": 1.8, "cover": 1.3, "bones": 0.7, "webs": 0.6},
 	4: {"spikes": 1.8, "pits": 1.5, "hard": 1.6, "fire": 1.3, "choke": 1.4, "webs": 1.2},
+	5: {"hard": 1.8, "open": 1.4, "cover": 1.5, "pits": 1.4, "furniture": 1.2, "webs": 0.3, "oil": 0.5, "bones": 0.4},   # Clock Tower
 }
 
 ## id, tags, optional w (weight), min_floor, rows.

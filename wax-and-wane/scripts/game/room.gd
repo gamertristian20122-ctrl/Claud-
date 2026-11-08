@@ -250,6 +250,8 @@ func _furniture_tex(c: Vector2i) -> Texture2D:
 			nm = "decor/prop_pew_m" if l and r else ("decor/prop_pew_l" if r else ("decor/prop_pew_r" if l else lone))
 		"belfry":
 			nm = "decor/prop_beam_m" if l and r else ("decor/prop_beam_l" if r else ("decor/prop_beam_r" if l else "decor/prop_bell"))
+		"tower":
+			nm = "decor/prop_tower_case" if alt or not (l or r) else "decor/prop_tower_crate"
 	return Art.tex(nm) if Art.has(nm) else Art.tex("0x72/crate")
 
 

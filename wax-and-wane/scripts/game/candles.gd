@@ -2,7 +2,7 @@ class_name Candles
 extends RefCounted
 ## The Candle Box: playable candles, each with its own clock rules. Unlocked by goals.
 
-const ORDER := ["tallow", "tea_light", "party", "pillar", "black_taper"]
+const ORDER := ["tallow", "tea_light", "party", "pillar", "black_taper", "moonwick"]
 
 const LIST := {
 	"tallow": {
@@ -36,6 +36,14 @@ const LIST := {
 		"wax": 100.0, "drain": 1.4, "speed": 1.0, "damage": 1.0, "fire_delay": 1.0, "shots": 1, "hit": 1.3,
 		"body_w": 8, "colours": ["#775c55", "#483b3a", "#333333", "#2a2a3a"],
 		"unlock_text": "Win a run",
+	},
+	# the Clock Tower's reward (scripts/game/tower.gd): a pale candle in a silver dish, lit by the moon
+	"moonwick": {
+		"name": "Moonwick", "line": "Lit by the moon. Quick and thin; its sparks pass through.",
+		"wax": 108.0, "drain": 1.0, "speed": 1.08, "damage": 1.0, "fire_delay": 1.0, "shots": 1,
+		"body_w": 10, "colours": ["#fdf7ed", "#cae6f5", "#b6cbcf", "#7b8994"],
+		"pierce": 1, "holder": "tower/holder_silver", "moon": true,
+		"unlock_text": "Be done by one, then climb",
 	},
 }
 

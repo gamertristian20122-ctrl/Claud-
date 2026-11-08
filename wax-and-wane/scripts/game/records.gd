@@ -166,6 +166,8 @@ static func on_kill(w: Node, e: Node) -> void:
 		bb[kind] = rec
 		var all := true
 		for b in BestiaryGallery.boss_kinds():
+			if Enemy.DEFS.get(b, {}).get("secret", false):
+				continue   # the Keeper is not one of the eight
 			if not bb.has(b):
 				all = false
 		if all:

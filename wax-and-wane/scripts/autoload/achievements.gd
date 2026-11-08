@@ -54,6 +54,16 @@ const LIST := [
 	{"id": "census", "name": "House Census", "desc": "Meet every lodger in the house."},
 	{"id": "curio", "name": "Curio Cabinet", "desc": "Find every relic in the house."},
 	{"id": "guardians_all", "name": "Night Watch", "desc": "Snuff all eight guardians."},
+	# the Clock Tower and the true ending (endgame stream, scripts/game/tower.gd)
+	{"id": "tower", "name": "Above the Bells", "desc": "Climb the ladder of light into the Clock Tower.", "hidden": true},
+	{"id": "keeper", "name": "Time's Up", "desc": "Still the Keeper of Hours.", "hidden": true},
+	{"id": "true_early", "name": "Home Before Half Past", "desc": "Reach the true ending before 1:30 AM.", "hidden": true},
+	{"id": "keeper_tallow", "name": "The Last Candle", "desc": "Still the Keeper as Tallow.", "hidden": true},
+	{"id": "keeper_tea_light", "name": "Small Hours", "desc": "Still the Keeper as the Tea Light.", "hidden": true},
+	{"id": "keeper_party", "name": "Many Happy Returns", "desc": "Still the Keeper as the Party Candle.", "hidden": true},
+	{"id": "keeper_pillar", "name": "Load-Bearing", "desc": "Still the Keeper as the Altar Pillar.", "hidden": true},
+	{"id": "keeper_black_taper", "name": "Midnight Oil", "desc": "Still the Keeper as the Black Taper.", "hidden": true},
+	{"id": "keeper_moonwick", "name": "Moon Over the Tower", "desc": "Still the Keeper as Moonwick.", "hidden": true},
 ]
 const BOSS_IDS := {1: "boss_cellar", 2: "boss_crypt", 3: "boss_chapel"}
 const FLOOR_IDS := {2: "floor_crypt", 3: "floor_chapel", 4: "floor_belfry"}
