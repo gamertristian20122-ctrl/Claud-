@@ -44,6 +44,9 @@ static func latency(at: Node) -> void:
 	# --- keyboard: the fire key, pressed between two physics steps (a real key press lands there too)
 	res["key_fire"] = await _key_to_shot(tree, p, "shoot_right")
 	await _settle(tree, p, 40)
+	# --- a quick tap (3 frames) 0.27 s after a shot, while the flame recharges: kept or eaten?
+	res["tap_in_cooldown"] = await _tap_in_cooldown(tree, p)
+	await _settle(tree, p, 40)
 	# --- touch: the aim stick (finger down, then a drag past the stick's dead zone)
 	Controls.set_device(Controls.TOUCH)
 	await tree.physics_frame
@@ -53,9 +56,15 @@ static func latency(at: Node) -> void:
 	await _settle(tree, p, 40)
 	res["touch_fire_from_down"] = await _touch_to_shot(tree, w, aim_at, Vector2(12, 0), true)
 	await _settle(tree, p, 40)
+	# a small flick of the thumb (5 viewport px, about 2 mm on a phone): does it fire at all?
+	res["touch_fire_small_flick"] = await _touch_to_shot(tree, w, aim_at, Vector2(0, -5), false)
+	await _settle(tree, p, 40)
 	# --- move: keyboard and the move stick; frames until Tallow is drawn one pixel further on
 	Controls.set_device(Controls.KEYS)
 	res["key_move"] = await _key_to_move(tree, p, "move_left")
+	await _settle(tree, p, 40)
+	# --- dodge: running right at full speed, then left: frames until drawn a pixel left of the turn
+	res["key_reverse"] = await _key_reverse(tree, p)
 	await _settle(tree, p, 40)
 	Controls.set_device(Controls.TOUCH)
 	res["touch_move"] = await _touch_to_move(tree, w, Vector2(vs.x * 0.22, vs.y * 0.62), Vector2(18, 0))
@@ -66,14 +75,18 @@ static func latency(at: Node) -> void:
 	await at._wait(1.5)
 	res["enemy_hit"] = await _enemy_hit_probe(tree, w, p)
 	var ok := true
-	for k in ["key_fire", "touch_fire_from_drag"]:
+	for k in ["key_fire", "touch_fire_from_drag", "touch_fire_small_flick"]:
 		ok = ok and int(res[k]) == 1
+	ok = ok and int(res["key_reverse"]) <= 6 and int(res["tap_in_cooldown"]) < 99
 	ok = ok and int(res["hurt"][0]) == 0 and int(res["hurt"][1]) == 0 and int(res["enemy_hit"][0]) == 0 and int(res["enemy_hit"][1]) == 0
 	print("[design] latency (physics frames at 60 Hz, 1 = the next physics step after the input arrives):")
 	print("[design]   key fire -> ember spawned: %s" % res["key_fire"])
+	print("[design]   3-frame tap 0.27 s into the 0.42 s recharge -> ember (99 = eaten): %s" % res["tap_in_cooldown"])
 	print("[design]   touch drag past dead zone -> ember: %s" % res["touch_fire_from_drag"])
 	print("[design]   touch down (drag 1 frame later) -> ember: %s" % res["touch_fire_from_down"])
+	print("[design]   touch small flick (5 px) -> ember: %s" % res["touch_fire_small_flick"])
 	print("[design]   key move -> first drawn pixel: %s" % res["key_move"])
+	print("[design]   key reverse at full speed -> first drawn pixel the other way: %s" % res["key_reverse"])
 	print("[design]   touch move stick -> first drawn pixel: %s" % res["touch_move"])
 	print("[design]   bolt hit -> [flash lag, sound lag, hud ghost lag]: %s" % [res["hurt"]])
 	print("[design]   ember hit -> [enemy flash lag, sound lag]: %s" % [res["enemy_hit"]])
@@ -127,6 +140,47 @@ static func _key_to_move(tree: SceneTree, p: Player, action: String) -> int:
 	return got
 
 
+## One shot, release; 16 frames later a 3-frame tap. Frames from the tap to the second ember.
+static func _tap_in_cooldown(tree: SceneTree, p: Player) -> int:
+	await _key_to_shot(tree, p, "shoot_up")
+	for i in 15:
+		await tree.physics_frame
+	await tree.process_frame
+	_spawn_frame = -1
+	var f0 := Engine.get_physics_frames()
+	Input.parse_input_event(_key_event("shoot_up", true))
+	for i in 3:
+		await tree.physics_frame
+	await tree.process_frame
+	Input.parse_input_event(_key_event("shoot_up", false))
+	for i in 30:
+		await tree.physics_frame
+		if _spawn_frame >= 0:
+			break
+	return _spawn_frame - f0 if _spawn_frame >= 0 else 99
+
+
+static func _key_reverse(tree: SceneTree, p: Player) -> int:
+	Input.parse_input_event(_key_event("move_right", true))
+	for i in 30:
+		await tree.physics_frame
+	await tree.process_frame
+	var peak := roundf(p.global_position.x)
+	var f0 := Engine.get_physics_frames()
+	Input.parse_input_event(_key_event("move_right", false))
+	Input.parse_input_event(_key_event("move_left", true))
+	var got := 99
+	for i in 40:
+		await tree.process_frame
+		var x := roundf(p.global_position.x)
+		peak = maxf(peak, x)
+		if x < peak:
+			got = Engine.get_physics_frames() - f0
+			break
+	Input.parse_input_event(_key_event("move_left", false))
+	return got
+
+
 static func _screen(w: Node, vp_pos: Vector2) -> Vector2:
 	return w.get_viewport().get_screen_transform() * vp_pos
 
@@ -152,10 +206,11 @@ static func _touch_to_shot(tree: SceneTree, w: Node, at_pos: Vector2, drag: Vect
 	_spawn_frame = -1
 	_touch(w, 3, at_pos, true)
 	var f0 := Engine.get_physics_frames()
-	if from_down:
-		await tree.process_frame   # the thumb moves on the next frame
-	else:
-		await tree.process_frame
+	# headless runs many idle frames per physics step: step once so the down and the drag land in
+	# different physics frames (the thumb moves a frame after it lands)
+	await tree.physics_frame
+	await tree.process_frame
+	if not from_down:
 		f0 = Engine.get_physics_frames()
 	_drag(w, 3, at_pos + drag, drag)
 	for i in 30:
@@ -170,6 +225,7 @@ static func _touch_to_move(tree: SceneTree, w: Node, at_pos: Vector2, drag: Vect
 	var p: Player = w.player
 	await tree.process_frame
 	_touch(w, 4, at_pos, true)
+	await tree.physics_frame
 	await tree.process_frame
 	var x0 := roundf(p.global_position.x)
 	var f0 := Engine.get_physics_frames()

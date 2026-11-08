@@ -62,6 +62,7 @@ var _r_idx := -1
 var _l_origin := Vector2.ZERO
 var _r_origin := Vector2.ZERO
 const STICK_R := 22.0
+const AIM_FLICK := 4.0   # px of thumb travel before the aim stick fires
 
 
 func _init(w: Node) -> void:
@@ -742,7 +743,9 @@ func _input(event: InputEvent) -> void:
 				_r_origin = pos - d.normalized() * STICK_R
 				stick_r.position = _r_origin
 				d = pos - _r_origin
-			_touch_aim = d / STICK_R if d.length() > 5.0 else Vector2.ZERO
+			# the aim stick is a direction: past a 4 px flick it fires at full tilt (design pass: a 5 px
+			# flick used to do nothing, the player waited for 0.3 x STICK_R = 6.6 px)
+			_touch_aim = d.normalized() if d.length() > AIM_FLICK else Vector2.ZERO
 			stick_r.set_meta("knob", d)
 
 
