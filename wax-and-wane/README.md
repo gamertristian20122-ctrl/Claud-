@@ -1,84 +1,208 @@
 # Wax & Wane
 
-A room-by-room roguelite for Android phones (landscape), made with **Godot 4.7.2** (GL Compatibility).
+A room-by-room roguelite for Android phones (landscape), Windows, Linux and the Steam Deck, made with
+**Godot 4.7.2** (GL Compatibility, 384x216 pixels, integer scaling).
 
 You are **Tallow**, a small living candle. At midnight the old house wakes up. Your wax is your health
 **and** your clock: it melts every second, enemies melt it faster, and wax drippings mend it. The HUD
-candle runs from **12:00 AM** to **2:00 AM**. Burn down through four floors and snuff the **Hour Fiend**
-before the clock strikes two. The lower your wax, the shorter you get and the smaller your circle of light.
+candle runs from **12:00 AM** to **2:00 AM** (one minute of wax = one minute on the clock; a full,
+unhurt candle lasts about 8 real minutes). Burn down through four floors and snuff the Belfry's
+guardian before the clock strikes two. The lower your wax, the shorter you get and the smaller your
+circle of light. Be done by **1:00 AM** and a ladder of light opens to a secret fifth floor, the
+**Clock Tower**, and the true ending.
 
 ## How to play
-- **Left thumb:** move (floating stick). **Right thumb:** shoot in that direction (hold to keep firing).
-- **Bomb button** (right edge): breaks rocks and hollow walls, hurts everything nearby, including you.
-- **Keepsake button** (above the bomb, once you carry one): use it when its pips are full. Keyboard: Q.
-- **II** (top right): pause. Android Back also pauses.
-- Desktop testing: WASD move, arrow keys shoot, Space/E bomb, Esc pause.
+The game picks up whatever you touch last (screen, keys, mouse or pad) and changes the on-screen
+hints, the chalk drawings in the first room and the button labels to match.
+
+| | Phone (touch) | Keyboard + mouse | Gamepad / Steam Deck |
+|---|---|---|---|
+| Move | left thumb (floating stick) | W A S D | left stick or d-pad |
+| Shoot | right thumb, in that direction (hold to keep firing) | arrow keys, or hold the left mouse button to fire at the cursor | right stick, or Y / A / X / B for up / down / left / right |
+| Bomb | bomb button (right edge) | E or Space, right mouse button | RB or RT |
+| Keepsake (when its pips are full) | keepsake button (above the bomb) | Q or Shift, middle mouse button | LB or LT |
+| Pause | II (top right) or Android Back | Esc or P | Start or Back |
+| Menus | tap; swipe the Journal grid to turn pages | arrows / WASD, Enter or Space, Esc back, Q / E switch pages | d-pad / left stick, A, B back, LB / RB switch pages |
+| Fullscreen | | F11 or Alt+Enter | |
+
+- **Bombs** break rocks, soot rocks and cracked walls (secret Hollows) and hurt everything nearby,
+  including you.
+- **Settings** (title or pause menu), two pages: *Game* (music, sound, screen shake, vibration,
+  gentle burn, FPS counter, fullscreen on desktop) and *Controls* (touch sticks AUTO / ON / OFF, swap
+  sticks, aim assist, mouse aim on desktop, the key list). Vibration also rumbles a gamepad.
+- **Save & Continue**: the run is saved at the start of every floor (and when the app is paused or the
+  window closes). Pause > *Save & quit*, then *Continue* on the title (it shows the floor and clock).
+- The first three runs show a short controls hint; the first room of every run has the controls
+  chalked on the floor for the device you are using.
 
 ## What's in it
 | | |
 |---|---|
-| Floors | The Cellar, The Crypt, The Chapel, The Belfry (8 → 14 rooms each, generated every run) |
-| Rooms | 18 hand-made layouts (randomly mirrored), plus start, treasure, shop and boss rooms |
-| Enemies | 16 kinds: chasers, hoppers that splash water, archers, chargers, leapers, ring-casters, summoners, flask-throwers, a mimic chest |
-| Bosses | Old Rot, The Gaoler, The Hollow Vicar, The Hour Fiend (3 phases: fans, dashes, sweeping clock hands, bell tolls) |
-| Relics | 25 (Twin Wick, Blue Flame, Moth Friend, Hourglass, Phoenix Feather, Pocket Watch...) + 4 tonics |
-| Other | Shops, chests, mimics, urns and crates, spikes, pits, bombs, candelabras that light up when a room is cleared, bell tolls at 1:00 / 1:30 / 1:45 |
-| Kindling (v1.1) | Kills within 2.2 s chain into a streak that pours minutes back into the candle (x3 +1 min, x5 +2 min...); a hit douses it |
-| Spilled Wax (v1.1) | A hit splashes half the lost wax out as warm drops - grab them back within 4 s. Once per floor a killing hit leaves you Guttering at 1 minute |
-| Marked foes (v1.1) | Glowing ember / gilded / sooty / chilled monsters: tougher, and they pay out wax, coins or bombs |
-| Smoke Altar & Vigil (v1.1) | After some bosses: buy strong relics with minutes cut from the top of your candle forever - or, if you are struggling, a free Vigil gift |
-| Keepsakes (v1.1) | One held item with charge pips filled by clearing rooms: Hand Bell (freeze), Flare Match (ember ring), Winding Key (+12 min), Smoke Jar (untouchable) |
-| Candle Rites (v1.1) | Hold 3 relics of the same Rite (Hearth, Clock, Moth, Many Wicks) for a set bonus you can see on Tallow |
-| Candle Box (v1.1) | Unlockable candles with their own clocks: Tea Light, Party Candle, Altar Pillar, Black Taper (hard mode) |
-| Omens & Hollows (v1.1) | Floor twists that always pay back (Cold Draught, Tallow Moon, Long Night, Smoky Halls); one secret Hollow per floor behind a cracked, wax-seeping wall - bomb it |
-| Tonight's Candle (v1.1) | A nightly seeded run: same house for everyone that night, scored on your first try |
+| Floors | The Cellar, The Crypt, The Chapel, The Belfry (8 / 10 / 12 / 14 rooms, plus a shop, a treasure room, a boss room, a Hollow and any special rooms; a new house every run from the run seed). Secret 5th floor: **The Clock Tower** (6-8 rooms, one treasure room and the Keeper's room; no shop, Hollow, special rooms or omens) |
+| Rooms | 69 hand-made 15x9 layouts, randomly mirrored and weighted by floor (the Cellar likes webs and barrels, the Crypt pits and bones, the Chapel pews and hearths, the Belfry spikes and hard rooms), plus start, treasure, shop, boss, Hollow and special rooms. Furniture (barrels, coffins, pews, beams, long-case clocks), hearths that burn, oil jars that explode and chain, cobwebs that slow walkers, soot rocks that always drop a bomb, skull piles, spikes, pits, urns, crates and hidden chests. Every room is dressed from its seed: wall lights, banners, shelves, stained glass, floor decals. `--checkrooms` checks every layout |
+| Special rooms | **The Seance** (floors 1-4, 40%): ring the bell for 3 waves and a boss-pool relic. **The Cracked Mirror** (2-4, 45%): a strong relic for 15 max minutes, for good. **The Music Box** (1-4, 40%): 3 coins a crank, it plays what it likes. **The Study** (2-4, 35%): a keepsake, two tonics or the floor's map. **The Wax Font** (1-4, 30%): feed it 4 minutes at a time; the sixth offering always pays a relic. Each has its own door and minimap mark |
+| Lodgers | 35 creatures, each with a name, a line of lore and its own stain colour: 20 from the 0x72 set (Coal-Bin Shambler, Larder Thief, Bone Lodger, Hearth Devil, Hungry Chest...) and 15 of the house's own (Rose Melt, Lamp Moth swarms, Iron Snuffer, Grave Light, Sootling, Waxwork Bride, Cinder Rat, Restless Psalter, Clapper Bat, Deathwatch Beetle, Grave Hand, Gutterspout; Cog Sentry and Minute-Hand Wraith in the tower). Attacks are telegraphed (lanes, rings, flashes). Marked foes (ember / gilded / sooty / chilled) are tougher and pay out wax, coins or bombs |
+| Guardians | 8, two per floor, picked by the run seed: Old Rot or The Wax Mother (Cellar), The Gaoler or The Sexton (Crypt), The Hollow Warden or The Melted Choir (Chapel), The Hour Fiend or The Great Pendulum (Belfry; always the Hour Fiend until your first win). The four 2.0 guardians have 3 phases each. Every guardian gets a versus card. Secret: **The Keeper of Hours** (Clock Tower: sweeping clock hands, stopped time, chimes) |
+| Mini-bosses | 6 house champions, a lodger grown to twice the size with 6x health and one extra attack (floors 2-4, 50% a floor): The Great Sootling, The Bone Landlord, The Kitchen Devil, The Rafter King, The Deathwatch Queen, The Icebox Giant |
+| Relics | 64 (24 from 1.x and 40 new: shot changers like Split Wick, Tin Sconce, Old Pipe, Stove Door; showpieces Blowlamp, Pale Taper, Tinderbox; curses Cold Wax, Shadow Puppet, Love Letter, Nightshade; helpers Matchling, Paper Lantern, Dust Bunny, Clockwork Mouse; clock relics Pendulum, Bell Rope, Cuckoo Clock, Minute Hand...). Five quality tiers; each room type (treasure, shop, boss, Smoke Altar, Hollow) draws from its own pool. Many show on Tallow as costume pieces |
+| Tonics | 8 unlabelled flasks. Each run they hide 8 of 13 draughts (5 good, 2 bad, 1 odd); you learn one by drinking it. Big flasks are 1.8x stronger, for better or worse |
+| Keepsakes | 8, one held at a time, charged by clearing rooms: Hand Bell (freeze), Flare Match (ember ring), Winding Key (+10 min), Smoke Jar (untouchable), Censer (poison), Oil Jug (burning pool), Music Box (charm), Hand Mirror (shots turn back) |
+| Candle Rites | 6 set bonuses for holding 3 relics of one Rite: Hearth, Clock, Moth, Many Wicks, Household, Seance. Tallow's look changes with each |
+| Candle Box | 6 playable candles with their own clocks: Tallow; Tea Light (reach the Crypt); Party Candle (x8 Kindling); Altar Pillar (snuff the Chapel's guardian); Black Taper, hard mode (win a run); **Moonwick** (still the Keeper of Hours: pale wax, a silver dish, sparks that pierce) |
+| Run twists | **Kindling**: quick kills chain into a streak that pours minutes back in. **Spilled Wax**: a hit splashes wax out to grab back; once a floor a killing blow leaves you **Guttering** at 1 minute. **Omens** (floors 2-4): Cold Draught, Tallow Moon, Long Night, Smoky Halls. **Hollows**: one secret room a floor behind a cracked, wax-seeping wall. **Smoke Altar** after some guardians (buy strong relics with max minutes) or a free **Vigil** gift when you are struggling. The Tallow Merchant's shop, chests, mimics, bell tolls at 1:00, 1:30 and 1:45 |
+| Journal | From the title and the pause menu, six tabs: Relics (64 + keepsakes + Vigil gifts), Lodgers, Guardians, Rooms (special rooms and champions), Candles, Records (totals, best finishes, Tonight's Candle history, the last 20 runs). Unseen entries are silhouettes; new ones carry a gold dot |
+| Unlocks and achievements | 18 of the new relics and 2 keepsakes move into the house as you earn achievements. 52 achievements (13 hidden), shown as toasts and listed in Settings; sent to Steam when GodotSteam is present |
+| Results | A death note (what snuffed you, with its portrait), the run's relics, anything that moved in, and the run's seed to share |
+| Tonight's Candle and seeds | **Tonight's Candle**: one seeded house a night, the same for everyone, scored on your first try. **Seed**: type in a friend's seed on the title keypad. Both use the full relic pool, so a seed is the same run for everyone |
+| True ending | Beat the Belfry's guardian by 1:00 AM, climb the ladder of light (+12 min), cross the Clock Tower and still the Keeper of Hours: four ending scenes, a credits roll and a results screen marked TRUE ENDING |
 
 ## Project layout
 ```
-project.godot, export_presets.cfg, icon.png
-scenes/main.tscn              entry scene; everything else is built in code
-scripts/main.gd               screen manager, fades, Android back button
-scripts/autoload/             Game (settings, records, save), Audio (music + SFX pool), Art (texture loader)
-scripts/game/world.gd         a run: floors, rooms, transitions, spawning, drops, bombs, effects, clock
-scripts/game/room.gd          one room: background, doors, obstacles, candelabras, spikes, collision grid
-scripts/game/floor_gen.gd     floor layout generator      scripts/game/room_templates.gd   15x9 room layouts
-scripts/game/player.gd        Tallow (the wax body is drawn in code and shrinks with your wax)
-scripts/game/enemy.gd         every creature and boss     scripts/game/shot.gd   projectiles
-scripts/game/items.gd         relics, tonics, keepsakes, rites, gifts   scripts/game/pickup.gd wax, coins, chests, shop goods
-scripts/game/candles.gd       the Candle Box (playable candles and their unlock goals)
-scripts/game/hud.gd           wax/clock bar, minimap, boss bar, twin-stick touch controls, pause menu
-scripts/ui/                   title, results, settings, UI helpers
-scripts/autotest.gd           play-test bot + screenshot tour
-assets/0x72/frames/           0x72 DungeonTileset II frames (CC0)
-assets/art/                   our own pixel art (hero, fx, pickups, relic icons, rooms, UI)
-assets/audio/                 sound effects (Kenney, CC0, processed) + synthesized music
-tools/                        asset generators (Python) and the APK build script
+project.godot, export_presets.cfg (Android, Android Play, Windows Desktop, Linux), icon.png
+scenes/main.tscn                  entry scene; everything else is built in code
+scripts/main.gd                   screen manager, burn transitions, Android back, --checkscripts / --checkrooms
+scripts/autoload/game.gd          Game: settings, records, save file, VERSION, clock_text()
+scripts/autoload/audio.gd         Audio: music slots, SFX takes, dynamic mix, low-wax layer, per-floor reverb
+scripts/autoload/art.gd           Art: texture loader (Art.tex / Art.has)
+scripts/autoload/controls.gd      Controls: InputMap, last device, focus for keys / pad, cursors, fullscreen
+scripts/autoload/achievements.gd  Achievements: list, toasts, Steam bridge (GodotSteam if present)
+scripts/game/run_save.gd          RunSave (autoload): Save & Continue (user://run.cfg)
+scripts/game/world.gd             a run: FLOORS / POOLS, rooms, spawning, drops, bombs, the clock, effects
+scripts/game/floor_gen.gd         floor layout (shop, treasure, boss, Hollow, special rooms, champion room)
+scripts/game/room.gd              one room: background, doors, obstacles, hazards, collision, path_dir()
+scripts/game/room_templates.gd    the 69 layouts, FLOOR_LIKES, the --checkrooms validator
+scripts/game/room_decor.gd        seeded dressing, wall lights, stained glass, light budget
+scripts/game/player.gd            Tallow (wax body drawn in code; squash, drips, melt-down)
+scripts/game/costumes.gd          relic costume pieces on Tallow
+scripts/game/candles.gd           the Candle Box
+scripts/game/enemy.gd             Enemy.DEFS (every creature and guardian), FLOOR_HP, TOUCH, pick_boss
+scripts/game/enemies/             house_ai.gd (lodger AIs), boss_ai.gd (guardians), telegraph.gd,
+                                  soot_patch.gd, gallery.gd (bestiary review sheets)
+scripts/game/keeper.gd            the Clock Tower's creatures and the Keeper of Hours
+scripts/game/tower.gd             the Clock Tower: unlock, ladder, floor 5 layout and dressing, true ending hook
+scripts/game/specials.gd          special rooms, offers and the house champions
+scripts/game/items.gd             relics, tonics, keepsakes, rites, Vigil gifts (data + stat relics)
+scripts/game/relic_fx.gd          everything relics do live (shots, curses, helpers, tonics, relic pools)
+scripts/game/pickup.gd            wax, coins, chests, shop goods, previews, prices
+scripts/game/shot.gd              projectiles
+scripts/game/juice.gd             game feel: shake, hit-stop, room-clear, boss finale, dust in the light
+scripts/game/stains.gd, fx_gibs.gd, fx_parts.gd   floor stains, gibs, particles
+scripts/game/boss_card.gd         the versus card
+scripts/game/burn.gdshader, flame_lean.gdshader   burn transition, flame lean
+scripts/game/chalk.gd             the chalked controls in the first room
+scripts/game/records.gd           what the Journal remembers, the death note
+scripts/game/unlocks.gd           which relics and keepsakes move in with which achievement
+scripts/game/hud.gd               wax / clock bar, minimap, boss bar, touch sticks, pause menu
+scripts/game/meta_tour.gd         the --tour --journal screenshot tour
+scripts/ui/                       title.gd (menu, Candle Box, seed keypad, credits), results.gd, journal.gd,
+                                  ending.gd (true ending + credits roll), settings_panel.gd, key_catcher.gd, ui.gd
+scripts/autotest.gd               play-test bot, screenshot tours, bench
+scripts/audio_check.gd            --audiotest
+scripts/store_shots.gd            --shots-store and --keyart staging for the store images
+assets/0x72/frames/               0x72 DungeonTileset II frames (CC0)
+assets/art/                       our own pixel art (see DESIGN.md for every folder)
+assets/audio/                     music/ (12 slots) and sfx/ (74 files)
+assets/fonts/, assets/licenses/   Kenney fonts; every licence and per-file credit list
+tools/art_*.py                    art generators (rooms, decor, fx, items, monsters, specials, chalk, tower, ui, icon)
+tools/import_audio.py, make_audio.py   music import + loudness, SFX and jingles
+tools/build_apk.sh, build_aab.sh, build_desktop.sh, android_sdk_setup.sh, store_art.py, steam/
+docs/                             REVAMP.md, streams/ (notes per 2.0 work stream), marketing/ (store pages, store_assets/)
 ```
+`android/` (Godot's Android build template, about 230 MB) is git-ignored; `tools/build_aab.sh`
+re-creates it from the export templates.
 
 ## Commands
+Run from `wax-and-wane/`. Add `--speed=4` to anything the bot plays to run it four times faster.
 ```
 godot --headless --path . --import                                   # after adding/changing assets
 godot --headless --path . -- --checkscripts                           # compile every script
-godot --headless --path . -- --autotest --playtest --speed=4 --runs=3 # bot plays full runs, prints a summary
-xvfb-run -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 \
-    -- --autotest --tour --shots=/abs/dir                             # screenshots of every screen
-./tools/build_apk.sh                                                  # signed APK -> build/WaxAndWane.apk
+godot --headless --path . -- --checkrooms                             # validate every layout + dressed room (exit 1 on a problem)
+godot --headless --path . -- --autotest --audiotest                   # every sound and music slot + the live mix
+
+# the bot plays full runs and prints a summary ([diag] lines per floor, [stuck] if it stalls)
+godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
+    --god                 the bot cannot die (does the game reach the end?)
+    --seed=N              fixed seeds (consecutive per run)
+    --stress              a random relic in every room (ends holding all 64)
+    --unlockall --candle=tea_light|party|pillar|black_taper|moonwick
+    --relics=a,b,c  --keepsake=id    start with these
+    --savecycle           Save & quit + Continue at every floor
+    --tower [--keeper [--keeperwax=N]]   start in the Clock Tower with a test kit (or at the Keeper)
+    --nospecials          no special rooms or champions (balance baseline)
+    --nocard              skip the boss versus card
+    --device=touch|keyboard|mouse|gamepad,  --touchmouse   input to show / emulate
+godot --headless --path . -- --autotest --bench [--secs=6] [--seed=N] [--ablate]   # CPU per frame, lights, leaks
+
+# screenshot tours (look at the pictures!). 1600x720 = a 480x216 phone screen
+xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 \
+    -- --autotest --tour --shots=/abs/dir                             # every screen + one room per floor
+    ... --tour --rooms        4 hand-picked layouts per floor
+    ... --tour --gallery      every creature and guardian labelled, then each floor's lodgers in a room
+    ... --tour --bosses [--only=kind]   each guardian mid-fight
+    ... --tour --relictour    costumes, curses, helpers, Blowlamp, pause, shop, treasure, results
+    ... --tour --specials     every special room, Seance waves, the champions, the minimap marks
+    ... --tour --journal      every Journal tab, death note, seed keypad, credits, chalk start room
+    ... --tour --tower        ladder, Clock Tower, the Keeper's phases, the four ending scenes, TRUE ENDING
+    ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
+    ... --herosheet           Tallow in every state at x6 (hero_states.png)
+    ... --shots-store [--phone]   staged store screenshots (run at 1920x1080; 2160x1080 for --phone)
+    ... --keyart [--keylayout=wide|tall]   the key-art scene, no HUD
+
+python3 tools/store_art.py [--import] [--no-render] [--review /abs/dir]   # every Steam / Play / itch image
+./tools/build_apk.sh                  # signed APK for sideloading -> build/WaxAndWane.apk
+./tools/build_aab.sh                  # Google Play bundle -> build/WaxAndWane_v<version>.aab (ends with PLAY-READY)
+./tools/build_aab.sh --verify build/X.aab   # checks only
+./tools/build_desktop.sh              # build/WaxAndWane_<version>_windows.zip and _linux.zip (+ a headless boot test)
+./tools/android_sdk_setup.sh          # Android platform 36 + build-tools 36.1.0 (build_aab.sh runs it)
 ```
+Art tools: `python3 tools/art_<name>.py [--review <dir>]` rebuilds that art and writes contact sheets.
+Audio: `python3 tools/import_audio.py music` and `python3 tools/make_audio.py sfx` (see
+`docs/streams/audio.md`). Steam upload templates are in `tools/steam/`.
 
 ## Signing
-This repository is **public**, so the release key is **not** in it. `tools/build_apk.sh` signs with the
-owner's private release key from the private `FailedIdolsOfTheAbyss` repo (`keystore/`), expected next to
-this repo (`../../FailedIdolsOfTheAbyss/keystore/`). Every update must be signed with that same key.
-Bump `version/code` in `export_presets.cfg` for each build you install over an older one.
+This repository is **public**, so the release key is **not** in it. `tools/build_apk.sh` and
+`tools/build_aab.sh` sign with the owner's private release key from the private `FailedIdolsOfTheAbyss`
+repo (`keystore/`), expected next to this repo (`../../FailedIdolsOfTheAbyss/keystore/`; `build_aab.sh`
+also looks in `$KS_DIR` and `~/FailedIdolsOfTheAbyss/keystore`, or takes `KEYSTORE` / `KEYSTORE_USER` /
+`KEYSTORE_PASS`). Every update must be signed with that same key. Google Play gets the same key as its
+app signing key (`docs/marketing/google_play.md`, section 6), so Play and sideloaded builds update each
+other. Desktop builds are not code-signed. Bump `version/code` in the "Android" preset of
+`export_presets.cfg` for each build you install over an older one (`build_aab.sh` copies it to
+"Android Play").
 
 ## Credits & licences
-- Dungeon tiles, creatures, chests, coins, bombs, flasks: **0x72 — 16x16 DungeonTileset II** (CC0),
-  `assets/licenses/0x72_DungeonTilesetII_CC0.txt`.
-- Fonts: **Kenney Pixel** and **Kenney Mini** by Kenney (CC0), `assets/licenses/Kenney_Fonts_CC0.txt`.
-- Sound effects: **Kenney** audio packs (CC0) — see `assets/licenses/` and `assets/licenses/CREDITS_audio.txt`.
-- Hero, effects, pickups, relic icons, room compositions, UI, logo and app icons: original pixel art made for
-  this game (`tools/art_*.py`; app / store icons: `tools/art_icon.py`), built from / matched to the 0x72 palette.
-- Music: original, synthesized for this game (`tools/make_audio.py`).
-- Engine: Godot Engine (MIT).
-- Asset packs were obtained via the curated `series-ai/jam-ready-assets` library, which records each
-  pack's licence.
+Every licence text is in `assets/licenses/`. All third-party assets are CC0 1.0 (public domain) or MIT.
+- **Dungeon tiles, the 0x72 creatures and guardians, chests, coins, bombs, flasks**: *16x16 DungeonTileset
+  II* by **0x72** (CC0), https://0x72.itch.io/dungeontileset-ii -
+  `0x72_DungeonTilesetII_CC0.txt`; how the room art uses it: `CREDITS_rooms.txt`.
+- **Fonts**: *Kenney Pixel* and *Kenney Mini* by **Kenney** (CC0), www.kenney.nl - `Kenney_Fonts_CC0.txt`.
+- **Sound effects**: layered and processed from **Kenney** Foley Sounds, Impact Sounds, Interface Sounds,
+  Retro Sounds 1, Retro Sounds 2 and RPG Audio (CC0) - `Kenney_*_CC0.txt`; plus a few **Ninja
+  Adventure** sounds (fire, fireball, wings, spirit, explosion; CC0) and original synthesis. Source of
+  every file: `CREDITS_audio.txt`.
+- **Music**: *Ninja Adventure Asset Pack* by **Pixel-boy** and **AAA** (CC0),
+  https://pixel-boy.itch.io/ninja-adventure-asset-pack - `Ninja_Adventure_CC0.txt`, slots in `CREDITS_music.txt`:
+
+  | Slot | Track |
+  |---|---|
+  | Title | 22 - Dream |
+  | The Cellar | 40 - Crypt |
+  | The Crypt | 21 - Dungeon |
+  | The Chapel | 12 - Temple |
+  | The Belfry | 24 - Final Area |
+  | The Clock Tower | 19 - Ascension |
+  | Shop | 39 - Boat |
+  | Guardians (floors 1-3) | 17 - Fight |
+  | Belfry guardian and the Keeper | 28 - Tension |
+  | True ending and credits | 15 - Credit Theme |
+
+  The victory and death jingles are original, synthesized for this game (`tools/make_audio.py`).
+- **Engine**: Godot Engine (MIT), https://godotengine.org - `Godot_MIT.txt`.
+- **Original work**: design, code, the hero, the house's own creatures and guardians, the Keeper,
+  relic and keepsake icons, costumes, effects, rooms, decor, special rooms, the Clock Tower, chalk
+  drawings, UI, logo, app and store icons, and the jingles were made for this game with **Claude**
+  (`tools/art_*.py`, `tools/make_audio.py`), built from and matched to the 0x72 palette.
+- The free packs were obtained through the curated `series-ai/jam-ready-assets` library, which records
+  each pack's licence.
+
+The in-game credits (title > Credits, and the true ending's credits roll) list the same.
