@@ -1416,8 +1416,39 @@ func fx_drop(pos: Vector2, v: Vector2) -> void:
 var _texts: Array = []   # live fx_text labels: a new one stacks clear of them instead of overlapping
 
 
+## C10: minute rewards that land in the same frame near the same spot (a room clear's QUICK, CLEAN and
+## hourglass, the last kill's Kindling) read as one line, "+4 min  KINDLING x3  CLEAN  QUICK".
+var _merge := {"frame": -1, "label": null, "min": 0, "words": [], "x": 0.0}
+var _min_re := RegEx.create_from_string("^(.*?)\\s*\\+(\\d+) min$")
+
+
+func _merged_text(pos: Vector2, text: String) -> bool:
+	var m := _min_re.search(text)
+	if m == null:
+		return false
+	var frame := Engine.get_process_frames()
+	var last: Variant = _merge["label"]
+	if frame == int(_merge["frame"]) and last != null and is_instance_valid(last) and absf(pos.x - float(_merge["x"])) < 24.0:
+		_merge["min"] = int(_merge["min"]) + int(m.get_string(2))
+		if m.get_string(1) != "":
+			(_merge["words"] as Array).append(m.get_string(1).strip_edges())
+		var l: Label = last
+		l.text = ("+%d min  %s" % [_merge["min"], "  ".join(_merge["words"])]).strip_edges()
+		var w := Art.font_small.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 4.0
+		if w > l.size.x:
+			l.position.x -= (w - l.size.x) / 2.0
+			l.size.x = w
+		return true
+	_merge = {"frame": frame, "label": null, "min": int(m.get_string(2)), "words": [] if m.get_string(1) == "" else [m.get_string(1).strip_edges()], "x": pos.x}
+	return false
+
+
 func fx_text(pos: Vector2, text: String, col: Color) -> void:
+	if _merged_text(pos, text):
+		return
 	var l := UI.outlined(UI.label(text, 8, col, HORIZONTAL_ALIGNMENT_CENTER))
+	if int(_merge["frame"]) == Engine.get_process_frames() and _merge["label"] == null and _min_re.search(text):
+		_merge["label"] = l
 	l.material = Art.unshaded
 	l.size = Vector2(60, 10)
 	l.position = Vector2(pos.x - 30, _free_text_y(pos))

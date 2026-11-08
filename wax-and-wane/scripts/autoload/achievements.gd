@@ -312,6 +312,9 @@ func _hold_reason(scr: Node) -> String:
 			return "ending"
 	var hud: Variant = w.get("hud")
 	if hud and is_instance_valid(hud):
+		var bb: Variant = hud.get("boss_box")
+		if bb and (bb as CanvasItem).visible:
+			return "boss"   # a guardian fight: the medal can wait for the victory (and its banner)
 		for l in [hud.get("banner"), hud.get("banner_sub")]:
 			if l and is_instance_valid(l) and (l as CanvasItem).modulate.a > 0.05 and str(l.text) != "":
 				return "banner"

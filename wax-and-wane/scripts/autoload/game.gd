@@ -136,6 +136,7 @@ func tip(key: String, times := 2) -> bool:
 		return false
 	t[key] = n + 1
 	records["tips"] = t
+	set_meta("tip_frame", Engine.get_process_frames())   # the HUD holds a tip that lands mid boss fight
 	return true
 
 

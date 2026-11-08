@@ -42,6 +42,9 @@ var streak_label: Label
 var hint_band: ColorRect
 var _banner_tw: Tween
 var _hint_tw: Tween
+var _held_tips: Array = []      # [text, dur]: tips that landed mid guardian fight, shown after it (UX-04)
+var _hint_scope := []           # [floor, cell] of the special room a hint belongs to, or [] (C11)
+var _banner_scope := []
 
 var shown_wax := 120.0
 var ghost_wax := 120.0
@@ -196,7 +199,7 @@ func _ready() -> void:
 	preview.max_lines_visible = 2
 	preview.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	root.add_child(preview)
-	hint = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+	hint = UI.outlined(UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))   # outlined: in a boss fight it has no band
 	hint.modulate.a = 0
 	root.add_child(hint)
 	# --- sticks
@@ -302,6 +305,10 @@ func _place_hints() -> void:
 	preview.size = Vector2(vs.x - 16.0, ph)
 	preview.position = Vector2(8, vs.y - 13 - ph - lift)
 	hint.position = Vector2(0, vs.y - 12 - lift)
+	if boss_box.visible:
+		# UX-04: during a guardian fight a hint is one line at the top, under the banner slot, with no
+		# band: the arena floor (and its bottom rows) stays clear
+		hint.position = Vector2(0, 66.0 if _narrow else 48.0)
 	hint_band.size.y = ph + 15.0
 	hint_band.position = Vector2(floorf((vs.x - hint_band.size.x) / 2.0), vs.y - 15 - ph - lift)
 
@@ -353,6 +360,7 @@ func _place_banner() -> void:
 func show_banner(title: String, sub := "", dur := 2.4) -> void:
 	banner.text = title
 	banner_sub.text = sub
+	_banner_scope = _room_scope()
 	_place_banner()
 	if title != "" and preview.text.begins_with(title.to_upper() + "  -  "):
 		preview.modulate.a = 0.0   # the banner names it now: no second copy at the bottom
@@ -393,7 +401,13 @@ func preview_item(title: String, sub: String) -> void:
 
 
 func show_hint(text: String, dur := 6.0) -> void:
+	# UX-04: a first-time tip (Game.tip) that lands while a guardian fights waits for the fight to end
+	if boss_box.visible and int(Game.get_meta("tip_frame", -1)) == Engine.get_process_frames():
+		if _held_tips.size() < 3 and not _held_tips.any(func(h): return h[0] == text):
+			_held_tips.append([text, dur])
+		return
 	hint.text = text
+	_hint_scope = _room_scope()
 	_fit_band(hint)
 	if _hint_tw:
 		_hint_tw.kill()
@@ -404,11 +418,53 @@ func show_hint(text: String, dur := 6.0) -> void:
 
 
 func set_boss(name: String, visible_: bool) -> void:
+	var ended := boss_box.visible and not visible_
 	boss_box.visible = visible_
 	_place_hints()
+	if ended and not _held_tips.is_empty():
+		_flush_tips()
 	boss_name.text = name
 	boss_frac = 1.0
 	boss_bar.queue_redraw()
+
+
+## The tips held during the fight, one after another.
+func _flush_tips() -> void:
+	var tw := create_tween()
+	tw.tween_interval(1.0)
+	for h in _held_tips:
+		tw.tween_callback(show_hint.bind(h[0], h[1]))
+		tw.tween_interval(float(h[1]) + 1.4)
+	_held_tips.clear()
+
+
+## C11: banners and hints shown in a special room (seance, mirror, music box, study, font), a treasure
+## room, the shop or a hollow belong to it: they fade as soon as Tallow leaves it. Floor banners,
+## tutorial tips and boss lines (start / normal / boss rooms) keep their time.
+func _room_scope() -> Array:
+	var r: Variant = world.get("room")
+	if r == null or not is_instance_valid(r) or not ("data" in r):
+		return []
+	if str((r as Node).get("data").get("type", "normal")) in ["start", "normal", "boss"]:
+		return []
+	return [world.get("floor_num"), world.get("cur_cell")]
+
+
+func _drop_room_text() -> void:
+	var here := [world.get("floor_num"), world.get("cur_cell")]
+	if not _hint_scope.is_empty() and _hint_scope != here:
+		_hint_scope = []
+		if _hint_tw:
+			_hint_tw.kill()
+		_hint_tw = create_tween()
+		_hint_tw.tween_property(hint, "modulate:a", 0.0, 0.25)
+	if not _banner_scope.is_empty() and _banner_scope != here:
+		_banner_scope = []
+		if _banner_tw:
+			_banner_tw.kill()
+		_banner_tw = create_tween().set_parallel(true)
+		for l in [banner, banner_sub, banner_band]:
+			_banner_tw.tween_property(l, "modulate:a", 0.0, 0.25)
 
 
 func set_boss_frac(f: float) -> void:
@@ -447,7 +503,8 @@ func _process(dt: float) -> void:
 			if _preview_lines != 1:
 				_preview_lines = 1
 				_place_hints()
-	hint_band.modulate.a = maxf(hint.modulate.a, preview.modulate.a)
+	hint_band.modulate.a = maxf(0.0 if boss_box.visible else hint.modulate.a, preview.modulate.a)
+	_drop_room_text()
 	bar.queue_redraw()
 	clock_label.text = Game.clock_text(world.clock_minutes(), false)
 	var spare := Game.spare_minutes(world.clock_minutes())
