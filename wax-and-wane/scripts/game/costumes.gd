@@ -2,7 +2,8 @@ class_name Costumes
 extends Node2D
 ## Relics you can see on Tallow: a glass chimney round the flame, a tin reflector behind it, a pipe,
 ## a knitted scarf, a feather in the dish, a wind-up key... A child of the Player, placed in the
-## same coordinates as Player._draw (feet at 0,0), so every piece follows the shrinking candle.
+## same coordinates as Player._draw (feet at 0,0); every piece anchors to Player.geo() (the wax rows,
+## the lip, the eyes, the wick tip), so it follows the melting, hopping candle.
 ## Pieces are tiny sprites from tools/art_items2.py (assets/art/items/costume/); bands that must
 ## fit the candle's width are drawn here with the same palette.
 
@@ -62,16 +63,19 @@ func _process(_dt: float) -> void:
 	modulate.a = p.self_modulate.a
 
 
-## Body geometry, the same sums Player._draw makes: [top, base, L, R, face_y].
-func _geo() -> Array:
-	var h := p.body_height()
-	var bob := -1 if sin(float(p.get("_bob"))) > 0.3 else 0
-	var base := -5 + bob
-	var top := base - h
-	var L := -p.body_w / 2
-	var R := L + p.body_w
-	var fy := top + clampi(2 + h / 5, 2, 5)
-	return [top, base, L, R, fy, h]
+## The body's geometry this frame, straight from Player.shape() (so every piece follows the melting,
+## hopping, squashing candle): t = top wax row, top = the outline over it, base = the bottom wax row
+## (it stands in the dish, whose bowl row is base + 1), lip = the overhang, fy = the eyes' top row,
+## cheek = the blush row (fy + 3), cx = the face's x, w = half-width at the eyes, belly = half-width
+## of the gumdrop belly, tip = the wick tip, d = the dish's offset (it hops with him).
+func _geo() -> Dictionary:
+	var g: Dictionary = p.geo()
+	var at: Dictionary = g["at"]
+	var w: int = g["w"]
+	var bl := Player.span_at(g, int(g["base"])).y
+	return {"t": g["top"], "top": int(g["top"]) - 1, "base": g["base"], "lip": at["lip"], "fy": g["fy"],
+		"cheek": at["cheek"], "pool": at["pool"], "cx": g["cx"], "w": w, "belly": maxi(bl, w), "h": g["h"],
+		"tip": g["tip"], "d": Vector2(0, -int(g["lift"])), "stage": g["stage"]}
 
 
 func _tex(name: String, frame := -1) -> Texture2D:
@@ -96,93 +100,106 @@ func _r(node: CanvasItem, x: float, y: float, w: float, h: float, c: Color) -> v
 
 func _draw_back() -> void:
 	var g := _geo()
-	var top: int = g[0]
+	var tip: Vector2i = g["tip"]
 	if "tin_sconce" in _wear:
-		_put(back, "sconce", Vector2(-5, top - 15))
+		# a tin reflector standing behind the flame, its foot on the top of the wax
+		_put(back, "sconce", Vector2(tip.x - 6, int(g["top"]) - 15))
 
 
 # ---------------------------------------------------------------- on the body
 
 func _draw_mid() -> void:
 	var g := _geo()
-	var top: int = g[0]
-	var base: int = g[1]
-	var L: int = g[2]
-	var R: int = g[3]
-	var fy: int = g[4]
-	var h: int = g[5]
+	var t0: int = g["t"]
+	var top: int = g["top"]
+	var base: int = g["base"]
+	var lip: int = g["lip"]
+	var fy: int = g["fy"]
+	var cheek: int = g["cheek"]
+	var cx: int = g["cx"]
+	var w: int = g["w"]
+	var bw: int = g["belly"]
+	var h: int = g["h"]
+	var d: Vector2 = g["d"]
 	var t := Time.get_ticks_msec() / 1000.0
-	if "bell_wire" in _wear and h >= 6:
-		# copper wire wound twice round the body
-		for k in 2:
-			var y := top + 3 + k * maxi(3, h / 3)
-			if y > base - 2:
-				break
-			_r(self, L, y, R - L, 1, Color("#c56025"))
-			_r(self, L + 1, y, 2, 1, Color("#ee8e2e"))
-			_r(self, R - 2, y, 1, 1, Color("#8f4029"))
-			_r(self, R, y, 1, 2, INK)
-			_r(self, L - 1, y - 1, 1, 2, INK)
-	if "scalding_wax" in _wear and h >= 6:
-		# red-hot drips over the rim and a bubble that pops in the pool
-		_r(self, L, top + 1, 1, 3, Color("#facb3e"))
-		_r(self, L - 1, top + 2, 1, 3, Color("#ee8e2e"))
-		_r(self, L - 1, top + 5, 1, 1, Color("#da4e38"))
-		_r(self, R - 1, top + 1, 1, 4, Color("#ee8e2e"))
-		_r(self, R, top + 3, 1, 3, Color("#da4e38"))
-		_r(self, L + 2, top + 1, R - L - 4, 1, Color("#ee8e2e"))
+	if "bell_wire" in _wear:
+		# copper wire wound round the body: under the overhang and round the belly
+		var ys: Array = [lip + 1]
+		if cheek + 1 <= base:
+			ys.append(cheek + 1)
+		for y in ys:
+			var hw: int = Player.span_at(p.geo(), y).y
+			_r(self, -hw, y, 2 * hw + 1, 1, Color("#c56025"))
+			_r(self, -hw + 1, y, 2, 1, Color("#ee8e2e"))
+			_r(self, hw - 1, y, 1, 1, Color("#8f4029"))
+			_r(self, hw + 1, y, 1, 2, INK)
+			_r(self, -hw - 1, y - 1, 1, 2, INK)
+	if "scalding_wax" in _wear and h >= 5:
+		# red-hot tears over the lip and a bubble that pops in the pool round the wick
+		_r(self, -w - 1, lip, 1, 3, Color("#facb3e"))
+		_r(self, -w - 1, lip + 3, 1, 1, Color("#ee8e2e"))
+		_r(self, -w - 1, lip + 4, 1, 1, Color("#da4e38"))
+		_r(self, w + 1, lip, 1, 2, Color("#ee8e2e"))
+		_r(self, w + 1, lip + 2, 1, 1, Color("#da4e38"))
+		var pool: int = g["pool"]
+		var pw: int = Player.span_at(p.geo(), pool).y
+		_r(self, -pw + 2, pool, 2 * pw - 3, 1, Color("#ee8e2e"))
 		var bub := fmod(t, 0.9)
 		if bub < 0.5:
-			_r(self, -2 + int(t / 0.9) % 3, top - roundf(bub * 4.0), 1, 1, Color("#facb3e"))
-	if "wax_coat" in _wear and fy + 5 <= base - 3:
-		# a knitted red scarf just under the face (and its tail)
-		var y2 := fy + 5
-		_r(self, L - 1, y2 - 1, R - L + 2, 4, INK)
-		_r(self, L, y2, R - L, 2, Color("#da4e38"))
-		_r(self, L, y2, 2, 1, Color("#ee8e2e"))
-		var x := L + 1
-		while x < R:
+			_r(self, -3 + int(t / 0.9) % 3, pool - 1 - roundf(bub * 4.0), 1, 1, Color("#facb3e"))
+	if "wax_coat" in _wear:
+		# a knitted red scarf round the belly, just under the blush (at low wax it drapes over the dish)
+		var y2 := cheek + 2
+		_r(self, -bw - 2, y2 - 1, 2 * bw + 5, 4, INK)
+		_r(self, -bw - 1, y2, 2 * bw + 3, 2, Color("#da4e38"))
+		_r(self, -bw - 1, y2, 2, 1, Color("#ee8e2e"))
+		var x := -bw
+		while x <= bw + 1:
 			_r(self, x, y2 + 1, 1, 1, Color("#8f4029"))
 			x += 2
-		_r(self, R - 2, y2 + 2, 3, 4, INK)
-		_r(self, R - 1, y2 + 2, 1, 3, Color("#da4e38"))
-		_r(self, R - 1, y2 + 4, 1, 1, Color("#8f4029"))
+		_r(self, bw - 2, y2 + 2, 3, 4, INK)
+		_r(self, bw - 1, y2 + 2, 1, 3, Color("#da4e38"))
+		_r(self, bw - 1, y2 + 4, 1, 1, Color("#8f4029"))
 	if "lace_fan" in _wear:
-		# a lace collar where the candle meets the dish
-		var y3 := base - 2
-		_r(self, L - 1, y3 - 1, R - L + 2, 3, INK)
-		_r(self, L, y3, R - L, 1, Color("#fdf7ed"))
-		var x2 := L
-		while x2 < R:
-			_r(self, x2, y3 + 1, 1, 1, Color("#fdf7ed") if (x2 - L) % 2 == 0 else Color("#d3bfa9"))
+		# a lace collar where the candle meets the dish (it hangs over the bowl's rim)
+		var y3 := base
+		_r(self, -bw - 2, y3 - 1, 2 * bw + 5, 3, INK)
+		_r(self, -bw - 1, y3, 2 * bw + 3, 1, Color("#fdf7ed"))
+		var x2 := -bw - 1
+		while x2 <= bw + 1:
+			_r(self, x2, y3 + 1, 1, 1, Color("#fdf7ed") if (x2 + bw + 1) % 2 == 0 else Color("#d3bfa9"))
 			x2 += 1
-	if "household" in p.rites and h >= 8:
-		_put(self, "apron", Vector2(-4, base - 8))
+	if "household" in p.rites and h >= 7:
+		# an apron tied under the blush, its hem over the dish
+		_put(self, "apron", Vector2(-4, cheek + 1))
 	if "jet_brooch" in _wear and h >= 7:
 		var lit: bool = RelicFx._cur != null and is_instance_valid(RelicFx._cur) and RelicFx._cur.brooch > 0
 		var bf := (int(Time.get_ticks_msec() / 250) % 2) if lit else 0
 		var bt := _tex("brooch", bf)
 		if bt:
-			draw_texture(bt, Vector2(-3, mini(fy + 5, base - 6)))
+			# pinned on his top-left shoulder, clear of the eyes
+			draw_texture(bt, Vector2(-w - 4, t0 - 2))
 	if "love_letter" in _wear:
-		_put(self, "bow", Vector2(L - 3, top + 1))
+		_put(self, "bow", Vector2(w - 3, t0 - 2))
 	if "stopped_clock" in _wear and h >= 5:
-		_put(self, "key", Vector2(L - 7, top + maxi(2, h / 2) - 3), 2, 2.0)
+		# the wind-up key in his back, sticking out on the left above the arm
+		_put(self, "key", Vector2(-w - 9, lip + 1), 2, 2.0)
 	if "nightshade" in _wear:
-		_put(self, "berries", Vector2(-9, -9))
+		_put(self, "berries", Vector2(-16, -9) + d)   # a sprig by the dish
 	if "phoenix_feather" in _wear and p.revives > 0:
-		_put(self, "feather", Vector2(4, -15))
+		_put(self, "feather", Vector2(9, -16) + d)
 	if "both_ends" in _wear:
-		_put(self, "flame_small", Vector2(-10, -11), 2, 8.0)
-	if "old_pipe" in _wear:
-		_put(self, "pipe", Vector2(0, fy - 1))
+		_put(self, "flame_small", Vector2(-15, -8) + d, 2, 8.0)   # burning at the other end too
+	if "old_pipe" in _wear and h >= 5:
+		var my := fy + 3   # the bottom of the mouth
+		_put(self, "pipe", Vector2(cx + 1, my - 4))
 		var ph := fmod(t, 1.6)
 		if ph < 1.0:
-			_put(self, "puff", Vector2(6, fy - 3 - roundf(ph * 6.0)), 3, 3.0)
+			_put(self, "puff", Vector2(cx + 7, my - 6 - roundf(ph * 6.0)), 3, 3.0)
 	if "seance" in p.rites:
 		for k in 2:
 			var a := t * 2.2 + k * PI
-			var at := Vector2(cos(a) * 9.0, top - 6 + sin(a) * 3.0).round()
+			var at := Vector2(cos(a) * 11.0, top - 6 + sin(a) * 3.0).round()
 			_r(self, at.x, at.y, 1, 1, Color("#cae6f5"))
 			_r(self, at.x - 1, at.y + 1, 1, 1, Color("#72d6ce"))
 
@@ -193,8 +210,10 @@ func _draw_front() -> void:
 	if not "glass_chimney" in _wear:
 		return
 	var fx := RelicFx._cur
-	if fx == null or not is_instance_valid(fx) or not fx.chimney_ready:
+	var ready: bool = fx != null and is_instance_valid(fx) and fx.chimney_ready
+	if not ready and not p.has_meta("show_all"):
 		return
 	var g := _geo()
-	var top: int = g[0]
-	_put(front, "chimney", Vector2(-7, top - 18))
+	var tip: Vector2i = g["tip"]
+	# a glass chimney round the flame, standing on the top of the wax
+	_put(front, "chimney", Vector2(tip.x - 8, int(g["top"]) - 18))

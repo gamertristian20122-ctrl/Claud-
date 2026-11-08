@@ -61,7 +61,9 @@ func _ready() -> void:
 	Engine.time_scale = Game.base_time_scale
 	Game.settings["aim_assist"] = true
 	await get_tree().create_timer(0.8).timeout
-	if args.has("herosheet"):
+	if args.has("herosheet") and args.has("costumes"):
+		_costume_sheet()
+	elif args.has("herosheet"):
 		_hero_sheet()
 	elif args.has("lightjudge"):
 		await LightJudge.run(self)
@@ -1008,6 +1010,50 @@ func _hero_sheet() -> void:
 	cand.resize(cand.get_width() * 6, cand.get_height() * 6, Image.INTERPOLATE_NEAREST)
 	cand.save_png(_shots_dir + "/hero_candles.png")
 	print("[tour] hero sheet")
+	get_tree().quit()
+
+
+## Every costume piece (relics you can see on Tallow) on Tallow at 100 and 30 % wax, the thin Party
+## Candle and the wide Altar Pillar: hero_costumes.png (x5) and hero_costumes_1x.png.
+func _costume_sheet() -> void:
+	DirAccess.make_dir_recursive_absolute(_shots_dir)
+	var layer := CanvasLayer.new()
+	layer.layer = 60
+	add_child(layer)
+	var bg := ColorRect.new()
+	bg.color = Color("#3b3332")
+	bg.size = Vector2(480, 216)
+	layer.add_child(bg)
+	var looks := [["glass_chimney"], ["tin_sconce"], ["old_pipe"], ["wax_coat"], ["lace_fan"], ["bell_wire"],
+		["scalding_wax"], ["pale_taper"], ["stopped_clock"], ["love_letter"], ["jet_brooch"], ["nightshade"],
+		["phoenix_feather"], ["both_ends"], ["household", "seance"]]
+	var setups := [["tallow", 1.0], ["tallow", 0.3], ["party", 1.0], ["pillar", 1.0], ["tea_light", 0.55]]
+	var ps: Array = []
+	for row in setups.size():
+		for i in looks.size():
+			var p := _hs_add(layer, i * 32, 2 + row * 42, setups[row][0])
+			p.revives = 1
+			p.set_meta("show_all", true)
+			for r in looks[i]:
+				if r in ["household", "seance"]:
+					p.rites.append(r)
+				else:
+					p.relics.append(r)
+			ps.append([p, float(setups[row][1])])
+	Engine.time_scale = 0.01
+	for k in 40:
+		for e in ps:
+			var p: Player = e[0]
+			p.wax = p.wax_max * float(e[1])
+			p._blink = 9.0
+			p._breath = 0.0
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	img.save_png(_shots_dir + "/hero_costumes_1x.png")
+	img.resize(img.get_width() * 5, img.get_height() * 5, Image.INTERPOLATE_NEAREST)
+	img.save_png(_shots_dir + "/hero_costumes.png")
+	print("[tour] costume sheet")
 	get_tree().quit()
 
 
