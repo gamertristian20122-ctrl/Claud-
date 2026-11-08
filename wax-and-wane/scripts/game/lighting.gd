@@ -121,8 +121,9 @@ func _walk(n: Node) -> void:
 
 
 func _on_node_added(n: Node) -> void:
-	if n is AnimatedSprite2D and n.get_parent() is Enemy:
-		(n as CanvasItem).light_mask |= CREATURE_BIT   # lit by the shadow-floor twin too
+	if n is AnimatedSprite2D and n.get_parent() is Enemy and (n.get_parent() as Enemy).spr == n:
+		# the creature's own sprite (lit_flash.gdshader, the only shader that understands the twin)
+		(n as CanvasItem).light_mask |= CREATURE_BIT
 	if n is Light2D:
 		if (n as Light2D).shadow_enabled:
 			(n as Light2D).shadow_filter = Light2D.SHADOW_FILTER_NONE

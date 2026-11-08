@@ -31,8 +31,8 @@ var _last := []
 ## Adds the glow pass to `en` if it needs one (a guardian, a marked foe, or `glow_px` art).
 static func attach(en: Enemy) -> CreatureGlow:
 	var glow_px: Array = en.def.get("glow_px", [])
-	var mini: bool = en.get_meta("mini", false)   # a special room's champion (specials.gd)
-	if not en.boss and not mini and en.champ == "" and glow_px.is_empty():
+	var is_mini: bool = en.get_meta("mini", false)   # a special room's champion (specials.gd)
+	if not en.boss and not is_mini and en.champ == "" and glow_px.is_empty():
 		return null
 	if en.def.get("glow", false):
 		return null   # already unshaded
@@ -51,7 +51,7 @@ static func attach(en: Enemy) -> CreatureGlow:
 	g._mat.set_shader_parameter("glow_n", mini(glow_px.size(), 4))
 	g._mat.set_shader_parameter("glow", 1.0 if en.boss else GLOW_EYES)
 	var rim := Color(0, 0, 0, 0)
-	if en.boss or mini:
+	if en.boss or is_mini:
 		rim = RIM_BOSS
 	elif en.champ != "":
 		rim = RIM_CHAMP.get(en.champ, RIM_BOSS)

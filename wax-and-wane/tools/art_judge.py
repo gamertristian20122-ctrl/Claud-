@@ -9,7 +9,9 @@ For every creature in every shot pair (A = as played, B = the creatures' sprites
   * floor = the median colour of B in a ring 3..8 px round those pixels,
   * top10 = WCAG contrast of the mean of its brightest 10 % of pixels against the floor
     (the UX review's measure, tools contrast.py: "ink" vs background),
-  * body = WCAG contrast of the median of all its pixels against the floor.
+  * body = WCAG contrast of the median of all its pixels against the floor,
+  * crop = the UX review's contrast.py measure on a crop of its sprite rect + 3 px (brightest 10 % of the
+    crop against the median of its darkest 60 %), for comparison with the review's numbers.
 Prints a table per condition and the worst cases; writes DIR/judge_table.json. Pass mark: top10 >= 3.0
 for every creature in shadow at full and at 25 % wax.
 """
@@ -60,11 +62,19 @@ def measure(d):
             order = np.argsort(L)
             top = px[order[int(len(L) * 0.9):]].mean(0)
             lf = float(lum(floor))
+            # the UX review's own crop measure (contrast.py): the brightest 10 % of a crop round the
+            # creature (its sprite rect + 3 px) against the median of the crop's darkest 60 %
+            crop = a[max(0, y0 - 2):y1 + 2, max(0, x0 - 2):x1 + 2].reshape(-1, 3)
+            cl = lum(crop)
+            co = np.argsort(cl)
+            ink = crop[co[int(len(cl) * 0.9):]].mean(0)
+            bg = np.median(crop[co[:int(len(cl) * 0.6)]], axis=0)
             rows.append({
                 "tag": pair["tag"], "kind": r["kind"], "boss": r.get("boss", False), "wax": pair["wax"],
                 "pixels": int(m.sum()), "floor": [int(v) for v in floor], "floor_lum": round(lf, 4),
                 "top10": round(ratio(float(lum(top)), lf), 2),
                 "body": round(ratio(float(np.median(L)), lf), 2),
+                "crop": round(ratio(float(lum(ink)), float(lum(bg))), 2),
             })
     return rows
 
@@ -88,10 +98,15 @@ def summary(rows, label):
         v = out[k]
         t = np.array([r["top10"] for r in v])
         bdy = np.array([r["body"] for r in v])
+        cr = np.array([r.get("crop", 0.0) for r in v])
         worst = sorted(v, key=lambda r: r["top10"])[:3]
         print("  %-14s n=%3d  top10 min %.2f median %.2f | body min %.2f median %.2f | below 3: %d | worst: %s" % (
             k, len(v), t.min(), np.median(t), bdy.min(), np.median(bdy), int((t < 3.0).sum()),
             ", ".join("%s %s %.2f" % (r["tag"].split("_")[0], r["kind"], r["top10"]) for r in worst)))
+        cw = sorted(v, key=lambda r: r.get("crop", 0.0))[:3]
+        print("  %-14s        review crop measure: min %.2f median %.2f | below 3: %d | worst: %s" % (
+            "", cr.min(), np.median(cr), int((cr < 3.0).sum()),
+            ", ".join("%s %s %.2f" % (r["tag"].split("_")[0], r["kind"], r.get("crop", 0.0)) for r in cw)))
     miss = [r for r in rows if r.get("missing")]
     if miss:
         print("  missing (no pixels found):", ", ".join("%s/%s" % (r["tag"], r["kind"]) for r in miss))
