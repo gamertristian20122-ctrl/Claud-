@@ -18,7 +18,7 @@ import sys
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-GAME = "/home/user/Claud-/wax-and-wane"
+GAME = os.path.dirname(os.path.dirname(HERE))   # wax-and-wane/
 FONT = GAME + "/assets/fonts/kenney_pixel.ttf"
 FRAMES_0X72 = GAME + "/assets/0x72/frames/"
 SHEET_0X72 = GAME + "/art_source/0x72_DungeonTilesetII_v1.7.png"

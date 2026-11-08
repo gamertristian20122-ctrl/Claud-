@@ -202,123 +202,105 @@ FLAME = [
 ]
 BLUE = {"w": "h", "y": "t", "o": "b", "r": "n", "R": "B"}
 
-# Brass chamberstick dish, 18x7, finger ring on the right. Drawn BEHIND the
-# wax body: put the body's bottom outline row on holder row 3, body x = 1..12.
-HOLDER = """
-...kkkkkkkkk......
-.kkyyyyyyyyykkkk..
-kyyoooooooooykyyk.
-kwoccccccccccokcRk
-kwyyyyyyyyyyykccRk
-.koooooooooookkkk.
-..kkkkkkkkkkkk....
-"""
+# --------------------------------------------------------------------------
+# Tallow, reborn (2.0 hero redesign). The approved concept lives in
+# art_source/hero_reborn/ (pitch.txt, draw.py, sheet.png); its draw.py is the
+# single source of truth for the dish, the faces, the 7x10 flame and the
+# portrait, so this tool imports it instead of copying the grids.
+# The wax body itself is drawn in code by player.gd (it melts row by row).
+# --------------------------------------------------------------------------
+sys.path.insert(0, os.path.join(ROOT, "art_source", "hero_reborn"))
+import draw as concept  # noqa: E402
 
-# Faces 10x5, drawn onto the wax (eyes 2 px tall, tiny mouth, rosy cheeks).
-FACES = {
-    "face_open": """
-    ..........
-    ..k....k..
-    ..k....k..
-    .q..kk..q.
-    ..........
-    """,
-    "face_blink": """
-    ..........
-    ..........
-    .kk....kk.
-    .q..kk..q.
-    ..........
-    """,
-    "face_hurt": """
-    .k......k.
-    ..k....k..
-    .k......k.
-    ....kk....
-    ...k..k...
-    """,
-    "face_happy": """
-    ..k....k..
-    .k.k..k.k.
-    ..........
-    .q.k..k.q.
-    ....kk....
-    """,
+CPAL = dict(concept.PAL)
+# Blue flame (Blue Flame relic): the same bands, cold colours (0x72 palette).
+CBLUE = {"w": "#cae6f5", "l": "#cae6f5", "y": "#72d6ce", "f": "#5698cc", "r": "#5956bd"}
+# Every flame frame sits on one 9x12 canvas with the wick tip (the concept's 'k'
+# pixel, left transparent so the code-drawn wick shows) at (4, 11): player.gd
+# puts the sprite's offset at (-4, -11) from the wick tip.
+FLAME_W, FLAME_H, FLAME_KX, FLAME_KY = 9, 12, 4, 11
+# Faces: 11x6, x = eye centre - 5, y = the eyes' top row. Mouth is part of the
+# face; the rosy cheeks are drawn by player.gd in each candle's own colour.
+FACE_SET = {
+    "face_open": ("open", "v"), "face_blink": ("blink", "v"), "face_brave": ("brave", "dot"),
+    "face_shout": ("brave", "open"), "face_worried": ("worried", "flat"),
+    "face_blink_worried": ("blink", "flat"), "face_tired": ("tired", "wavy"),
+    "face_blink_tired": ("blink", "wavy"), "face_hurt": ("hurt", "ouch"), "face_happy": ("happy", "grin"),
 }
 
-# Wax drip sliding down the side of the body, 3x6.
-DRIPS = [
-    """
-    .w.
-    wXd
-    .D.
-    ...
-    ...
-    ...
-    """,
-    """
-    .w.
-    .w.
-    .X.
-    wXd
-    .D.
-    ...
-    """,
-    """
-    .w.
-    .w.
-    .X.
-    .X.
-    wXd
-    .D.
-    """,
-]
 
-# Reference only: the wax body the game draws in code (12 x 14 at full wax).
-BODY_REF = """
-..44444444..
-.4wwwwwwww4.
-4wwddddddXX4
-4wwwwwwwwwX4
-4wXwXXXXwXD4
-4wXwXXXXXdD4
-4wXXXXXXXdD4
-4wXXXXXXXdD4
-4wXXXXXXXdD4
-4wXXXXXXXdD4
-4wXXXXXXXdD4
-4wXXXXXXXdD4
-4wXXXXXXXdD4
-444444444444
-"""
-
-
-def hero_composite(flame_img, face="face_open"):
-    """Holder + 14 px wax body + face + wick + flame, 20x34."""
-    im = Image.new("RGBA", (20, 34), (0, 0, 0, 0))
-    hx, hy = 1, 34 - 7
-    bx, by = hx + 1, hy + 3 - 13
-    im.alpha_composite(grid(HOLDER), (hx, hy))
-    im.alpha_composite(grid(BODY_REF), (bx, by))
-    im.alpha_composite(grid(FACES[face]), (bx + 1, by + 4))
-    wx = bx + 5
-    im.putpixel((wx, by + 1), rgba(PAL["k"]))
-    im.putpixel((wx, by + 2), rgba(PAL["4"]))
-    im.alpha_composite(flame_img, (wx - 4, by - 12))
+def spr_image(sp, W, H, ox, oy, pal=None, skip=()):
+    """concept.Spr -> RGBA image; (ox, oy) is where the sprite's origin lands."""
+    pal = dict(CPAL, **(pal or {}))
+    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for (x, y), c in sp.px.items():
+        if c in skip:
+            continue
+        X, Y = ox + x, oy + y
+        if 0 <= X < W and 0 <= Y < H:
+            im.putpixel((X, Y), rgba(pal[c]))
     return im
 
 
+def tallow_flame(kind, i, blue=False):
+    g = concept.FLAMES[kind][i]
+    for j, r in enumerate(g):
+        if "k" in r:
+            kx, ky = r.index("k"), j
+    sp = concept.Spr()
+    sp.grid(-kx, -ky, g)
+    return spr_image(sp, FLAME_W, FLAME_H, FLAME_KX, FLAME_KY, CBLUE if blue else None, skip=("k",))
+
+
+def tallow_face(eyes, mouth):
+    sp = concept.Spr()
+    concept.draw_face(sp, 0, 0, eyes, mouth)
+    sp.px = {k: v for k, v in sp.px.items() if v != "c"}   # cheeks: drawn in code per candle
+    return spr_image(sp, 11, 6, 5, 0)
+
+
+def tallow_dish():
+    """(back 19x3 at (-9, -7), front 23x5 at (-9, -5) with the ring, full 23x7 at (-9, -7))."""
+    back, front = concept.Spr(), concept.Spr()
+    concept.dish_back(back)
+    concept.dish_front(front, 0)
+    full = concept.Spr()
+    full.px.update(back.px)
+    full.px.update(front.px)
+    return spr_image(back, 19, 3, 9, 7), spr_image(front, 23, 5, 9, 5), spr_image(full, 23, 7, 9, 7)
+
+
+def build_tallow():
+    for kind, frames in concept.FLAMES.items():
+        for i in range(len(frames)):
+            save(tallow_flame(kind, i), "hero", "flame_%s_f%d.png" % (kind, i))
+            save(tallow_flame(kind, i, True), "hero", "flame_blue_%s_f%d.png" % (kind, i))
+    back, front, full = tallow_dish()
+    save(back, "hero", "holder_back.png")
+    save(front, "hero", "holder.png")
+    save(full, "hero", "holder_full.png")
+    for name, (eyes, mouth) in FACE_SET.items():
+        save(tallow_face(eyes, mouth), "hero", name + ".png")
+    # the results screen / HUD preview: Tallow at full wax, cropped to the sprite
+    im = concept.all_frames()["idle_0"].image()
+    save(im.crop(im.getbbox()), "hero", "hero_preview.png")
+
+
 def build_hero():
+    # the old 9x13 flame stays for the HUD wax bar, the Kindling streak and the title logo
     for i, f in enumerate(FLAME):
         save(grid(f, 9, 13), "hero", "flame_f%d.png" % i)
         save(grid(f, 9, 13, remap=BLUE), "hero", "flame_blue_f%d.png" % i)
-    save(grid(HOLDER, 18, 7), "hero", "holder.png")
-    for name, g in FACES.items():
-        save(grid(g, 10, 5), "hero", name + ".png")
-    for i, g in enumerate(DRIPS):
-        save(grid(g, 3, 6), "hero", "drip_f%d.png" % i)
-    save(grid(BODY_REF, 12, 14), "hero", "body_ref.png")
-    save(hero_composite(grid(FLAME[0])), "hero", "hero_preview.png")
+    build_tallow()
+
+
+def review_hero(d):
+    os.makedirs(d, exist_ok=True)
+    L = lambda *p: Image.open(os.path.join(ART, *p)).convert("RGBA")
+    tf = [L("hero", "flame_%s_f%d.png" % (k, i)) for k, fr in concept.FLAMES.items() for i in range(len(fr))]
+    tb = [L("hero", "flame_blue_%s_f%d.png" % (k, i)) for k, fr in concept.FLAMES.items() for i in range(len(fr))]
+    sheet([tf, tb, [L("hero", n) for n in ("holder_back.png", "holder.png", "holder_full.png", "hero_preview.png")],
+           [L("hero", f + ".png") for f in FACE_SET]], S=8).save(os.path.join(d, "hero_8x.png"))
 
 
 # ==========================================================================
@@ -1347,17 +1329,8 @@ def on_floor(sprite, tiles=("floor_1", "floor_2", "floor_3", "floor_5"), cols=2,
 
 def review(d):
     os.makedirs(d, exist_ok=True)
+    review_hero(d)
     L = lambda *p: Image.open(os.path.join(ART, *p)).convert("RGBA")
-    flames = [L("hero", "flame_f%d.png" % i) for i in range(6)]
-    blues = [L("hero", "flame_blue_f%d.png" % i) for i in range(6)]
-    comps = [hero_composite(f) for f in flames]
-    faces = [hero_composite(flames[0], f) for f in FACES]
-    hero_rows = [flames + blues,
-                 [L("hero", "holder.png")] + [L("hero", f + ".png") for f in FACES]
-                 + [L("hero", "drip_f%d.png" % i) for i in range(3)] + [L("hero", "body_ref.png")],
-                 comps + [ox("wizzard_m_idle_anim_f0"), ox("knight_f_idle_anim_f0")],
-                 faces + [on_floor(comps[0], cols=3, rows=3)]]
-    sheet(hero_rows, S=8).save(os.path.join(d, "hero_8x.png"))
     sheet([comps + [ox("wizzard_m_idle_anim_f0"), ox("big_demon_idle_anim_f0")],
            [on_floor(c, cols=2, rows=3) for c in comps]], S=3, pad=6).save(os.path.join(d, "hero_3x.png"))
     sheet([comps + faces + [ox("wizzard_m_idle_anim_f0"), ox("imp_idle_anim_f0")]], S=1, pad=4).save(os.path.join(d, "hero_1x.png"))
@@ -1388,6 +1361,12 @@ def review(d):
 
 def main():
     build_hero()
+    if "--hero" in sys.argv:   # only the hero (Tallow, reborn): python3 tools/art_hero_fx_items.py --hero
+        if "--review" in sys.argv:
+            review_hero(sys.argv[sys.argv.index("--review") + 1])
+        for p in OUT:
+            print(os.path.relpath(p, ROOT), Image.open(p).size)
+        return
     build_fx()
     build_pickups()
     build_items()

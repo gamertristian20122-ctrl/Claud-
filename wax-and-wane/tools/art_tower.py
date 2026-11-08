@@ -597,9 +597,11 @@ def build_ladder():
 
 # =========================================================================== Moonwick's dish
 def build_holder():
-    im = Image.open(os.path.join(ART, "hero/holder.png")).convert("RGBA")
-    put("tower/holder_silver", remap(im, {"#facb3e": "#fdf7ed", "#ee8e2e": "#b6cbcf", "#c56025": "#7b8994",
-                                          "#8f4029": "#545454"}))
+    # the hero's brass dish (front with the ring + the back rim, tools/art_hero_fx_items.py) in silver
+    silver = {"#facb3e": "#fdf7ed", "#ee8e2e": "#b6cbcf", "#c56025": "#7b8994", "#8f4029": "#545454"}
+    for src, dst in (("hero/holder.png", "tower/holder_silver"), ("hero/holder_back.png", "tower/holder_silver_back")):
+        im = Image.open(os.path.join(ART, src)).convert("RGBA")
+        put(dst, remap(im, silver))
 
 
 # =========================================================================== bolts
@@ -1028,6 +1030,13 @@ def main():
     for a in sys.argv[1:]:
         if a.startswith("--review"):
             review = a.split("=", 1)[1] if "=" in a else "/tmp/claude-0/review_tower"
+    if "--holder" in sys.argv:   # only Moonwick's silver dish (after the hero art changes)
+        build_holder()
+        for name, im in MADE.items():
+            check(name, im)
+            im.save(os.path.join(ART, name + ".png"), optimize=True)
+        print("wrote", list(MADE))
+        return
     build_rooms()
     build_gears()
     build_sconces()
