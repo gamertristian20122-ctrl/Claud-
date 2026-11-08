@@ -759,9 +759,10 @@ func _d_candle(e: Dictionary) -> void:
 
 ## The rules from the one-time intro (world._intro), for anyone who skipped it.
 func _d_howto() -> void:
-	_head(_pic(Art.tex("hero/hero_preview"), 2), "How to play", [["The rules of the night", UI.EMBER]])
-	_text("The old house wakes when the clock strikes twelve. You are Tallow, the last candle in the cellar. Burn down through four floors and snuff the Hour Fiend before the clock strikes two.")
-	_text("Your wax is your life - and your time. Every hit melts you. Wax drippings mend you.", UI.WAX)
+	# short enough for the 384-wide Journal (the detail panel must not push the Back row off the screen)
+	_head(_pic(Art.tex("hero/hero_preview"), 2), "How to play", [["Midnight to two", UI.EMBER]])
+	_text("Burn down four floors and snuff the Hour Fiend before the clock strikes two.")
+	_text("Your wax is your life and your time: hits melt it, drippings mend it.", UI.WAX)
 	_text(Controls.intro_line(), UI.DIM)
 
 
