@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Wax & Wane 2.0 - floor stains, gibs and small juice sprites (assets/art/fx/).
+"""Wax & Wane 2.0 - floor stains, gibs, small juice sprites and every enemy shot (assets/art/fx/).
 
 Splats and gibs are drawn in a neutral three-step "ash" ramp taken from the 0x72
 palette. The game recolours them per creature at runtime by exact colour index
@@ -261,6 +261,167 @@ def save(im, name):
     OUT.append(p)
 
 
+# --------------------------------------------------------------------------
+# Enemy shots (7x7, two frames; Shot loads fx/<kind>). This file owns all eight: art_hero_fx_items.py
+# (the orbs) and art_tower.py (the cog) call build_enemy_shots() / enemy_shot_images() after their own
+# old versions, and tools/design_bullets.py rebuilds and judges just these.
+# Friend or foe by SHAPE and LIGHTNESS, not hue (UX-02): every enemy shot is a dark-rimmed token (1 px
+# #21141b all round) with a white-hot core of at least a quarter of its inside (so it still clears 3:1
+# on every lit floor, tools/design_contrast.py) and the rest in the darkest tones of its hue; Tallow's
+# embers are bright flames with no dark rim. The cog is white enamel (pewter read as the Blue Flame's
+# ember for colour-blind players), the ring and the bone are white with dark rims.
+# Judge: python3 tools/design_bullets.py --judge (colour distance to the player's shots under
+# protanopia / deuteranopia / tritanopia, the floor contrast, and a side-by-side sheet).
+# --------------------------------------------------------------------------
+SHOT_PAL = {
+    "K": "#21141b", "2": "#2a2a3a", "w": "#fdf7ed", "p": "#9f294e", "v": "#5f2d56", "m": "#62232f",
+    "P": "#dc4a7b", "g": "#4ba747", "G": "#3d734f", "B": "#417089", "A": "#d3bfa9", "X": "#e2b694",
+    "a": "#aa8d7a", "S": "#b6cbcf",
+}
+ORB_SHAPE = ["""
+..KKK..
+.KLMMK.
+KLwwMDK
+KMwwwDK
+KMMwDDK
+.KDDDK.
+..KKK..
+""", """
+..KKK..
+.KLwMK.
+KLwwwDK
+KMwwMDK
+KMMMDDK
+.KDDDK.
+..KKK..
+"""]
+ORB_TONES = {
+    "bullet_purple": {"L": "p", "M": "v", "D": "m"},   # plum, a wine glint up-left
+    "bullet_green": {"L": "g", "M": "G", "D": "2"},    # moss
+    "bullet_water": {"L": "B", "M": "2", "D": "2"},    # black water, a blue glint
+}
+ENEMY_SHOTS = {
+    # the Keeper's and the sentries' cogs: white enamel, ivory teeth turning a notch each frame
+    "bolt_cog": ["""
+..XKX..
+.KAwAK.
+XAwwwaX
+KwwKwaK
+XAwwaaX
+.KaaaK.
+..XKX..
+""", """
+..KXK..
+.XAwAX.
+KAwwwaK
+XwwKwaX
+KAwwaaK
+.XaaaX.
+..KXK..
+"""],
+    # a sound wave: a white ring with a dark rim inside and out
+    "bolt_ring": ["""
+..KKK..
+.KwwwK.
+KwKKKwK
+KwK.KwK
+KwKKKwK
+.KwwwK.
+..KKK..
+""", """
+..KKK..
+.KwSwK.
+KwKKKwK
+KSK.KSK
+KwKKKwK
+.KwSwK.
+..KKK..
+"""],
+    # rose wax: a dark plum bead with a pink glint, a white-hot heart and a drip
+    "bolt_wax": ["""
+..KKK..
+.KPvvK.
+KPwwwmK
+KvwwwmK
+KvvvmmK
+.KvmmK.
+..KmK..
+""", """
+..KKK..
+.KvPvK.
+KPwwwmK
+KvwwwmK
+KvvvmmK
+.KmmmK.
+..KmK..
+"""],
+    # the Sexton's bone, tumbling end over end
+    "bolt_bone": ["""
+.KK....
+KwwK...
+KwAwK..
+.KwAwK.
+..KwAwK
+...KwwK
+....KK.
+""", """
+....KK.
+...KwwK
+..KwAwK
+.KwAwK.
+KwAwK..
+KwwK...
+.KK....
+"""],
+    # a hymn-book page, face on and edge on
+    "bolt_page": ["""
+.KKKKK.
+KwwwwwK
+KwaaawK
+KwwwwwK
+KwaawwK
+KwwwwwK
+.KKKKK.
+""", """
+.......
+KKKKKKK
+KwaaawK
+KwwwwwK
+KwaawaK
+KKKKKKK
+.......
+"""],
+}
+for _k, _tones in ORB_TONES.items():
+    ENEMY_SHOTS[_k] = ["".join(_tones.get(ch, ch) for ch in f) for f in ORB_SHAPE]
+
+
+def shot_image(rows):
+    rows = [r.strip() for r in rows.strip().split("\n")]
+    im = Image.new("RGBA", (7, 7), CLEAR)
+    px = im.load()
+    for y, r in enumerate(rows):
+        assert len(r) == 7 and len(rows) == 7, rows
+        for x, ch in enumerate(r):
+            if ch != ".":
+                px[x, y] = hexc(SHOT_PAL[ch])
+    return im
+
+
+def enemy_shot_images(names=None, prefix=""):
+    """{"<prefix><kind>_f<i>": Image} for the given enemy shots (all eight by default)."""
+    out = {}
+    for k in names or ENEMY_SHOTS:
+        for i, f in enumerate(ENEMY_SHOTS[k]):
+            out["%s%s_f%d" % (prefix, k, i)] = shot_image(f)
+    return out
+
+
+def build_enemy_shots(names=None):
+    for n, im in enemy_shot_images(names).items():
+        save(im, n + ".png")
+
+
 def build():
     for i in range(len(SPLATS)):
         save(splat(i), "splat_%d.png" % i)
@@ -268,6 +429,7 @@ def build():
         save(gib(g), "gib_%d.png" % i)
     for i, g in enumerate(GLINT):
         save(glint(g), "glint_f%d.png" % i)
+    build_enemy_shots()
 
 
 # --------------------------------------------------------------------------

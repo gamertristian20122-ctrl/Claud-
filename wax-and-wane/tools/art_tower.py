@@ -612,6 +612,7 @@ def build_bolts():
         # design pass: a gold body (was orange, 2.8:1 on the lit cellar floor; tools/design_contrast.py)
         tiny_cog(cv, 3, 3, 2, teeth[f], "y", "Y", "o", "R", tooth="Y")
         put("fx/bolt_cog_f%d" % f, to_img(cv))
+    MADE.update(__import__("art_fx2").enemy_shot_images(["bolt_cog"], "fx/"))  # owner: art_fx2.py (UX-02)
 
 
 # =========================================================================== creatures

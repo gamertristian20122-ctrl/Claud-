@@ -652,6 +652,7 @@ def build_fx():
     for name, cols in ORB_COLS.items():
         for i in range(2):
             save(orb_frame(i, cols), "fx", "bullet_%s_f%d.png" % (name, i))
+    __import__("art_fx2").build_enemy_shots(["bullet_purple", "bullet_green", "bullet_water"])  # owner: art_fx2.py (UX-02)
     for i, im in enumerate(explosion_frames()):
         save(im, "fx", "explosion_f%d.png" % i)
     save(scorch(), "fx", "scorch.png")
