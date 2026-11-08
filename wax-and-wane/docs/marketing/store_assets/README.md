@@ -9,6 +9,27 @@ The only text on any capsule is the WAX & WANE logo. Steam does not allow review
 
 `overview.png` is a contact sheet of every file, shown at about the size each store displays it.
 
+**Since 2.0.0 the capsules use the "hero" key art:** Tallow about three times bigger than before, in one warm
+pool of light, beside the Wax Mother (a guardian made for this game) lit by her own candles. Every run of
+`tools/store_art.py` ends with a brightness judge, so the art never sinks into Steam's dark page: each capsule
+needs a mean luma of at least 70/255 with fewer than 35% of its pixels below 30. At 2.0.0:
+
+| Capsule | Mean luma | Pixels below 30 |
+|---|---:|---:|
+| header 920x430 (and library header) | 114.7 | 6.7% |
+| small 462x174 | 86.9 | 14.6% |
+| main 1232x706 | 108.6 | 9.4% |
+| vertical 748x896 | 118.2 | 6.2% |
+| library capsule 600x900 | 118.5 | 4.4% |
+| library hero 3840x1240 | 80.0 | 19.3% |
+| Play feature graphic 1024x500 | 98.2 | 9.8% |
+| itch cover 630x500 | 109.7 | 6.4% |
+
+(1.9.3, for comparison: main 34.8 with 68% below 30, header 30.4 / 72%, small 46.1 / 70%, itch cover 31.5 / 72%.)
+The page background stays dark and quiet on purpose (Steam draws the page text on it), so it is not judged.
+`--review DIR` also writes `small_capsule_on_steam.png`: the small capsule at Steam's real 231 x 87 and
+184 x 69 sizes on Steam's #1b2838 page.
+
 ## Re-make everything (after the final build)
 
 ```
@@ -25,7 +46,10 @@ banners, no empty rooms.
 You can also run the renders on their own:
 - `-- --autotest --shots-store --shots=/abs/dir` takes the gameplay shots. Run it at
   `--resolution 1920x1080`. Add `--phone` (at 2160x1080) for the touch HUD.
-- `-- --autotest --keyart [--keylayout=tall] --shots=/abs/dir` takes the key art.
+- `-- --autotest --keyart [--keylayout=tall|hero|hero_tall] --shots=/abs/dir` takes the key art
+  (`hero` and `hero_tall` are the capsules; `wide` is still used for the page background).
+- Each render runs on its own throw-away save profile with every achievement already earned, so no
+  first-time toast lands on a picture and a player's save is never touched.
 
 ## Steam (Steamworks: Store Page Admin, then Graphical Assets)
 
@@ -53,14 +77,12 @@ Steam asks you to mark at least four screenshots as suitable for all ages. Use 0
 | File | Size | Upload as |
 |---|---|---|
 | `google_play/feature_graphic_1024x500.png` | 1024 x 500, 24-bit PNG | **Feature graphic** |
-| `google_play/phone_01_cellar_fight_2160x1080.png` | 2160 x 1080 | **Phone screenshots** (put this one first: it shows the clock and candle bar) |
-| `google_play/phone_02_boss_fight_2160x1080.png` | 2160 x 1080 | Phone screenshots |
-| `google_play/phone_03_relic_aloft_2160x1080.png` | 2160 x 1080 | Phone screenshots |
-| `screenshots/*.png` | 1920 x 1080 | **7-inch and 10-inch tablet screenshots** (and more phone ones if you want up to 8) |
+| `google_play/phone16x9_01_cellar_fight_1920x1080.png` to `phone16x9_06_relic_aloft_1920x1080.png` | 1920 x 1080, 16:9 | **Phone screenshots**, all six in number order (01 shows the clock and the candle), and the same six as **7-inch and 10-inch tablet screenshots** |
+| `google_play/phone_01_..._2160x1080.png` to `phone_03_...` | 2160 x 1080, 2:1 | optional extra phone screenshots |
 
-The phone shots use the touch HUD at 18:9. Play rejects screenshots whose long side is more than twice
-the short side, so 2160 x 1080 is the widest phone shape it accepts. The app icon is
-`../icons/google_play_512.png`.
+The phone shots use the touch HUD (sticks, bomb and keepsake buttons, no keyboard letters). Play asks games for
+at least four 16:9 landscape screenshots of 1920 x 1080 or more before it recommends them, hence the 16:9 set;
+2160 x 1080 (2:1) is the widest phone shape Play accepts at all. The app icon is `../icons/google_play_512.png`.
 
 ## itch.io (Edit game, then Uploads and images)
 
@@ -81,10 +103,12 @@ the short side, so 2160 x 1080 is the widest phone shape it accepts. The app ico
 
 ## What is in the pictures
 
-- **Key art:** a Crypt room at night. Tallow stands in a strong flame light. Four lodgers come at it:
-  a sootling, a wax blob, a snuffer and a wisp, with two flames in flight. The Sexton looms at the back
-  in a cold light. Stains are on the floor. The landscape capsules use the "wide" layout; the portrait
-  capsules use the "tall" one, where the same cast is stacked.
+- **Capsules and key art ("hero"):** the Cellar, warm. Tallow, close up and lit by its own flame, fires two
+  flames at the Wax Mother, who is lit by her own candles; one of her Melt Drops waits behind her. A clean
+  floor (no splats), so the art also suits the all-ages slots. The landscape capsules use `hero`; the portrait
+  ones use `hero_tall` (the Wax Mother behind, Tallow in front).
+- **Page background ("wide"):** a Crypt room at night, Tallow in a strong flame light, four lodgers, the
+  Sexton in a cold light at the back; dimmed so the page text stays readable.
 - **Screenshots** (seed 7, Tallow carrying Twin Wick and Moth Friend):
   1. a Cellar fight
   2. the Hour Fiend's clock hands

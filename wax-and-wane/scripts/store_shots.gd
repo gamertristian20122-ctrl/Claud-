@@ -2,7 +2,7 @@ extends RefCounted
 ## Store screenshots and key art, staged by the game itself (run through scripts/autotest.gd):
 ##   -- --autotest --shots-store --shots=/abs/dir [--phone]   ten staged gameplay moments with the HUD
 ##        (--phone: the touch HUD, for Google Play; run the window at 2160x1080 for an 18:9 phone)
-##   -- --autotest --keyart [--keylayout=tall] --shots=/abs/dir the key-art scene with no HUD, in several
+##   -- --autotest --keyart [--keylayout=tall|hero|hero_tall] --shots=/abs/dir the key-art scene, no HUD, in several
 ##        framings (full, wide, standard, tall) + keyart.json; tools/store_art.py turns them into capsules
 ## Shots are saved at the game's own resolution (384x216 at 1920x1080) and scaled up by whole numbers
 ## later, so every pixel stays crisp. Everything is staged from a fixed seed, fixed rooms, a fixed relic
@@ -16,6 +16,7 @@ const KIT := ["twin_wick", "moth_friend"]
 
 static func run(at: Node) -> void:
 	DirAccess.make_dir_recursive_absolute(at._shots_dir)
+	_seasoned()
 	if at.args.has("keyart"):
 		await _keyart(at)
 	else:
@@ -23,6 +24,18 @@ static func run(at: Node) -> void:
 
 
 # ---------------------------------------------------------------- helpers
+
+## A seasoned save, like the trailer's: every achievement and candle already earned and the first-run hints
+## used up, so no first-time achievement toast ("BELL CLIMBER ... NEW IN THE HOUSE") or banner lands on a
+## store picture. tools/store_art.py renders on a private save profile, so a player's save is never touched.
+static func _seasoned() -> void:
+	var rec: Dictionary = Achievements._records()
+	for a in Achievements.LIST:
+		rec[a["id"]] = 1
+	Game.records["unlocked"] = Candles.ORDER.duplicate()
+	Game.records["seen_intro"] = true
+	Game.records["runs"] = maxi(int(Game.records.get("runs", 0)), 12)
+
 
 ## Saves the screen as <dir>/<name>.png. Banners and hints are snapped fully off first (keep_banner:
 ## the floor / relic banner stays, fully on), so no shot ever catches text half-faded.
@@ -395,6 +408,18 @@ const KEY_LAYOUTS := {
 	"tall": {"tallow": Vector2(-14, 42), "guardian": ["sexton", Vector2(16, -38)],
 		"lodgers": [["sootling", Vector2(10, 10)], ["wax_blob", Vector2(36, 30)], ["snuffer", Vector2(-38, 10)], ["wisp", Vector2(40, -8)]],
 		"stains": [["wax_blob", Vector2(-4, 30)], ["sootling", Vector2(20, 22)], ["tiny_zombie", Vector2(-30, -4)], ["cinder_rat", Vector2(44, 12)]]},
+	# "hero" / "hero_tall" (the capsules since 2.0.0): Tallow close up in one warm pool of light, facing the
+	# Wax Mother (a guardian made for this game) lit by her own candles, one of her Melt Drops beside her,
+	# a clean floor, and the Cellar's own warm darkness lifted. tools/store_art.py crops them tight, so
+	# Tallow is about three times bigger than in "wide". Each key below is also a --key<name> flag.
+	"hero": {"floor": 1, "tallow": Vector2(-22, 22), "guardian": ["wax_mother", Vector2(20, 22)],
+		"lodgers": [["wax_bit", Vector2(44, 14)]], "stains": [], "aim": "guardian",
+		"tint": "0.30,0.25,0.25", "energy": "1.6", "radius": "1.1", "dim": "1.0", "moon": "0.0", "warm": "0.9",
+		"gap": "0.05", "hit": "0.01"},
+	"hero_tall": {"floor": 1, "tallow": Vector2(-10, 30), "guardian": ["wax_mother", Vector2(12, 6)],
+		"lodgers": [["wax_bit", Vector2(36, 10)]], "stains": [], "aim": "guardian",
+		"tint": "0.30,0.25,0.25", "energy": "1.6", "radius": "1.1", "dim": "1.0", "moon": "0.0", "warm": "0.9",
+		"gap": "0.05", "hit": "0.01"},
 }
 ## framings: name -> [size, centre offset from the room centre]. "full" holds the whole room with a
 ## margin (tools/store_art.py crops every capsule from it); the others are ready-made shapes.
@@ -413,8 +438,10 @@ static func _keyart(at: Node) -> void:
 	main.goto("game", {"seed": SEED})
 	var w: Node = await _until_game(at)
 	await at._wait(0.6)
-	await _floor(at, w, int(at.args.get("keyfloor", str(KEY_FLOOR))))
 	var lay: Dictionary = KEY_LAYOUTS.get(str(at.args.get("keylayout", "wide")), KEY_LAYOUTS["wide"])
+	# a setting: the --key<name> flag, else the layout's own value, else the default
+	var opt := func(k: String, def: String) -> String: return str(at.args.get("key" + k, lay.get(k, def)))
+	await _floor(at, w, int(opt.call("floor", str(KEY_FLOOR))))
 	# the picture is the world only: hide every screen-space layer (HUD, fades, vignettes)
 	for ch in w.get_children():
 		if ch is CanvasLayer:
@@ -454,27 +481,36 @@ static func _keyart(at: Node) -> void:
 	p.position = c0 + lay["tallow"]
 	p.invuln = 0.0
 	# night: the floor's own darkness, deeper and bluer (--keytint=r,g,b to try others)
-	var tint: PackedStringArray = str(at.args.get("keytint", "0.13,0.135,0.22")).split(",")
+	var tint: PackedStringArray = opt.call("tint", "0.13,0.135,0.22").split(",")
 	w.dark.color = Color(float(tint[0]), float(tint[1]), float(tint[2])) if tint.size() == 3 else w.dark.color.darkened(0.6)
 	await at._wait(1.4)
 	# two flames in flight at the nearest lodger, a muzzle flash at the wick
-	var aim: Vector2 = (c0 + lay["lodgers"][0][1] + Vector2(0, -6) - p.global_position).normalized()
+	var at_pt: Vector2 = lay["guardian"][1] + Vector2(0, -16) if lay.get("aim", "") == "guardian" else lay["lodgers"][0][1] + Vector2(0, -6)
+	var aim: Vector2 = (c0 + at_pt - p.global_position).normalized()
+	# a fighting face for the picture: no blink, no leftover "happy" from setting the stage
+	p._blink = 9.0
+	p.set("_happy_face", 0.0)
+	p.set("_hold_t", 0.0)
 	p._fire(aim)
-	await at._wait(float(at.args.get("keygap", "0.13")))
+	await at._wait(float(opt.call("gap", "0.13")))
 	p._fire(aim)
-	await at._wait(float(at.args.get("keyhit", "0.04")))
+	await at._wait(float(opt.call("hit", "0.04")))
 	at.get_tree().paused = true
+	for e in w.enemies:   # a flame that already landed would leave its target flashing white
+		if is_instance_valid(e) and e.mat:
+			e.set("_flash", 0.0)
+			e.mat.set_shader_parameter("flash", 0.0)
 	# a strong flame: bright, but a pool of light rather than a lit room (set after the pause, so the
 	# flicker code does not put it back)
-	p.light.energy = float(at.args.get("keyenergy", "1.55"))
-	p.light.texture_scale = float(at.args.get("keyradius", "1.0"))
+	p.light.energy = float(opt.call("energy", "1.55"))
+	p.light.texture_scale = float(opt.call("radius", "1.0"))
 	# Tallow is the brightest thing: every other light in the room burns lower (set after the pause, so
 	# no flicker code puts it back)
-	var dim := float(at.args.get("keydim", "0.65"))
+	var dim := float(opt.call("dim", "0.65"))
 	for l in _lights(w.room, []):
 		(l as PointLight2D).energy *= dim
 	# a cold light from above the guardian (moonlight through the ceiling), so it looms out of the dark
-	var moon := float(at.args.get("keymoon", "0.6"))
+	var moon := float(opt.call("moon", "0.6"))
 	if moon > 0.0 and guard:
 		var ml := PointLight2D.new()
 		ml.texture = Art.light_tex
@@ -483,6 +519,16 @@ static func _keyart(at: Node) -> void:
 		ml.texture_scale = float(at.args.get("keymoonr", "0.55"))
 		ml.position = guard.position + Vector2(8, -34)
 		w.room.objects.add_child(ml)
+	# ...or a warm one: the guardian's own candles (the hero layouts), so it stands out lit, not as a silhouette
+	var warm := float(opt.call("warm", "0.0"))
+	if warm > 0.0 and guard:
+		var gl := PointLight2D.new()
+		gl.texture = Art.light_tex
+		gl.color = Color(1.0, 0.64, 0.46)
+		gl.energy = warm
+		gl.texture_scale = float(opt.call("warmr", "0.75"))
+		gl.position = guard.position + Vector2(0, -30)
+		w.room.objects.add_child(gl)
 	if guard:
 		print("[keyart] guardian ", guard.kind, " at ", guard.global_position - w.room.position)
 	# frame and capture every shape from the same frozen moment
