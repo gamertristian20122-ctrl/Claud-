@@ -127,6 +127,55 @@ static func _add_hollow(res: Dictionary, rng: RandomNumberGenerator) -> void:
 		"visited": false, "seen": false, "pickups": [], "seed": rng.randi(), "dist": 99, "revealed": false}
 
 
+## Layout tags that keep a room "easy": no pits, spikes, fire, oil, webs, choke points or flyers.
+const EASY_TAGS := ["open", "cover", "furniture"]
+
+
+## A template's tier: "hard" (tagged so), "easy" (only EASY_TAGS and 2-3 lodger slots), or "normal".
+static func tier_of_template(t: Dictionary) -> String:
+	var tags: Array = t.get("tags", [])
+	if "hard" in tags:
+		return "hard"
+	for tag in tags:
+		if not tag in EASY_TAGS:
+			return "normal"
+	var n := slots_in("".join(t["rows"]))
+	return "easy" if n >= 2 and n <= 3 else "normal"
+
+
+static func slots_in(s: String) -> int:
+	return s.count("e") + s.count("h") + s.count("f")
+
+
+## The tier of an ordinary room as built: from its template id when the floor stored it, otherwise by
+## matching its grid against every template and its mirror images (DesignCheck reads old layouts too).
+static func tier_of(cell: Dictionary) -> String:
+	if cell.has("tpl"):
+		for t in RoomTemplates.NORMAL:
+			if t["id"] == cell["tpl"]:
+				return tier_of_template(t)
+	var have := _grid_sig(cell["grid"])
+	for t in RoomTemplates.NORMAL:
+		var rows: Array = t["rows"]
+		for flip in 4:
+			var r := rows.duplicate()
+			if flip & 1:
+				for i in r.size():
+					r[i] = (r[i] as String).reverse()
+			if flip & 2:
+				r.reverse()
+			if _grid_sig(RoomTemplates.to_grid(r)) == have:
+				return tier_of_template(t)
+	return "?"
+
+
+static func _grid_sig(g: Array) -> String:
+	var s := ""
+	for row in g:
+		s += "".join(row)
+	return s.replace("Q", "R").replace("Z", "U")
+
+
 static func _neighbours(cells: Dictionary, c: Vector2i) -> int:
 	var n := 0
 	for d in DIRS:
@@ -180,6 +229,13 @@ static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasu
 		return {}
 	var rest := dead.slice(1)
 	shuffle(rest, rng)
+	if floor_num == 1:
+		# the opening (design pass): the first treasure room is at most OPENING_TREASURE rooms away
+		var near := rest.filter(func(c): return dist[c] <= OPENING_TREASURE)
+		if near.is_empty():
+			return {}
+		rest.erase(near[0])
+		rest.push_front(near[0])
 	var treasure: Vector2i = rest[0]
 	var shop: Vector2i = rest[1]
 	var treasure2: Vector2i = rest[2] if treasures >= 2 and rest.size() > 2 else Vector2i(-99, -99)
@@ -195,11 +251,18 @@ static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasu
 		elif c == shop:
 			type = "shop"
 		var tpl: Array
+		var opening: bool = floor_num == 1 and type == "normal" and int(dist[c]) <= OPENING_DIST
+		var easy := {}
 		match type:
 			"start", "shop": tpl = RoomTemplates.START
 			"treasure": tpl = RoomTemplates.TREASURE
 			"boss": tpl = RoomTemplates.BOSS
-			_: tpl = RoomTemplates.pick_normal(rng, floor_num, dist[c])
+			_:
+				if opening:
+					easy = _pick_easy(rng)
+					tpl = easy["rows"]
+				else:
+					tpl = RoomTemplates.pick_normal(rng, floor_num, dist[c])
 		out[c] = {
 			"type": type,
 			"grid": RoomTemplates.to_grid(tpl),
@@ -210,4 +273,44 @@ static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasu
 			"seed": rng.randi(),
 			"dist": dist[c],
 		}
+		if opening:
+			out[c]["opening"] = true          # world: slow lodgers only, no marked foes
+			out[c]["tpl"] = easy["id"]
 	return {"cells": out, "start": start, "boss": boss, "floor": floor_num}
+
+
+## The first floor's opening (design pass, docs/design/MDA.md): every ordinary room within
+## OPENING_DIST of the start (so the first two rooms, whichever way Tallow goes) is an easy layout
+## with 2-3 lodger slots, and a treasure room is at most OPENING_TREASURE rooms away. The first
+## OPENING_ROOMS of them Tallow fights call only slow lodgers (opening_now); later ones the usual
+## floor-1 crowd, so the floor still ramps up to its guardian.
+const OPENING_DIST := 2
+const OPENING_TREASURE := 3
+const OPENING_ROOMS := 2
+## Floor-1 lodgers that walk at 26 px/s or less (Tallow runs at 74): an opening room's guests.
+const OPENING_POOL := {"e": ["tiny_zombie", "tiny_slug", "wax_blob"], "h": ["slug", "wax_blob"], "f": ["tiny_slug"]}
+
+
+## True while `cell` is one of the floor's first OPENING_ROOMS opening rooms to be fought (counted
+## from the layout, so Save & Continue keeps the count).
+static func opening_now(layout: Dictionary, cell: Dictionary) -> bool:
+	if not cell.get("opening", false) or cell.get("cleared", false):
+		return false
+	var done := 0
+	for c in layout.get("cells", {}):
+		var d: Dictionary = layout["cells"][c]
+		if d.get("opening", false) and d.get("cleared", false):
+			done += 1
+	return done < OPENING_ROOMS
+
+
+static func _pick_easy(rng: RandomNumberGenerator) -> Dictionary:
+	var pool: Array = RoomTemplates.NORMAL.filter(func(t): return tier_of_template(t) == "easy" and int(t.get("min_floor", 1)) <= 1)
+	var t: Dictionary = pool[rng.randi() % pool.size()]
+	var rows: Array = (t["rows"] as Array).duplicate()
+	if rng.randf() < 0.5:
+		for i in rows.size():
+			rows[i] = (rows[i] as String).reverse()
+	if rng.randf() < 0.5:
+		rows.reverse()
+	return {"id": t["id"], "rows": rows}

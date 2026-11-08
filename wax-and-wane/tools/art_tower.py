@@ -607,7 +607,8 @@ def build_bolts():
     teeth = [[(1, -3), (3, 1), (-1, 3), (-3, -1)], [(-1, -3), (3, -1), (1, 3), (-3, 1)]]
     for f in range(2):
         cv = Canvas(7, 7)
-        tiny_cog(cv, 3, 3, 2, teeth[f], "o", "y", "c", "R", tooth="Y")
+        # design pass: a gold body (was orange, 2.8:1 on the lit cellar floor; tools/design_contrast.py)
+        tiny_cog(cv, 3, 3, 2, teeth[f], "y", "Y", "o", "R", tooth="Y")
         put("fx/bolt_cog_f%d" % f, to_img(cv))
 
 

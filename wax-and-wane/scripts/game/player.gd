@@ -98,6 +98,12 @@ var move_input := Vector2.ZERO
 var aim_input := Vector2.ZERO
 var facing := Vector2.RIGHT
 var fire_cd := 0.0
+## Design pass (docs/design/MDA.md): a fire press in the last FIRE_BUFFER s of the cooldown fires the
+## moment the flame is ready; turning back from a run uses TURN_ACCEL so a dodge reads at once.
+const FIRE_BUFFER := 0.2
+const TURN_ACCEL := 2600.0
+var _fire_buf := 0.0
+var _buf_dir := Vector2.RIGHT
 var invuln := 0.0
 var dead := false
 var frozen := false
@@ -244,6 +250,8 @@ func _physics_process(dt: float) -> void:
 		return
 	var target := move_input.limit_length(1.0) * speed
 	var accel := 900.0 if target.length() > 1 else 1100.0
+	if target.length() > 1 and vel.length() > 1 and vel.dot(target) < -0.2 * vel.length() * target.length():
+		accel = TURN_ACCEL   # a dodge: turning back bites at once (design pass: 7 -> 4 frames)
 	vel = vel.move_toward(target, accel * dt)
 	_move(vel * dt)
 	if vel.length() > 8:
@@ -256,14 +264,20 @@ func _physics_process(dt: float) -> void:
 		_bob = 0.0
 	# shooting
 	fire_cd -= dt
-	if aim_input.length() > 0.3:
+	_fire_buf -= dt
+	var aiming := aim_input.length() > 0.3
+	if aiming:
 		facing = aim_input.normalized()
-		if fire_cd <= 0.0:
-			var rate := fire_delay
-			if witching and wax < 30.0:
-				rate *= 0.7
-			fire_cd = rate
-			_fire(aim_input.normalized())
+		if fire_cd > 0.0 and fire_cd <= FIRE_BUFFER:
+			_fire_buf = FIRE_BUFFER   # a quick tap just before the flame is ready is kept, not eaten
+			_buf_dir = facing
+	if (aiming or _fire_buf > 0.0) and fire_cd <= 0.0:
+		_fire_buf = 0.0
+		var rate := fire_delay
+		if witching and wax < 30.0:
+			rate *= 0.7
+		fire_cd = rate
+		_fire(facing if aiming else _buf_dir)
 	if invuln > 0:
 		invuln -= dt
 	# blink only the wax body while invulnerable; the flame and lights stay on (no screen flashing)

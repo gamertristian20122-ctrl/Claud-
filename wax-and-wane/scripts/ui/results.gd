@@ -114,6 +114,7 @@ func _ready() -> void:
 	var again := UI.button("Light another", func(): main.goto("game"))
 	again.set_meta("default_focus", true)
 	row2.add_child(again)
+	row2.add_child(UI.button("Share", _share, 64))
 	row2.add_child(UI.button("Title", func(): main.goto("title")))
 	v.add_child(row2)
 	Tower.on_results(self, v, params)   # the Clock Tower: TRUE ENDING, its floor name, the hint after a first win
@@ -181,3 +182,30 @@ func _daily_score() -> int:
 
 func on_back() -> void:
 	main.goto("title")
+
+
+## Design pass (docs/design/MDA.md, relatedness): copy a short, spoiler-free summary of the run
+## (Share.text: candle, how far, relics, best Kindling, the seed or tonight's date, a glyph per floor).
+var _toast_box: Control
+
+
+func _share() -> void:
+	if not params.has("date"):
+		params["date"] = Time.get_date_string_from_system()
+	Share.copy(params)
+	Audio.play("ui_click")
+	if is_instance_valid(_toast_box):
+		_toast_box.queue_free()
+	var box := UI.panel()
+	box.add_child(UI.label("Copied - paste it anywhere", 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
+	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	box.offset_bottom = -4
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(box)
+	_toast_box = box
+	var tw := box.create_tween()
+	tw.tween_interval(1.6)
+	tw.tween_property(box, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(box.queue_free)

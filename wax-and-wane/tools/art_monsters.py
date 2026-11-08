@@ -949,22 +949,23 @@ BOLTS = {
         ..ttt..
         """,
     ],
+    # design pass: a hotter cream core (2.4:1 -> 3:1+ on the lit cellar floor, tools/design_contrast.py)
     "bolt_wax": [
         """
         ...q...
         ..qwq..
-        .qwwPq.
-        .qwPPp.
-        .PPPPp.
+        .qwwwq.
+        .qwwPp.
+        .PwPPp.
         ..ppp..
         .......
         """,
         """
         ...q...
-        ..qqq..
-        .qwqPP.
-        .PwPPp.
-        .PPPPp.
+        ..qwq..
+        .qwwPq.
+        .qwwPp.
+        .PPwPp.
         ..ppp..
         .......
         """,
