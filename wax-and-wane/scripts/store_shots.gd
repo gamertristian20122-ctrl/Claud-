@@ -2,8 +2,8 @@ extends RefCounted
 ## Store screenshots and key art, staged by the game itself (run through scripts/autotest.gd):
 ##   -- --autotest --shots-store --shots=/abs/dir [--phone]   ten staged gameplay moments with the HUD
 ##        (--phone: the touch HUD, for Google Play; run the window at 2160x1080 for an 18:9 phone)
-##   -- --autotest --keyart --shots=/abs/dir                    the key-art scene with no HUD, framed for
-##        every store shape (wide, standard, tall); tools/store_art.py turns them into capsules
+##   -- --autotest --keyart [--keylayout=tall] --shots=/abs/dir the key-art scene with no HUD, in several
+##        framings (full, wide, standard, tall) + keyart.json; tools/store_art.py turns them into capsules
 ## Shots are saved at the game's own resolution (384x216 at 1920x1080) and scaled up by whole numbers
 ## later, so every pixel stays crisp. Everything is staged from a fixed seed, fixed rooms, a fixed relic
 ## kit and a fixed cast, so a re-run on a later build gives the same pictures (the fights are live, so a
@@ -203,21 +203,20 @@ static func _store(at: Node) -> void:
 		w.player.position = w.room.center() + Vector2(0, 16)
 		await at._wait(1.2)
 		await _snap(at, w, "shop")
-	# 6. the Chapel: stained-glass light pools on the floor and a fight in them
+	# 5. the Chapel: stained-glass light pools on the floor and a fight in them
 	await _floor(at, w, 3)
 	await _chapel(at, w)
-	# 7. a Seance (special room): the chalk ring, the bell and a wave of pale lodgers
+	# 6. a Seance (special room): the chalk ring, the bell and a wave of pale lodgers
 	await _floor(at, w, 2)
 	await _seance(at, w)
-	# 8. low wax: Tallow short, the light circle small, lodgers closing in, nearly two
+	# 7. low wax: Tallow short, the light circle small, lodgers closing in, nearly two
 	await _low_wax(at, w)
-	# 9 + 10. the Hour Fiend: the versus card, then the clock hands sweeping the room
+	# 8 + 9. the Hour Fiend: the versus card, then the clock hands sweeping the room
 	await _boss(at, w)
-	# 11. a relic held aloft (last: the relic changes how Tallow looks)
+	# 10. a relic held aloft (last: the relic changes how Tallow looks)
 	at.args.erase("drive")
 	await _relic_aloft(at, w)
 	Audio.stop_all()
-	at.args.erase("drive")
 
 
 static func _relic_aloft(at: Node, w: Node) -> void:
@@ -228,14 +227,23 @@ static func _relic_aloft(at: Node, w: Node) -> void:
 	w.hud.set_boss("", false)   # the guardian's bar from the fight before
 	at._jump(w, c)
 	_clear_foes(w)
-	w.player.position = w.room.center() + Vector2(-8, 30)
-	w.player.wax = 96.0
+	var p: Player = w.player
+	p.position = w.room.center() + Vector2(-8, 30)
+	p.wax = 96.0
+	p.frozen = true   # nothing from the staging can hurt it (no blinking)
 	await at._wait(0.4)
-	# the fight that just ended: splats round the room, a few drippings
+	# the fight that just ended: splats round the room
 	await _splats(at, w, [["chort", Vector2(-62, -24)], ["clapper_bat", Vector2(52, -36)], ["deathwatch", Vector2(66, 22)],
-		["sootling", Vector2(-56, 40)], ["wax_blob", Vector2(30, 8)]])
+		["sootling", Vector2(-56, 40)], ["wax_blob", Vector2(40, -10)]])
 	await at._wait(1.4)
 	_clear_foes(w)   # (the wax bits a blob splits into)
+	for o in w.room.objects.get_children():
+		if o is Pickup:
+			o.queue_free()   # no drippings flying in to Tallow mid-shot
+	Juice.of(w).gibs.clear()   # no stray bones next to the relic
+	await at._wait(0.9)   # their "+min" texts fade out
+	p.frozen = false
+	p.invuln = 0.0
 	var id := "both_ends" if Items.RELICS.has("both_ends") else "beeswax"
 	w.collect_item(id, w.player.global_position)
 	await at._wait(0.4)

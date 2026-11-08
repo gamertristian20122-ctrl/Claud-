@@ -13,8 +13,8 @@ The only text on any capsule is the WAX & WANE logo. Steam does not allow review
 
 ```
 cd wax-and-wane
-godot --headless --path . --import     # only if assets changed since the last import
-python3 tools/store_art.py             # about 1.5 minutes: renders, then writes every file below
+python3 tools/store_art.py --import    # about 2 minutes: imports, renders, then writes every file below
+python3 tools/store_art.py             # the same without the import (when no asset changed)
 python3 tools/store_art.py --no-render # rebuild from the last renders in build/store_raw/ (seconds)
 python3 tools/store_art.py --review /abs/dir   # also: each capsule at the size Steam shows it
 ```

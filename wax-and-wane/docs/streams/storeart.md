@@ -4,7 +4,7 @@ Store art and screenshots for Steam, itch.io and Google Play. Branch `revamp/sto
 
 ## One command, re-runnable on the final build
 ```
-python3 tools/store_art.py          # renders (about 1.5 min, xvfb), then writes docs/marketing/store_assets/
+python3 tools/store_art.py --import # import, render (about 1.5 min, xvfb), write docs/marketing/store_assets/
 python3 tools/store_art.py --no-render --review /abs/dir   # rebuild from build/store_raw/ + review sheets
 ```
 Run it again after the Journal and the secret 5th floor are merged. The staging uses ordinary world

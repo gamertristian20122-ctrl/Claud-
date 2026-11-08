@@ -8,9 +8,10 @@ no blur, no smoothing, no anti-aliasing on the pixel art. The darkness around th
 dithered on the game's own pixel grid (like the light rings in tools/art_icon.py), never a smooth
 gradient.
 
-Re-run it on the final build with one command (about three minutes; needs godot + xvfb-run):
+Re-run it on the final build with one command (about 1.5 minutes; needs godot + xvfb-run):
     python3 tools/store_art.py
 Options:
+    --import        run `godot --headless --import` first (after new or changed assets)
     --no-render     rebuild the images from the last renders in build/store_raw/ (a few seconds)
     --raw DIR       where the raw renders go (default build/store_raw, git-ignored)
     --review DIR    also write review sheets: every capsule at the size Steam really shows it
@@ -18,7 +19,6 @@ Options:
 Output: docs/marketing/store_assets/ (README.md there lists each file and where it is uploaded).
 """
 import json
-import math
 import os
 import shutil
 import subprocess
@@ -420,6 +420,10 @@ def main():
     if "--review" in args:
         review = os.path.abspath(args[args.index("--review") + 1])
     os.makedirs(raw, exist_ok=True)
+    if "--import" in args:
+        print("[store_art] importing assets ...", flush=True)
+        subprocess.run(["godot", "--headless", "--path", ROOT, "--import"], stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL, timeout=900)
     if "--no-render" not in args:
         render(raw)
     files = screenshots(raw)
