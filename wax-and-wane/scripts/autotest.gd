@@ -3,6 +3,7 @@ extends Node
 ##   -- --autotest --playtest [--runs=N] [--speed=4] [--seed=N]   plays full runs, prints a summary
 ##        [--god] [--stress] [--unlockall --candle=id] [--relics=a,b] [--savecycle: Save & quit + Continue each floor]
 ##   -- --autotest --tour --shots=/abs/dir                         screenshots of every screen
+##        [--fit]: after each shot, FitCheck lists text/buttons off the screen or on other text
 ##   -- --autotest --audiotest                                     audio catalogue + live-mix check (audio_check.gd)
 ##   -- --autotest --herosheet --shots=/abs/dir                    Tallow in every juice state (pixel check)
 ##   -- --autotest --tour --rooms --shots=/abs/dir                 three dressed rooms on every floor

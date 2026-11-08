@@ -78,7 +78,8 @@ var _toast: Control
 var _toast_tw: Tween
 var _last_screen := 0   # instance id of the screen seen last frame
 var _gap := 0.0
-var _toast_ids: Array[String] = []   # what the toast on screen shows (put back if it is pulled)
+var _toast_ids: Array[String] = []   # what the toast on screen shows (put back if it is pulled early)
+var _toast_ms := 0                   # when it came up
 var _steam: Object
 # what the watcher saw last frame in the current run
 var _w: Node
@@ -298,6 +299,8 @@ func _hold_reason(scr: Node) -> String:
 		return "switch"
 	if scr.name == "Results":
 		return "results"
+	if scr.name == "Title":
+		return "title"   # its bottom edge is the button row now: a rare unlock there waits for the next run
 	var w := _world()
 	if w == null:
 		return ""
@@ -329,7 +332,7 @@ func _pull(requeue: bool) -> void:
 	if _toast and is_instance_valid(_toast):
 		_toast.queue_free()
 	_toast = null
-	if requeue:
+	if requeue and Time.get_ticks_msec() - _toast_ms < 1200:   # it was barely seen: show it again later
 		for i in range(_toast_ids.size() - 1, -1, -1):
 			_queue.push_front(_toast_ids[i])
 	_toast_ids.clear()
@@ -416,6 +419,7 @@ func _pop(title: String, desc: String, reward: String) -> void:
 	box.set_meta("fit_group", "toast")
 	_layer.add_child(box)
 	_toast = box
+	_toast_ms = Time.get_ticks_msec()
 	box.reset_size()
 	var sz := box.get_combined_minimum_size()
 	box.size = sz

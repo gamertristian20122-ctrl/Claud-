@@ -1444,10 +1444,28 @@ func _merged_text(pos: Vector2, text: String) -> bool:
 	return false
 
 
+## A Kindling chain (KINDLING x3, BLAZE x5, BLAZE x6...) is one line that counts up, not a stack.
+var _streak := {"label": null, "min": 0, "ms": 0}
+var _streak_re := RegEx.create_from_string("^((?:KINDLING|BLAZE|INFERNO) x\\d+)\\s+\\+(\\d+) min$")
+
+
 func fx_text(pos: Vector2, text: String, col: Color) -> void:
+	var sm := _streak_re.search(text)
+	if sm:
+		var prev: Variant = _streak["label"]
+		var total := int(sm.get_string(2))
+		if prev != null and is_instance_valid(prev) and Time.get_ticks_msec() - int(_streak["ms"]) < 1500:
+			total += int(_streak["min"])
+			_texts.erase(prev)
+			(prev as Node).queue_free()
+		text = "%s  +%d min" % [sm.get_string(1), total]
+		_streak["min"] = total
+		_streak["ms"] = Time.get_ticks_msec()
 	if _merged_text(pos, text):
 		return
 	var l := UI.outlined(UI.label(text, 8, col, HORIZONTAL_ALIGNMENT_CENTER))
+	if sm:
+		_streak["label"] = l
 	if int(_merge["frame"]) == Engine.get_process_frames() and _merge["label"] == null and _min_re.search(text):
 		_merge["label"] = l
 	l.material = Art.unshaded

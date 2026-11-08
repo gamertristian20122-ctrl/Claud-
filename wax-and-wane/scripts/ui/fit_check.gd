@@ -18,7 +18,7 @@ static func scan(tree_root: Node, vs: Vector2) -> Array[String]:
 	var screen := Rect2(Vector2.ZERO, vs).grow(0.5)
 	for it in items:
 		var r: Rect2 = it[0]
-		if not screen.encloses(r):
+		if not screen.encloses(r) and not _rolling(it[3]):
 			out.append("OFF '%s' (%d,%d %dx%d)" % [_short(it[1]), r.position.x, r.position.y, r.size.x, r.size.y])
 	for i in items.size():
 		for j in range(i + 1, items.size()):
@@ -30,6 +30,17 @@ static func scan(tree_root: Node, vs: Vector2) -> Array[String]:
 			if x.size.x >= 2.0 and x.size.y >= 2.0:
 				out.append("OVER '%s' x '%s'" % [_short(a[1]), _short(b[1])])
 	return out
+
+
+## The ending's credits roll scrolls in from below the screen on purpose.
+static func _rolling(n: Node) -> bool:
+	var p := n
+	while p:
+		var sc: Variant = p.get_script()
+		if sc is Script and str((sc as Script).get_global_name()) == "Ending":   # by name: no compile-time tie to ending.gd
+			return true
+		p = p.get_parent()
+	return false
 
 
 static func _short(t: String) -> String:
