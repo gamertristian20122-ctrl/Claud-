@@ -1249,6 +1249,7 @@ func _bench_measure(w: Node, label: String, secs: float) -> void:
 	var j: Juice = Juice.of(w) if game else null
 	var frames := 0
 	var spawn_ms: Array[float] = []
+	var draws: Array[float] = []   # canvas draw calls per frame (0 headless: only a real renderer counts)
 	if not get_tree().physics_frame.is_connected(_bench_ph_begin):
 		get_tree().physics_frame.connect(_bench_ph_begin)
 	await get_tree().process_frame
@@ -1279,6 +1280,7 @@ func _bench_measure(w: Node, label: String, secs: float) -> void:
 			cpu_parts_max = maxi(cpu_parts_max, o[2])
 			parts_max = maxi(parts_max, j.hot.count() + j.lit.count())
 			nodes_max = maxi(nodes_max, int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)))
+			draws.append(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
 			var shots := 0
 			for s in w.fx_layer.get_children():
 				if s is Shot:
@@ -1302,6 +1304,9 @@ func _bench_measure(w: Node, label: String, secs: float) -> void:
 	var row := "%s: physics step avg %.2f ms p95 %.2f max %.2f | process frame avg %.2f p95 %.2f max %.2f (%d steps, %d frames; engine worst/s %.1f / %.1f) | spawn %.2f ms per foe (max %.2f) | static lights %d/%d, live lights max %d (shadowed %d) %s | particles %d (+%d cpu) shots %d nodes %d foes min %d" % [
 		label, ph[0], ph[1], ph[2], pr[0], pr[1], pr[2], phys.size(), proc.size(), phys_max, proc_max, sp[0], sp[2], static_l, RoomDecor.LIGHT_BUDGET,
 		lights_max, shadows_max, by_max, parts_max, cpu_parts_max, shots_max, nodes_max, enemies_min]
+	if DisplayServer.get_name() != "headless":
+		var dc := _bench_stats(draws)
+		row += " | render: draw calls avg %.0f max %.0f, %.0f fps" % [dc[0], dc[2], (phys.size() + proc.size()) / maxf(secs, 0.001)]
 	_bench_rows.append(row)
 	print("[bench] ", row)
 

@@ -95,6 +95,11 @@ static func run(t: Node) -> void:
 	await _save(t, dir, "wane_20")
 	_render_counters(t, "wane_20")
 	t.get_tree().paused = false
+	w.player.wax = w.player.wax_max * 0.1   # for the eye: 10 % wax with the HUD (its low-wax glow)
+	w.hud.visible = true
+	await t._wait(2.5)
+	await _save(t, dir, "wane_10_hud")
+	w.hud.visible = false
 	w.player.wax = w.player.wax_max
 	await t._wait(1.6)
 	# ---- D: heat haze on / off, shockwave on / off (only once the light pass exists)
@@ -126,6 +131,27 @@ static func run(t: Node) -> void:
 		_render_counters(t, "shock_on")
 		ring.queue_free()
 		t.get_tree().paused = false
+	# ---- E: creature modulate (a plain slug and a "chilled" champion slug, raw colours)
+	var foes: Array = []
+	for k in 2:
+		var e: Node2D = w.spawn_enemy("slug", w.room.center() + Vector2(-70 + 140 * k, -36), "" if k == 0 else "chilled")
+		foes.append(e)
+	await t._wait(1.2)
+	t.get_tree().paused = true
+	for e in foes:
+		e.set_physics_process(false)
+		var ep: Vector2 = e.get_global_transform_with_canvas().origin
+		print("[judge] foe%d=%d,%d" % [foes.find(e), roundi(ep.x), roundi(ep.y)])
+	var lights2: Array = []
+	_collect_lights(w, lights2)
+	for x in lights2:
+		x.visible = false
+	w.dark.color = Color.WHITE
+	await _save(t, dir, "foes_albedo")
+	w.dark.color = dark_col
+	for x in lights2:
+		x.visible = true
+	t.get_tree().paused = false
 	print("[judge] done")
 
 

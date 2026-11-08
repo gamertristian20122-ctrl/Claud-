@@ -133,6 +133,24 @@ def flame(d, info):
     return res
 
 
+def foes(d, info):
+    """A plain slug vs a 'chilled' champion slug (modulate 0.7, 0.95, 1.35): mean colour of each body."""
+    res = {}
+    a = load(d, "foes_albedo")
+    if a is None or "foe0" not in info or "foe1" not in info:
+        return res
+    for k in ("foe0", "foe1"):
+        x, y = info[k]
+        box = a[y - 16:y, x - 9:x + 9].reshape(-1, 3).astype(float)
+        m = box.max(axis=1) > 40
+        if m.any():
+            res[k + "_mean_rgb"] = [round(float(v), 1) for v in box[m].mean(axis=0)]
+    if "foe0_mean_rgb" in res and "foe1_mean_rgb" in res:
+        r0, r1 = res["foe0_mean_rgb"], res["foe1_mean_rgb"]
+        res["champ_tint_visible"] = abs((r1[2] / max(r1[0], 1)) - (r0[2] / max(r0[0], 1))) > 0.1
+    return res
+
+
 def sat(a):
     f = a / 255.0
     mx, mn = f.max(axis=2), f.min(axis=2)
@@ -210,7 +228,7 @@ def main():
     log = os.path.join(d, "judge.log")
     if os.path.exists(log):
         for line in open(log):
-            for key in ("panel_light", "room_light", "flame", "shock"):
+            for key in ("panel_light", "room_light", "flame", "shock", "foe0", "foe1"):
                 if line.startswith("[judge] %s=" % key):
                     x, y = line.split("=")[1].strip().split(",")
                     info[key] = (int(x), int(y))
@@ -221,6 +239,7 @@ def main():
     if before:
         out.update({"before_" + k: v for k, v in flame(before, info).items() if "palette" in k})
     out.update(waning(d))
+    out.update(foes(d, info))
     out.update(displacement(d, "haze_on", "haze_off", 1))
     out.update(displacement(d, "shock_on", "shock_off", 2))
     for k, v in out.items():
