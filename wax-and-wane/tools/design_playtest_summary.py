@@ -65,6 +65,9 @@ def main():
         print("median finish clock of the wins: %d:%02d AM (%d min of wax used of 120)" % (int(med) // 60 or 12, int(med) % 60, med))
     print("floor-1 hits: median %.1f, mean %.1f (%s); floor-1 time median %ds" % (
         statistics.median(f1h), statistics.mean(f1h), f1h, statistics.median(f1t)))
+    f1l = [r["floors"].get(1, [0, 0, 0, 0])[2] for r in runs]
+    f1g = [r["floors"].get(1, [0, 0, 0, 0])[3] for r in runs]
+    print("floor-1 wax lost median %.0f, gained back median %.0f" % (statistics.median(f1l), statistics.median(f1g)))
     print("hits per minute by floor: " + ", ".join("f%d %.1f" % (f, 60.0 * h / max(1, t)) for f, (t, h) in sorted(rate.items())))
     losses = [r["floor"] for r in runs if not r["won"]]
     print("losses on floors: %s" % losses)

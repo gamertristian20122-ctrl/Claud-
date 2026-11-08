@@ -56,7 +56,28 @@ Plus one for relatedness (socializers): a run had no way to leave the game. Fix:
 
 ### Re-measured playtests (same 12 seeds)
 
-AFTER_TABLE
+Same 12 seeds, same bot, `--speed=4`. The seeds give the same houses, but a run's fights (and from
+this pass on, floor 1's room picks) differ, so treat a change of one or two runs as noise.
+
+| Measure | Before | After |
+|---|---|---|
+| Wins | 8 / 12 (67%) | 7 / 12 (58%) |
+| Median finish clock of the wins | 12:21 AM (21 of 120 min used) | 12:44 AM (44 min used) |
+| Floor-1 hits, median / mean | 10 / 11.0 | **8 / 7.9** |
+| Floor-1 wax lost, median | 58 min | **42 min** |
+| Hits per minute f1 / f2 / f3 / f4 / f5 | **4.5** / 4.6 / 3.2 / 2.0 / 1.1 | **3.4** / 4.0 / 2.4 / 1.3 / 1.0 |
+| Deaths on floor 1 | 1 | 0 |
+| Losses on floors | 2, 2, 2, 1 | 2, 2, 3, 2, 3 |
+| Shot hits from beyond the candle's light | 1 of 64 (4 runs logged) | 1 of 175 (12 runs) |
+
+What it means: floor 1 now ramps (3.4 hits/min, below floor 2's 4.0) instead of being the worst
+minute of the night, and the room log confirms the order the bot met: the first two rooms held only
+wax blobs, slugs, tiny slugs and tiny zombies in all 12 runs, the third and fourth the usual crowd
+(goblins, rats, skelets, muddies), then the guardian. The win rate moved by one run (noise at this
+size; the balance pass owns it). Winners now finish later (12:44 AM): fewer floor-1 lodgers means
+less wax won back on floor 1 (median 60 -> 44 min gained), so the clock keeps a little more of its
+bite; it is still far from the 1:30-1:50 AM a tense finish would want. Shots still almost never come
+from outside the light (1 of 175), which is why no off-screen damage flash was added.
 
 ## Left for the balance pass
 - Wax income vs burn after floor 2 (median win 12:21 AM): the clock should still bite on floors 3-4.
