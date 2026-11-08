@@ -147,9 +147,7 @@ func _ready() -> void:
 	FloorGen.shuffle(relic_pool, rng)
 	player = Player.new()
 	player.world = self
-	player.apply_candle(candle_id)
-	if Game.settings.get("gentle", false) and not daily:
-		player.drain_mult *= 0.75
+	player.apply_candle(candle_id)   # Gentle burn is read live in _physics_process (gentle_mult)
 	actors.add_child(player)
 	var cd: Dictionary = Candles.def_of(candle_id)
 	if cd.has("start_relic"):
@@ -1200,6 +1198,12 @@ func clock_minutes() -> float:
 	return 120.0 - player.wax
 
 
+## Gentle burn (Settings > Game): the candle melts 25% slower. Read every frame, so switching it in the
+## pause menu works at once; never in Tonight's Candle (the same night for everyone).
+func gentle_mult() -> float:
+	return 0.75 if Game.settings.get("gentle", false) and not daily else 1.0
+
+
 # ---------------------------------------------------------------- loop
 
 func _physics_process(dt: float) -> void:
@@ -1219,7 +1223,7 @@ func _physics_process(dt: float) -> void:
 		return
 	if not transitioning and not player.dead and not player.frozen:
 		run_time += dt
-		var melt := DRAIN_PER_SEC * player.drain_mult * (1.15 if omen == "draught" else 1.0)
+		var melt := DRAIN_PER_SEC * player.drain_mult * gentle_mult() * (1.15 if omen == "draught" else 1.0)
 		if player.wax < 8.0:
 			melt *= 0.6       # the flame clings on when it is nearly out
 		if player.chill_t > 0.0:
