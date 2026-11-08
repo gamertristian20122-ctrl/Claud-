@@ -94,3 +94,17 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   core-web-vitals, gsap-core, gsap-performance, gsap-scrolltrigger, threejs-fundamentals, scroll-world.
 - Other: memory-management, find-skills. (`/.agents/skills` holds the same set minus game-audio,
   godot-export, pixel-art-sprites and roguelike.)
+
+## Where things stand (handoff, 2026-11-08)
+- Latest build: **1.9.2** (versionCode 7), sent to the owner. Everything in it is merged on `ccr-37a74654-pp10xa`.
+- 2.0 content is done: 5 floors (secret Clock Tower), 35 lodgers, 9 guardians, 64 relics, 5 special rooms,
+  6 mini-bosses, Journal + unlocks, Save & Continue, keyboard/mouse/gamepad, achievements, pixel-art
+  banded light + waning world, Share button. Bot win rate on the 8-minute candle: about 7 of 12.
+- Store kit: `docs/marketing/` (store copy, launch plan, `store_assets/` images; key art is a bit dark).
+- **Not finished:** the trailer. `scripts/trailer.gd` (`--trailer=<scene>`), `tools/make_trailer.sh` and
+  `tools/trailer_edit.py` are a draft: record the scenes with Godot's movie writer, edit, check, then write
+  `docs/marketing/videos.md`. Then: version 2.0.0, APK + AAB + desktop zips, send them.
+- The owner is connecting SpriteCook (sprite generation), Creative Claw (voice clone for meme videos) and
+  Kobiton (real-phone testing) in claude.ai connectors; they need a new session to load. Use Kobiton to
+  measure Effects Full vs Lite on real phones and decide the phone default.
+- Usage limits stopped parallel agent teams twice: run at most 2-3 agents at once and commit after every step.
