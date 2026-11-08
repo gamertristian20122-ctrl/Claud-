@@ -992,7 +992,7 @@ func _hero_sheet() -> void:
 		cells.append([_hs_add(layer, i * 32, 44, "tallow"), 1, i])
 	for row in 3:
 		for i in Candles.ORDER.size():
-			cells.append([_hs_add(layer, i * 32, 110 + row * 36, Candles.ORDER[i]), 2 + row, i])
+			cells.append([_hs_add(layer, i * 32, 106 + row * 35, Candles.ORDER[i]), 2 + row, i])
 	# hold every state still: re-apply it each frame (the timers count down in _process; slow time
 	# down so a slow software renderer cannot run a blink out between two frames)
 	Engine.time_scale = 0.01
@@ -1010,7 +1010,7 @@ func _hero_sheet() -> void:
 	var top := img.get_region(Rect2i(0, 0, 480, 80))
 	top.resize(top.get_width() * 6, top.get_height() * 6, Image.INTERPOLATE_NEAREST)
 	top.save_png(_shots_dir + "/hero_states.png")
-	var cand := img.get_region(Rect2i(0, 110, 192, 106))
+	var cand := img.get_region(Rect2i(0, 106, 192, 105))
 	cand.resize(cand.get_width() * 6, cand.get_height() * 6, Image.INTERPOLATE_NEAREST)
 	cand.save_png(_shots_dir + "/hero_candles.png")
 	print("[tour] hero sheet")
