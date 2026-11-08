@@ -100,6 +100,39 @@ def palette(d, before):
     return res
 
 
+def palette_set():
+    here = os.path.dirname(os.path.abspath(__file__))
+    import re
+    txt = open(os.path.join(here, "..", "DESIGN.md")).read()
+    return {tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)) for h in re.findall(r"#([0-9a-fA-F]{6})", txt)}
+
+
+def flame(d, info):
+    """The flame is unshaded: in the albedo frame its pixels must all be 0x72 palette colours; and the
+    sputter tint (self_modulate) must still reach it."""
+    res = {}
+    a = load(d, "room_albedo")
+    if a is None or "flame" not in info:
+        return res
+    fx, fy = info["flame"]
+    box = a[fy - 13:fy + 2, fx - 5:fx + 6].reshape(-1, 3)
+    pal = palette_set()
+    warm = [tuple(int(v) for v in c) for c in box if c[0] > 150 and c[0] > c[2] + 60]   # flame-coloured pixels
+    if warm:
+        res["flame_px"] = len(warm)
+        res["flame_in_palette_pct"] = round(100.0 * sum(1 for c in warm if c in pal) / len(warm), 1)
+        res["flame_off_palette"] = sorted({"#%02x%02x%02x" % c for c in warm if c not in pal})[:6]
+    s = load(d, "flame_sputter")
+    if s is not None:
+        sb = s[fy - 13:fy + 2, fx - 5:fx + 6].reshape(-1, 3).astype(float)
+        ab = box.astype(float)
+        m = ab[:, 0] > 150
+        if m.any():
+            res["sputter_g_over_r"] = round(float(sb[m, 1].sum() / max(sb[m, 0].sum(), 1)), 3)
+            res["normal_g_over_r"] = round(float(ab[m, 1].sum() / max(ab[m, 0].sum(), 1)), 3)
+    return res
+
+
 def sat(a):
     f = a / 255.0
     mx, mn = f.max(axis=2), f.min(axis=2)
@@ -184,6 +217,9 @@ def main():
     out = {}
     out.update(bands(d, info))
     out.update(palette(d, before))
+    out.update(flame(d, info))
+    if before:
+        out.update({"before_" + k: v for k, v in flame(before, info).items() if "palette" in k})
     out.update(waning(d))
     out.update(displacement(d, "haze_on", "haze_off", 1))
     out.update(displacement(d, "shock_on", "shock_off", 2))

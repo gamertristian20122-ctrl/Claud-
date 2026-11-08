@@ -59,6 +59,7 @@ func _ready() -> void:
 	dark = CanvasModulate.new()
 	dark.color = DARK_LIT
 	add_child(dark)
+	Lighting.attach(self)   # banded pixel light (lighting.gd)
 	var fw := FakeWorld.new()
 	add_child(fw)
 	hero = Player.new()

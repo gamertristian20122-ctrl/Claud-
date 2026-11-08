@@ -36,6 +36,12 @@ static func run(t: Node) -> void:
 	var dark_col: Color = w.dark.color
 	w.dark.color = Color.WHITE
 	await _save(t, dir, "room_albedo")
+	var fl: CanvasItem = w.player.flame
+	var fpos: Vector2 = fl.get_global_transform_with_canvas().origin
+	print("[judge] flame=%d,%d" % [roundi(fpos.x), roundi(fpos.y)])
+	fl.self_modulate = Color(1.0, 0.62, 0.45)   # the sputter tint must still reach the flame
+	await _save(t, dir, "flame_sputter")
+	fl.self_modulate = Color.WHITE
 	w.dark.color = dark_col
 	for x in lights:
 		x.visible = true

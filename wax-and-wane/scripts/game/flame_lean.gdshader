@@ -2,6 +2,13 @@ shader_type canvas_item;
 render_mode unshaded;
 // Leans the candle flame by shifting whole pixel rows sideways (more at the tip).
 uniform float lean = 0.0;
+// The vertex colour (self_modulate: the sputter tint). The fragment's incoming COLOR already holds
+// the texel at the unshifted UV, so multiplying by it squared the palette (#ee8e2e came out #de4f08).
+varying vec4 vtint;
+
+void vertex() {
+	vtint = COLOR;
+}
 
 void fragment() {
 	float rows = 1.0 / TEXTURE_PIXEL_SIZE.y;
@@ -12,5 +19,5 @@ void fragment() {
 	if (uv.x < 0.0 || uv.x > 1.0) {
 		c.a = 0.0;
 	}
-	COLOR = c * COLOR;
+	COLOR = c * vtint;
 }

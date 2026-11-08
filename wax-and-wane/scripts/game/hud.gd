@@ -95,6 +95,7 @@ func _ready() -> void:
 	vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vignette.modulate.a = 0.0
+	vignette.material = Lighting.dither_material()   # stepped + dithered, not a smooth ramp
 	root.add_child(vignette)
 	# --- wax bar
 	bar = Control.new()
