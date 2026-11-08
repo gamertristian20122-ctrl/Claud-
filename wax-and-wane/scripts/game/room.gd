@@ -323,6 +323,7 @@ func _light_hearth(holder: Node2D, c: Vector2i) -> void:
 	l.texture_scale = 0.55
 	l.position = Vector2(0, -12)
 	holder.add_child(l)
+	Lighting.haze(holder, Vector2(-6, -29), Vector2(12, 14), l)
 	_fires.append([l, 0.95, float(c.x * 1.3 + c.y)])
 	# a few sparks lift off the coals
 	var em := CPUParticles2D.new()

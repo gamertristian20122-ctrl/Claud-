@@ -126,6 +126,7 @@ func _ready() -> void:
 	_jet_light.energy = 0.0
 	_jet_light.color = Color(1.0, 0.7, 0.35)
 	add_child(_jet_light)
+	Lighting.haze(_jet_light, Vector2(-12, -9), Vector2(24, 12), _jet_light)
 
 
 # ================================================================ relic pool

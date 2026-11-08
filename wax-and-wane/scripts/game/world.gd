@@ -121,6 +121,7 @@ func _ready() -> void:
 	fx_layer = Node2D.new()
 	fx_layer.z_index = 20
 	add_child(fx_layer)
+	Lighting.attach(self)   # banded pixel light, the waning house, heat haze (lighting.gd)
 	cam = Camera2D.new()
 	add_child(cam)
 	cam.make_current()
@@ -804,6 +805,8 @@ func _spawn_altar_visual(r: Room) -> void:
 
 func on_boss_phase(ph: int) -> void:
 	shake(5.0)
+	if is_instance_valid(boss):
+		Lighting.shockwave(self, boss.global_position + Vector2(0, -12), 56.0, 2.0)
 	Audio.play("boss_roar")
 	hud.show_banner("", "The bell answers..." if ph == 2 else "It is nearly two!", 1.2)
 
@@ -1063,6 +1066,7 @@ func _explode(pos: Vector2, r: Room) -> void:
 	var lt := l.create_tween()
 	lt.tween_property(l, "energy", 0.0, 0.5)
 	fx_scorch(pos)
+	Lighting.shockwave(self, pos + Vector2(0, -6), bomb_radius, 2.0)
 	r.blast(pos, bomb_radius)
 	RelicFx.on_blast(self, pos)
 	var hd := r.reveal_near(pos, bomb_radius)

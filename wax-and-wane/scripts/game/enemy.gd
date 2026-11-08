@@ -306,8 +306,7 @@ func _ready() -> void:
 	add_child(shadow)
 	mat = ShaderMaterial.new()
 	if _flash_shader == null:
-		_flash_shader = Shader.new()
-		_flash_shader.code = FLASH_SHADER
+		_flash_shader = Lighting.flash_shader()   # FLASH_SHADER + the banded pixel light (lighting.gd)
 		_glow_shader = Shader.new()
 		_glow_shader.code = FLASH_SHADER_GLOW
 	mat.shader = _glow_shader if def.get("glow", false) else _flash_shader
@@ -925,6 +924,7 @@ func _damage(dmg: float, sound: bool) -> void:
 ## New bosses: a short roar, a line on the banner, then the next phase of patterns.
 func on_new_phase() -> void:
 	world.shake(5.0)
+	Lighting.shockwave(world, global_position + Vector2(0, -12), 56.0, 2.0)
 	Audio.play("boss_roar")
 	var lines: Array = def.get("phase_lines", [])
 	if phase < lines.size() and lines[phase] != "":
