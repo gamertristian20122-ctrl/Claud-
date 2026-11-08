@@ -425,6 +425,18 @@ static func ghost_shots(at: Node) -> void:
 	var f := FileAccess.open(at._shots_dir + "/ghost.json", FileAccess.WRITE)
 	f.store_string(JSON.stringify(rows))
 	print("[design] ghost shots: %d" % rows.size())
+	# 5. the results screen: press Share, read the clipboard back
+	p.frozen = false
+	var params := {"won": false, "floor": 3, "clock": 120.0, "kills": 64, "rooms": 17, "relics": ["sharp_wick", "bellows", "hourglass"],
+		"time": 702.0, "streak": 9, "hits": 21, "candle": "tallow", "daily": false, "seed": 4242, "killer": "e:skelet", "date": "2026-11-08"}
+	at.main.goto("results", params)
+	await at._wait(1.2)
+	var res: Node = at.main.current
+	res._share()
+	await at._wait(0.25)
+	await at._shot("results_share")
+	var clip := DisplayServer.clipboard_get()
+	print("[design] share button: clipboard %s the share text (%d chars)" % ["holds" if clip == Share.text(params) else "DOES NOT hold", clip.length()])
 
 
 static func _ghost_row(w: Node, name: String, cost_max: float, cost_now: float) -> Dictionary:
