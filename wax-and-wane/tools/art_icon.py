@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Wax & Wane - app, launcher, store and Steam icons.
 
-The icon: Tallow, drawn large, in front of a pewter-rimmed clock dial with the
-hands at ten to two (the flame goes out at 2 AM). The flame is the brightest
+The icon: Tallow ("Tallow, reborn": the concept's portrait, art_source/hero_reborn/),
+drawn large, in front of a pewter-rimmed clock dial with the hands at ten to two
+(the flame goes out at 2 AM). The flame is the brightest
 thing in the picture; the dial's warm light is two stepped rings with a 1 px
 checker band at each edge (no smooth gradient). Old-house wallpaper fills the
 corners.
@@ -16,17 +17,17 @@ neighbour) for every output, so every file is crisp:
     middle 72; Tallow (foreground) stays inside the 66 px safe circle, the
     dial and wall are the background layer
   - Windows .ico 16 / 32 / 48: their own art (hand-drawn 16; the in-game
-    1x Tallow, drawn the way player.gd draws it, for 32 and 48) - the .ico
-    itself is written by tools/art_platform.py from ico_images()
+    1x Tallow - the concept's idle frame, which player.gd draws - for 32 and
+    48) - the .ico itself is written by tools/art_platform.py from ico_images()
 
-Big Tallow is hand-placed character grids (one char = one pixel). Only the
-dish shading was started from an ellipse and then finished by hand; the dial,
-light rings, wallpaper and clock hands are plain pixel rules. Nothing is
-random, so running this script always gives identical PNGs.
+Big Tallow is the concept portrait's integer shape tests (ellipse dish, gumdrop
+body, drips, 4x6 eyes, banded flame) with the dish narrowed to fit the dial and
+the adaptive safe circle; the dial, light rings, wallpaper and clock hands are
+plain pixel rules. Nothing is random, so running this script always gives
+identical PNGs.
 
-Colours: the 0x72 DungeonTileset II palette (art_ui.PAL) plus Tallow's
-in-game wax colour #f3e6cf (player.gd). 1 px dark outline, light from the
-top-left, no anti-aliasing.
+Colours: the 0x72 DungeonTileset II palette only. 1 px dark outline, light from
+the top-left, no anti-aliasing.
 
 Usage:
     python3 tools/art_icon.py               # write all icons
@@ -91,204 +92,207 @@ def save(im, path):
 
 
 # ==========================================================================
-# BIG TALLOW (hand-placed). Layers: dish, body, face, the dish's front lip
-# again (over the body's foot), ring handle, wick, flame.
+# BIG TALLOW ("Tallow, reborn"): the concept's 64 px portrait
+# (art_source/hero_reborn/draw.py make_portrait) without its backdrop, with
+# the brass dish narrowed (half-width DISH_RX) so he fits the icon's dial and
+# the adaptive safe circle. Integer shape tests and hard colour bands only.
 # ==========================================================================
-FLAME = """
-.......r.......
-......rr.......
-......ro.......
-.....rro.......
-.....roor......
-....rrooo......
-....roooor.....
-...rrooyoor....
-...rooyyoor....
-..rrooyyyoor...
-..rooyyyyyor...
-..rooyywyyoor..
-.rooyywwwyyor..
-.rooyywwwwyoor.
-.rooyywwwwwyor.
-.rooyywwwwwyor.
-.roooywwwwwyor.
-..rooywwwwyoor.
-..rrooywwyoor..
-...rrooyyoor...
-....rroooorr...
-......rRRr.....
-"""
-FLAME_CORE = (7, 14)        # the flame's centre inside FLAME (glow rings centre)
-
-# Wax body, 23 x 23: melted pool on top, a lip, drips that bulge the outline
-# on both sides (like the in-game drips) and two short raised front drips.
-BODY_TOP = """
-......KKKKKKKKKKK......
-....KKwwwwwwwwwwwKK....
-...KwwXXXXXXXXXXXwaK...
-..KwwXXXXXXXXXXXXXwAK..
-.KwwwdXXXXXXXXXXXdwAaK.
-KwwwwwwwwwwwwwwwwwAAaaK
-"""
-BODY_H = 23
-BODY_ROW = ".KwWWWWWWWWWWWWWWAAAaK."     # lit edge, wax, shade, deep shade
-FRONT_DRIPS = ((4, 4), (5, 3), (12, 2), (13, 3))   # (x, length) below the lip
+DISH_RX = 19.0
+FLAME_CENTRE = (33.0, 14.0)      # glow rings centre (portrait coordinates)
 
 
-def body_grid():
-    rows = [list(r) for r in rows_of(BODY_TOP)]
-    while len(rows) < BODY_H - 1:
-        rows.append(list(BODY_ROW))
-    rows.append(list(".KKKKKKKKKKKKKKKKKKKKK."))
-    for y in (6, 7):                       # left side drip
-        rows[y][0], rows[y][1] = "K", "w"
-    for y in (6, 7, 8):                    # right side drip
-        rows[y][21], rows[y][22] = "a", "K"
-    for x, n in FRONT_DRIPS:               # raised drips: lit, one shade px at the tip
-        for k in range(n):
-            rows[6 + k][x] = "w"
-        if rows[5 + n][x + 1] == "W":
-            rows[5 + n][x + 1] = "A"
-    return "\n".join("".join(r) for r in rows)
+def portrait_tallow(rx=DISH_RX):
+    """{(x, y): '#rrggbb'} on the portrait's 64 px grid (body centre x 31.5)."""
+    N = 64
+    P = {}
+    O = "#21141b"
 
+    def put(x, y, c):
+        if 0 <= x < N and 0 <= y < N:
+            P[(x, y)] = c
 
-FACE = """
-...wK......wK...
-...KK......KK...
-...KK......KK...
-................
-.qq...K...K..qq.
-.......KKK......
-"""
+    def outline(mask, below=N):
+        for (x, y) in mask:
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                q = (x + dx, y + dy)
+                if q not in mask and q[1] < below:
+                    put(q[0], q[1], O)
 
-# Brass chamberstick dish seen from a little above: back rim, the bowl Tallow
-# stands in, the lit front lip (brightest on the left) and the underside.
-DISH = """
-..........KKKKKKKKKKKKKKKKK..........
-......KKKKyyyyyyyyyyyyyyyyyKKKK......
-...KKKyyyyyycccccccccccccyyyyooKKK...
-..KyyyycccccccccccccccccccccccyoooK..
-.KyyyRRRRRRRRRRRRRRRRRRRRRRRRRRRcccK.
-KyyyyRRRRRRRRRRRRRRRRRRRRRRRRRRRccccK
-KywwwwRRRRRRRRRRRRRRRRRRRRRRRRRoooocK
-KoywwwwwwRRRRRRRRRRRRRRRRRRRyyyooocRK
-KRoyyywwwwyyyyyyyyyyyyyyyyyyyyycccRRK
-.KRoooyyyyyyyyyyyyyyyyyyyyyooooRRRRK.
-..KRRRoooooooooooooooooooooccccRRRK..
-...KKKRRRRcccccccccccccccccRRRRKKK...
-......KKKKRRRRRRRRRRRRRRRRRKKKK......
-..........KKKKKKKKKKKKKKKKK..........
-"""
-DISH_FRONT_ROW = 8          # dish rows from here are drawn again over the body
+    # ---- dish (an ellipse) with a 3 px front face, the ring on the right
+    dcx, dcy = 31.5, 51.0
+    dish = {(x, y) for y in range(40, 62) for x in range(N)
+            if ((x - dcx) / rx) ** 2 + ((y - dcy) / 5.6) ** 2 <= 1.0}
+    front = {(x, y + k) for (x, y) in dish for k in (1, 2, 3)} - dish
+    dall = dish | front
+    outline(dall)
+    for (x, y) in front:
+        put(x, y, "#ee8e2e" if x < dcx + 0.65 * rx else "#c56025")
+    for (x, y) in front:
+        if (x, y + 1) not in dall:
+            put(x, y, "#c56025")          # underside
+    bowl = {(x, y) for (x, y) in dish
+            if ((x - dcx) / (rx - 4.0)) ** 2 + ((y - dcy + 0.5) / 3.6) ** 2 <= 1.0}
+    for (x, y) in dish:
+        put(x, y, "#facb3e")
+    for (x, y) in bowl:
+        put(x, y, "#c56025" if y >= dcy - 1 else "#8f4029")
+    g0 = int(dcx - rx + 2.5)
+    for x in range(g0, g0 + 5):
+        put(x, 54, "#fdf7ed")             # glint on the rim
+    rcx = dcx + rx + 2.5
+    ring = {(x, y) for y in range(42, 60) for x in range(int(rcx) - 7, int(rcx) + 7)
+            if 2.0 <= math.hypot(x - rcx, y - 51.0) <= 4.2}
+    outline(ring)
+    for (x, y) in ring:
+        put(x, y, "#facb3e" if (x - rcx) + (y - 51.0) < 0 else "#c56025")
 
-# Finger ring on the right of the dish, as on the in-game holder.png.
-RING = """
-..KKKKK..
-.KyyyyoK.
-KyoKKKocK
-KyK...KcK
-KoK...KRK
-KoK...KRK
-KocKKKcRK
-.KccRRRK.
-..KKKKK..
-"""
+    # ---- wax body
+    L0, R0 = 18, 45
+    body = {(x, y) for y in range(27, 51) for x in range(L0, R0 + 1)}
+    body |= {(x, y) for y in range(19, 33) for x in range(L0 - 1, R0 + 2)
+             if ((x - 31.5) / 14.0) ** 2 + ((y - 26.0) / 5.0) ** 2 <= 1.0}
+    body |= {(L0 - 1, y) for y in (29, 30)} | {(R0 + 1, y) for y in (29, 30)}   # lip overhang
+    tear_l = {(L0 - 2, y) for y in range(31, 38)} | {(L0 - 3, 37), (L0 - 3, 38), (L0 - 2, 38), (L0 - 2, 39)}
+    tear_r = {(R0 + 2, y) for y in range(31, 34)} | {(R0 + 3, 34), (R0 + 2, 34), (R0 + 2, 35)}
+    body |= tear_l | tear_r
+    body |= {(L0 - 1, y) for y in range(41, 51)} | {(R0 + 1, y) for y in range(41, 51)}  # gumdrop belly
+    body |= {(L0 - 2, y) for y in range(47, 51)} | {(R0 + 2, y) for y in range(47, 51)}  # sags into the dish
+    outline(body, below=48)
+    rows = {}
+    for (x, y) in body:
+        rows[y] = max(rows.get(y, -1), x)
+    for (x, y) in body:
+        put(x, y, "#e2b694" if x >= rows[y] - 3 and y >= 29 else "#fdf7ed")
+    for (x, y) in body:
+        if y < 29 and x >= rows[y] - 1:
+            put(x, y, "#e2b694")
+    for y in range(31, 37):
+        put(L0 - 1, y, O)
+    for y in range(31, 33):
+        put(R0 + 1, y, O)
+    for q in ((L0 - 3, 38), (L0 - 2, 39), (R0 + 2, 35), (R0 + 3, 34)):
+        put(q[0], q[1], "#e2b694")
+    for y in range(19, 33):               # the pool round the wick (two tones)
+        for x in range(L0, R0 + 1):
+            if (x, y) not in body:
+                continue
+            e = ((x - 31.5) / 10.5) ** 2 + ((y - 25.6) / 2.6) ** 2
+            if e <= 1.0:
+                put(x, y, "#e2b694")
+            if e <= 0.3:
+                put(x, y, "#c38d70")
+    # the melted edge under the lip: drips of different lengths, shadowed on their right
+    bumps = [(20.5, 4, 1.5), (27.0, 2, 1.0), (34.0, 6, 1.6), (40.5, 3, 1.2)]
+
+    def dpt(x):
+        d = 0
+        for bx, h, wd in bumps:
+            if abs(x + 0.5 - bx - 0.5) <= wd:
+                d = max(d, h if abs(x - bx) <= wd - 1 else h - 1)
+        return d
+    sx = rows[33] - 3
+    for x in range(L0, sx):
+        put(x, 32 + dpt(x), "#e2b694")
+        nxt = dpt(x + 1) if x + 1 < sx else 0
+        for y in range(32 + nxt, 32 + dpt(x)):
+            put(x + 1, y, "#e2b694")
+
+    # ---- face: big eyes (4x6) with two glints, rosy cheeks, a small smile
+    def eye(x0, y0):
+        for y in range(y0, y0 + 6):
+            for x in range(x0, x0 + 4):
+                if not ((x in (x0, x0 + 3)) and (y in (y0, y0 + 5))):
+                    put(x, y, O)
+        for q in ((x0 + 1, y0 + 1), (x0 + 2, y0 + 1), (x0 + 1, y0 + 2)):
+            put(q[0], q[1], "#fdf7ed")
+        put(x0 + 2, y0 + 4, "#cae6f5")
+    eye(22, 37)
+    eye(38, 37)
+    for x in (19, 20, 21, 42, 43, 44):
+        for y in (44, 45):
+            put(x, y, "#f78697")
+    for q in ((29, 43), (30, 44), (31, 45), (32, 45), (33, 44), (34, 43)):
+        put(q[0], q[1], O)
+    # stub arms, in front of the body edge
+    for ax in (L0 - 4, R0 + 1):
+        arm = {(x, y) for y in range(42, 47) for x in range(ax, ax + 4)
+               if not ((x in (ax, ax + 3)) and (y in (42, 46)))}
+        outline(arm)
+        for (x, y) in arm:
+            put(x, y, "#e2b694" if (x == ax + 3 or y == 46) else "#fdf7ed")
+    # crooked wick
+    for q in ((32, 25), (32, 24), (32, 23), (33, 22), (33, 21)):
+        put(q[0], q[1], O)
+    # flame: a teardrop with a curl, hard colour bands
+    base = 21
+    for y in range(2, base + 1):
+        t = base - y
+        hw = 2.6 + t * 0.75 if t <= 5 else 6.35 - (t - 5) * 0.5
+        if hw <= 0:
+            continue
+        sway = -1.5 * math.sin((t - 6) / 13.0 * math.pi) if t > 6 else 0.0
+        for x in range(18, 48):
+            dx = x + 0.5 - (33.0 + sway)
+            if abs(dx) > hw:
+                continue
+            k = abs(dx) / hw
+            if k > 0.74 or t >= 15:
+                c = "#da4e38"
+            elif k > 0.5 or t >= 12:
+                c = "#ee8e2e"
+            elif k > 0.28 or t >= 9:
+                c = "#facb3e"
+            elif t >= 6 or t <= 1:
+                c = "#ffcc68"
+            else:
+                c = "#fdf7ed"
+            put(x, y, c)
+    put(33, 21, O)
+    put(33, 20, "#da4e38")
+    return P
 
 
 def hero():
-    """Big Tallow on a transparent 48 x 58 canvas.
-    Returns (image, flame centre (x, y))."""
-    flame, body, face = grid(FLAME), grid(body_grid()), grid(FACE)
-    dish, ring = grid(DISH), grid(RING)
-    W, H = 48, 58
-    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    dx, dy = 1, H - dish.height - 1
-    im.alpha_composite(dish, (dx, dy))
-    bx = dx + 18 - 11                          # body centre on the dish centre
-    by = dy + 7 - (BODY_H - 1)                 # body's foot on dish row 7
-    im.alpha_composite(body, (bx, by))
-    im.alpha_composite(face, (bx + 4, by + 10))
-    front = dish.crop((0, DISH_FRONT_ROW, dish.width, dish.height))
-    im.alpha_composite(front, (dx, dy + DISH_FRONT_ROW))
-    im.alpha_composite(ring, (dx + dish.width - 3, dy + 2))
-    wx = bx + 11
-    for k, ch in enumerate("RKK"):             # glowing wick tip, wick
-        im.putpixel((wx, by - 2 + k), rgba(PAL[ch]))
-    fx, fy = wx - flame.width // 2, by - 2 - flame.height
-    im.alpha_composite(flame, (fx, fy))
-    return im, (fx + FLAME_CORE[0] + 0.5, fy + FLAME_CORE[1] + 0.5)
+    """Big Tallow on a transparent canvas cropped to him. Returns (image, flame centre (x, y))."""
+    P = portrait_tallow()
+    xs = [x for x, _ in P]
+    ys = [y for _, y in P]
+    x0, y0 = min(xs) - 1, min(ys) - 1
+    im = Image.new("RGBA", (max(xs) - x0 + 2, max(ys) - y0 + 2), (0, 0, 0, 0))
+    for (x, y), c in P.items():
+        im.putpixel((x - x0, y - y0), rgba(c))
+    return im, (FLAME_CENTRE[0] - x0, FLAME_CENTRE[1] - y0)
 
 
 # ==========================================================================
-# SMALL TALLOW (1x, for the 32 / 48 px .ico sizes): drawn exactly the way
-# player.gd _draw() draws the standing candle, with the in-game holder,
-# face and flame sprites.
+# SMALL TALLOW (1x, for the 32 / 48 px .ico sizes): the in-game sprite, i.e.
+# the concept's idle frame (player.gd draws exactly this at full wax).
 # ==========================================================================
-OUTLINE, WAX_HI, WAX, WAX_SH, WAX_DEEP, POOL = (
-    "#21141b", "#fdf7ed", "#f3e6cf", "#d3bfa9", "#aa8d7a", "#e2b694")
+def mini_tallow(h=None, bw=None):
+    """Returns (image, flame centre). The feet point (player position) is the bottom centre."""
+    sys.path.insert(0, os.path.join(ROOT, "art_source", "hero_reborn"))
+    import draw as concept
+    im = concept.all_frames()["idle_0"].image(32, 34, 15, 33)
+    bb = im.getbbox()
+    im = im.crop((bb[0], bb[1] - 1, bb[2], bb[3]))
+    # the flame's core: 4 px above the wick tip, which is at (16, 15) in the 32 x 34 frame
+    return im, (16 - bb[0] + 0.5, 11 - (bb[1] - 1) + 0.5)
 
 
-def mini_tallow(h, bw=10):
-    """Returns (image, flame centre). Image is 18 x (h + 19); the feet point
-    (player position) is (9, bottom)."""
-    H = h + 19
-    im = Image.new("RGBA", (18, H), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    ox, oy = 9, H
-
-    def r(x, y, w, hh, col):
-        d.rectangle((ox + x, oy + y, ox + x + w - 1, oy + y + hh - 1), fill=rgba(col))
-
-    base = -5
-    top = base - h
-    L = -bw // 2
-    R = L + bw
-    r(L, top, bw, h, OUTLINE)
-    r(L + 1, top + 1, bw - 2, h - 1, WAX)
-    r(L + 1, top + 1, 1, h - 1, WAX_HI)
-    if bw >= 10:
-        r(R - 4, top + 1, 2, h - 1, WAX_SH)
-    else:
-        r(R - 3, top + 1, 1, h - 1, WAX_SH)
-    r(R - 2, top + 1, 1, h - 1, WAX_DEEP)
-    r(L + 1, top + 1, bw - 2, 1, WAX_HI)
-    r(L + 2, top + 1, bw - 4, 1, POOL)
-    if bw >= 8:
-        r(L + 3, top + 2, bw - 6, 1, WAX_SH)
-    if h >= 6:
-        r(L, top + 1, 1, 3, OUTLINE)
-        r(L - 1, top + 2, 1, 3, OUTLINE)
-        r(L, top + 2, 1, 2, WAX_HI)
-        r(L - 1, top + 5, 2, 1, OUTLINE)
-        r(R - 1, top + 1, 1, 4, OUTLINE)
-        r(R, top + 3, 1, 3, OUTLINE)
-        r(R - 1, top + 3, 1, 2, WAX_SH)
-    if h >= 11 and bw >= 10:
-        r(0, top + 2, 1, h // 2, WAX_SH)
-        r(-1, top + 2 + h // 2, 3, 1, WAX_SH)
-    r(0, top - 2, 1, 3, OUTLINE)                                   # wick
-    hero_dir = os.path.join(ART, "hero")
-    ld = lambda n: Image.open(os.path.join(hero_dir, n + ".png")).convert("RGBA")
-    im.alpha_composite(ld("holder"), (ox - 9, oy - 7))
-    im.alpha_composite(ld("face_open"), (ox - 5, oy + top + min(5, max(2, 2 + h // 5))))
-    im.alpha_composite(ld("flame_f0"), (ox - 4, oy + top - 14))
-    return im, (ox + 0.5, oy + top - 7.5)
-
-
-# Windows 16 px: dial, white candle, flame breaking the rim, brass dish.
+# Windows 16 px: dial, Tallow's gumdrop (lip, eyes, blush), the flame breaking the rim, brass dish.
 ICON_16 = """
 .....KKrKKK.....
 ...KKSSroiiKK...
 ..KSS6roor6isK..
 .KS26moyyom62sK.
 .KS26mowyom62sK.
-KS226mmyomm622sK
-Ki22KKKKKKKK22sK
-Ki22KwXXXXaK22sK
-Kia2KwWWWWAKa2sK
-Ks22KwKWWKAK22sK
-.Ks2KwqWWqAK2sK.
-.KyyKwWWWWAKyoK.
+KS226KKKKKK622sK
+Ks22KwXXXXwAK2sK
+Ki2KwwwwwwwwAKsK
+Ki2KwKwwwwKwAKsK
+Ka2KqKwwwwKqAKsK
+KsKwwwwwwwwwAKsK
+.KyyKwwwwwwAKyoK
 KywwyyyyyyyyyyoK
 .KoooooooooocRK.
 ..KccccccccRRK..
@@ -373,7 +377,7 @@ GLOW = (19.0, 12.5)       # warm light rings on the dial face, per 64 px
 LIGHT = (-0.7071, -0.7071)
 DOT_STEPS = (0.8, 0.4, -0.3, -0.75)     # bezel facing the light -> away
 BEZEL = ("hSiis", "Siiss", "iisss")     # pewter, outer band to inner band
-HANDS = ((300, 7), (55, 12))             # (clock degrees, length short of R): 1:50
+HANDS = ((300, 3), (55, 7))              # (clock degrees, length short of R): 1:50; long enough to show past Tallow
 
 
 def dial(cv, dcx, dcy, R, bands=BEZEL, hands=HANDS, marks=True):
