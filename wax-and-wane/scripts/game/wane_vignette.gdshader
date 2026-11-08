@@ -1,12 +1,13 @@
 shader_type canvas_item;
 render_mode unshaded;
-// The dark closing in as the wax runs low: a dithered vignette in three steps of one dark 0x72 colour,
-// drawn over the game (under the HUD). `amount` 0 = off, 1 = the tightest (an empty candle).
+// The dark closing in as the wax runs low: a dithered vignette in three steps of the house's own dark
+// (the clear colour around the rooms), drawn over the game, under the HUD. `amount` 0 = off, 1 = the
+// tightest (an empty candle).
 #include "res://scripts/game/px_dither.gdshaderinc"
 
 uniform float amount : hint_range(0.0, 1.0) = 0.0;
 uniform vec2 focus = vec2(0.5, 0.5);     // screen UV the dark closes in on (between the centre and Tallow)
-uniform vec4 shade : source_color = vec4(0.067, 0.067, 0.067, 1.0);   // #111111
+uniform vec4 shade : source_color = vec4(0.035, 0.027, 0.035, 1.0);   // the clear colour
 
 void fragment() {
 	vec2 sz = 1.0 / SCREEN_PIXEL_SIZE;

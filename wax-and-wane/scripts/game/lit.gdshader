@@ -4,8 +4,6 @@ shader_type canvas_item;
 // Fire, embers, the flame, shots and the HUD are unshaded or elsewhere, so they keep full colour.
 #include "res://scripts/game/pixel_light.gdshaderinc"
 
-uniform float wane : hint_range(0.0, 1.0) = 0.0;
-
 void fragment() {
 	// In Godot 4 the incoming COLOR is already texture x vertex colour x modulate.
 	vec4 c = COLOR;

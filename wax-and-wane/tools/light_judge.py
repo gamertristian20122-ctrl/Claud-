@@ -172,6 +172,13 @@ def waning(d):
     res["sat_mean_100"] = round(float(sat(a).mean()), 4)
     res["sat_mean_20"] = round(float(sat(b).mean()), 4)
     res["sat_ratio_20_vs_100"] = round(res["sat_mean_20"] / max(res["sat_mean_100"], 1e-6), 3)
+    # the room only (the 272x192 room image centred on screen; the void around it is the clear colour)
+    h, w = a.shape[:2]
+    y0, x0 = (h - 192) // 2, (w - 272) // 2
+    ra, rb = sat(a[y0:y0 + 192, x0:x0 + 272]), sat(b[y0:y0 + 192, x0:x0 + 272])
+    res["room_sat_100"] = round(float(ra.mean()), 4)
+    res["room_sat_20"] = round(float(rb.mean()), 4)
+    res["room_sat_ratio_20_vs_100"] = round(res["room_sat_20"] / max(res["room_sat_100"], 1e-6), 3)
     hm = hot_mask(b)
     res["hot_pixels_20"] = int(hm.sum())
     if hm.any():

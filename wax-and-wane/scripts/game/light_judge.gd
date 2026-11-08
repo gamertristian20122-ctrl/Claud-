@@ -16,6 +16,7 @@ const PANEL_COL := Color("#aa8d7a")
 
 static func run(t: Node) -> void:
 	var dir: String = t._shots_dir
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)   # for the fps samples
 	DirAccess.make_dir_recursive_absolute(dir)
 	var lighting: Script = load("res://scripts/game/lighting.gd") if ResourceLoader.exists("res://scripts/game/lighting.gd") else null
 	# ---- B: the start room, frozen
@@ -87,6 +88,7 @@ static func run(t: Node) -> void:
 	await t._wait(0.15)
 	await _save(t, dir, "wane_100")
 	_render_counters(t, "wane_100")
+	await _fps(t, "wane_100")
 	t.get_tree().paused = false
 	w.player.wax = w.player.wax_max * 0.2
 	await t._wait(2.5)
@@ -94,6 +96,12 @@ static func run(t: Node) -> void:
 	await t._wait(0.15)
 	await _save(t, dir, "wane_20")
 	_render_counters(t, "wane_20")
+	await _fps(t, "wane_20")
+	Game.settings["effects"] = "lite"
+	Game.settings_changed.emit()
+	await _fps(t, "wane_20_lite")
+	Game.settings["effects"] = "full"
+	Game.settings_changed.emit()
 	t.get_tree().paused = false
 	w.player.wax = w.player.wax_max * 0.1   # for the eye: 10 % wax with the HUD (its low-wax glow)
 	w.hud.visible = true
@@ -161,6 +169,17 @@ static func _save(t: Node, dir: String, name: String) -> void:
 	var img := t.get_viewport().get_texture().get_image()
 	img.save_png("%s/%s.png" % [dir, name])
 	print("[judge] shot ", name, " ", img.get_size())
+
+
+## Frames drawn per second with the tree paused (llvmpipe here: CPU-rendered, a rough proxy for GPU cost).
+static func _fps(t: Node, label: String, secs := 3.0) -> void:
+	await RenderingServer.frame_post_draw
+	var n := 0
+	var t0 := Time.get_ticks_usec()
+	while Time.get_ticks_usec() - t0 < int(secs * 1000000.0):
+		await RenderingServer.frame_post_draw
+		n += 1
+	print("[judge] fps_%s=%.1f" % [label, n / secs])
 
 
 static func _collect_lights(n: Node, out: Array) -> void:
