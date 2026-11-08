@@ -571,6 +571,9 @@ func _shot(name: String) -> void:
 	_shot_i += 1
 	img.save_png("%s/%02d_%s.png" % [_shots_dir, _shot_i, name])
 	print("[tour] shot ", name)
+	if args.has("fit"):   # layout judge: text off the screen or on other text (scripts/ui/fit_check.gd)
+		for line in FitCheck.scan(get_tree().root, get_viewport().get_visible_rect().size):
+			print("[fit] %02d_%s %s" % [_shot_i, name, line])
 
 
 func _wait(s: float) -> void:

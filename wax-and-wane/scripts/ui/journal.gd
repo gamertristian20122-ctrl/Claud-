@@ -791,7 +791,8 @@ func _d_run(r: Dictionary) -> void:
 	var title := "Run %d" % int(r.get("n", 0))
 	var sub := ("Done by %s" % Game.clock_text(float(r.get("clock", 0.0)))) if won else Records.death_line(killer)
 	_head(_pic(tex, k), title, [[sub, UI.GOLD if won else UI.RED]], UI.GOLD)
-	var where := "%s - %s (%d/%d)" % [Candles.def_of(str(r.get("candle", "tallow")))["name"], Records.floor_name(fl), fl, Records.floor_count()]
+	var where := "%s - %s (%s)" % [Candles.def_of(str(r.get("candle", "tallow")))["name"], Records.floor_name(fl),
+		"above the bells" if fl > Records.floor_count() else "%d/%d" % [fl, Records.floor_count()]]
 	if won:
 		where += " - " + Game.clock_text(float(r.get("clock", 0.0)))
 	_text(where, UI.CREAM)

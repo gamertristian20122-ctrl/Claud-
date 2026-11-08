@@ -34,6 +34,10 @@ static func text(p: Dictionary) -> String:
 	var how := ""
 	if won:
 		how = "%s: done by %s" % [candle, Game.clock_text(float(p.get("clock", 120.0)))]
+		if f > house:
+			how += ", above the bells"   # the secret floor: never "Floor 5" of a four-floor house
+	elif f > house:
+		how = "%s: snuffed above the bells" % candle
 	else:
 		how = "%s: snuffed at Floor %d" % [candle, f]
 	var glyphs := ""
