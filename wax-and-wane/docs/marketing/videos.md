@@ -15,6 +15,7 @@ current build with one command (bottom of this page). They are not kept in git (
 | `short_c_one_minute_left.mp4` | Short C: 1:58 AM, the Hour Fiend still standing, narrated | 15.2 s | 6.0 MB | 1080x1920, 60 fps | AAC, -14 LUFS |
 | `loop_fight.gif` | 6.5 s loop: the fire build melts a full room (game size, 384x216) | 6.5 s | 1.1 MB | GIF, 15 fps | none |
 | `loop_fight.webm` | The same loop, twice the size (768x432) | 6.5 s | 1.0 MB | VP9, 30 fps | none |
+| `trailer_60s.srt`, `short_a_...srt`, `short_c_...srt` | The narration as subtitles, timed to each video | | | | |
 
 `tools/make_trailer.sh check` prints this table again for the current files (lengths, sizes, loudness).
 
@@ -43,6 +44,7 @@ Steam starts trailers muted, so the short text cards ("YOUR WAX IS YOUR CLOCK", 
    - Description: `You are Tallow, a little living candle. Your wax is your health and your clock: 12:00 AM full,
      2:00 AM gone. Four floors, one secret. Wishlist on Steam: [STEAM LINK]` and on its own line:
      `Narration: AI-generated voice (Kokoro TTS).`
+   - Subtitles: *Subtitles > Add language > English > Upload file > With timing*: `trailer_60s.srt`.
    - Then paste the YouTube link into Google Play (Store listing > Promo video), the press kit and the itch page.
 3. **TikTok, YouTube Shorts and Instagram Reels**: post the same file on all three. One short per day is
    plenty (see the weekly plan in `launch_plan.md`). Use 3 to 5 hashtags, not 20.

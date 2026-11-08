@@ -33,7 +33,7 @@ OUT="$ROOT/build/videos"
 VENV="${VOICE_VENV:-$HOME/.cache/waxandwane/voice_venv}"
 SCENES=(title intro cellar hook floors build chapel seance specials cards boss clutch ladder keeper dawn)
 FINALS=(trailer_60s.mp4 short_a_candle_is_the_timer.mp4 short_b_every_fire_relic.mp4 short_c_one_minute_left.mp4
-	loop_fight.webm loop_fight.gif)
+	loop_fight.webm loop_fight.gif trailer_60s.srt short_a_candle_is_the_timer.srt short_c_one_minute_left.srt)
 # build/ holds thousands of footage PNGs: Godot must never import them (that took minutes and 250 MB of cache)
 mkdir -p "$ROOT/build"
 touch "$ROOT/build/.gdignore"

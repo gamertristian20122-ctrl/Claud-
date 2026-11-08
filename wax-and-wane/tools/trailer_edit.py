@@ -745,7 +745,21 @@ def build(tl, out, layout, target, crf, stills=None, audio_only=False):
         mux(v, a, out)
     with open(os.path.splitext(out)[0] + ".json", "w") as f:
         json.dump(side, f, indent=2)
+    if tl.vo:
+        write_srt(tl, os.path.splitext(out)[0] + ".srt")
     report(out)
+
+
+def write_srt(tl, path):
+    """The narration as subtitles (upload with the video on YouTube: viewers who watch muted can read it)."""
+    def ts(x):
+        ms = int(round(x * 1000))
+        return "%02d:%02d:%02d,%03d" % (ms // 3600000, ms // 60000 % 60, ms // 1000 % 60, ms % 1000)
+    cues = sorted((t, t + secs(a), txt) for t, a, txt, _ in tl.vo if txt)
+    with open(path, "w") as f:
+        for k, (t0, t1, txt) in enumerate(cues, 1):
+            end = min(t1 + 0.25, cues[k][0] - 0.05) if k < len(cues) else t1 + 0.25
+            f.write("%d\n%s --> %s\n%s\n\n" % (k, ts(t0), ts(end), txt.replace("...", "\u2026")))
 
 
 def save_stills(tl, out, layout, d):

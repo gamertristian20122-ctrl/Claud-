@@ -330,16 +330,12 @@ func _intro() -> void:
 	_mark("in")
 	_mark_spot("tallow")
 	await at._wait(3.6)
-	# the house wakes up: the doors slam (as on entering any room) and the lodgers are there, all around
+	# the house wakes up exactly as a room does when Tallow walks in: the doors slam and the lodgers are there
 	_mark("wake")
 	w.room.set_open(false, true)
 	Audio.play("door_close", -3.0)
-	w.shake(3.0)
-	var cast := [["tiny_zombie", Vector2(-70, -36)], ["goblin", Vector2(66, -40)], ["cinder_rat", Vector2(78, 30)],
-		["sootling", Vector2(-76, 38)], ["imp", Vector2(6, -58)], ["wax_blob", Vector2(52, -6)], ["skelet", Vector2(-40, 56)]]
-	for e in cast:
-		w.fx_ring(c0 + e[1], Color("#cae6f5"))
-	_spawn(c0, cast)
+	_spawn(c0, [["tiny_zombie", Vector2(-70, -36)], ["goblin", Vector2(66, -40)], ["cinder_rat", Vector2(78, 30)],
+		["sootling", Vector2(-76, 38)], ["imp", Vector2(6, -58)], ["wax_blob", Vector2(52, -6)], ["skelet", Vector2(-40, 56)]])
 	await at._wait(0.7)
 	at.args["drive"] = true
 	await at._wait(5.0)
