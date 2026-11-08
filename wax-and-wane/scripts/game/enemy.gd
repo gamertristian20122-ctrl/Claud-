@@ -215,13 +215,14 @@ static func _blob(w: int, h: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
-## The floor's guardian out of `opts` (world FLOORS[n]["bosses"]), picked from the run seed so
-## Tonight's Candle is the same for everyone. Until a player has won once, a normal run always ends
-## with the first finale (the Hour Fiend).
-static func pick_boss(opts: Array, floor_num: int, run_seed: int, daily := false) -> String:
+## The floor's guardian out of `opts` (world FLOORS[n]["bosses"]), picked from the run seed. A `fixed`
+## run (Tonight's Candle, a typed-in seed: Unlocks.fixed) always takes the seed's pick, so the same seed is
+## the same house for everyone, guardians included. Otherwise, until a player has won once, the Belfry is
+## always guarded by opts[0] (The Great Pendulum, the house's own clock); the Hour Fiend joins after that.
+static func pick_boss(opts: Array, floor_num: int, run_seed: int, fixed := false) -> String:
 	if opts.is_empty():
 		return "big_zombie"
-	if floor_num >= 4 and not daily and int(Game.records.get("wins", 0)) <= 0:
+	if floor_num >= 4 and not fixed and int(Game.records.get("wins", 0)) <= 0:
 		return opts[0]
 	return opts[absi(hash("%d:boss:%d" % [run_seed, floor_num])) % opts.size()]
 

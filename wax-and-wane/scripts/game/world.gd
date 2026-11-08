@@ -5,7 +5,8 @@ const FLOORS := {
 	1: {"name": "The Cellar", "theme": "cellar", "dark": Color(0.32, 0.26, 0.27), "music": "floor_1", "boss": "big_zombie", "bosses": ["big_zombie", "wax_mother"]},
 	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.25, 0.27, 0.34), "music": "floor_2", "boss": "ogre", "bosses": ["ogre", "sexton"]},
 	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.28, 0.24, 0.34), "music": "floor_3", "boss": "necro_boss", "bosses": ["necro_boss", "choir"]},
-	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "boss": "big_demon", "bosses": ["big_demon", "pendulum"]},
+	# a new player's first Belfry is always The Great Pendulum (Enemy.pick_boss); the Hour Fiend joins after a win
+	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "boss": "pendulum", "bosses": ["pendulum", "big_demon"]},
 	# the secret fifth floor (scripts/game/tower.gd): beat the Belfry by 1:00 AM to climb to it
 	5: {"name": "The Clock Tower", "theme": "tower", "dark": Color(0.27, 0.29, 0.40), "music": "floor_5", "boss": "keeper", "bosses": ["keeper"]},
 }
@@ -182,8 +183,8 @@ func _intro() -> void:
 	var v: VBoxContainer = m[1]
 	for line in ["The old house wakes when the clock strikes twelve.",
 			"You are Tallow, the last candle in the cellar.",
-			"Burn down through four floors and snuff the Hour Fiend",
-			"before the clock strikes two.",
+			"Burn down through four floors to the belfry",
+			"and still the clock before it strikes two.",
 			"",
 			"Your wax is your life - and your time.",
 			"Every hit melts you. Wax drippings mend you.",
@@ -240,7 +241,7 @@ func _start_floor(n: int) -> void:
 	else:
 		layout = FloorGen.generate(n, frng)
 	recompute_discount()
-	boss_kind = Enemy.pick_boss(FLOORS[n]["bosses"], n, run_seed, daily)
+	boss_kind = Enemy.pick_boss(FLOORS[n]["bosses"], n, run_seed, Unlocks.fixed(self))   # seeded / daily: the seed alone
 	dark.color = FLOORS[n]["dark"]
 	for c in layout["cells"].keys():
 		layout["cells"][c]["seen"] = false
