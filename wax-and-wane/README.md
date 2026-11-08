@@ -198,6 +198,10 @@ Every licence text is in `assets/licenses/`. All third-party assets are CC0 1.0 
 
   The victory and death jingles are original, synthesized for this game (`tools/make_audio.py`).
 - **Engine**: Godot Engine (MIT), https://godotengine.org - `Godot_MIT.txt`.
+- **Trailer narration (AI-generated)**: the narrator of the trailer and the shorts is an AI voice made with
+  **Kokoro TTS** (*Kokoro-82M* by hexgrad, open weights, Apache-2.0; voice `am_michael`; misaki G2P,
+  Apache-2.0), https://huggingface.co/hexgrad/Kokoro-82M - `Kokoro_TTS_Apache-2.0.txt`. Only the videos
+  use it, not the game. The lines and how to swap in a real voice: `docs/marketing/voice/`.
 - **Original work**: design, code, the hero, the house's own creatures and guardians, the Keeper,
   relic and keepsake icons, costumes, effects, rooms, decor, special rooms, the Clock Tower, chalk
   drawings, UI, logo, app and store icons, and the jingles were made for this game with **Claude**

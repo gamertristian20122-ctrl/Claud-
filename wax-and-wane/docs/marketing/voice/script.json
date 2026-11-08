@@ -1,0 +1,12 @@
+{
+  "about": "The trailer narration, in order. One audio file per line, named by 'file'. tools/make_voice.py makes and judges them; tools/trailer_edit.py places them. 'speed' (optional) slows or quickens one line of the AI voice.",
+  "lines": [
+    {"file": "01_this_is_tallow.wav", "text": "This is Tallow. Tallow is a candle."},
+    {"file": "02_midnight.wav", "text": "At midnight, the house wakes up.", "speed": 0.88},
+    {"file": "03_wax_is_health.wav", "text": "His wax is his health. His wax is also his clock."},
+    {"file": "04_every_hit.wav", "text": "Every hit melts him faster. Every win buys him time."},
+    {"file": "05_four_floors.wav", "text": "Four floors. One secret."},
+    {"file": "06_done_by_two.wav", "text": "Be done by two... or burn out trying."},
+    {"file": "07_light_the_wick.wav", "text": "Wax and Wane. Light the wick."}
+  ]
+}
