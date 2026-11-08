@@ -143,6 +143,9 @@ func _ready() -> void:
 	Controls.set_page_handler(self, func(d: int): _set_tab((tab + d + TABS.size()) % TABS.size(), true))
 	Controls.device_changed.connect(_on_device)
 	tree_exiting.connect(Game.save)
+	tree_exiting.connect(func():   # silhouettes are cheap to redraw; nothing is held after the Journal closes
+		_sil_cache.clear()
+		_face_cache.clear())
 	_on_device(Controls.device)
 	Audio.play("page_flip")
 	_set_tab(tab, false)
