@@ -117,11 +117,21 @@ Same size, same AI, the stock 0x72 frames with a few pixels of the house (`tools
 ```
 python3 tools/design_bullets.py --judge DIR [--floors FLOORSHOTS]   # UX-02: dE table, floor contrast, CVD sheet
 xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 \
-    -- --autotest --tour --artjudge --shots=DIR [--set=shadow|bosses|cards [--only=<kind>]]
+    -- --autotest --tour --artjudge --shots=DIR [--set=shadow|bosses|cards|perf [--only=<kind>]]
 python3 tools/art_judge.py DIR [BEFORE_DIR]                         # UX-03 / C6 contrast tables
 ```
 Baseline numbers come from the untouched `e3a03f4` tree with the judge script copied in; the after numbers from
 the final tree (`--artjudge`, all sets). Screenshots of both runs are listed in the hand-off.
+
+## Cost
+- In one process, same load (`--artjudge --set=perf`: a crypt room with its obstacles, 24 lodgers incl. marked
+  foes, llvmpipe at 1600x720, alternating 3 s windows x3): everything on 47.2 / 43.6 fps (two windows of the
+  same state, i.e. the noise), twin light off 43.7, glow pass off 43.2, both off 46.7. No measurable cost on a
+  CPU-rendered frame. Canvas draw calls: +1 per creature that has a glow pass (eyes, rim), batched otherwise.
+- `--bench` before / after was also run (fps 38/37/29/38 -> 22/21/23/25, draw calls avg 329/316/262/229 ->
+  318/354/199/286) but the two runs were minutes apart while three other streams' Godot jobs loaded the 4 shared
+  cores (load average 5), so they are not comparable; the in-process A/B above is the measurement.
+- `--autotest --bench` reports "shadowed 2" live lights now (Tallow's light and its creature twin).
 
 ## Known issues / not done
 - The twin light adds one more shadow-map pass for Tallow's light; its GPU cost on a real phone is not measured

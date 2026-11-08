@@ -23,6 +23,10 @@ static func run(bot: Node) -> void:
 		await _cards(bot)
 		bot.get_tree().quit()
 		return
+	if which == "perf":
+		await _perf(bot)
+		bot.get_tree().quit()
+		return
 	bot.main.goto("game", {"seed": 5})
 	await bot._wait(1.5)
 	var w: Node = bot.main.current
@@ -81,6 +85,53 @@ static func _cards(bot: Node) -> void:
 			await bot._shot("card_%s" % kind)
 			await bot._wait(3.4)
 			await bot._shot("fight_%s" % kind)
+
+
+## --set=perf: what the shadow-floor twin light and the glow pass cost, in one process so the machine's load
+## is the same for both: a crowded crypt room with its own obstacles (shadows), 24 lodgers (some marked),
+## frames counted over alternating 3 s windows with each feature on and off (ABAB..., so load drift cancels).
+static func _perf(bot: Node) -> void:
+	bot.args["god"] = true
+	bot.main.goto("game", {"seed": 5})
+	await bot._wait(1.5)
+	var w: Node = bot.main.current
+	w._start_floor(2)
+	await bot._wait(3.0)
+	var c: Vector2i = bot._normal_cells(w)[0]
+	w.layout["cells"][c]["cleared"] = true
+	bot._jump(w, c)
+	await bot._wait(0.5)
+	w.player.frozen = true
+	w.freeze_t = 9999.0
+	var kinds: Array = []
+	for slot in ["e", "h", "f"]:
+		for k in w.POOLS[2][slot]:
+			if not k in kinds:
+				kinds.append(k)
+	var ctr: Vector2 = w.room.center()
+	for i in 24:
+		var e: Enemy = w.spawn_enemy(kinds[i % kinds.size()], ctr + Vector2(-96 + 24 * (i % 9), -50 + 34 * (i / 9)),
+			["", "", "", "ember", "", "chilled"][i % 6])
+		if e:
+			e.set_meta("swarm_child", true)
+	await bot._wait(2.0)
+	var res := {"twin_on": [], "twin_off": [], "glow_on": [], "glow_off": [], "both_off": []}
+	for rep in 3:
+		for mode in ["twin_on", "twin_off", "glow_on", "glow_off", "both_off"]:
+			Lighting.twin_on = mode != "twin_off" and mode != "both_off"
+			CreatureGlow.enabled = mode != "glow_off" and mode != "both_off"
+			await bot._wait(0.5)
+			var f0 := Engine.get_frames_drawn()
+			var t0 := Time.get_ticks_usec()
+			await bot._wait(3.0)
+			res[mode].append((Engine.get_frames_drawn() - f0) / ((Time.get_ticks_usec() - t0) / 1e6))
+	Lighting.twin_on = true
+	CreatureGlow.enabled = true
+	for k in res:
+		var v: Array = res[k]
+		print("[artjudge] perf %-9s fps %s  mean %.1f" % [k, str(v.map(func(x): return snappedf(x, 0.1))), v.reduce(func(a, b): return a + b, 0.0) / v.size()])
+	print("[artjudge] perf enemies %d, canvas draw calls now %d" % [w.enemies.size(),
+		int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))])
 
 
 ## The same room with every tile plain floor (walls and doors are drawn by the room itself).

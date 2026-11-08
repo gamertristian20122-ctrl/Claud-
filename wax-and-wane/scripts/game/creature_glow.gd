@@ -22,6 +22,9 @@ const POOL_SCALE := 0.42
 ## How much light a lodger's glowing eyes add (a guardian's own lights add their full colour).
 const GLOW_EYES := 0.8
 
+## Off only for cost tests (scripts/game/art_judge.gd --set=perf).
+static var enabled := true
+
 var e: Enemy
 var pool: PointLight2D
 var _mat: ShaderMaterial
@@ -72,7 +75,7 @@ func _process(_dt: float) -> void:
 	var s: AnimatedSprite2D = e.spr if is_instance_valid(e) else null
 	if s == null:
 		return
-	visible = e.alive and not e.buried and s.visible
+	visible = e.alive and not e.buried and s.visible and enabled
 	if not visible:
 		return
 	var p: Node2D = e.world.get("player") if e.world else null

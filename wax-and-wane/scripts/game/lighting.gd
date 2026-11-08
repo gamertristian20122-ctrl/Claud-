@@ -37,6 +37,8 @@ const FX_Z := 60
 ## Light-mask bit only creature sprites carry, and the height that marks Tallow's creature twin light.
 const CREATURE_BIT := 1 << 9
 const TWIN_HEIGHT := 16.0
+## Off only for cost tests (scripts/game/art_judge.gd --set=perf).
+static var twin_on := true
 
 static var _room_mat: ShaderMaterial
 static var _actor_mat: ShaderMaterial
@@ -223,7 +225,7 @@ func _follow_twin(p: Node2D) -> void:
 	_twin.color = l.color
 	_twin.position = l.position
 	_twin.offset = l.offset
-	_twin.enabled = l.enabled and l.visible
+	_twin.enabled = l.enabled and l.visible and twin_on
 	_twin.shadow_item_cull_mask = l.shadow_item_cull_mask
 
 
