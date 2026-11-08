@@ -11,6 +11,7 @@ extends Node
 ##   -- --autotest --tour --journal --shots=/abs/dir               Journal tabs, death note, chalk start room
 ##   -- --autotest --shots-store --shots=/abs/dir [--phone]        staged store screenshots (scripts/store_shots.gd)
 ##   -- --autotest --keyart --shots=/abs/dir                       the key-art scene, no HUD (tools/store_art.py)
+##   -- --autotest --lightjudge --shots=/abs/dir                   light pass judge images (tools/light_judge.py)
 
 var main: Node
 var args := {}
@@ -48,6 +49,8 @@ func _ready() -> void:
 		mode = "bench"
 	if args.has("shots-store") or args.has("keyart"):
 		mode = "tour"   # store art: the bot only plays when the staging asks it to
+	if args.has("lightjudge"):
+		mode = "tour"   # light pass judge images (scripts/game/light_judge.gd, tools/light_judge.py)
 	runs_left = int(args.get("runs", "1"))
 	_shots_dir = str(args.get("shots", ""))
 	Game.base_time_scale = float(args.get("speed", "1"))
@@ -56,6 +59,9 @@ func _ready() -> void:
 	await get_tree().create_timer(0.8).timeout
 	if args.has("herosheet"):
 		_hero_sheet()
+	elif args.has("lightjudge"):
+		await LightJudge.run(self)
+		get_tree().quit()
 	elif args.has("shots-store") or args.has("keyart"):
 		await load("res://scripts/store_shots.gd").run(self)
 		get_tree().quit()
