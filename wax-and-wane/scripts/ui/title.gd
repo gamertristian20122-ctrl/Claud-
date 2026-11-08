@@ -357,15 +357,16 @@ func _credits() -> void:
 	var m := UI.modal(root, "CREDITS")
 	var v: VBoxContainer = m[1]
 	v.add_theme_constant_override("separation", 3)
+	var pages := preload("res://scripts/ui/credits_pages.gd")
 	for line in [
-		["Design, code, pixel art, jingles", "made for this game with Claude"],
-		["Dungeon tiles and creatures", "0x72 - 16x16 DungeonTileset II (CC0)"],
-		["Fonts", "Kenney Pixel and Kenney Mini by Kenney (CC0)"],
-		["Sound effects", "Kenney audio packs, Ninja Adventure (CC0)"],
-		["Music", "Ninja Adventure by Pixel-boy and AAA (CC0)"],
-		["", "Dream - Crypt - Dungeon - Temple - Final Area"],
-		["", "Boat - Fight - Tension - Ascension - Credit Theme"],
-		["Engine", "Godot Engine (MIT)"],
+		["Made by", "one developer, with Claude (AI)"],
+		["Made for this game", "Tallow, %s, the relics," % pages.cast_line(true).replace(" and ", ", ")],
+		["", "the rooms, effects, jingles and logo"],
+		["Dungeon art (CC0)", "0x72: tiles, %s" % pages.cast_line(false).replace(" and ", ", ")],
+		["Music (CC0)", "Ninja Adventure by Pixel-boy and AAA"],
+		["Sound effects (CC0)", "Kenney packs, Ninja Adventure"],
+		["Fonts (CC0)", "Kenney Pixel and Kenney Mini"],
+		["Engine (MIT)", "Godot Engine"],
 	]:
 		var row := HBoxContainer.new()
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -377,10 +378,16 @@ func _credits() -> void:
 		val.custom_minimum_size = Vector2(170, 0)
 		row.add_child(val)
 		v.add_child(row)
-	v.add_child(UI.label("Free for any use. Licences are in assets/licenses.", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
-	var back := UI.button("Back", func(): m[0].queue_free())
-	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	v.add_child(back)
+	# the licences (assets, Godot and its parts) and the privacy policy, each on its own page
+	var btns := HBoxContainer.new()
+	btns.alignment = BoxContainer.ALIGNMENT_CENTER
+	btns.add_theme_constant_override("separation", 4)
+	btns.add_child(UI.button("Licences", func(): pages.licences(root), 84))
+	btns.add_child(UI.button("Privacy", func(): pages.privacy(root), 84))
+	var back := UI.button("Back", func(): m[0].queue_free(), 84)
+	back.set_meta("default_focus", true)
+	btns.add_child(back)
+	v.add_child(btns)
 
 
 ## Menu buttons are 20 px tall so Continue + four rows fit under the logo on a 216 px screen.

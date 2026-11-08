@@ -392,16 +392,19 @@ func _credits() -> Array:
 	var champ_lines: Array = []
 	for i in range(0, champs.size(), 2):
 		champ_lines.append("   ".join(champs.slice(i, i + 2)))
+	var pages := preload("res://scripts/ui/credits_pages.gd")
 	return [
-		["DESIGN, CODE AND PIXEL ART", ["Made for you with Claude"]],
-		["DUNGEON ART", ["0x72 - 16x16 DungeonTileset II (CC0)"]],
-		["ORIGINAL ART", ["Tallow, the house, its lodgers, the relics and the Clock Tower:", "drawn pixel by pixel for this game"]],
+		["MADE BY", ["One developer, with Claude (AI)"]],
+		["MADE FOR THIS GAME", ["Tallow, %s," % pages.cast_line(true), "the relics, the rooms, the Clock Tower and every effect",
+			"(pixel art drawn by scripts written with Claude, checked by the developer)"]],
+		["DUNGEON ART", ["0x72 - 16x16 DungeonTileset II (CC0)", "the dungeon tiles, %s" % pages.cast_line(false)]],
 		["MUSIC", ["Ninja Adventure Asset Pack by Pixel-boy and AAA (CC0)",
 			"Dream - Crypt - Dungeon - Temple - Final Area", "Boat - Fight - Tension - Ascension - Credit Theme",
 			"Jingles: original, made for this game"]],
 		["SOUND", ["Kenney audio packs (CC0)", "Ninja Adventure sounds (CC0)", "Original synthesis"]],
 		["FONTS", ["Kenney Pixel and Kenney Mini by Kenney (CC0)"]],
-		["ENGINE", ["Godot Engine (MIT)"]],
+		["ENGINE", ["Godot Engine (MIT) - godotengine.org/license"]],
+		["LICENCES AND PRIVACY", ["Title screen > Credits", "The game collects no data"]],
 		["THE GUARDIANS", cast],
 		["THE HOUSE CHAMPIONS", champ_lines],
 		["AND", ["Every lodger, moth and melt drop in the house", "Tallow, the last candle in the cellar"]],
