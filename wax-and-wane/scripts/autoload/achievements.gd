@@ -50,6 +50,10 @@ const LIST := [
 	{"id": "font_5", "name": "Generous Wick", "desc": "Feed the Wax Font five times in one run."},
 	{"id": "mini_boss", "name": "Big Game", "desc": "Snuff a house champion."},
 	{"id": "mini_all", "name": "Trophy Wall", "desc": "Snuff all six house champions.", "hidden": true},
+	# the Journal (meta stream, scripts/game/records.gd)
+	{"id": "census", "name": "House Census", "desc": "Meet every lodger in the house."},
+	{"id": "curio", "name": "Curio Cabinet", "desc": "Find every relic in the house."},
+	{"id": "guardians_all", "name": "Night Watch", "desc": "Snuff all eight guardians."},
 ]
 const BOSS_IDS := {1: "boss_cellar", 2: "boss_crypt", 3: "boss_chapel"}
 const FLOOR_IDS := {2: "floor_crypt", 3: "floor_chapel", 4: "floor_belfry"}
@@ -308,6 +312,7 @@ func _show(id: String) -> void:
 	row.add_child(col)
 	col.add_child(UI.label(a["name"].to_upper(), 8, UI.GOLD))
 	col.add_child(UI.label(a["desc"], 8, UI.CREAM))
+	if Unlocks.reward_of(id) != "": col.add_child(UI.label("NEW IN THE HOUSE: " + Items.display_name(Unlocks.reward_of(id)), 8, UI.EMBER))
 	_layer.add_child(box)
 	_toast = box
 	box.reset_size()
@@ -398,6 +403,7 @@ func _entry(a: Dictionary) -> Control:
 	row.add_child(col)
 	col.add_child(UI.label("? ? ?" if secret else a["name"], 8, UI.GOLD if got else UI.CREAM))
 	col.add_child(UI.label("A secret of the house." if secret else a["desc"], 8, UI.CREAM if got else UI.DIM))
+	if Unlocks.reward_of(a["id"]) != "" and not secret: col.add_child(UI.label("Brings: " + Items.display_name(Unlocks.reward_of(a["id"])), 8, UI.EMBER if got else Color("#775c55")))
 	return row
 
 

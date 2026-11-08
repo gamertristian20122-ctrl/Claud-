@@ -42,7 +42,22 @@ var records := {
 	"daily_best": 0,
 	"achievements": {},   # id -> unix time it was earned (see scripts/autoload/achievements.gd)
 	"rites_done": [],     # every Candle Rite ever completed
+	# ---- the Journal (scripts/game/records.gd keeps these up to date)
+	"seen_relics": {},    # relic / keepsake / gift id -> 1 (looked at on a pedestal or in a shop)
+	"taken_relics": {},   # id -> times taken
+	"met": {},            # creature kind (or "mini:<kind>") -> 1
+	"kills_by_kind": {},  # creature kind -> creatures snuffed
+	"bosses_beaten": {},  # guardian kind -> {"n": times, "best": fastest fight in seconds}
+	"run_history": [],    # the last 20 runs, newest first
+	"best_streak": 0,
+	"wins_by_candle": {}, # candle id -> wins
+	"daily_history": [],  # [{date, first, best, won}], newest first (14 nights)
+	"rooms_found": {},    # special room type -> 1
+	"journal_new": {},    # Journal entry key -> 1 until it has been looked at
+	"unlocks_known": [],  # unlocked relics / keepsakes already announced
 }
+## Tests and screenshot tours set this so a staged Journal never reaches the real save file.
+var no_save := false
 
 
 func _ready() -> void:
@@ -67,6 +82,8 @@ func load_save() -> void:
 
 
 func save() -> void:
+	if no_save:
+		return
 	var cf := ConfigFile.new()
 	for k in settings.keys():
 		cf.set_value("settings", k, settings[k])

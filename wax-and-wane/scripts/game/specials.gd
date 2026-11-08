@@ -390,7 +390,7 @@ func _stock(t: String, d: Dictionary) -> void:
 			var v: Pickup = world.add_pickup("offer", c + Vector2(30, 22), "veil")
 			v.record["group"] = "mirror"
 		"study":
-			var ks: Array = Items.KEEPSAKES.keys().filter(func(k): return k != world.player.keepsake)
+			var ks: Array = Unlocks.keepsakes(world).filter(func(k): return k != world.player.keepsake)
 			var a: Pickup = world.add_pickup("keepsake", c + Vector2(-46, 24), ks[world.rng.randi() % ks.size()])
 			var b: Pickup = world.add_pickup("offer", c + Vector2(0, 34), "tonics")
 			var m: Pickup = world.add_pickup("offer", c + Vector2(46, 24), "map")

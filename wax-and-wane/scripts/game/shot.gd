@@ -43,6 +43,8 @@ func setup(w: Node, pos: Vector2, v: Vector2, kind: String, is_friendly: bool) -
 	add_child(spr)
 	z_index = 5
 	_blue = kind.contains("blue")
+	if not friendly:
+		Records.tag_shot(w, self)   # who fired it (the death note)
 	if friendly:
 		material = Art.unshaded   # the spark trail glows like the ember
 	if friendly and _lights < 6:

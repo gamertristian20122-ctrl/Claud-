@@ -8,6 +8,7 @@ extends Node
 ##   -- --autotest --tour --rooms --shots=/abs/dir                 three dressed rooms on every floor
 ##   -- --autotest --bench [--secs=6] [--seed=N] [--ablate]        busiest rooms: CPU per physics step / frame, lights, leaks
 ##                                                                 (--ablate: floor 1 again with each script group switched off)
+##   -- --autotest --tour --journal --shots=/abs/dir               Journal tabs, death note, chalk start room
 
 var main: Node
 var args := {}
@@ -69,6 +70,7 @@ func _next_run() -> void:
 	var params := {}
 	if args.has("unlockall"):
 		Game.records["unlocked"] = Candles.ORDER.duplicate()
+		Unlocks.force_all = true   # every relic and keepsake in the pool
 	if args.has("candle"):
 		params["candle"] = str(args["candle"])
 	if args.has("seed"):
@@ -541,6 +543,12 @@ func _tour() -> void:
 	if args.has("gallery") or args.has("bosses"):
 		await _wait(1.0)
 		await BestiaryGallery.tour(self)
+		get_tree().quit()
+		return
+	if args.has("journal"):   # meta stream: the Journal, the death note, the chalk start room
+		await _wait(1.0)
+		await MetaTour.tour(self)
+		Audio.stop_all()
 		get_tree().quit()
 		return
 	if args.has("specials"):   # every special room, a Seance wave and a mini-boss per floor

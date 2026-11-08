@@ -169,6 +169,7 @@ func _physics_process(dt: float) -> void:
 		var rite := Items.rite_progress_text(item, p) if kind == "relic" else ""
 		if rite != "":
 			ds += "   [%s]" % rite
+		Records.see(item)   # the Journal: seen
 		world.hud.preview_item(nm, ds)
 	var reach := 9.0 if kind in ["relic", "tonic", "chest", "keepsake"] else 8.0
 	if kind == "trapdoor":

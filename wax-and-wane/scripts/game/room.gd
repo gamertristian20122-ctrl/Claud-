@@ -161,6 +161,7 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 	set_open(data["cleared"], true)
 	if data["cleared"]:
 		light_candles(true)
+	Records.on_room(self)   # the Journal (special rooms found) + the chalk drawings in the first room
 
 
 ## Cracks and seeping wax mark a hollow wall.
@@ -452,6 +453,7 @@ func _hearth_touch(dt: float) -> void:
 		var rect := Rect2(position + IN + Vector2(c.x * TILE + 1, c.y * TILE + 2), Vector2(TILE - 2, TILE - 3)).grow(2.5)
 		var p: Player = world.player
 		if not p.dead and _touches(rect, p.global_position, Player.RADIUS):
+			Records.blame("hearth")
 			p.hurt(4.0, p.global_position - cell_center(c))
 		if sizzle:
 			for e in world.enemies:
@@ -797,6 +799,7 @@ func _oil_blast(c: Vector2i) -> void:
 			e.take_hit(4.0 + 1.5 * float(world.floor_num), (e.global_position - wp).normalized() * 130.0)
 	var p: Player = world.player
 	if p and not p.dead and p.global_position.distance_to(wp) < OIL_R * 0.8:
+		Records.blame("oil")
 		p.hurt(5.0, p.global_position - wp)
 	var tw := create_tween()
 	tw.tween_interval(0.1)
