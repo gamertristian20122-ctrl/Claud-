@@ -405,6 +405,7 @@ func _physics_process(dt: float) -> void:
 		return
 	_say_t -= dt
 	_tick_mini(dt)
+	_preview_costs()
 	var r: Room = world.room
 	var d: Dictionary = r.data
 	var t: String = d.get("type", "")
@@ -450,6 +451,30 @@ func _physics_process(dt: float) -> void:
 				_say("The font is full", UI.DIM)
 	if near and t in ["mirror", "study"]:
 		world.hud.preview_item(INFO[t]["name"], INFO[t]["hint"])
+
+
+## Design pass (docs/design/MDA.md): the font's offering and the mirror's toll show on the wax bar
+## while Tallow is in reach of them (hud.preview_cost), before a minute is paid.
+var _toll_room: Room
+var _tolls: Array = []
+
+
+func _preview_costs() -> void:
+	var r: Room = world.room
+	var p: Player = world.player
+	if p.dead or world.transitioning:
+		return
+	if r.data.get("type", "") == "font" and not r.data.get("font_spent", false) and p.wax > FONT_COST + 2.0 \
+			and p.global_position.distance_to(r.cell_center(PROP_CELL)) < 40.0:
+		world.hud.preview_cost(FONT_COST)
+	if _toll_room != r:
+		_toll_room = r
+		_tolls = r.get_children().filter(func(n): return n.has_meta("toll"))
+	for n in _tolls:
+		if is_instance_valid(n) and p.global_position.distance_to(r.position + (n as Node2D).position) < 30.0:
+			var cd: Dictionary = world.layout["cells"].get(world.cur_cell + (n.get_meta("toll") as Vector2i), {})
+			if not cd.get("toll", false):
+				world.hud.preview_cost(MIRROR_TOLL)
 
 
 func _say(text: String, col: Color) -> void:

@@ -370,6 +370,7 @@ func _process(dt: float) -> void:
 	if _ghost_hold <= 0:
 		ghost_wax = move_toward(ghost_wax, p.wax, 30.0 * dt)
 	_flame_t += dt
+	_cost_t -= dt
 	_safe_t -= dt
 	if _safe_t <= 0.0:
 		_safe_t = 0.5
@@ -446,6 +447,8 @@ func _draw_bar() -> void:
 		while i < int(cpx):
 			bar.draw_rect(Rect2(cx + i, y0 + 2 + (i % 4) * 2, 1, 1), Color("#483b3a"))
 			i += 2
+	if _cost_t > 0.0:
+		_draw_cost(x0, y0, h, inner, total, wpx)
 	# quarter-hour notches; the 1:00 AM notch is wider
 	var mins := total
 	var k := 15.0
@@ -463,6 +466,39 @@ func _draw_bar() -> void:
 	if not _flame_frames.is_empty() and shown_wax > 0.2:
 		var fr: Texture2D = _flame_frames[int(_flame_t * 10.0) % _flame_frames.size()]
 		bar.draw_texture(fr, Vector2(x0 + wpx - 4, y0 - fr.get_height() + 5))
+
+
+## Design pass (docs/design/MDA.md): a wax price within reach (Smoke Altar, Cracked Mirror, the Wax
+## Font, the mirror's toll) shows ON the wax bar before it is paid, so the clock trade is felt, not
+## read. `now_min`: minutes cut from the wax now (marching red at the flame end); `max_min`: minutes
+## charred for good (marching soot at the far end). Callers refresh it every frame while in reach.
+var cost_now := 0.0
+var cost_max := 0.0
+var _cost_t := 0.0
+const COST_HOT := [Color("#da4e38"), Color("#8f4029")]
+const COST_CHAR := [Color("#775c55"), Color("#21141b")]
+
+
+func preview_cost(now_min: float, max_min := 0.0) -> void:
+	cost_now = maxf(0.0, now_min)
+	cost_max = maxf(0.0, max_min)
+	_cost_t = 0.15
+
+
+## The exact pixels: the slice runs from where the wax would end to where it ends now; the soot from
+## where the charred end would begin to where it begins now. Rows 2..h-3, under the notches.
+func _draw_cost(x0: float, y0: float, h: float, inner: float, total: float, wpx: float) -> void:
+	var p: Player = world.player
+	var march := int(_flame_t * 8.0)
+	if cost_max > 0.0:
+		var c1 := roundf(inner * (total - p.charred) / total)
+		var c0 := roundf(inner * maxf(0.0, total - p.charred - cost_max) / total)
+		for i in int(c1 - c0):
+			bar.draw_rect(Rect2(x0 + c0 + i, y0 + 2, 1, h - 4), COST_CHAR[(i + march) % 2])
+	if cost_now > 0.0:
+		var keep := roundf(inner * clampf((shown_wax - cost_now) / total, 0.0, 1.0))
+		for i in int(wpx - keep):
+			bar.draw_rect(Rect2(x0 + keep + i, y0 + 2, 1, h - 4), COST_HOT[(i + march) % 2])
 
 
 func _draw_ghosts() -> void:

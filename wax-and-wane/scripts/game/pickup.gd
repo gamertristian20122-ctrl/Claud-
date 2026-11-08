@@ -166,6 +166,9 @@ func _physics_process(dt: float) -> void:
 			ds += "   -   %d coins" % int(round(price * world.shop_discount))
 		if record and int(record.get("cost_wax", 0)) > 0:
 			ds += "   -   %d max min for good, up to %d now" % [int(record["cost_wax"]), int(record["cost_wax"]) / 2]
+			var wc := float(record["cost_wax"])
+			if p.wax_max - wc >= float(Candles.def_of(world.candle_id)["wax"]) * 0.45:
+				world.hud.preview_cost(pact_cut(p, wc), wc)   # design pass: the trade, shown on the wax bar
 		var rite := Items.rite_progress_text(item, p) if kind == "relic" else ""
 		if rite != "":
 			ds += "   [%s]" % rite
@@ -184,6 +187,13 @@ func _physics_process(dt: float) -> void:
 		global_position = global_position.move_toward(p.global_position, pull.y * dt)
 	elif kind == "wax_warm" and d < 12.0 and _t > 0.3:
 		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
+
+
+## Wax a Smoke Altar / Cracked Mirror relic takes right now (as _collect does it: half the price,
+## never below 15 minutes, and never above the shortened candle).
+static func pact_cut(p: Player, cost: float) -> float:
+	var cut := minf(cost * 0.5, maxf(0.0, p.wax - 15.0))
+	return p.wax - minf(p.wax - cut, p.wax_max - cost)
 
 
 func _collect(p: Player) -> void:

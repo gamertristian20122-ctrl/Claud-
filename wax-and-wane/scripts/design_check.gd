@@ -14,6 +14,9 @@ static func run(at: Node) -> void:
 	if a.has("floorshots"):   # (with xvfb and --shots=dir) for tools/design_contrast.py
 		await floor_shots(at)
 		return
+	if a.has("ghostshot"):    # (with xvfb and --shots=dir) for tools/design_ghost_check.py
+		await ghost_shots(at)
+		return
 	var any := a.has("latency") or a.has("share") or a.has("floors")
 	if not any or a.has("share"):
 		share_check()
@@ -357,6 +360,81 @@ static func floor_shots(at: Node) -> void:
 		for s in shots:
 			if is_instance_valid(s):
 				s.queue_free()
+
+
+# ================================================================ 4. the wax price on the wax bar
+
+## Tallow stands in reach of a priced relic (Smoke Altar style: cost_wax 15) at two wax levels, then of
+## the Wax Font. Each shot gets a line in ghost.json: the game's numbers (wax, max, charred, price)
+## and where the bar is, so tools/design_ghost_check.py can work out the expected pixels on its own.
+static func ghost_shots(at: Node) -> void:
+	var tree: SceneTree = at.get_tree()
+	DirAccess.make_dir_recursive_absolute(at._shots_dir)
+	at.main.goto("game", {"seed": 4242})
+	while not (at.main.current and at.main.current.name == "Game" and at.main.current.get("player") != null and not at.main._busy):
+		await tree.process_frame
+	var w: Node = at.main.current
+	var p: Player = w.player
+	await at._wait(3.6)   # past the floor banner
+	var rows: Array = []
+	for wax in [90.0, 118.0]:
+		var c: Vector2 = w.room.center()
+		var a: Pickup = w.add_pickup("relic", c + Vector2(0, -20), "sharp_wick")
+		a.record["cost_wax"] = 15
+		a.queue_free()
+		var pk: Pickup = w._spawn_pickup_node(w.room, a.record)
+		p.position = c + Vector2(0, 2)
+		p.frozen = true
+		p.wax = wax
+		w.hud.shown_wax = wax
+		w.hud.ghost_wax = wax   # no red "just lost" trail: only the price shows
+		await at._wait(0.6)
+		p.wax = wax
+		w.hud.shown_wax = wax
+		w.hud.ghost_wax = wax   # no red "just lost" trail: only the price shows
+		await tree.physics_frame
+		await tree.process_frame
+		var name := "ghost_altar_%d" % int(wax)
+		rows.append(_ghost_row(w, name, 15.0, Pickup.pact_cut(p, 15.0)))
+		await at._shot(name)
+		if is_instance_valid(pk):
+			pk.queue_free()
+		await at._wait(0.3)
+	# the Wax Font: four minutes an offering
+	var fc: Vector2i = Specials._cell_of_type(w, "font")
+	if fc == Vector2i(-99, -99):
+		fc = Specials._make_special(w, "font")
+	if fc != Vector2i(-99, -99):
+		p.frozen = false
+		at._jump(w, fc)
+		await at._wait(2.8)   # past the room banner
+		var feet: Vector2 = w.room.cell_center(Specials.PROP_CELL) + Vector2(0, 2)
+		p.position = feet + Vector2(0, 30)
+		p.frozen = true
+		p.wax = 80.0
+		w.hud.shown_wax = 80.0
+		w.hud.ghost_wax = 80.0
+		await at._wait(0.5)
+		p.wax = 80.0
+		w.hud.shown_wax = 80.0
+		w.hud.ghost_wax = 80.0
+		await tree.physics_frame
+		await tree.process_frame
+		rows.append(_ghost_row(w, "ghost_font", 0.0, Specials.FONT_COST))
+		await at._shot("ghost_font")
+	var f := FileAccess.open(at._shots_dir + "/ghost.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify(rows))
+	print("[design] ghost shots: %d" % rows.size())
+
+
+static func _ghost_row(w: Node, name: String, cost_max: float, cost_now: float) -> Dictionary:
+	var p: Player = w.player
+	var bar: Control = w.hud.bar
+	var o: Vector2 = bar.get_global_transform_with_canvas().origin
+	var left: Texture2D = Art.tex("ui/bar_frame_left")
+	return {"name": name, "wax": p.wax, "wax_max": p.wax_max, "charred": p.charred, "cost_now": cost_now, "cost_max": cost_max,
+		"bar_x": o.x + float(left.get_width()), "bar_y": o.y, "inner": 128, "h": 14,
+		"hud_now": w.hud.cost_now, "hud_max": w.hud.cost_max}
 
 
 # ================================================================ 5. the share text
