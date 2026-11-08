@@ -970,6 +970,68 @@ def build_house_touches():
             frames.append(im)
         if frames:
             save_anim("muddy", anim, frames)
+    # The three stock lodgers met first (the opening rooms, the trailer) get the house in them:
+    for anim in ("idle", "run"):
+        save_anim("tiny_zombie", anim, [shambler(im, i) for i, im in enumerate(ox72_frames("tiny_zombie", anim))])
+        save_anim("goblin", anim, [larder_thief(im, i) for i, im in enumerate(ox72_frames("goblin", anim))])
+        save_anim("tiny_slug", anim, [damp_slug(im, i) for i, im in enumerate(ox72_frames("tiny_slug", anim))])
+
+
+def recolour_px(im, x, y, src, dst):
+    if 0 <= x < im.width and 0 <= y < im.height and im.getpixel((x, y)) == rgba(PAL[src]):
+        im.putpixel((x, y), rgba(PAL[dst]))
+
+
+def overlay(base, draw):
+    """Draw extra bits on a char canvas the size of `base` (outlined by render) and lay them over it."""
+    cv, post = Canvas(base.width, base.height), Canvas(base.width, base.height)
+    draw(cv, post)
+    out = base.copy()
+    out.alpha_composite(render(cv, post))
+    return out
+
+
+def shambler(im, i):
+    """Coal-Bin Shambler (tiny_zombie): a cap of coal dust on its head, dust down its face, and two
+    coal-bright sparks in its eye holes (glow_px #ee8e2e)."""
+    im = im.copy()
+    t = top_row(im)
+    for x in range(5, 12):
+        recolour_px(im, x, t + 1, "A", "4" if x not in (9, 10) else "5")
+    for x in (5, 7, 11):
+        recolour_px(im, x, t + 2, "A", "4")
+    recolour_px(im, 8, t + 2, "A", "5")
+    for x in (7, 11):
+        im.putpixel((x, t + 3), rgba(PAL["o"]))
+    return im
+
+
+def larder_thief(im, i):
+    """Larder Thief (goblin): wears a stolen candle end on its head, still lit (glow_px: the flame)."""
+    t = top_row(im)
+
+    def draw(cv, post):
+        _bosses.candle(cv, post, 5, t - 1, 3, i)
+    return overlay(im, draw)
+
+
+def damp_slug(im, i):
+    """Damp Slug (tiny_slug): has crawled into a brass candle cup and wears it as a shell."""
+    t = top_row(im)
+    a = im.split()[3].load()
+    # the hump: the topmost body row under the eye stalks
+    y0 = t + 4 if any(a[x, t + 4] for x in range(4, 8)) else t + 5
+
+    def draw(cv, post):
+        for x, ch in zip(range(4, 9), "yyyyo"):
+            cv.put(x, y0 - 1, ch)
+        for x, ch in zip(range(4, 9), "oooco"):
+            cv.put(x, y0, ch)
+        for x in range(5, 8):
+            cv.put(x, y0 + 1, "c")
+        cv.put(5, y0 - 2, "A")   # a crust of old wax on the rim
+        cv.put(6, y0 - 2, "X")
+    return overlay(im, draw)
 
 
 # ==========================================================================

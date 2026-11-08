@@ -34,9 +34,9 @@ void fragment() {
 ## `cd` (attack cooldown). Bosses add `title`, `phase_lines`, `victory`.
 const DEFS := {
 	# ---- the 0x72 lodgers
-	"tiny_zombie": {"hp": 4.0, "speed": 26.0, "ai": "chase", "r": 5.0, "name": "Coal-Bin Shambler",
+	"tiny_zombie": {"hp": 4.0, "speed": 26.0, "ai": "chase", "r": 5.0, "name": "Coal-Bin Shambler", "glow_px": ["#ee8e2e"],
 		"lore": "Slept in the coal bin so long it forgot it was ever a boy.", "stain": Color("#3d734f")},
-	"goblin": {"hp": 5.0, "speed": 40.0, "ai": "chase", "jitter": true, "r": 5.0, "name": "Larder Thief",
+	"goblin": {"hp": 5.0, "speed": 40.0, "ai": "chase", "jitter": true, "r": 5.0, "name": "Larder Thief", "glow_px": ["#facb3e", "#ee8e2e", "#da4e38"],
 		"lore": "Steals candle ends to eat in the dark. Yours will do nicely.", "stain": Color("#3d734f")},
 	"tiny_slug": {"hp": 3.0, "speed": 20.0, "ai": "chase", "r": 4.0, "name": "Damp Slug", "glow_px": ["#fdf7ed"],
 		"lore": "Follows the drip of the cellar pipes, and now the drip of you.", "stain": Color("#4ba747")},
