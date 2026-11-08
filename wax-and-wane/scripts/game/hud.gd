@@ -288,6 +288,11 @@ func _layout() -> void:
 	pause_btn.position = Vector2(vs.x - 26 - ins.y, 3)
 	bomb_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 118)
 	keep_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 154)
+	if Game.settings.get("swap_sticks", false) and Controls.touch_visible():
+		# UX-08: swapped sticks aim with the left thumb, so its buttons sit on the left edge (a little
+		# lower, clear of the floor name in the left gutter)
+		bomb_btn.position = Vector2(3 + ins.x, vs.y - 108)
+		keep_btn.position = Vector2(3 + ins.x, vs.y - 144)
 	boss_box.position = Vector2((vs.x - 170) / 2.0, vs.y - 12)
 	_place_banner()
 	hint.size = Vector2(vs.x, 10)
@@ -766,6 +771,7 @@ func _refresh_touch() -> void:
 	if not on:
 		release_sticks()
 	keep_key.text = "" if on else Controls.glyph("keepsake")
+	_layout()   # Swap sticks moves the bomb / keepsake buttons
 	root.queue_redraw()
 
 

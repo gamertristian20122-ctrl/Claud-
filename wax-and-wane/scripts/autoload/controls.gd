@@ -255,21 +255,31 @@ func glyph(action: String) -> String:
 		"bomb": return "RB" if pad else ("E" if device != TOUCH else "BOMB")
 		"keepsake": return "LB" if pad else "Q"
 		"pause": return "START" if pad else "ESC"
-		"move": return "Left stick" if pad else ("WASD" if device != TOUCH else "Left thumb")
+		"move": return "Left stick" if pad else ("WASD" if device != TOUCH else thumb(false))
 		"aim":
 			if pad:
 				return "Right stick"
 			if device == TOUCH:
-				return "Right thumb"
+				return thumb(true)
 			return "Arrows / mouse" if Game.settings.get("mouse_aim", true) else "Arrows"
 	return action
+
+
+## Touch: which thumb moves / aims ("Settings > Controls > Swap sticks" trades them, UX-08).
+func thumb(aim: bool) -> String:
+	return "Left thumb" if aim == bool(Game.settings.get("swap_sticks", false)) else "Right thumb"
+
+
+## The side of the screen the bomb and keepsake buttons are on (under the aiming thumb).
+func button_side() -> String:
+	return "left" if bool(Game.settings.get("swap_sticks", false)) else "right"
 
 
 ## The one-line controls reminder shown at the start of a run.
 func controls_hint(with_wax := true) -> String:
 	var t := ""
 	match device:
-		TOUCH: t = "Left thumb: move    Right thumb: aim + shoot"
+		TOUCH: t = "%s: move   %s: aim + shoot   Bomb: %s button" % [thumb(false), thumb(true), button_side()]
 		PAD: t = "Left stick: move    Right stick: shoot    RB: bomb"
 		_: t = "WASD: move    %s: shoot    E: bomb" % glyph("aim")
 	return t + ("    Wax = health = time" if with_wax else "")
@@ -277,7 +287,7 @@ func controls_hint(with_wax := true) -> String:
 
 func intro_line() -> String:
 	match device:
-		TOUCH: return "Left thumb moves. Right thumb aims and fires."
+		TOUCH: return "%s moves. %s aims and fires. Bomb: the %s button." % [thumb(false), thumb(true), button_side()]
 		PAD: return "Left stick moves. Right stick aims and fires."
 	return "WASD moves. The arrow keys%s fire." % (" or the mouse" if Game.settings.get("mouse_aim", true) else "")
 
