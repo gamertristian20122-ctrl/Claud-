@@ -191,6 +191,9 @@ func _process(dt: float) -> void:
 			print("[diag]    shot hits %d: from beyond half the light %d, beyond the light %d, mean distance %.0f px" % [
 				_diag_dark[0], _diag_dark[1], _diag_dark[2], _diag_dark[3] / _diag_dark[0]])
 		_diag_dark = [0, 0, 0, 0.0]
+		print("[diag]    floor-1 rooms fought: ", _diag_rooms)
+		_diag_rooms = []
+		_diag_cell = Vector2i(-99, -99)
 		_diag_src = {}
 		_diag = {}
 		_diag_wax = -1.0
@@ -353,9 +356,13 @@ func _hit_source(w: Node, p: Player) -> String:
 
 ## Design pass: every enemy shot's origin, so a hit can say how far (and from how deep in the dark)
 ## the shot came. id -> [origin, last position]; _diag_dark = [shot hits, from beyond half the light
-## radius, from beyond the light radius, sum of distances, hits by an unseen (unlit) shooter].
+## radius, from beyond the light radius, sum of distances]. _diag_rooms: floor 1's rooms in the order
+## they were fought, with who was in them.
 var _shot_from := {}
 var _diag_dark := [0, 0, 0, 0.0]
+var _diag_rooms: Array = []
+var _diag_cell := Vector2i(-99, -99)
+var _diag_logged := false
 
 
 func _diag_shot_origin(w: Node, p: Player) -> float:
@@ -413,6 +420,16 @@ func _diag_tick(w: Node, p: Player) -> void:
 		elif dw > 0.05:
 			d[3] += dw
 	_diag_track_shots(w)
+	if f == 1 and w.cur_cell != _diag_cell:   # floor 1, room by room: who the bot met ("o" = an opening room)
+		_diag_cell = w.cur_cell
+		_diag_logged = false
+	if f == 1 and not _diag_logged and w.room_spawned and w.count_enemies() > 0:
+		_diag_logged = true
+		var kinds := {}
+		for e in w.enemies:
+			if is_instance_valid(e) and e.alive:
+				kinds[e.kind] = true
+		_diag_rooms.append(("o:" if w.room.data.get("opening", false) else "") + "+".join(kinds.keys()))
 	d[0] += w.get_physics_process_delta_time()
 	_diag[f] = d
 	_diag_floor = f

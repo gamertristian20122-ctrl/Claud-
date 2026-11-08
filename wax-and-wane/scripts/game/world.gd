@@ -363,6 +363,7 @@ func _spawn_room_enemies() -> void:
 	var champs_left := 2 if omen == "tallow_moon" else 1
 	var pool: Dictionary = POOLS[floor_num]
 	var depth: int = room.data["dist"]
+	var opening := FloorGen.opening_now(layout, room.data)   # floor 1: the first two rooms call slow lodgers, no marked foes
 	for slot in room.spawn_slots():
 		var letter: String = slot[0]
 		var pos: Vector2 = slot[1]
@@ -374,9 +375,9 @@ func _spawn_room_enemies() -> void:
 			continue
 		if pos.distance_to(player.global_position) < 56.0:
 			pos = random_free_spot(player.global_position, 72.0)
-		var list: Array = pool[letter]
+		var list: Array = FloorGen.OPENING_POOL[letter] if opening else pool[letter]
 		var champ := ""
-		if champs_left > 0 and rng.randf() < champ_chance() * (2.0 if omen == "tallow_moon" else 1.0):
+		if champs_left > 0 and not opening and rng.randf() < champ_chance() * (2.0 if omen == "tallow_moon" else 1.0):
 			champs_left -= 1
 			champ = ["ember", "gilded", "sooty", "chilled"][rng.randi() % 4]
 			if Game.tip("marked"):

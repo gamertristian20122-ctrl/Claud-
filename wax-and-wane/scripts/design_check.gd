@@ -482,6 +482,7 @@ static func floors_check() -> void:
 	var dists: Array = []
 	var first_ok := 0
 	var first_n := 0
+	var deeper := 0
 	var tiers := {}
 	var lodgers := {}
 	for s in range(1, 21):
@@ -496,6 +497,8 @@ static func floors_check() -> void:
 		dists.append(best)
 		for c in cells:
 			var d: Dictionary = cells[c]
+			if d["type"] == "normal" and int(d["dist"]) > 2:
+				deeper += 1
 			if d["type"] != "normal" or int(d["dist"]) > 2:
 				continue
 			first_n += 1
@@ -507,12 +510,22 @@ static func floors_check() -> void:
 			var tier := FloorGen.tier_of(d)
 			tiers[tier] = int(tiers.get(tier, 0)) + 1
 			lodgers[n] = int(lodgers.get(n, 0)) + 1
-			if tier == "easy" and n >= 2 and n <= 3 and d.get("gentle", false):
+			if tier == "easy" and n >= 2 and n <= 3 and d.get("opening", false):
 				first_ok += 1
 	var within := dists.filter(func(x): return x <= 3).size()
 	var sorted := dists.duplicate()
 	sorted.sort()
 	print("[design] floor 1 x20: rooms from the start to the treasure %s" % [dists])
 	print("[design]   treasure within 3 rooms: %d/20 (median %d, worst %d)" % [within, sorted[10], sorted[19]])
-	print("[design]   dist<=2 ordinary rooms: %d; tiers %s; lodger slots %s; easy + 2-3 slow lodgers: %d/%d" % [first_n, tiers, lodgers, first_ok, first_n])
-	print("[design] floors %s" % ("PASS" if within == 20 and first_ok == first_n else "FAIL"))
+	print("[design]   dist<=2 ordinary rooms: %d; tiers %s; lodger slots %s; easy + 2-3 slow lodgers: %d/%d; ordinary rooms further out: %d" % [first_n, tiers, lodgers, first_ok, first_n, deeper])
+	# who an opening room calls (world._spawn_room_enemies): every one must be slow
+	var slow := true
+	var speeds := {}
+	var pool: Dictionary = FloorGen.OPENING_POOL
+	for letter in pool:
+		for k in pool[letter]:
+			var d: Dictionary = Enemy.DEFS[k]
+			speeds[k] = d["speed"]
+			slow = slow and float(d["speed"]) <= 26.0 and str(d["ai"]) != "rat"
+	print("[design]   opening lodgers and their speed (Tallow runs 74 px/s): %s %s" % [speeds, "all slow" if slow and not pool.is_empty() else "NOT ALL SLOW"])
+	print("[design] floors %s" % ("PASS" if within == 20 and first_ok == first_n and slow and not pool.is_empty() else "FAIL"))

@@ -229,6 +229,13 @@ static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasu
 		return {}
 	var rest := dead.slice(1)
 	shuffle(rest, rng)
+	if floor_num == 1:
+		# the opening (design pass): the first treasure room is at most OPENING_TREASURE rooms away
+		var near := rest.filter(func(c): return dist[c] <= OPENING_TREASURE)
+		if near.is_empty():
+			return {}
+		rest.erase(near[0])
+		rest.push_front(near[0])
 	var treasure: Vector2i = rest[0]
 	var shop: Vector2i = rest[1]
 	var treasure2: Vector2i = rest[2] if treasures >= 2 and rest.size() > 2 else Vector2i(-99, -99)
@@ -244,11 +251,18 @@ static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasu
 		elif c == shop:
 			type = "shop"
 		var tpl: Array
+		var opening: bool = floor_num == 1 and type == "normal" and int(dist[c]) <= OPENING_DIST
+		var easy := {}
 		match type:
 			"start", "shop": tpl = RoomTemplates.START
 			"treasure": tpl = RoomTemplates.TREASURE
 			"boss": tpl = RoomTemplates.BOSS
-			_: tpl = RoomTemplates.pick_normal(rng, floor_num, dist[c])
+			_:
+				if opening:
+					easy = _pick_easy(rng)
+					tpl = easy["rows"]
+				else:
+					tpl = RoomTemplates.pick_normal(rng, floor_num, dist[c])
 		out[c] = {
 			"type": type,
 			"grid": RoomTemplates.to_grid(tpl),
@@ -259,4 +273,44 @@ static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasu
 			"seed": rng.randi(),
 			"dist": dist[c],
 		}
+		if opening:
+			out[c]["opening"] = true          # world: slow lodgers only, no marked foes
+			out[c]["tpl"] = easy["id"]
 	return {"cells": out, "start": start, "boss": boss, "floor": floor_num}
+
+
+## The first floor's opening (design pass, docs/design/MDA.md): every ordinary room within
+## OPENING_DIST of the start (so the first two rooms, whichever way Tallow goes) is an easy layout
+## with 2-3 lodger slots, and a treasure room is at most OPENING_TREASURE rooms away. The first
+## OPENING_ROOMS of them Tallow fights call only slow lodgers (opening_now); later ones the usual
+## floor-1 crowd, so the floor still ramps up to its guardian.
+const OPENING_DIST := 2
+const OPENING_TREASURE := 3
+const OPENING_ROOMS := 2
+## Floor-1 lodgers that walk at 26 px/s or less (Tallow runs at 74): an opening room's guests.
+const OPENING_POOL := {"e": ["tiny_zombie", "tiny_slug", "wax_blob"], "h": ["slug", "wax_blob"], "f": ["tiny_slug"]}
+
+
+## True while `cell` is one of the floor's first OPENING_ROOMS opening rooms to be fought (counted
+## from the layout, so Save & Continue keeps the count).
+static func opening_now(layout: Dictionary, cell: Dictionary) -> bool:
+	if not cell.get("opening", false) or cell.get("cleared", false):
+		return false
+	var done := 0
+	for c in layout.get("cells", {}):
+		var d: Dictionary = layout["cells"][c]
+		if d.get("opening", false) and d.get("cleared", false):
+			done += 1
+	return done < OPENING_ROOMS
+
+
+static func _pick_easy(rng: RandomNumberGenerator) -> Dictionary:
+	var pool: Array = RoomTemplates.NORMAL.filter(func(t): return tier_of_template(t) == "easy" and int(t.get("min_floor", 1)) <= 1)
+	var t: Dictionary = pool[rng.randi() % pool.size()]
+	var rows: Array = (t["rows"] as Array).duplicate()
+	if rng.randf() < 0.5:
+		for i in rows.size():
+			rows[i] = (rows[i] as String).reverse()
+	if rng.randf() < 0.5:
+		rows.reverse()
+	return {"id": t["id"], "rows": rows}
