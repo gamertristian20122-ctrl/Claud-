@@ -1012,13 +1012,23 @@ def short_c(F, V):
     add_canvas(s, 2.6, 99, v_text("NO MUSIC. JUST THE HEARTBEAT.", CAP_Y, color=DIM, scale=5, width=170))
     v6 = V.line(5)
     tl.say(max(0.2, tl.t - secs(v6) - 0.1), v6, V.text(5), 5)
-    tl.hold(c, kill - sec(0.12), 1.3)
-    add_canvas(tl.segs[-1], 0, 1.3, v_text("...", CAP_Y, color=CREAM, scale=7))
+    # the fight is live, so the guardian falls a little sooner or later each recording: the freeze and
+    # the victory stretch so the short always runs about 16 s
+    pre = tl.t
+    hold, post = 1.3, 2.6
+    post_max = (c.at("out") - kill) / FPS - 0.15
+    short = 16.0 - (pre + hold + post + 2.4)
+    if short > 0:
+        add = min(short, max(0.0, post_max - post))
+        post += add
+        hold += min(short - add, 0.8)
+    tl.hold(c, kill - sec(0.12), hold)
+    add_canvas(tl.segs[-1], 0, hold, v_text("...", CAP_Y, color=CREAM, scale=7))
     t_kill = tl.t
-    s = tl.shot(c, kill - sec(0.1), 2.6, gain=1.2)
-    add_canvas(s, 0.35, 2.6, v_text("SNUFFED IT AT 1:58 AM.", CAP_Y, color=GOLD, scale=6, width=170))
+    s = tl.shot(c, kill - sec(0.1), post, gain=1.2)
+    add_canvas(s, 0.35, post, v_text("SNUFFED IT AT 1:58 AM.", CAP_Y, color=GOLD, scale=6, width=170))
     t_end = tl.t
-    tl.card(2.4, end_card_vertical(c.frame(kill + sec(2.4)), "WOULD YOU HAVE MADE IT?"))
+    tl.card(max(2.4, 15.6 - tl.t), end_card_vertical(c.frame(kill + sec(2.4)), "WOULD YOU HAVE MADE IT?"))
     add_hook(tl, "1:58 AM. THE HOUR FIEND\nIS STILL STANDING.", 0, t_end)
     tl.music.append((t_kill, tl.t, "ending", 0.0, -2.0, 0.02, 1.0))
     return tl
@@ -1151,7 +1161,10 @@ def main():
               args.audio_only)
     for k, fn in [("short_a", short_a), ("short_b", short_b), ("short_c", short_c)]:
         if k in only:
-            build(fn(F, V), os.path.join(args.out, FINALS[k]), "vertical", -14, 19, args.stills, args.audio_only)
+            tl = fn(F, V)
+            if tl.t < 15.5:   # live fights vary a little between recordings: the end card holds longer
+                tl.segs[-1].n += sec(15.5 - tl.t)
+            build(tl, os.path.join(args.out, FINALS[k]), "vertical", -14, 19, args.stills, args.audio_only)
     if "loop" in only:
         render_loop(F, args.out, args.stills)
 

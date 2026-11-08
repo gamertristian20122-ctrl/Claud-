@@ -10,7 +10,7 @@ Run it with the voice venv (tools/voice_setup.sh makes it once; tools/make_trail
 
   make_voice.py audition [--voices bm_george,bm_fable,am_michael,af_heart] [--speed 0.92]
         every line in each voice -> build/voice_audition/<voice>/ + scorecard.md + one reel per voice
-  make_voice.py make --voice bm_george [--speed 0.92]
+  make_voice.py make [--voice am_michael] [--speed 0.86]
         the chosen voice -> docs/marketing/voice/ai_narrator/ (a line that fails is made again, a little
         slower or faster, until it passes); writes judge.json and judge.md next to the files
   make_voice.py check <dir> [--fix]
@@ -506,8 +506,8 @@ def main():
     a.add_argument("--voices", default="bm_george,bm_fable,am_michael,af_heart")
     a.add_argument("--speed", type=float, default=0.92)
     m = sub.add_parser("make")
-    m.add_argument("--voice", default="bm_george")
-    m.add_argument("--speed", type=float, default=0.92)
+    m.add_argument("--voice", default="am_michael")   # the chosen narrator (docs/marketing/voice/ai_narrator/README.md)
+    m.add_argument("--speed", type=float, default=0.86)
     m.add_argument("--out", default=AI_DIR)
     c = sub.add_parser("check")
     c.add_argument("dir")

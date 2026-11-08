@@ -128,8 +128,8 @@ case "$cmd" in
 	all)
 		record_all
 		edit
-		check
 		copy_out
+		check
 		;;
 	record) record_all "$@" ;;
 	edit)

@@ -1,5 +1,9 @@
 # Trailer and short-video plan: Wax & Wane
 
+> **Done:** the trailer, Shorts A, B and C and a store loop are made from this plan by the game itself
+> (`./tools/make_trailer.sh all`), now with an AI narrator. What was made, where to post it and the AI
+> disclosure: `videos.md`. The plan below stays as the shot ideas and the twenty more short-video ideas.
+
 Everything here uses real gameplay only. No fake UI, no scenes the game can't produce, no review quotes until real ones exist.
 
 ---

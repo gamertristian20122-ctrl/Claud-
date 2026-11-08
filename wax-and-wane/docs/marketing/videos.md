@@ -9,12 +9,12 @@ current build with one command (bottom of this page). They are not kept in git (
 
 | File | What it is | Length | Size | Picture | Sound |
 |---|---|---:|---:|---|---|
-| `trailer_60s.mp4` | The main trailer, narrated | 55.6 s | 46 MB | 1920x1080, 60 fps, H.264 | AAC 192k, -16 LUFS |
-| `short_a_candle_is_the_timer.mp4` | Short A: "My health bar is also the clock", narrated | 17.1 s | 7.4 MB | 1080x1920, 60 fps | AAC, -14 LUFS |
-| `short_b_every_fire_relic.mp4` | Short B: seven fire relics on one candle, music only | 19.0 s | 7.6 MB | 1080x1920, 60 fps | AAC, -14 LUFS |
-| `short_c_one_minute_left.mp4` | Short C: 1:58 AM, the Hour Fiend still standing, narrated | 15.2 s | 6.0 MB | 1080x1920, 60 fps | AAC, -14 LUFS |
+| `trailer_60s.mp4` | The main trailer, narrated | 55.6 s | 47 MB | 1920x1080, 60 fps, H.264 | AAC 192k, -16 LUFS |
+| `short_a_candle_is_the_timer.mp4` | Short A: "My health bar is also the clock", narrated | 17.5 s | 7.6 MB | 1080x1920, 60 fps | AAC, -14 LUFS |
+| `short_b_every_fire_relic.mp4` | Short B: seven fire relics on one candle, music only | 18.8 s | 7.4 MB | 1080x1920, 60 fps | AAC, -14 LUFS |
+| `short_c_one_minute_left.mp4` | Short C: 1:58 AM, the Hour Fiend still standing, narrated | 15.7 s | 6.0 MB | 1080x1920, 60 fps | AAC, -14 LUFS |
 | `loop_fight.gif` | 6.5 s loop: the fire build melts a full room (game size, 384x216) | 6.5 s | 1.1 MB | GIF, 15 fps | none |
-| `loop_fight.webm` | The same loop, twice the size (768x432) | 6.5 s | 1.0 MB | VP9, 30 fps | none |
+| `loop_fight.webm` | The same loop, twice the size (768x432) | 6.5 s | 0.9 MB | VP9, 30 fps | none |
 | `trailer_60s.srt`, `short_a_...srt`, `short_c_...srt` | The narration as subtitles, timed to each video | | | | |
 
 `tools/make_trailer.sh check` prints this table again for the current files (lengths, sizes, loudness).
@@ -106,8 +106,8 @@ with `./tools/voice_setup.sh`.
   seven came back word for word (0% word errors; table in `voice/ai_narrator/judge.md`). Each line is -16 LUFS
   with peaks under -1 dB, at 2.0 to 2.9 words a second.
 - **The mix**: the same recogniser listened to the finished trailer and the narrated shorts, music and effects
-  and all: every line still came through (0% word errors; one word, "win", is sometimes written as "whim"
-  because "win buys" runs together, so a line can read 10%). The voice sits 13 to 26 dB over the music and
+  and all: every line still came through (0 to 10% word errors per line; the soft spots are two small words
+  that run together in natural speech: "melts him" can be written "melts in", "win buys" as "whim buys"). The voice sits 13 to 26 dB over the music and
   effects while it speaks: the music ducks 14 dB, the effects 12 dB, and the speech band a further 8 dB.
 - **The picture**: the game's own 384x216 frames scaled by whole numbers (x5, x10 for the close-up, x4 in the
   shorts), so every pixel stays square and sharp; the text is the game's own pixel font. No tips, hint lines,
