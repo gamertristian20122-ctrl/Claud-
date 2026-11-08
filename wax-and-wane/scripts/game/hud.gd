@@ -283,12 +283,7 @@ func _layout() -> void:
 	bomb_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 118)
 	keep_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 154)
 	boss_box.position = Vector2((vs.x - 170) / 2.0, vs.y - 12)
-	banner.size = Vector2(vs.x, 16)
-	banner.position = Vector2(0, 16)
-	banner_sub.size = Vector2(vs.x, 10)
-	banner_sub.position = Vector2(0, 33)
-	banner_band.position = Vector2(floorf(vs.x / 2.0) - 110, 14)
-	banner_band.size = Vector2(220, 32)
+	_place_banner()
 	preview.size = Vector2(vs.x, 10)
 	hint.size = Vector2(vs.x, 10)
 	hint_band.size = Vector2(300, 25)
@@ -317,9 +312,38 @@ func _fit_band(fresh: Label) -> void:
 	_place_hints()
 
 
+## Floor / relic / room banners: the title, then a subtitle that wraps to two lines, on a dark band
+## sized to the text. The subtitle keeps clear of the clock and counters on the left and the minimap
+## on the right; on 384-wide screens the banner sits below the wax bar (QA-11: a long relic line ran
+## over the bomb counter there).
+func _place_banner() -> void:
+	var vs := view_size()
+	var ins := safe_insets()
+	var top := 27.0 if _narrow else 16.0
+	var sub_y := top + (18.0 if _narrow else 17.0)
+	var mid := floorf(vs.x / 2.0)
+	var left := 72.0 + ins.x   # the clock, coins and bombs column
+	var right := minimap.position.x - 4.0 if sub_y < minimap.position.y + minimap.size.y else keep_btn.position.x - 4.0
+	var sub_max := 2.0 * minf(mid - left, right - mid)
+	var sw := Art.font_small.get_string_size(banner_sub.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
+	var lines := 1 if sw <= sub_max else 2
+	var w := ceilf(minf(sw, sub_max))
+	banner.size = Vector2(vs.x, 16)
+	banner.position = Vector2(0, top)
+	banner_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if lines > 1 else TextServer.AUTOWRAP_OFF
+	banner_sub.max_lines_visible = 2
+	banner_sub.size = Vector2(w + 2.0, 10.0 * lines)
+	banner_sub.position = Vector2(floorf(mid - w / 2.0) - 1.0, sub_y)
+	var tw := Art.font.get_string_size(banner.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x if banner.text != "" else 0.0
+	var bw := ceilf(maxf(maxf(tw, w) + 20.0, 120.0))
+	banner_band.position = Vector2(floorf(mid - bw / 2.0), top - 2.0)
+	banner_band.size = Vector2(bw, sub_y - top + 10.0 * lines + 4.0)
+
+
 func show_banner(title: String, sub := "", dur := 2.4) -> void:
 	banner.text = title
 	banner_sub.text = sub
+	_place_banner()
 	if _banner_tw:
 		_banner_tw.kill()
 	_banner_tw = create_tween().set_parallel(true)
@@ -863,10 +887,11 @@ func open_pause() -> void:
 	var resume := UI.button("Resume", func(): world.toggle_pause())
 	resume.set_meta("default_focus", true)
 	v.add_child(resume)
-	var row1 := HBoxContainer.new()   # Journal | Settings
+	var row1 := HBoxContainer.new()   # Journal | Settings: two halves, like the row below
 	row1.add_theme_constant_override("separation", 6)
-	row1.add_child(UI.button("Journal", func(): Journal.open(root), 96))
-	row1.add_child(UI.button("Settings", func(): SettingsPanel.open(root), 96))
+	for b in [UI.button("Journal", func(): Journal.open(root), 96), UI.button("Settings", func(): SettingsPanel.open(root), 96)]:
+		(b as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row1.add_child(b)
 	v.add_child(row1)
 	var row2 := HBoxContainer.new()
 	row2.add_theme_constant_override("separation", 6)
