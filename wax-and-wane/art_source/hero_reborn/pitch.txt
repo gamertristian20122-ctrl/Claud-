@@ -1,0 +1,34 @@
+TALLOW, REBORN  (concept tallow2)
+
+Name: Tallow (same hero, same name, new body).
+
+Pitch: A chubby little white candle with big shiny eyes and rosy cheeks, who cries wax when he's
+scared and keeps walking into the dark anyway.
+
+How health / time shows on the body:
+- Height is the wax: at 100% Tallow is a tall gumdrop with a melted, drippy lip; belly rows melt away
+  first (60%: shorter, one-row melted edge), then he slumps (25%: a wide stub with long wax tears
+  running all the way into the dish).
+- The flame shrinks with him: 7x10 -> 5x8 -> 3x5, and the wick flops over at the end.
+- The brass dish fills: clean bowl at 100%, a wax puddle at 60%, wax spilling over the lip at 25%.
+- His face follows the clock: bright glinting eyes at 12:00, worried eyes with teary blue glints
+  around 1:00, small droopy eyes plus a sweat drop near 2:00.
+
+What changes in the game if chosen:
+- player.gd _draw: same "wax rows" idea, new shape rules. Body 13 px wide (15 at the gumdrop belly,
+  was 10). Overhanging lip, wavy melted edge, a wax tear stuck on each side, two stub arms. Rows are
+  removed from the belly first, so the face never melts away. The hitbox stays the dish base.
+- hero/: new 19x7 dish with a bowl row and ring handle (replaces holder.png). Faces become 2x3-eye
+  sets: open, blink, brave, worried, tired, hurt (> <), happy (^ ^). A smaller 7x10 flame with
+  trail and flare variants. The drip sprite is reused for the side tears.
+- Costumes._geo() needs a pass (the body is wider and the face sits lower). Candles.LIST still works:
+  each candle keeps its 4 wax colours. Recolour the tear and cheek pixels per candle.
+- Store and app icon: portrait.png at x8 = 512 px, for google_play_512 / Steam capsule art.
+- Text: no renames. Journal blurb: "Tallow. Stubby, brave, a little teary. Cries wax when he's
+  scared and keeps going anyway." The 25% face fits the existing Guttering low-wax state.
+  An optional relic hook: "Wax Tears" (tears that drip off when hit become small wax pickups).
+
+Self-rating of appeal at game size: 7/10. The face and gumdrop shape read instantly at 1x, and at
+phone scale (x4-5) the glints, cheeks and drips make it genuinely cute.
+The one weakness: without the flame and dish it is basically a marshmallow. The candle identity leans
+on the flame and the dish, and at 1x the tan melted-top band reads more like a hairline than melted wax.
