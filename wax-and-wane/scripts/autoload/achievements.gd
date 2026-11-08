@@ -39,7 +39,7 @@ const LIST := [
 	{"id": "ks_winding_key", "name": "Wind It Back", "desc": "Turn the Winding Key."},
 	{"id": "ks_smoke_jar", "name": "Up in Smoke", "desc": "Open the Smoke Jar."},
 	{"id": "rite", "name": "Candle Rite", "desc": "Complete a Candle Rite."},
-	{"id": "rite_all", "name": "Keeper of Rites", "desc": "Complete all four Candle Rites."},
+	{"id": "rite_all", "name": "Keeper of Rites", "desc": "Complete all six Candle Rites."},
 	{"id": "guttering", "name": "Clinging On", "desc": "Live through a Guttering."},
 	{"id": "two_oclock", "name": "Two O'Clock", "desc": "Melt all the way down to 2:00 AM.", "hidden": true},
 	{"id": "candle_box", "name": "Full Candle Box", "desc": "Unlock every candle."},
