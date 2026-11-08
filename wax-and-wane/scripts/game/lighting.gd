@@ -163,7 +163,8 @@ func _on_settings() -> void:
 # ---------------------------------------------------------------- per frame: waning + Tallow's haze
 
 func _process(dt: float) -> void:
-	var p: Node2D = host.get("player") if host.get("player") != null else host.get("hero")
+	var o: Variant = host.get("player") if host.get("player") != null else host.get("hero")
+	var p: Node2D = o if is_instance_valid(o) else null
 	if p != _player:
 		_player = p
 		if p and p.get("flame") is Node2D:
