@@ -109,6 +109,14 @@ def facts():
                    for k, t, _ in [(int(re.match(r'\t(\d+)', l).group(1)), l, "") for l in block(world, "FLOORS").splitlines() if re.match(r"\t\d+:", l)]]
     f["last_floor"] = int(re.search(r"const LAST_FLOOR := (\d+)", world).group(1))
     f["omens"] = [field(t, "name") for _, t, _ in entries(block(world, "OMENS"))]
+    m = re.search(r"streak_t = ([\d.]+)", world)
+    f["kindle_window"] = float(m.group(1))
+    f["kindle_gains"] = [(int(n), float(g)) for n, g in re.findall(r"streak == (\d+):\s*gain = ([\d.]+)", world)]
+    f["spill"] = float(re.search(r"amount \* ([\d.]+) / k", world).group(1))
+    f["warm_life"] = float(re.search(r'"wax_warm":.{0,200}?life = ([\d.]+)', read("scripts/game/pickup.gd"), re.S).group(1))
+    tw = read("scripts/game/tower.gd")
+    f["tower_by"] = float(re.search(r"const UNLOCK_CLOCK := ([\d.]+)", tw).group(1))
+    f["tower_wax"] = float(re.search(r"const ARRIVAL_WAX := ([\d.]+)", tw).group(1))
     gen = read("scripts/game/floor_gen.gd")
     m = re.search(r"var target := (\d+) \+ floor_num \* (\d+)", gen)
     f["rooms_per_floor"] = [int(m.group(1)) + n * int(m.group(2)) for n in range(1, f["last_floor"] + 1)]
@@ -226,6 +234,11 @@ def md(f):
     names = [n for k, n, _, _ in f["floors"] if k <= f["last_floor"]]
     secret = [n for k, n, _, _ in f["floors"] if k > f["last_floor"]]
     a("| Floors | **%d**: %s, plus a secret fifth floor, **%s** | `world.FLOORS` |" % (len(names), ", ".join(names), ", ".join(secret)))
+    by = int(f["tower_by"])
+    a("| The secret floor opens | if the Belfry's guardian falls by **%d:%02d AM** (you arrive with +%g minutes of wax) | `Tower.UNLOCK_CLOCK`, `ARRIVAL_WAX` |" % (
+        12 if by < 60 else by // 60, by % 60, f["tower_wax"]))
+    a("| Kindling | kills less than %g s apart chain; %s | `world._kindle` |" % (f["kindle_window"], ", ".join("x%d gives +%g min" % kg for kg in f["kindle_gains"])))
+    a("| Spilled Wax | %d%% of the wax a hit melts splashes out as warm drops that cool after %g s | `world.gd`, `pickup.gd` |" % (round(f["spill"] * 100), f["warm_life"]))
     a("| Rooms per floor | %s (with the start, shop, treasure and boss rooms), plus a hidden Hollow and any special rooms | `floor_gen.gd` |" % " / ".join(str(n) for n in f["rooms_per_floor"]))
     a("| Hand-made room layouts | **%d** | `RoomTemplates.NORMAL` |" % f["layouts"])
     a("| Lodgers (creatures) | **%d**: %d from 0x72's DungeonTileset II, %d made for this game (%d of them only in the Clock Tower) | `Enemy.DEFS` |" % (

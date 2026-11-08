@@ -12,6 +12,9 @@ script after any content change; `--check` tells you if it is out of date). Game
 | The candle | 120 wax = 12:00 AM to 2:00 AM; one minute of wax is one minute on the clock | `world.gd`, `candles.gd` |
 | A full candle lasts | **8 minutes** of real time if you are never hit | `world.DRAIN_PER_SEC` = 120 / (8 x 60) |
 | Floors | **4**: The Cellar, The Crypt, The Chapel, The Belfry, plus a secret fifth floor, **The Clock Tower** | `world.FLOORS` |
+| The secret floor opens | if the Belfry's guardian falls by **1:00 AM** (you arrive with +12 minutes of wax) | `Tower.UNLOCK_CLOCK`, `ARRIVAL_WAX` |
+| Kindling | kills less than 2.2 s apart chain; x3 gives +1 min, x5 gives +2 min | `world._kindle` |
+| Spilled Wax | 30% of the wax a hit melts splashes out as warm drops that cool after 2.5 s | `world.gd`, `pickup.gd` |
 | Rooms per floor | 8 / 10 / 12 / 14 (with the start, shop, treasure and boss rooms), plus a hidden Hollow and any special rooms | `floor_gen.gd` |
 | Hand-made room layouts | **69** | `RoomTemplates.NORMAL` |
 | Lodgers (creatures) | **35**: 20 from 0x72's DungeonTileset II, 15 made for this game (2 of them only in the Clock Tower) | `Enemy.DEFS` |
