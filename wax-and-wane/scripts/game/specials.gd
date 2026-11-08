@@ -13,7 +13,7 @@ extends Node2D
 
 const TYPES := ["seance", "mirror", "musicbox", "study", "font"]
 const INFO := {
-	"seance": {"name": "THE SEANCE", "sub": "Ring the bell, and the lodgers answer", "floors": [1, 2, 3, 4], "chance": 0.6,
+	"seance": {"name": "THE SEANCE", "sub": "Ring the bell, and the lodgers answer", "floors": [1, 2, 3, 4], "chance": 0.4,
 		"hint": "Ring the bell to call the lodgers. The doors lock until they are gone."},
 	"mirror": {"name": "THE CRACKED MIRROR", "sub": "It shows you stronger, and shorter", "floors": [2, 3, 4], "chance": 0.45,
 		"hint": "Its gift costs 15 minutes of wax, for good. Or veil the glass."},
@@ -53,7 +53,7 @@ const WAVES := 3
 const WAVE_SIZE := [5, 5, 5]
 const WAVE_SIZE_CELLAR := [3, 4, 4]
 ## The Seance pays a boss-pool relic of tier 0..SEANCE_TIER (it rolls often: the very best stay with the guardians).
-const SEANCE_TIER := 3
+const SEANCE_TIER := 2
 const MIRROR_TOLL := 1.0
 const MIRROR_COST := 15
 const CRANK_COST := 3
@@ -780,7 +780,7 @@ func _cleared() -> void:
 		Achievements.unlock("seance")
 	if d.has("mini") and not d.get("mini_paid", false) and (_mini == null or not is_instance_valid(_mini) or not _mini.alive):
 		d["mini_paid"] = true
-		if world.rng.randf() < 0.4:
+		if world.rng.randf() < 0.25:
 			world.add_pickup("relic", c + Vector2(0, 8), pick_relic(world, ["treasure", "shop"], 1, 2))
 		else:
 			world.add_pickup("chest", world.free_spot_near(c + Vector2(0, 8), 8.0))

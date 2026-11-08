@@ -32,8 +32,8 @@ const OMENS := {
 	"long_night": {"name": "Long Night", "desc": "A bigger floor with two treasure rooms"},
 	"smoky_halls": {"name": "Smoky Halls", "desc": "Your light is shorter, but rooms give twice"},
 }
-## Base melt: a full candle (120 wax) lasts 8.75 minutes if you never get hit; kills, clears and drips buy time back.
-const DRAIN_PER_SEC := 120.0 / (8.75 * 60.0)
+## Base melt: a full candle (120 wax) lasts 8 minutes if you never get hit; kills, clears and drips buy time back.
+const DRAIN_PER_SEC := 120.0 / (8.0 * 60.0)
 
 var main: Node
 var floor_num := 1
