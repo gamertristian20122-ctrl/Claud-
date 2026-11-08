@@ -194,7 +194,7 @@ func _intro_begin() -> void:
 
 
 func _wick_point() -> Vector2:
-	return hero.position + Vector2(1, hero._top - 3)
+	return hero.position + hero.wick_tip()
 
 
 func _intro_step(dt: float) -> void:

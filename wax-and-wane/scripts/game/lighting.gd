@@ -157,7 +157,7 @@ func _process(dt: float) -> void:
 	if p != _player:
 		_player = p
 		if p and p.get("flame") is Node2D:
-			_flame_haze = haze(p.get("flame"), Vector2(-5, -23), Vector2(11, 14), null, 0.0)   # overlaps the tip
+			_flame_haze = haze(p.get("flame"), Vector2(-5, -20), Vector2(11, 14), null, 0.0)   # overlaps the tip
 	var want := 0.0
 	if p and p.get("wax_max") != null and float(p.get("wax_max")) > 0.0:
 		var frac: float = float(p.get("wax")) / float(p.get("wax_max"))

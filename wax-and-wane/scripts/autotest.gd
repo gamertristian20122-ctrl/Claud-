@@ -966,54 +966,156 @@ func _tour_juice(w: Node) -> void:
 	p.face.visible = true
 
 
-## Tallow in every juice state side by side (squash, stretch, flash, drips, guttering, holding, melting).
+## Tallow in every state side by side, in 32x34 cells with the feet at (15, 33) like the concept sheet
+## (art_source/hero_reborn/draw.py). Row A = the concept sheet in order: idle x4, run x4, shoot, hurt,
+## victory, wax 100 / 60 / 25 %. Row B = the other juice states. Rows C..E = the six candles at
+## 100 / 60 / 25 % wax. Writes hero_sheet_1x.png, hero_states.png (rows A+B x6), hero_candles.png (x6).
 func _hero_sheet() -> void:
 	DirAccess.make_dir_recursive_absolute(_shots_dir)
 	var layer := CanvasLayer.new()
 	layer.layer = 60
 	add_child(layer)
 	var bg := ColorRect.new()
-	bg.color = Color("#483b3a")
+	bg.color = Color("#3b3332")   # the concept sheet's cell colour
 	bg.size = Vector2(480, 216)
 	layer.add_child(bg)
-	var ps: Array = []
-	for i in 12:
-		var p := Player.new()
-		p.world = null
-		p.position = Vector2(20 + (i % 6) * 34, 60 + (i / 6) * 70)
-		layer.add_child(p)
-		p.set_physics_process(false)
-		p.light.enabled = false
-		p.glow.enabled = false
-		ps.append(p)
-	await get_tree().process_frame
-	ps[4]._drips = [[-1, 0.3, 1.0], [1, 0.75, 1.0]]
-	ps[5].wax = 20.0
-	ps[6].hold_aloft(Art.tex("items/blue_flame"))
-	for k in [7, 8, 9]:
-		ps[k].dead = true
-		ps[k]._melt_from = ps[k].body_height()
-	ps[7]._melt = 0.3
-	ps[8]._melt = 0.6
-	ps[9]._melt = 0.95
-	ps[10].apply_candle("tea_light")
-	ps[11].apply_candle("pillar")
-	for f in 3:
-		ps[1]._sq = -1.0
-		ps[1]._sq_v = 0.0
-		ps[2]._sq = 0.7
-		ps[2]._sq_v = 0.0
-		ps[3]._white = 1.0
-		ps[5]._sput = 0.1
+	var cells: Array = []   # [player, row, index]
+	for i in 14:
+		cells.append([_hs_add(layer, i * 32, 4, "tallow"), 0, i])
+	for i in 15:
+		cells.append([_hs_add(layer, i * 32, 44, "tallow"), 1, i])
+	for row in 3:
+		for i in Candles.ORDER.size():
+			cells.append([_hs_add(layer, i * 32, 110 + row * 36, Candles.ORDER[i]), 2 + row, i])
+	# hold every state still: re-apply it each frame (the timers count down in _process; slow time
+	# down so a slow software renderer cannot run a blink out between two frames)
+	Engine.time_scale = 0.01
+	for k in 40:
+		for c in cells:
+			var p: Player = c[0]
+			p._blink = 9.0
+			p._breath = 0.0
+			_hs_state(p, c[1], c[2])
+			p.face.visible = true
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
-	img = img.get_region(Rect2i(0, 0, 210, 160))
-	img.resize(img.get_width() * 6, img.get_height() * 6, Image.INTERPOLATE_NEAREST)
-	img.save_png(_shots_dir + "/hero_states.png")
+	img.save_png(_shots_dir + "/hero_sheet_1x.png")
+	var top := img.get_region(Rect2i(0, 0, 480, 80))
+	top.resize(top.get_width() * 6, top.get_height() * 6, Image.INTERPOLATE_NEAREST)
+	top.save_png(_shots_dir + "/hero_states.png")
+	var cand := img.get_region(Rect2i(0, 110, 192, 106))
+	cand.resize(cand.get_width() * 6, cand.get_height() * 6, Image.INTERPOLATE_NEAREST)
+	cand.save_png(_shots_dir + "/hero_candles.png")
 	print("[tour] hero sheet")
 	get_tree().quit()
 
+
+func _hs_add(layer: Node, x: float, y: float, cid: String) -> Player:
+	var p := Player.new()
+	p.world = null
+	p.position = Vector2(x + 15, y + 33)
+	layer.add_child(p)
+	p.set_physics_process(false)
+	p.light.enabled = false
+	p.glow.enabled = false
+	if cid != "tallow":
+		p.apply_candle(cid)
+	p.flame.speed_scale = 0.0
+	return p
+
+
+func _hs_run(p: Player, bob: float, dir := 1.0) -> void:
+	p.move_input = Vector2(dir, 0)
+	p.vel = Vector2(dir * p.speed, 0)
+	p.facing = Vector2(dir, 0)
+	p._was_moving = true
+	p._bob = bob
+	p._drip_spawn = 99.0
+
+
+func _hs_melt(p: Player, m: float) -> void:
+	if not p.dead:
+		p.dead = true
+		p._melt_from = p.body_height()
+	p._melt = m
+
+
+func _hs_state(p: Player, row: int, i: int) -> void:
+	if row >= 2:
+		p.wax = p.wax_max * [1.0, 0.6, 0.25][row - 2]
+		return
+	if row == 0:
+		match i:
+			0, 1, 2, 3:
+				p.flame.frame = i
+				if i >= 2:
+					p._breath = 0.6
+				if i == 3:
+					p._blink = 0.05
+			4, 5, 6, 7:
+				_hs_run(p, [0.0, 0.5, PI / 2.0, 2.6][i - 4])
+				p.flame.frame = i % 2
+			8:
+				p.facing = Vector2.RIGHT
+				p.aim_input = Vector2.RIGHT
+				p._recoil = 9.0
+				p._recoil_off = Vector2(-1, 0)
+			9:
+				p._hurt_face = 9.0
+				p._sq = -0.4
+				p._sq_v = 0.0
+			10:
+				p._happy_face = 9.0
+			11:
+				p.wax = 120.0
+			12:
+				p.wax = 72.0
+			13:
+				p.wax = 30.0
+		return
+	match i:
+		0:
+			p._sq = -1.0
+			p._sq_v = 0.0
+		1:
+			p._sq = 0.7
+			p._sq_v = 0.0
+		2:
+			p._white = 1.0
+		3:
+			p._drips = [[-1, 0.3, 0.0], [1, 0.75, 0.0]]
+		4:
+			p.wax = 20.0
+			p._sput = 0.1
+		5:
+			_hs_melt(p, 0.3)
+		6:
+			_hs_melt(p, 0.6)
+		7:
+			_hs_melt(p, 0.95)
+		8:
+			if not p.blue:
+				p.set_blue(true)
+		9:
+			if not "wick" in p.rites:
+				p.rites.append("wick")
+				p.refresh_rite_look()
+		10:
+			if not "clock" in p.rites:
+				p.rites.append("clock")
+		11:
+			_hs_run(p, PI / 2.0, -1.0)
+		12:
+			p.wax = 45.0
+			_hs_run(p, 0.0)
+		13:
+			p.wax = 30.0
+			p._hurt_face = 9.0
+		14:
+			if p._hold_t <= 0.0:
+				p.hold_aloft(Art.tex("items/blue_flame"))
+			p._hold_t = maxf(p._hold_t, 0.5)
 
 # ---------------------------------------------------------------- relic tour (--tour --relictour)
 

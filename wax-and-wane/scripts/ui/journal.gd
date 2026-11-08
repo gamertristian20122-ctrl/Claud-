@@ -925,66 +925,9 @@ class CandleArt extends Control:
 
 	## base = the bottom centre of the wax (the dish sits under it).
 	static func paint(ci: CanvasItem, cid: String, base: Vector2, dark: bool, frame: int) -> void:
-		var d: Dictionary = Candles.def_of(cid)
-		var cs: Array = d["colours"]
-		var bw := int(d["body_w"])
-		var h := clampi(int(round(float(d["wax"]) / 5.5)), 12, 26)
-		var ol := Player.OUTLINE
-		var c_hi := Color(cs[0])
-		var c_w := Color(cs[1])
-		var c_s := Color(cs[2])
-		var c_d := Color(cs[3])
+		# the same painter as the in-game Tallow (Player.paint_preview); feet = 4 px under the wax's bottom
+		var opts := {"frame": frame}
 		if dark:
-			c_hi = Journal.SIL
-			c_w = Journal.SIL
-			c_s = Journal.SIL
-			c_d = Journal.SIL
-		var L := int(base.x) - bw / 2
-		var R := L + bw
-		var top := int(base.y) - h
-		# the dish
-		var dish: Texture2D = Art.tex("hero/holder")
-		if dish:
-			if dark:
-				ci.draw_texture(Journal.silhouette(dish), Vector2(int(base.x) - 9, int(base.y) - 3))
-			else:
-				ci.draw_texture(dish, Vector2(int(base.x) - 9, int(base.y) - 3))
-		ci.draw_rect(Rect2(L, top, bw, h), ol)
-		ci.draw_rect(Rect2(L + 1, top + 1, bw - 2, h - 1), c_w)
-		ci.draw_rect(Rect2(L + 1, top + 1, 1, h - 1), c_hi)
-		ci.draw_rect(Rect2((R - 4) if bw >= 10 else (R - 3), top + 1, 2 if bw >= 10 else 1, h - 1), c_s)
-		ci.draw_rect(Rect2(R - 2, top + 1, 1, h - 1), c_d)
-		if d.get("stripes", false) and not dark:
-			var row := top + 3
-			while row < int(base.y) - 1:
-				ci.draw_rect(Rect2(L + 1, row, bw - 2, 1), c_s)
-				ci.draw_rect(Rect2(R - 2, row, 1, 1), c_d)
-				row += 3
-		ci.draw_rect(Rect2(L + 1, top + 1, bw - 2, 1), c_hi)
-		if not dark:
-			ci.draw_rect(Rect2(L + 2, top + 1, bw - 4, 1), Player.POOL)
-		# drips over the rim
-		ci.draw_rect(Rect2(L, top + 1, 1, 3), ol)
-		ci.draw_rect(Rect2(L - 1, top + 2, 1, 3), ol)
-		ci.draw_rect(Rect2(L, top + 2, 1, 2), c_hi)
-		ci.draw_rect(Rect2(L - 1, top + 5, 2, 1), ol)
-		ci.draw_rect(Rect2(R - 1, top + 1, 1, 4), ol)
-		ci.draw_rect(Rect2(R, top + 3, 1, 3), ol)
-		ci.draw_rect(Rect2(R - 1, top + 3, 1, 2), c_s)
-		if d.get("foil", false):
-			var fb := int(base.y)
-			ci.draw_rect(Rect2(L - 1, fb - 4, bw + 2, 5), ol)
-			ci.draw_rect(Rect2(L, fb - 3, bw, 3), Journal.SIL if dark else Color("#b6cbcf"))
-			ci.draw_rect(Rect2(L, fb - 1, bw, 1), Journal.SIL if dark else Color("#7b8994"))
-		# face and wick
-		var face: Texture2D = Art.tex("hero/face_open")
-		if face and not dark:
-			ci.draw_texture(face, Vector2(int(base.x) - 5, top + 4))
-		ci.draw_rect(Rect2(int(base.x), top - 2, 1, 3), ol)
-		if dark:
-			return
-		var flames := 2 if int(d.get("shots", 1)) > 1 else 1
-		for k in flames:
-			var fx := int(base.x) - 4 + (0 if flames == 1 else (-2 if k == 0 else 3))
-			var tex: Texture2D = Art.tex("hero/flame_f%d" % ((frame + k * 3) % 6))
-			ci.draw_texture(tex, Vector2(fx, top - 14))
+			opts["sil"] = Journal.SIL
+			opts["tex"] = func(t: Texture2D) -> Texture2D: return Journal.silhouette(t)
+		Player.paint_preview(ci, base + Vector2(0, 4), cid, opts)
