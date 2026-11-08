@@ -362,19 +362,51 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 		wc[w.candle_id] = int(wc.get(w.candle_id, 0)) + 1
 	for c in w.unlocked_this_run:
 		mark_new("c:" + str(c))
+	# Tonight's Candle belongs to the night it was lit, even when it ends after midnight (QA-15)
+	var lit := str(w.get("daily_date")) if bool(w.daily) and str(w.get("daily_date")) != "" else Time.get_date_string_from_system()
 	var hist := _arr("run_history")
 	hist.push_front({"won": won, "candle": str(w.candle_id), "floor": int(w.floor_num), "clock": float(w.clock_minutes()),
 		"killer": killer, "relics": (w.player.relics as Array).duplicate(), "time": float(w.run_time), "kills": int(w.kills),
-		"streak": int(w.best_streak), "seed": int(w.run_seed), "daily": bool(w.daily), "date": Time.get_date_string_from_system(),
+		"streak": int(w.best_streak), "seed": int(w.run_seed), "daily": bool(w.daily), "date": lit,
 		"n": int(Game.records.get("runs", 0))})
 	while hist.size() > HISTORY:
 		hist.pop_back()
+	if bool(w.daily):
+		params["date"] = lit   # the Share text (results.gd) uses it
+		score_night(params, lit)
 	params["new_unlocks"] = Unlocks.take_new()
 	Game.save()
 	return params
 
 
-## Tonight's Candle: one line per night (results.gd, after scoring).
+## Tonight's Candle score. results.gd _daily_score shows the same number (same formula).
+static func daily_score(params: Dictionary) -> int:
+	var s := 1000 * int(params.get("floor", 1)) + 60 * int(params.get("rooms", 0)) + 5 * int(params.get("kills", 0)) - 40 * int(params.get("hits", 0))
+	if params.get("won", false):
+		s += 2000 + int(25.0 * (120.0 - float(params.get("clock", 120.0))))
+	return maxi(s, 0)
+
+
+## Tonight's Candle bookkeeping (first try / best of the night, the nights list) under the night the
+## candle was lit. Sets params["scored"], so results.gd only shows the numbers.
+static func score_night(params: Dictionary, date: String) -> void:
+	if params.get("scored", false):
+		return
+	params["scored"] = true
+	var s := daily_score(params)
+	var last := str(Game.records.get("daily_date", ""))
+	if last != "" and date < last:
+		return   # an older night finished late (Save & Continue): tonight's record stays as it is
+	if last != date:
+		Game.records["daily_date"] = date
+		Game.records["daily_first"] = s
+		Game.records["daily_best"] = s
+	else:
+		Game.records["daily_best"] = maxi(int(Game.records["daily_best"]), s)
+	log_night(date, int(Game.records["daily_first"]), int(Game.records["daily_best"]), bool(params.get("won", false)))
+
+
+## Tonight's Candle: one line per night (score_night; results.gd for runs that skip end_run).
 static func log_night(date: String, first: int, best: int, won: bool) -> void:
 	var nights := _arr("daily_history")
 	if not nights.is_empty() and nights[0].get("date", "") == date:
@@ -403,8 +435,7 @@ static func to_dict(w: Node) -> Dictionary:
 
 
 static func from_dict(w: Node, d: Dictionary) -> void:
-	if d.get("seeded", false):
-		w.set_meta("seeded", true)
+	w.set_meta("seeded", bool(d.get("seeded", w.get_meta("seeded", false))))   # the saved value, true or false
 
 
 ## "4821 7730" style grouping so a seed is easy to read out to a friend.

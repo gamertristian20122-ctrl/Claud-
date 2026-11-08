@@ -55,7 +55,14 @@ func continue_run(main: Node) -> void:
 	var r: Dictionary = snap["run"]
 	_pending = true
 	Audio.play("ui_open")
-	main.goto("game", {"seed": int(r["run_seed"]), "candle": str(r["candle"]), "daily": bool(r["daily"])})
+	# the saved seed rebuilds the house; it does not make an ordinary run "a seeded run" (QA-08).
+	# Snapshots from before 2.0 kept the flag only in the Journal's extra.
+	var old: Dictionary = (snap["world"].get("__extra", {}) as Dictionary).get("records", {})
+	var params := {"seed": int(r["run_seed"]), "candle": str(r["candle"]), "daily": bool(r["daily"]),
+		"seeded": bool(r.get("seeded", old.get("seeded", false))), "continued": true}
+	if r.has("date"):
+		params["date"] = str(r["date"])   # Tonight's Candle keeps the night it was lit
+	main.goto("game", params)
 
 
 ## world._ready(): returns the floor to start on (1 for a new run).
@@ -183,6 +190,8 @@ func _capture(w: Node) -> Dictionary:
 		"floor": int(w.floor_num),
 		"candle": str(w.candle_id),
 		"daily": bool(w.daily),
+		"seeded": bool(w.get_meta("seeded", false)),
+		"date": str(w.daily_date),
 		"omen": str(w.omen),
 		"omens": _omens.duplicate(),
 		"clock": float(w.clock_minutes()),

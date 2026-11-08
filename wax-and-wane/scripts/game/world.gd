@@ -93,6 +93,7 @@ var omen := ""
 var run_seed := 0
 var _bell_paid := {}
 var daily := false
+var daily_date := ""   # Tonight's Candle: the date it was lit ("" for other runs)
 var unlocked_this_run: Array = []
 
 
@@ -106,7 +107,12 @@ func setup(params: Dictionary) -> void:
 	else:
 		run_seed = randi()
 	rng.seed = run_seed
-	set_meta("seeded", params.has("seed") and not daily)   # a typed-in seed: fixed relic pool (Unlocks)
+	# a typed-in seed: fixed relic pool and guardians (Unlocks.fixed). A continued run says what it was.
+	set_meta("seeded", bool(params["seeded"]) if params.has("seeded") else (params.has("seed") and not daily))
+	# Tonight's Candle belongs to the night it was lit, even if it ends after midnight (QA-15)
+	daily_date = str(params.get("date", "")) if daily else ""
+	if daily and daily_date == "":
+		daily_date = Time.get_date_string_from_system()
 
 
 func _ready() -> void:
