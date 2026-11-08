@@ -4,7 +4,7 @@ extends Node
 signal settings_changed
 signal unlocked_now(key: String)
 
-const VERSION := "1.9.2"
+const VERSION := "1.9.3"
 const SAVE_PATH := "user://save.cfg"
 
 ## In-game clock: the run starts at midnight and the flame dies at 2:00 AM.
