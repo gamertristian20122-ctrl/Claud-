@@ -25,6 +25,7 @@ var pause_layer: Control
 var vignette: TextureRect
 var preview: Label
 var _preview_t := 0.0
+var _preview_lines := 1
 var _safe_t := 0.0
 var _last_safe := Rect2i()
 var _bomb_idx := -1
@@ -192,6 +193,8 @@ func _ready() -> void:
 	root.add_child(banner_sub)
 	preview = UI.label("", 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
 	preview.modulate.a = 0
+	preview.max_lines_visible = 2
+	preview.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	root.add_child(preview)
 	hint = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
 	hint.modulate.a = 0
@@ -284,7 +287,6 @@ func _layout() -> void:
 	keep_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 154)
 	boss_box.position = Vector2((vs.x - 170) / 2.0, vs.y - 12)
 	_place_banner()
-	preview.size = Vector2(vs.x, 10)
 	hint.size = Vector2(vs.x, 10)
 	hint_band.size = Vector2(300, 25)
 	_place_hints()
@@ -296,9 +298,12 @@ func _layout() -> void:
 func _place_hints() -> void:
 	var vs := view_size()
 	var lift := 24.0 if boss_box.visible else 0.0
-	preview.position = Vector2(0, vs.y - 23 - lift)
+	var ph := 10.0 * _preview_lines   # an item preview is one or two lines
+	preview.size = Vector2(vs.x - 16.0, ph)
+	preview.position = Vector2(8, vs.y - 13 - ph - lift)
 	hint.position = Vector2(0, vs.y - 12 - lift)
-	hint_band.position = Vector2(floorf((vs.x - hint_band.size.x) / 2.0), vs.y - 25 - lift)
+	hint_band.size.y = ph + 15.0
+	hint_band.position = Vector2(floorf((vs.x - hint_band.size.x) / 2.0), vs.y - 15 - ph - lift)
 
 
 ## The dark band under hints / previews grows with the longest line (a shop line can be wide).
@@ -307,9 +312,14 @@ func _fit_band(fresh: Label) -> void:
 	for l in [hint, preview]:
 		var lab: Label = l
 		if lab.text != "" and (lab == fresh or lab.modulate.a > 0.05):
-			w = maxf(w, Art.font_small.get_string_size(lab.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 16.0)
+			for line in lab.text.split("\n"):
+				w = maxf(w, _tw8(line) + 16.0)
 	hint_band.size.x = minf(ceilf(w), view_size().x)
 	_place_hints()
+
+
+static func _tw8(text: String) -> float:
+	return Art.font_small.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
 
 
 ## Floor / relic / room banners: the title, then a subtitle that wraps to two lines, on a dark band
@@ -344,6 +354,9 @@ func show_banner(title: String, sub := "", dur := 2.4) -> void:
 	banner.text = title
 	banner_sub.text = sub
 	_place_banner()
+	if title != "" and preview.text.begins_with(title.to_upper() + "  -  "):
+		preview.modulate.a = 0.0   # the banner names it now: no second copy at the bottom
+		_preview_t = 0.0
 	if _banner_tw:
 		_banner_tw.kill()
 	_banner_tw = create_tween().set_parallel(true)
@@ -353,10 +366,27 @@ func show_banner(title: String, sub := "", dur := 2.4) -> void:
 
 
 ## Shown while standing next to a relic / shop item.
+## Long offers (a Cracked Mirror relic: name, what it does, its price, the rite) take two lines, never
+## more than the screen width - 16 px: "NAME  -  what it does" / "Costs 15 max minutes (7 now)   [Rite]".
 func preview_item(title: String, sub: String) -> void:
+	# the top banner names this item right now (it was just taken): no second copy at the bottom
+	if banner.modulate.a > 0.05 and banner.text == title.to_upper():
+		return
 	var t := "%s  -  %s" % [title.to_upper(), sub]
+	var maxw := view_size().x - 16.0
+	var lines := 1
+	if _tw8(t) > maxw:
+		lines = 2
+		var cut := sub.find("   -   ")
+		if cut < 0:
+			cut = sub.find("   [")
+		if cut >= 0:
+			t = "%s  -  %s\n%s" % [title.to_upper(), sub.substr(0, cut), sub.substr(cut).trim_prefix("   -   ").strip_edges()]
 	if t != preview.text:
 		preview.text = t
+		_preview_lines = lines
+		var wrap := lines == 2 and (not t.contains("\n") or _tw8(t.get_slice("\n", 0)) > maxw or _tw8(t.get_slice("\n", 1)) > maxw)
+		preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wrap else TextServer.AUTOWRAP_OFF
 		_fit_band(preview)
 	preview.modulate.a = 1.0
 	_preview_t = 0.3
@@ -412,6 +442,11 @@ func _process(dt: float) -> void:
 	_preview_t -= dt
 	if _preview_t <= 0.0 and preview.modulate.a > 0.0:
 		preview.modulate.a = move_toward(preview.modulate.a, 0.0, dt * 4.0)
+		if preview.modulate.a <= 0.0:
+			preview.text = ""
+			if _preview_lines != 1:
+				_preview_lines = 1
+				_place_hints()
 	hint_band.modulate.a = maxf(hint.modulate.a, preview.modulate.a)
 	bar.queue_redraw()
 	clock_label.text = Game.clock_text(world.clock_minutes(), false)
