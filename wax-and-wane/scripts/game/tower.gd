@@ -17,7 +17,8 @@ const UNLOCK_CLOCK := 60.0
 const HINT := "Something ticks above the belfry... next night, be done by one."
 const MOON := Color(0.55, 0.68, 1.0)
 ## Minutes the ladder of light gives back on arrival (the tower is long and the wax keeps burning).
-const ARRIVAL_WAX := 12.0
+## 12 made the tower the easiest floor of the night (C2): now a small gift, the climb has to be earned.
+const ARRIVAL_WAX := 5.0
 ## A sensible kit for a run that starts on floor 5 (--tower): what a good run carries by then.
 const TEST_KIT := ["sharp_wick", "bellows", "lamp_oil", "beeswax", "split_wick", "thimble", "wax_coat", "hourglass"]
 

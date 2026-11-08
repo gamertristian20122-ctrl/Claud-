@@ -132,14 +132,14 @@ const DEFS := {
 		"title": "The Hour Fiend's heart swings", "phase_lines": ["", "Tick... tock... TICK!", "It is nearly two!"],
 		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
-	"keeper": {"hp": 280.0, "speed": 0.0, "ai": "tower_keeper", "r": 14.0, "boss": true, "heavy": true, "name": "THE KEEPER OF HOURS",
+	"keeper": {"hp": 380.0, "speed": 0.0, "ai": "tower_keeper", "r": 14.0, "boss": true, "heavy": true, "name": "THE KEEPER OF HOURS",
 		"title": "It winds the house, every night", "phase_lines": ["", "Time stands still...", "It chimes for you!"],
 		"victory": "THE KEEPER OF HOURS IS STILLED", "no_flip": true, "secret": true,
 		"lore": "It has wound the house clock every night for three hundred years. Tonight it wants to wind you.", "stain": Color("#5f2d56")},
 }
 
 ## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
-const FLOOR_HP := [1.0, 1.35, 1.85, 2.4, 2.5]
+const FLOOR_HP := [1.0, 1.35, 1.85, 2.4, 3.0]
 ## Contact damage per floor for creatures without their own "touch" (bosses: 8). Balance: polish.md.
 const TOUCH := [5, 6, 7, 7, 7]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
@@ -918,7 +918,12 @@ func take_hit(dmg: float, knock: Vector2, burn := 0.0) -> void:
 
 
 func _damage(dmg: float, sound: bool) -> void:
+	var before := hp
 	hp -= dmg
+	if mem.has("hp_floor") and hp < float(mem["hp_floor"]):
+		# a gated guardian (the Keeper, Keeper.hp_floor): no burst skips a phase (and a hit never heals)
+		hp = minf(before, float(mem["hp_floor"]))
+		mem["held"] = true
 	if sound:
 		Audio.play("hit_enemy", 0.0, 0.1)
 	if boss:

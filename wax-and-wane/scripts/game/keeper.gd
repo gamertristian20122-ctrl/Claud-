@@ -19,11 +19,12 @@ extends RefCounted
 const PIVOT := Vector2(136, 104)     # room-local centre of the floor dial
 const HOUR_LEN := 74.0
 const MIN_LEN := 104.0
-const HAND_HIT := 6.0
+const HAND_HIT := 9.0
 const STOP_TIME := 2.9
-const MAX_SENTRIES := 2
-## Shortest time in phase 1 / 2 before the next phase (strong runs still see every pattern).
-const MIN_PHASE := [0.0, 6.0, 8.0, 0.0]
+const MAX_SENTRIES := 3
+## Shortest time in phase 1 / 2 before the next phase, and in phase 3 before it can be stilled (strong
+## runs still see every pattern; enforced in Enemy._damage through hp_floor, so no burst skips a phase).
+const MIN_PHASE := [0.0, 6.0, 8.0, 10.0]
 const FACE := Vector2(0, -41)        # the dial on the sprite, from the Keeper's feet
 const WARN := Color("#da4e38")
 const PALE := Color("#cae6f5")
@@ -70,6 +71,7 @@ func init_tower_keeper(e: Enemy) -> void:
 	]
 	e.mem["hand_t"] = 1.2
 	e.mem["next_hand"] = 0
+	e.mem["hp_floor"] = hp_floor(e)   # gated from the first frame (Enemy._damage)
 	e.mem["chime_t"] = 3.0
 	e.mem["stop_n"] = 0
 	e.mem["stop_due"] = 4.0
@@ -93,6 +95,15 @@ func init_tower_keeper(e: Enemy) -> void:
 	e.add_child(l)
 
 
+## The lowest the Keeper's health may go right now (Enemy._damage clamps every hit to it): just under the
+## next phase's threshold until that phase has begun; in phase 3 a straight line from its threshold down
+## to zero over MIN_PHASE[3] seconds, so however hard it is hit the last phase lasts that long.
+static func hp_floor(e: Enemy) -> float:
+	if e.phase < 3:
+		return [0.0, 0.66, 0.33][e.phase] * e.max_hp - 0.5
+	return (0.33 * e.max_hp - 0.5) * (1.0 - float(e.mem.get("phase_t", 0.0)) / MIN_PHASE[3])   # <= 0 after it
+
+
 ## Tours and tests: start a pattern now.
 func force(e: Enemy, what: String) -> void:
 	if what == "stop":
@@ -109,19 +120,19 @@ func tower_keeper(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 			e.mem["logged"] = true
 			print("[keeper] Tallow fell after %.0f s in phase %d, the Keeper at %d%% (hand hits %d)" % [e.mem["fight_t"], e.phase, int(100.0 * e.hp / e.max_hp), e.mem.get("hand_hits", 0)])
 	# every phase is seen, however strong the run: damage past the next threshold is held (the dial
-	# flashes pale and rings like metal) until the Keeper has changed phase, and a phase lasts at least
-	# MIN_PHASE seconds (long enough for its hands, and in phase 2 for one stopped time)
+	# flashes pale and rings like metal) until the Keeper has changed phase, a phase lasts at least
+	# MIN_PHASE seconds (long enough for its hands, and in phase 2 for one stopped time), and phase 3
+	# cannot end sooner than MIN_PHASE[3]. Enemy._damage clamps every hit to hp_floor, so a burst landing
+	# between two ticks can no longer jump the gate (it used to still the Keeper straight from phase 2).
 	e.mem["phase_t"] = e.mem.get("phase_t", 0.0) + e.get_physics_process_delta_time()
 	e.mem["held_t"] = e.mem.get("held_t", 0.0) - e.get_physics_process_delta_time()
-	if e.phase < 3:
-		var gate: float = [0.0, 0.66, 0.33][e.phase] * e.max_hp - 0.5
-		if e.hp < gate:
-			e.hp = gate
-			w.on_boss_hp(e)
-			if e.mem["held_t"] <= 0.0 and float(e.mem["phase_t"]) < MIN_PHASE[e.phase]:
-				e.mem["held_t"] = 0.3
-				e._telegraph(PALE)
-				Audio.play("hit_wall", -6.0, 0.1, 1.6)
+	e.mem["hp_floor"] = hp_floor(e)
+	if e.mem.get("held", false):
+		e.mem["held"] = false
+		if e.mem["held_t"] <= 0.0 and float(e.mem["phase_t"]) < MIN_PHASE[e.phase]:
+			e.mem["held_t"] = 0.3
+			e._telegraph(PALE)
+			Audio.play("hit_wall", -6.0, 0.1, 1.6)
 	if e.state == "stop":
 		_stop_tick(e)
 		return
