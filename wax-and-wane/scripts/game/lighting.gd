@@ -14,6 +14,9 @@ extends Node
 ##    guardian phase changes (screen-reading, small patches, whole-pixel offsets only).
 ##  - Settings: "effects" = "full" / "lite" (Lite: no haze, no shockwaves, no vignette; banding and the
 ##    colour loss stay, they cost nothing extra).
+##  - Creature shadow floor (fix/art, UX-03): a twin of Tallow's light that only creatures see (light mask
+##    CREATURE_BIT, marked for lit_flash.gdshader by its height). Where his light reaches it adds nothing; in
+##    his hard shadows it gives a creature `shadow_floor` of his light, so a lodger behind a pot still reads.
 ## Hooks: world._ready / title._ready `Lighting.attach(self)`; enemy.gd uses `Lighting.flash_shader()`;
 ## room._light_hearth and relic_fx._ready call `Lighting.haze(...)`; world._explode and
 ## world.on_boss_phase call `Lighting.shockwave(...)`; hud.gd puts `Lighting.dither_material()` on its
@@ -31,6 +34,9 @@ const WANE_MAX := 0.85
 const WANE_STEPS := 8.0
 ## Draw order of the screen-reading patches: above everything else in the world canvas.
 const FX_Z := 60
+## Light-mask bit only creature sprites carry, and the height that marks Tallow's creature twin light.
+const CREATURE_BIT := 1 << 9
+const TWIN_HEIGHT := 16.0
 
 static var _room_mat: ShaderMaterial
 static var _actor_mat: ShaderMaterial
@@ -45,6 +51,7 @@ var _wane := 0.0
 var _wane_q := -1.0
 var _flame_haze: Node2D
 var _player: Node2D
+var _twin: PointLight2D
 
 
 # ---------------------------------------------------------------- shared materials
@@ -114,6 +121,8 @@ func _walk(n: Node) -> void:
 
 
 func _on_node_added(n: Node) -> void:
+	if n is AnimatedSprite2D and n.get_parent() is Enemy:
+		(n as CanvasItem).light_mask |= CREATURE_BIT   # lit by the shadow-floor twin too
 	if n is Light2D:
 		if (n as Light2D).shadow_enabled:
 			(n as Light2D).shadow_filter = Light2D.SHADOW_FILTER_NONE
@@ -158,6 +167,8 @@ func _process(dt: float) -> void:
 		_player = p
 		if p and p.get("flame") is Node2D:
 			_flame_haze = haze(p.get("flame"), Vector2(-5, -20), Vector2(11, 14), null, 0.0)   # overlaps the tip
+		_twin = _make_twin(p)
+	_follow_twin(p)
 	var want := 0.0
 	if p and p.get("wax_max") != null and float(p.get("wax_max")) > 0.0:
 		var frac: float = float(p.get("wax")) / float(p.get("wax_max"))
@@ -184,6 +195,35 @@ func _process(dt: float) -> void:
 	elif _vig_on:
 		m.set_shader_parameter("vig_amount", 0.0)
 	_vig_on = vis
+
+
+## Tallow's creature twin: same light, seen only by creature sprites, white shadow colour (lit_flash.gdshader).
+func _make_twin(p: Node2D) -> PointLight2D:
+	if p == null or not (p.get("light") is PointLight2D):
+		return null
+	var tw := PointLight2D.new()
+	tw.name = "CreatureTwin"
+	tw.height = TWIN_HEIGHT
+	tw.range_item_cull_mask = CREATURE_BIT
+	tw.shadow_enabled = true
+	tw.shadow_color = Color(1, 1, 1, 1)
+	tw.shadow_filter = Light2D.SHADOW_FILTER_NONE
+	p.add_child(tw)
+	return tw
+
+
+func _follow_twin(p: Node2D) -> void:
+	if _twin == null or not is_instance_valid(_twin) or p == null:
+		return
+	var l: PointLight2D = p.get("light")
+	_twin.texture = l.texture
+	_twin.texture_scale = l.texture_scale
+	_twin.energy = l.energy
+	_twin.color = l.color
+	_twin.position = l.position
+	_twin.offset = l.offset
+	_twin.enabled = l.enabled and l.visible
+	_twin.shadow_item_cull_mask = l.shadow_item_cull_mask
 
 
 ## How far the house has waned (0..1), for tests.

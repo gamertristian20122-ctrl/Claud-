@@ -38,15 +38,15 @@ const DEFS := {
 		"lore": "Slept in the coal bin so long it forgot it was ever a boy.", "stain": Color("#3d734f")},
 	"goblin": {"hp": 5.0, "speed": 40.0, "ai": "chase", "jitter": true, "r": 5.0, "name": "Larder Thief",
 		"lore": "Steals candle ends to eat in the dark. Yours will do nicely.", "stain": Color("#3d734f")},
-	"tiny_slug": {"hp": 3.0, "speed": 20.0, "ai": "chase", "r": 4.0, "name": "Damp Slug",
+	"tiny_slug": {"hp": 3.0, "speed": 20.0, "ai": "chase", "r": 4.0, "name": "Damp Slug", "glow_px": ["#fdf7ed"],
 		"lore": "Follows the drip of the cellar pipes, and now the drip of you.", "stain": Color("#4ba747")},
-	"slug": {"hp": 8.0, "speed": 17.0, "ai": "chase", "r": 6.0, "name": "Cistern Slug",
+	"slug": {"hp": 8.0, "speed": 17.0, "ai": "chase", "r": 6.0, "name": "Cistern Slug", "glow_px": ["#fdf7ed"],
 		"lore": "It has grown fat on the soap the maids threw down the drain.", "stain": Color("#3d734f")},
-	"muddy": {"hp": 9.0, "speed": 0.0, "ai": "hop", "r": 6.0, "name": "Puddle Lump",
+	"muddy": {"hp": 9.0, "speed": 0.0, "ai": "hop", "r": 6.0, "name": "Puddle Lump", "glow_px": ["#cae6f5"],
 		"lore": "Coal dust and rainwater that decided to stand up.", "stain": Color("#483b3a")},
 	"swampy": {"hp": 8.0, "speed": 0.0, "ai": "hop", "shoot4": true, "r": 6.0, "name": "Drain Hopper",
 		"lore": "Each landing spits the sink's old water four ways at once.", "stain": Color("#4ba747")},
-	"imp": {"hp": 4.0, "speed": 46.0, "ai": "fly", "r": 5.0, "fly": true, "name": "Flue Imp",
+	"imp": {"hp": 4.0, "speed": 46.0, "ai": "fly", "r": 5.0, "fly": true, "name": "Flue Imp", "glow_px": ["#fdf7ed"],
 		"lore": "Rode the smoke down the chimney and never found the way back up.", "stain": Color("#62232f")},
 	"skelet": {"hp": 6.0, "speed": 30.0, "ai": "shooter", "r": 5.0, "cd": 1.9, "name": "Bone Lodger",
 		"lore": "Still pays its rent in teeth, one shot at a time.", "stain": Color("#aa8d7a")},
@@ -60,7 +60,7 @@ const DEFS := {
 		"lore": "Mutters the old house-rhymes until they turn into rings of fire.", "stain": Color("#3d734f")},
 	"masked_orc": {"hp": 20.0, "speed": 24.0, "ai": "chase", "r": 7.0, "heavy": true, "name": "Masked Porter",
 		"lore": "Carried coffins down the back stairs. Now it carries a grudge.", "stain": Color("#314152")},
-	"necromancer": {"hp": 14.0, "speed": 20.0, "ai": "summoner", "r": 6.0, "name": "Hooded Mourner",
+	"necromancer": {"hp": 14.0, "speed": 20.0, "ai": "summoner", "r": 6.0, "name": "Hooded Mourner", "glow_px": ["#fdf7ed"],
 		"lore": "Keeps a vigil for the dead and keeps waking them for company.", "stain": Color("#5f2d56")},
 	"doc": {"hp": 12.0, "speed": 22.0, "ai": "lobber", "r": 6.0, "name": "Tincture Doctor",
 		"lore": "Every bottle in its coat cures one thing: being alive.", "stain": Color("#2a2a3a")},
@@ -75,36 +75,36 @@ const DEFS := {
 	"zombie": {"hp": 13.0, "speed": 16.0, "ai": "spitter", "r": 6.0, "cd": 2.4, "name": "Potted Sleeper",
 		"lore": "Buried in the conservatory. Something green grew out and woke it.", "stain": Color("#3d734f")},
 	# ---- the house's own
-	"wax_blob": {"hp": 6.0, "speed": 18.0, "ai": "blob", "r": 6.0, "split": ["wax_bit", 2], "name": "Rose Melt",
+	"wax_blob": {"hp": 6.0, "speed": 18.0, "ai": "blob", "r": 6.0, "split": ["wax_bit", 2], "name": "Rose Melt", "glow_px": ["#fdf7ed", "#ee8e2e", "#facb3e"],
 		"lore": "A chapel candle that melted into a puddle and kept the wick.", "stain": Color("#9f294e")},
 	"wax_bit": {"hp": 2.0, "speed": 40.0, "ai": "chase", "jitter": true, "r": 4.0, "touch": 4.0, "small_fry": true, "name": "Melt Drop",
 		"lore": "Half a Rose Melt. It wants the other half back.", "stain": Color("#9f294e")},
-	"moth": {"hp": 2.0, "speed": 48.0, "ai": "moth", "r": 4.0, "fly": true, "touch": 3.0, "swarm": 3, "small_fry": true, "name": "Lamp Moth",
+	"moth": {"hp": 2.0, "speed": 48.0, "ai": "moth", "r": 4.0, "fly": true, "touch": 3.0, "swarm": 3, "small_fry": true, "name": "Lamp Moth", "glow_px": ["#da4e38"],
 		"lore": "They come for the brightest flame in the house. Tonight that is you.", "stain": Color("#aa8d7a")},
-	"snuffer": {"hp": 12.0, "speed": 20.0, "ai": "snuffer", "r": 6.0, "cd": 1.6, "name": "Iron Snuffer",
+	"snuffer": {"hp": 12.0, "speed": 20.0, "ai": "snuffer", "r": 6.0, "cd": 1.6, "name": "Iron Snuffer", "glow_px": ["#da4e38"],
 		"lore": "Its whole purpose is to put candles out. It takes the job seriously.", "stain": Color("#314152")},
 	"wisp": {"hp": 7.0, "speed": 20.0, "ai": "blinker", "r": 5.0, "fly": true, "glow": true, "cd": 2.4, "name": "Grave Light",
 		"lore": "A cold flame that walks the graveyard. Follow it and you never come back.", "stain": Color("#49a790")},
-	"sootling": {"hp": 5.0, "speed": 34.0, "ai": "sooter", "r": 5.0, "cd": 1.0, "name": "Sootling",
+	"sootling": {"hp": 5.0, "speed": 34.0, "ai": "sooter", "r": 5.0, "cd": 1.0, "name": "Sootling", "glow_px": ["#ee8e2e", "#facb3e"],
 		"lore": "Swept out of the chimney, it leaves itself everywhere it goes.", "stain": Color("#2a2a3a")},
 	"waxwork": {"hp": 16.0, "speed": 56.0, "ai": "statue", "r": 6.0, "name": "Waxwork Bride",
 		"lore": "She stood in the parlour for a hundred years. She only moves when no one looks.", "stain": Color("#d3bfa9")},
-	"cinder_rat": {"hp": 4.0, "speed": 92.0, "ai": "rat", "r": 4.0, "name": "Cinder Rat",
+	"cinder_rat": {"hp": 4.0, "speed": 92.0, "ai": "rat", "r": 4.0, "name": "Cinder Rat", "glow_px": ["#ee8e2e", "#da4e38", "#facb3e", "#fdf7ed"],
 		"lore": "Nests in the ash pit. Its back never quite stops smouldering.", "stain": Color("#483b3a")},
 	"psalter": {"hp": 9.0, "speed": 26.0, "ai": "fanner", "r": 6.0, "fly": true, "cd": 2.6, "name": "Restless Psalter",
 		"lore": "A hymn book that lost its choir. It hurls its pages at the dark.", "stain": Color("#8f4029")},
-	"clapper_bat": {"hp": 6.0, "speed": 50.0, "ai": "bellbat", "r": 5.0, "fly": true, "cd": 3.0, "name": "Clapper Bat",
+	"clapper_bat": {"hp": 6.0, "speed": 50.0, "ai": "bellbat", "r": 5.0, "fly": true, "cd": 3.0, "name": "Clapper Bat", "glow_px": ["#fdf7ed"],
 		"lore": "Stole the tongue of the smallest bell and rings it to see you.", "stain": Color("#5f2d56")},
 	"deathwatch": {"hp": 10.0, "speed": 64.0, "ai": "bouncer", "r": 5.0, "face_dir": true, "name": "Deathwatch Beetle",
 		"lore": "The ticking in the walls at night. Wound up, it never stops.", "stain": Color("#c56025")},
 	"grave_hand": {"hp": 8.0, "speed": 38.0, "ai": "burrow", "r": 5.0, "heavy": true, "name": "Grave Hand",
 		"lore": "Reaches up through the crypt floor for anyone who stands still.", "stain": Color("#8a503e")},
 	# ---- the Clock Tower (scripts/game/keeper.gd; floor 5 only)
-	"cog_sentry": {"hp": 11.0, "speed": 16.0, "ai": "tower_cog", "r": 6.0, "cd": 2.2, "name": "Cog Sentry",
+	"cog_sentry": {"hp": 11.0, "speed": 16.0, "ai": "tower_cog", "r": 6.0, "cd": 2.2, "name": "Cog Sentry", "glow_px": ["#72d6ce", "#cae6f5"],
 		"lore": "Wound up a hundred years ago and told to keep watch. Nobody told it to stop.", "stain": Color("#c56025")},
 	"minute_wraith": {"hp": 9.0, "speed": 40.0, "ai": "tower_wraith", "r": 5.0, "fly": true, "glow": true, "cd": 2.4,
 		"name": "Minute-Hand Wraith", "lore": "It was late, once. It has been hurrying ever since.", "stain": Color("#b6cbcf")},
-	"gutterspout": {"hp": 18.0, "speed": 0.0, "ai": "turret", "r": 6.0, "heavy": true, "cd": 1.2, "name": "Gutterspout",
+	"gutterspout": {"hp": 18.0, "speed": 0.0, "ai": "turret", "r": 6.0, "heavy": true, "cd": 1.2, "name": "Gutterspout", "glow_px": ["#facb3e"],
 		"lore": "Spat rain off the belfry roof for centuries. It aims better now.", "stain": Color("#7b8994")},
 	# ---- bosses
 	"big_zombie": {"hp": 78.0, "speed": 20.0, "ai": "boss_rot", "r": 11.0, "boss": true, "heavy": true, "name": "OLD ROT",
@@ -200,6 +200,7 @@ static var _shadow_big: Texture2D
 static var _house: HouseAI
 static var _bosses: BossAI
 static var _frames_cache := {}
+static var _boss_shadows := {}
 static var _champ_lights := 0   # marked foes with a glow light; past 3 the tint alone shows it (light budget)
 
 
@@ -214,6 +215,22 @@ static func _blob(w: int, h: int) -> Texture2D:
 			if absf(x + 0.5 - w / 2.0) <= half:
 				img.set_pixel(x, y, c)
 	return ImageTexture.create_from_image(img)
+
+
+## A guardian's ground shadow: a flat ellipse about 3/4 of its width, a little darker than a lodger's.
+static func _boss_shadow(w: int) -> Texture2D:
+	var sw := clampi(int(w * 0.75) | 1, 23, 41)
+	if not _boss_shadows.has(sw):
+		var img := Image.create(sw, 7, false, Image.FORMAT_RGBA8)
+		var c := Color(0.13, 0.08, 0.1, 0.6)
+		for y in 7:
+			var dy := (y + 0.5 - 3.5) / 3.5
+			var half := sqrt(maxf(0.0, 1.0 - dy * dy)) * sw / 2.0
+			for x in sw:
+				if absf(x + 0.5 - sw / 2.0) <= half:
+					img.set_pixel(x, y, c)
+		_boss_shadows[sw] = ImageTexture.create_from_image(img)
+	return _boss_shadows[sw]
 
 
 ## The floor's guardian out of `opts` (world FLOORS[n]["bosses"]), picked from the run seed so
@@ -303,6 +320,8 @@ func _ready() -> void:
 		_shadow_big = _blob(22, 5)
 	shadow = Sprite2D.new()
 	shadow.texture = _shadow_big if radius > 7.0 else _shadow_tex
+	if boss:   # guardians stand on a shadow as wide as they are (fix/art C6)
+		shadow.texture = _boss_shadow(tex.get_width())
 	shadow.position = Vector2(0, -1)
 	add_child(shadow)
 	mat = ShaderMaterial.new()
@@ -313,6 +332,7 @@ func _ready() -> void:
 	mat.shader = _glow_shader if def.get("glow", false) else _flash_shader
 	spr.material = mat
 	add_child(spr)
+	CreatureGlow.attach(self)   # unlit eye-lights / lanterns, the guardian + marked-foe rim (fix/art)
 	# behaviour: our own method, or one of the house / boss behaviour sets
 	var ai: String = def["ai"]
 	if has_method("_ai_" + ai):
