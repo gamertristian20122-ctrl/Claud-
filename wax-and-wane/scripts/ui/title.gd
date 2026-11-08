@@ -16,8 +16,13 @@ var sub: Label
 var sel_name: Label
 var play_btn: Button
 var journal_btn: Button
+## UX-05: menu buttons are 24 px tall with 4 px gaps (thumb-sized on a phone). The two big actions
+## (and Continue) stand in the column on the right; Journal / Seed / Settings / Credits (and Quit on
+## desktop) are a row along the bottom edge.
 const MENU_W := 120
-const MENU_H := 20
+const MENU_H := 24
+const GAP := 4
+var bar: HBoxContainer
 # ---- opening
 var logo: TextureRect
 var menu: VBoxContainer
@@ -99,31 +104,36 @@ func _ready() -> void:
 	sub.size = Vector2(300, 10)
 	sub.position = Vector2(-150, 70)
 	root.add_child(sub)
-	# ---- the menu: [Continue] / Light the wick / Tonight's Candle / Journal | Seed / Settings | Credits
+	# ---- the menu: [Continue] / Light the wick / Tonight's Candle, and along the bottom edge
+	# Journal | Seed | Settings | Credits [| Quit on desktop]
 	Unlocks.take_new()   # anything unlocked since the last visit gets its Journal dot
 	menu = VBoxContainer.new()
-	menu.add_theme_constant_override("separation", 2)
+	menu.add_theme_constant_override("separation", GAP)
 	menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	menu.position = Vector2(-6, -16 - (MENU_H * 4 + 2 * 3))
+	menu.position = Vector2(-6, -(4 + MENU_H + 8) - (MENU_H * 2 + GAP))
 	root.add_child(menu)
 	play_btn = _menu_btn("Light the wick", _play, MENU_W)
 	menu.add_child(play_btn)
 	menu.add_child(_menu_btn("Tonight's Candle", _daily, MENU_W))
-	var half := (MENU_W - 2) / 2
-	var row1 := HBoxContainer.new()
-	row1.add_theme_constant_override("separation", 2)
-	journal_btn = _menu_btn("Journal", func(): Journal.open(root).tree_exited.connect(journal_btn.queue_redraw), half)
+	bar = HBoxContainer.new()
+	bar.add_theme_constant_override("separation", GAP)
+	journal_btn = _menu_btn("Journal", func(): Journal.open(root).tree_exited.connect(journal_btn.queue_redraw), 56)
 	journal_btn.draw.connect(func():
 		if Records.any_new():
 			Journal._dot(journal_btn, Vector2(journal_btn.size.x - 7, 5)))
-	row1.add_child(journal_btn)
-	row1.add_child(_menu_btn("Seed", open_seed_pad, half))
-	menu.add_child(row1)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 2)
-	row.add_child(_menu_btn("Settings", func(): SettingsPanel.open(root), half))
-	row.add_child(_menu_btn("Credits", _credits, half))
-	menu.add_child(row)
+	bar.add_child(journal_btn)
+	bar.add_child(_menu_btn("Seed", open_seed_pad, 44))
+	bar.add_child(_menu_btn("Settings", func(): SettingsPanel.open(root), 60))
+	bar.add_child(_menu_btn("Credits", _credits, 56))
+	if OS.has_feature("pc"):   # QA-22: desktops get a Quit button (it asks first)
+		bar.add_child(_menu_btn("Quit", func(): Controls.quit_prompt(root), 44))
+	bar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)   # centred, 4 px above the bottom edge
+	var bw := bar.get_combined_minimum_size().x
+	bar.offset_left = -floorf(bw / 2.0)
+	bar.offset_right = bar.offset_left + bw
+	bar.offset_top = -4 - MENU_H
+	bar.offset_bottom = -4
+	root.add_child(bar)
 	var cont := RunSave.add_continue_button(menu, main)   # "Continue / Floor N - 12:41 AM" when a run is saved
 	if cont:
 		cont.custom_minimum_size.x = MENU_W
@@ -131,14 +141,14 @@ func _ready() -> void:
 	box = HBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	box.position = Vector2(-140, -40)
+	box.position = Vector2(-140, -(4 + MENU_H + 8) - 24)
 	root.add_child(box)
-	box.add_child(UI.button("<", func(): _cycle(-1), 18))
+	box.add_child(UI.button("<", func(): _cycle(-1), 24))
 	sel_name = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
 	sel_name.custom_minimum_size = Vector2(62, 24)
 	sel_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(sel_name)
-	box.add_child(UI.button(">", func(): _cycle(1), 18))
+	box.add_child(UI.button(">", func(): _cycle(1), 24))
 	sel = Game.settings.get("candle", "tallow")
 	if not Candles.is_unlocked(sel):
 		sel = "tallow"
@@ -151,9 +161,9 @@ func _ready() -> void:
 	if float(rec["best_finish"]) != 0.0:
 		line += "   Best: done by %s" % Game.clock_text(float(rec["best_finish"]))
 	stats = UI.label(line, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
-	stats.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	stats.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	stats.size = Vector2(300, 10)
-	stats.position = Vector2(-150, -12)
+	stats.position = Vector2(-150, 81)   # under the candle's line (the bottom edge holds the button row)
 	root.add_child(stats)
 	ver = UI.label("v" + Game.VERSION, 8, Color(0.4, 0.33, 0.33))
 	ver.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -165,7 +175,7 @@ func _ready() -> void:
 # ---------------------------------------------------------------- opening
 
 func _intro_begin() -> void:
-	for c in [logo, sub, menu, box, stats, ver]:
+	for c in [logo, sub, menu, box, bar, stats, ver]:
 		_home[c] = c.position
 		c.modulate.a = 0.0
 	dark.color = DARK_OFF
@@ -235,7 +245,7 @@ func _intro_step(dt: float) -> void:
 	# 1.45-1.95 the menu slides in
 	var mk := clampf((_it - 1.45) / 0.5, 0.0, 1.0)
 	var back := 1.0 + 2.2 * pow(mk - 1.0, 3.0) + 1.2 * pow(mk - 1.0, 2.0)   # ease-out-back
-	for c in [menu, box]:
+	for c in [menu, box, bar]:
 		c.position = _home[c] + Vector2(0, roundf((1.0 - back) * 70.0))
 		c.modulate.a = minf(1.0, mk * 2.0)
 	for c in [sub, stats, ver]:
@@ -343,14 +353,63 @@ func _show_candle() -> void:
 func _play() -> void:
 	if not Candles.is_unlocked(sel):
 		return
-	Audio.play("ui_open")
-	main.goto("game", {"candle": sel})
+	_abandon_check(func():
+		Audio.play("ui_open")
+		main.goto("game", {"candle": sel}))
 
 
 func _daily() -> void:
-	Audio.play("ui_open")
-	var date := Time.get_date_string_from_system()
-	main.goto("game", {"seed": hash("wax&wane" + date), "daily": true, "candle": "tallow"})
+	var go := func():
+		_abandon_check(func():
+			Audio.play("ui_open")
+			var date := Time.get_date_string_from_system()
+			main.goto("game", {"seed": hash("wax&wane" + date), "daily": true, "candle": "tallow"}))
+	if bool(Game.records.get("daily_explained", false)):
+		go.call()
+		return
+	# UX-05: the first time, one card says what it is (its first try is the score that counts)
+	var m := UI.modal(root, "TONIGHT'S CANDLE")
+	var r: Control = m[0]
+	var v: VBoxContainer = m[1]
+	for line in ["One house for everyone tonight: the same rooms, the same relics.",
+			"Only your first try counts. A new house tomorrow."]:
+		v.add_child(UI.label(line, 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	var light := UI.button("Light it", func():
+		Game.records["daily_explained"] = true
+		Game.save()
+		r.queue_free()
+		go.call(), 90)
+	light.set_meta("default_focus", true)
+	row.add_child(light)
+	row.add_child(UI.button("Not now", func(): r.queue_free(), 90))
+	v.add_child(row)
+
+
+## QA-02: a saved run is never thrown away silently. Starting a new candle while one is saved asks
+## first; only "Light new" lets the new run replace it.
+func _abandon_check(start: Callable) -> void:
+	if not RunSave.has_snapshot():
+		start.call()
+		return
+	var m := UI.modal(root, "YOUR CANDLE IS STILL LIT")
+	var r: Control = m[0]
+	var v: VBoxContainer = m[1]
+	v.add_child(UI.label("Your run on %s will go out for good." % RunSave.summary().replace(" - ", " at "), 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))
+	v.add_child(UI.label("Light a new candle anyway?", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	var keep := UI.button("Keep it", func(): r.queue_free(), 90)
+	keep.set_meta("default_focus", true)
+	row.add_child(keep)
+	row.add_child(UI.button("Light new", func():
+		r.queue_free()
+		RunSave.clear()
+		start.call(), 90))
+	v.add_child(row)
 
 
 func _credits() -> void:
@@ -383,7 +442,7 @@ func _credits() -> void:
 	v.add_child(back)
 
 
-## Menu buttons are 20 px tall so Continue + four rows fit under the logo on a 216 px screen.
+## Menu buttons are MENU_H (24) px tall: a thumb-sized target (UX-05).
 func _menu_btn(text: String, cb: Callable, w: int) -> Button:
 	var b := UI.button(text, cb, w)
 	b.custom_minimum_size.y = MENU_H
@@ -408,8 +467,8 @@ func open_seed_pad() -> void:
 	v.add_child(hint)
 	var grid := GridContainer.new()
 	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 2)
-	grid.add_theme_constant_override("v_separation", 2)
+	grid.add_theme_constant_override("h_separation", GAP)
+	grid.add_theme_constant_override("v_separation", GAP)
 	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var go := UI.button("Light", func(): pass, 30)
 	var refresh := func():
@@ -434,22 +493,23 @@ func open_seed_pad() -> void:
 	var light := func():
 		if st["digits"] == "":
 			return
-		Audio.play("ui_open")
 		var seed_n := int(st["digits"])
 		mr.queue_free()
-		main.goto("game", {"seed": seed_n, "candle": sel if Candles.is_unlocked(sel) else "tallow"})
+		_abandon_check(func():
+			Audio.play("ui_open")
+			main.goto("game", {"seed": seed_n, "candle": sel if Candles.is_unlocked(sel) else "tallow"}))
 	go.pressed.connect(light)
 	for k in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "<", "0"]:
-		var b := UI.button(k if k != "<" else "Del", press.bind(k), 30)
-		b.custom_minimum_size.y = 18
+		var b := UI.button(k if k != "<" else "Del", press.bind(k), 34)
+		b.custom_minimum_size.y = MENU_H
 		if k == "1":
 			b.set_meta("default_focus", true)
 		grid.add_child(b)
-	go.custom_minimum_size.y = 18
+	go.custom_minimum_size = Vector2(34, MENU_H)
 	grid.add_child(go)
 	v.add_child(grid)
 	var back := UI.button("Back", func(): mr.queue_free(), 70)
-	back.custom_minimum_size.y = 20
+	back.custom_minimum_size.y = MENU_H
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	v.add_child(back)
 	refresh.call()
