@@ -201,16 +201,21 @@ var _shown_h := 12
 func _ready() -> void:
 	_dish_back = Art.tex(holder_tex + "_back")
 	# draw order: the body (_draw), the face, the dish's front, then the arms and the wax in the dish
+	# Tallow is the light: the wax, face, dish and costumes draw in their own colours (unshaded, see
+	# _process) like the concept's in-game mock-up; the children share the Player's material.
 	face = Sprite2D.new()
 	face.centered = false
 	face.region_enabled = true
+	face.use_parent_material = true
 	add_child(face)
 	holder = Sprite2D.new()
 	holder.texture = Art.tex(holder_tex)
 	holder.centered = false
 	holder.offset = Vector2(-9, -5)
+	holder.use_parent_material = true
 	add_child(holder)
 	_front = Node2D.new()
+	_front.use_parent_material = true
 	_front.draw.connect(_draw_front)
 	add_child(_front)
 	flame = AnimatedSprite2D.new()
@@ -241,6 +246,7 @@ func _ready() -> void:
 	add_child(glow)
 	_pool = Node2D.new()
 	_pool.z_index = 1
+	_pool.use_parent_material = true
 	_pool.draw.connect(_draw_pool)
 	add_child(_pool)
 	add_child(Costumes.new())
@@ -511,6 +517,10 @@ func _process(dt: float) -> void:
 	_blink -= dt
 	_hurt_face -= dt
 	_happy_face -= dt
+	# self-lit while the flame burns; unlit (title intro) and melted down, the room's light shows him
+	var want: Material = Art.unshaded if not unlit and not dead and light_k >= 0.5 else null
+	if material != want:
+		material = want
 	if _blink < 0:
 		_blink = randf_range(2.0, 4.5)
 	_juice_step(dt)

@@ -26,11 +26,14 @@ var _pale_done := false
 func _ready() -> void:
 	p = get_parent() as Player
 	z_index = 1
+	use_parent_material = true   # self-lit with Tallow (Player._process)
 	back = Node2D.new()
 	back.z_index = 0
+	back.use_parent_material = true
 	add_child(back)
 	front = Node2D.new()
 	front.z_index = 2
+	front.use_parent_material = true
 	add_child(front)
 	draw.connect(_draw_mid)
 	back.draw.connect(_draw_back)

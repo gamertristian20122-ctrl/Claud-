@@ -63,6 +63,8 @@ func _ready() -> void:
 	await get_tree().create_timer(0.8).timeout
 	if args.has("herosheet") and args.has("costumes"):
 		_costume_sheet()
+	elif args.has("herosheet") and args.has("ingame"):
+		_ingame_hero()
 	elif args.has("herosheet"):
 		_hero_sheet()
 	elif args.has("lightjudge"):
@@ -232,6 +234,8 @@ func drive(w: Node) -> Array:
 		return td
 	if (mode == "tour" or mode == "audiotest" or mode == "designcheck") and not args.has("drive"):
 		return []
+	if args.has("herosheet"):
+		return [Vector2.ZERO, Vector2.ZERO]   # the in-game hero shot: stand still
 	var p: Player = w.player
 	if args.has("god") and p:
 		p.wax = maxf(p.wax, 80.0)
@@ -1054,6 +1058,34 @@ func _costume_sheet() -> void:
 	img.resize(img.get_width() * 5, img.get_height() * 5, Image.INTERPOLATE_NEAREST)
 	img.save_png(_shots_dir + "/hero_costumes.png")
 	print("[tour] costume sheet")
+	get_tree().quit()
+
+
+## The real game, the cellar's first room, Tallow standing at full wax: a 240x135 crop round him with
+## him at (104, 86) like art_source/hero_reborn/ingame.png. Writes hero_ingame_1x.png and hero_ingame.png (x4).
+func _ingame_hero() -> void:
+	DirAccess.make_dir_recursive_absolute(_shots_dir)
+	main.goto("game", {"seed": 11})
+	await _wait(1.6)
+	var w: Node = main.current
+	var p: Player = w.player
+	p.wax = 120.0
+	p.frozen = true
+	p.move_input = Vector2.ZERO
+	p.aim_input = Vector2.ZERO
+	p.position = w.room.center() + Vector2(0, 26)
+	w.hud.visible = false
+	await _wait(1.0)
+	p._blink = 9.0
+	p._breath = 0.0
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	var at := p.get_global_transform_with_canvas().origin
+	var crop := img.get_region(Rect2i(int(at.x) - 104, int(at.y) - 86, 240, 135))
+	crop.save_png(_shots_dir + "/hero_ingame_1x.png")
+	crop.resize(960, 540, Image.INTERPOLATE_NEAREST)
+	crop.save_png(_shots_dir + "/hero_ingame.png")
+	print("[tour] in-game hero")
 	get_tree().quit()
 
 
