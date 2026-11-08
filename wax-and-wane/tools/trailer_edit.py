@@ -469,11 +469,12 @@ def zoom_crop(g, z):
 # ---------------------------------------------------------------- shorts layout (1080x1920)
 
 VW, VH = 1080, 1920
-ROOM = (57, 22, 327, 214)     # the room (and the guardian's bar under it) in the game picture
-ROOM_Y = 588                  # x4 -> 1080x768
-BAR = (6, 2, 150, 23)         # the wax bar with its flame marker
+ROOM = (65, 14, 319, 214)     # the room, the banner band over its top and the guardian's bar under it
+NOTCH = (65, 14, 148, 21)     # where the wax bar's right end reaches into that crop (painted out)
+ROOM_Y = 572                  # x4 -> 1016x800
+BAR = (6, 2, 150, 21)         # the wax bar with its flame marker
 CLOCK = (7, 23, 52, 33)       # the clock under it
-HUD_Y = 452
+HUD_Y = 446
 HOOK_Y = 190                  # below the apps' top bar (TikTok / Shorts / Reels keep the top ~150 px clear)
 CAP_Y = 1400                  # above the apps' bottom ~420 px (caption, buttons)
 
@@ -490,7 +491,11 @@ def vertical(game, zoom=None, hud=True):
         y0 = min(max(0, cy - h // 2), GH - h)
         room = game.crop((x0, y0, x0 + w, y0 + h)).resize((w * 4 * f, h * 4 * f), Image.NEAREST)
     else:
-        room = game.crop(ROOM).resize((rw * 4, rh * 4), Image.NEAREST)
+        src = game.crop(ROOM)
+        if hud:   # the wax bar is shown on its own above the room, so its tip is painted out of this crop
+            ImageDraw.Draw(src).rectangle([0, 0, NOTCH[2] - ROOM[0] - 1, NOTCH[3] - ROOM[1] - 1],
+                                          fill=game.getpixel((1, 120)))
+        room = src.resize((rw * 4, rh * 4), Image.NEAREST)
     c.paste(room, ((VW - room.width) // 2, ROOM_Y))
     if not hud:
         return c
@@ -543,7 +548,7 @@ def cta(img_native):
 
 def end_card_vertical(bg_game, line, sub="WISHLIST ON STEAM"):
     c = vertical(bg_game)
-    c = Image.blend(c, Image.new("RGB", c.size, NIGHT), 0.55).convert("RGBA")
+    c = Image.blend(c, Image.new("RGB", c.size, NIGHT), 0.72).convert("RGBA")
     lg = Image.open(os.path.join(ROOT, "assets/art/ui/title_logo.png")).convert("RGBA")
     lg = lg.resize((lg.width * 4, lg.height * 4), Image.NEAREST)
     c.alpha_composite(lg, ((VW - lg.width) // 2, 700))
@@ -949,7 +954,7 @@ def short_a(F, V):
     add_canvas(s, 1.6, 99, v_text("KILL FAST: KINDLING POURS TIME BACK", CAP_Y, color=GOLD, scale=5, width=170))
     t_end = tl.t
     tl.card(2.4, end_card_vertical(hook.frame(hook.at("cleared", 1.4)), "YOUR HEALTH BAR IS A CANDLE."))
-    add_hook(tl, "MY HEALTH BAR IS ALSO THE CLOCK", 0, t_end)
+    add_hook(tl, "MY HEALTH BAR\nIS ALSO THE CLOCK", 0, t_end)
     tl.music.append((0.0, tl.t, "floor_2", 0.0, 0.0, 0.3, 0.6))
     return tl
 
@@ -977,7 +982,7 @@ def short_b(F, V):
     add_canvas(s, 0, 99, v_text("ALL %d AT ONCE" % (k - 1), CAP_Y, color=EMBER, scale=7))
     t_end = tl.t
     tl.card(2.6, end_card_vertical(b.frame(b.at("cleared", 0.6)), "WHICH RELIC SHOULD I ADD NEXT?"))
-    add_hook(tl, "I STACKED EVERY FIRE RELIC ON ONE CANDLE", 0, t_end)
+    add_hook(tl, "I STACKED EVERY FIRE\nRELIC ON ONE CANDLE", 0, t_end)
     tl.music.append((0.0, tl.t, "floor_4", first, 1.0, 0.02, 0.6))
     return tl
 
@@ -997,10 +1002,10 @@ def short_c(F, V):
     add_canvas(tl.segs[-1], 0, 1.3, v_text("...", CAP_Y, color=CREAM, scale=7))
     t_kill = tl.t
     s = tl.shot(c, kill - sec(0.1), 2.6, gain=1.2)
-    add_canvas(s, 0.35, 2.6, v_text("SNUFFED IT. ONE MINUTE TO SPARE.", CAP_Y, color=GOLD, scale=5, width=170))
+    add_canvas(s, 0.35, 2.6, v_text("SNUFFED IT AT 1:58 AM.", CAP_Y, color=GOLD, scale=6, width=170))
     t_end = tl.t
     tl.card(2.4, end_card_vertical(c.frame(kill + sec(2.4)), "WOULD YOU HAVE MADE IT?"))
-    add_hook(tl, "1:58 AM. THE HOUR FIEND IS STILL STANDING.", 0, t_end)
+    add_hook(tl, "1:58 AM. THE HOUR FIEND\nIS STILL STANDING.", 0, t_end)
     tl.music.append((t_kill, tl.t, "ending", 0.0, -2.0, 0.02, 1.0))
     return tl
 

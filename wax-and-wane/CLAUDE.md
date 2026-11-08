@@ -101,9 +101,11 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   6 mini-bosses, Journal + unlocks, Save & Continue, keyboard/mouse/gamepad, achievements, pixel-art
   banded light + waning world, Share button. Bot win rate on the 8-minute candle: about 7 of 12.
 - Store kit: `docs/marketing/` (store copy, launch plan, `store_assets/` images; key art is a bit dark).
-- **Not finished:** the trailer. `scripts/trailer.gd` (`--trailer=<scene>`), `tools/make_trailer.sh` and
-  `tools/trailer_edit.py` are a draft: record the scenes with Godot's movie writer, edit, check, then write
-  `docs/marketing/videos.md`. Then: version 2.0.0, APK + AAB + desktop zips, send them.
+- Trailer, 3 vertical shorts and a store loop: `./tools/make_trailer.sh all` re-makes them from the current build
+  into `build/videos/` (git-ignored; `COPY_TO=<dir>` copies them out). AI narrator (Kokoro TTS, Apache-2.0) in
+  `docs/marketing/voice/` (the owner's own recordings go in `voice/owner/`); posting guide and AI-disclosure
+  steps: `docs/marketing/videos.md`. Never let Godot import `build/` (it holds ~10k footage PNGs): the script
+  writes `build/.gdignore`. Next: version 2.0.0, APK + AAB + desktop zips, send them.
 - The owner is connecting SpriteCook (sprite generation), Creative Claw (voice clone for meme videos) and
   Kobiton (real-phone testing) in claude.ai connectors; they need a new session to load. Use Kobiton to
   measure Effects Full vs Lite on real phones and decide the phone default.

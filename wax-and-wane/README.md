@@ -149,6 +149,8 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
     ... --keyart [--keylayout=wide|tall]   the key-art scene, no HUD
 
 python3 tools/store_art.py [--import] [--no-render] [--review /abs/dir]   # every Steam / Play / itch image
+./tools/make_trailer.sh all           # trailer + 3 shorts + store loop from the current build -> build/videos/
+                                      #   (record / edit / check / stills / voice / audition / voicecheck: docs/marketing/videos.md)
 ./tools/build_apk.sh                  # signed APK for sideloading -> build/WaxAndWane.apk
 ./tools/build_aab.sh                  # Google Play bundle -> build/WaxAndWane_v<version>.aab (ends with PLAY-READY)
 ./tools/build_aab.sh --verify build/X.aab   # checks only
