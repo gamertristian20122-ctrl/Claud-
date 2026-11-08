@@ -362,6 +362,8 @@ func _credits() -> void:
 		["Fonts", "Kenney Pixel and Kenney Mini by Kenney (CC0)"],
 		["Sound effects", "Kenney audio packs, Ninja Adventure (CC0)"],
 		["Music", "Ninja Adventure by Pixel-boy and AAA (CC0)"],
+		["", "Dream - Crypt - Dungeon - Temple - Final Area"],
+		["", "Boat - Fight - Tension - Ascension - Credit Theme"],
 		["Engine", "Godot Engine (MIT)"],
 	]:
 		var row := HBoxContainer.new()
