@@ -105,7 +105,7 @@ on people's phones.
 > **Which file do I want?**
 > - Windows: download the Windows zip, unzip it, run `WaxAndWane.exe`. If Windows says "Windows protected your PC", click **More info**, then **Run anyway** (the game isn't code-signed yet; that's all the warning means).
 > - Linux and Steam Deck desktop mode: download the Linux zip, unzip it, run `WaxAndWane.x86_64`.
-> - Android: download the .apk on your phone and open it. When your phone asks, allow your browser to install apps. Your phone's own updates later install over it and keep your save.
+> - Android: download the .apk on your phone and open it. When your phone asks, allow your browser to install apps. A newer APK from this page installs over it and keeps your save.
 >
 > **Controls:** keyboard and mouse, a gamepad, or touch with two thumbs on Android. Save and quit any time.
 >
