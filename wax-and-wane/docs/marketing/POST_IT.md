@@ -188,9 +188,10 @@ Valve takes 30%.
    - **SteamPipe GUI on the ROG Ally** (easiest): download the Steamworks SDK from the partner site, run
      `tools/SteamPipeGUI` from it, log in, pick the depots, point them at the unzipped Windows and Linux
      folders, Upload.
-   - **steamcmd**, run by Claude with a Steam **build account** you create (Users & Permissions, only the
-     "Edit App Metadata" and "Publish App Changes to Steam" rights); the templates are in `tools/steam/`.
-     You type the account's password and Steam Guard code yourself; they never go in the chat or a file.
+   - **steamcmd**, also on the ROG Ally (`steamcmd.exe` in the SDK's `tools/ContentBuilder/builder` folder), with
+     the build scripts in `tools/steam/` (each file says what to fill in). Use a separate Steam **build account**
+     (Users & Permissions, only the "Edit App Metadata" and "Publish App Changes to Steam" rights). You type its
+     password and Steam Guard code yourself in that window; never in the chat or a file.
 10. Builds page: set the new build live on a **beta branch** with a password first, install it through Steam on
     the ROG Ally, play a run.
 11. **Steam Cloud** (optional, no code): App Admin > Cloud: quota 1 MB, 10 files, and the two Auto-Cloud rows in

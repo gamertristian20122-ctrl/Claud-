@@ -31,7 +31,7 @@ are unchanged (the only UI change is two buttons in the Credits modal).
 
 ## Checks run (all in this worktree, private save profiles)
 - `--checkscripts`: 54 scripts ok.
-- `--playtest --speed=4 --runs=2 --god`: see the result line in the final report of this stream.
+- `--playtest --speed=4 --runs=2 --god`: run 1 WIN on floor 5 at 12:04 AM, 223 kills, 40 rooms, 1213 s; run 2 WIN on floor 5 at 12:34 AM, 185 kills, 38 rooms, 1256 s (SUMMARY runs=2 wins=2 avg_floor=5.00). Both runs reached the end: the Belfry, the Clock Tower and the Keeper (true ending).
 - `--tour --journal` at 1600x720 with the two new pages opened (temporary tour lines, not committed): the Credits
   modal, Licences (top, Godot part, end) and Privacy all fit a 480x216 screen.
 - `--tour --tower` at 1600x720: the ending credits roll shows the new lines (made for this game, 0x72, music).
@@ -64,5 +64,11 @@ store texts for the old number. The credits count lodgers and guardians at run t
   `trailer_edit.py`, which this stream may only change at the end card.
 - Steam achievements need GodotSteam, 52 achievements in Steamworks and their icons: not in 2.0.0.
 - The Windows build still has to be run once on real Windows (the ROG Ally) before the system requirements go live.
+- The full trailer and its Play / Steam cuts have to be re-made at release from a full recording
+  (`./tools/make_trailer.sh all`, then the two `CTA=` edits); this stream only recorded the three scenes Short A needs.
+- The privacy link names the session branch (`ccr-37a74654-pp10xa`); if the game moves to another branch or a
+  private repository, the link in Play Console, the itch page and `scripts/ui/credits_pages.gd` must change too.
+- A paid Play app means the 12+ closed-test testers buy it (Google's rule); `google_play.md` section 2 has the
+  cheap ways round it.
 - The Data safety answer "no data collected" relies on Google treating Android's own Auto Backup as not collected
   by the app (the policy says so in plain words); Google's help page doesn't mention Auto Backup either way.
