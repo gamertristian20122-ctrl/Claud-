@@ -24,12 +24,15 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+import fx
+
 VIDEO_EXT = {".mp4", ".mkv", ".mov", ".webm", ".avi", ".m4v", ".ts", ".flv", ".wmv", ".mpg", ".mpeg"}
 FORMATS = {"vertical": (1080, 1920), "wide": (1920, 1080), "square": (1080, 1080)}
 GRADES = {
     "punchy": "eq=contrast=1.07:saturation=1.22:gamma=0.98,vignette=angle=0.5",
     "cool": "eq=contrast=1.07:saturation=1.18:gamma=0.98,colorbalance=rs=-0.04:bs=0.06:rm=-0.02:bm=0.04,vignette=angle=0.5",
     "warm": "eq=contrast=1.07:saturation=1.18:gamma=0.98,colorbalance=rs=0.05:bs=-0.04:rm=0.03:bm=-0.02,vignette=angle=0.5",
+    "purple": "eq=contrast=1.1:saturation=1.2:gamma=0.96,colorbalance=rs=0.04:bs=0.09:rm=0.02:gm=-0.03:bm=0.06,vignette=angle=0.55",
     "none": "",
 }
 SR, HOP, NFFT = 22050, 512, 2048
@@ -39,6 +42,7 @@ MARGIN = 0.15                    # seconds kept away from each end of a shot (no
 OVERSIZE = 1.12                  # base frames are this much bigger than the output: room for shake/zoom
 RAMP_SPEED = 0.5                 # slow motion on the shot that leads into the drop
 MAX_MB = 30.0                    # owner's upload limit
+TRANSITIONS = ("cut", "flash", "zoom", "spin", "whip", "glitch")
 FONT_CANDIDATES = [
     "/usr/share/fonts/opentype/inter/InterDisplay-Black.otf",
     "/usr/share/fonts/opentype/inter/InterDisplay-ExtraBold.otf",
@@ -280,11 +284,15 @@ def analyze_song(path: Path, length: float, song_start: float | None) -> dict:
     near = [d for d in downs if abs(d - want) <= 2 * period and start + 2 < d <= total]
     near = near or [b for b in beat_t if abs(b - want) <= period and start + 2 < b <= total]
     end = float(min(near, key=lambda d: abs(d - want))) if near else min(total, want)
+    if want >= total - 0.3:  # asked for the whole song: play it to the end
+        end = total
 
     sel = (beat_t >= start - 1e-3) & (beat_t < end - 1e-3)
     rel = list(np.round(beat_t[sel] - start, 4))
     rdown = [bool(v) for v in is_down[sel]]
-    if not rel or rel[0] > 0.05:
+    if rel and rel[0] < 0.5 * period:  # first beat right after the start: treat it as the start
+        rel[0] = 0.0
+    elif not rel or rel[0] > 0.05:
         rel.insert(0, 0.0)
         rdown.insert(0, True)
     rel[0] = 0.0
@@ -492,7 +500,8 @@ def load_plan(path: Path | None, shots: list[dict]) -> dict:
     if not isinstance(plan, dict):
         raise EditError("plan must be a JSON object")
     ids = {s["id"] for s in shots}
-    allowed = {"pool", "order", "hero", "ramp", "outro", "exclude", "focus", "title", "title_at", "notes"}
+    allowed = {"pool", "order", "hero", "ramp", "outro", "exclude", "focus", "title", "title_at", "notes",
+               "lyrics", "captions", "transitions", "accent"}
     unknown = set(plan) - allowed
     if unknown:
         raise EditError(f"unknown plan keys: {sorted(unknown)} (allowed: {sorted(allowed)})")
@@ -535,6 +544,69 @@ def load_plan(path: Path | None, shots: list[dict]) -> dict:
     if ta not in ("start", "end"):
         raise EditError("plan 'title_at' must be 'start' or 'end'")
     out["title_at"] = ta
+    out["lyrics"] = check_lyrics(plan.get("lyrics", []))
+
+    caps = plan.get("captions", {})
+    if not isinstance(caps, dict):
+        raise EditError("plan 'captions' must map shot numbers to text")
+    out["captions"] = {}
+    for k, v in caps.items():
+        try:
+            sid = int(k)
+        except ValueError:
+            raise EditError(f"plan 'captions' key {k!r} is not a shot number") from None
+        if sid not in ids or not isinstance(v, str):
+            raise EditError(f"plan 'captions' entry {k}: must be an existing shot and text")
+        text = clean_text(v, 24)
+        if text:
+            out["captions"][sid] = text
+
+    trans = plan.get("transitions", {})
+    if not isinstance(trans, dict):
+        raise EditError("plan 'transitions' must map cut numbers (1, 2, ...) to a transition name")
+    out["transitions"] = {}
+    for k, v in trans.items():
+        try:
+            n = int(k)
+        except ValueError:
+            raise EditError(f"plan 'transitions' key {k!r} is not a cut number") from None
+        if n < 1 or v not in TRANSITIONS:
+            raise EditError(f"plan 'transitions' entry {k}: cut numbers start at 1; names: {', '.join(TRANSITIONS)}")
+        out["transitions"][n] = v
+
+    accent = plan.get("accent", "#5ac8ff")
+    if not (isinstance(accent, str) and len(accent) == 7 and accent[0] == "#"
+            and all(c in "0123456789abcdefABCDEF" for c in accent[1:])):
+        raise EditError("plan 'accent' must be a colour like '#5ac8ff'")
+    out["accent"] = tuple(int(accent[i:i + 2], 16) for i in (1, 3, 5))
+    return out
+
+
+def clean_text(text: str, limit: int) -> str:
+    return "".join(ch for ch in text if ch.isprintable()).strip()[:limit]
+
+
+def check_lyrics(lyr) -> list[dict]:
+    """Lyrics: [{"text": "WORDS OF THE LINE", "start": s, "end": s, "times": [one start per word]}] (edit seconds)."""
+    if not isinstance(lyr, list):
+        raise EditError("plan 'lyrics' must be a list of lines")
+    out = []
+    num = (int, float)
+    for i, ln in enumerate(lyr):
+        if not isinstance(ln, dict) or not isinstance(ln.get("text"), str):
+            raise EditError(f"lyrics line {i + 1}: needs 'text'")
+        words = clean_text(ln["text"], 120).split()
+        st, en = ln.get("start"), ln.get("end")
+        if not words or not isinstance(st, num) or not isinstance(en, num) or isinstance(st, bool) \
+                or isinstance(en, bool) or not 0 <= st < en <= 600:
+            raise EditError(f"lyrics line {i + 1}: needs words and 0 <= start < end (seconds)")
+        times = ln.get("times")
+        if times is None:
+            times = [st + (en - st) * j / len(words) * 0.8 for j in range(len(words))]
+        if not isinstance(times, list) or len(times) != len(words) \
+                or not all(isinstance(t, num) and not isinstance(t, bool) and st - 0.5 <= t <= en for t in times):
+            raise EditError(f"lyrics line {i + 1}: 'times' needs one time per word, inside the line")
+        out.append({"start": float(st), "end": float(en), "words": [(float(t), w) for t, w in zip(times, words)]})
     return out
 
 
@@ -551,12 +623,14 @@ def build_slots(song: dict, style: str, fps: int) -> list[dict]:
         dn = [i for i in range(n) if downs[i]] or [0]
         kd = min(dn, key=lambda i: abs(beats[i] - 0.3 * L))
     hype = style == "hype"
-    pre, fast, post = (2 * unit, unit, 2 * unit) if hype else (4 * unit, 2 * unit, 4 * unit)
+    # arc: long holds to establish, a short slow-motion ramp into the drop, fast cuts, one held bar to end
+    pre, fast, post = (4 * unit, unit, 2 * unit) if hype else (8 * unit, 2 * unit, 4 * unit)
+    ramp_len = 2 * unit if hype else 4 * unit
     outro_start = n - 4 if n - kd > 4 else (kd + 1 if n - kd >= 2 else n)
-    ramp_start = kd - 4 if kd >= 6 else kd
+    ramp_start = kd - ramp_len if kd >= ramp_len + 2 else kd
     segs, b = [], 0
     while b < ramp_start:
-        step = min(4 if b == 0 else pre, ramp_start - b)
+        step = min(pre, ramp_start - b)
         segs.append((b, b + step, "intro"))
         b += step
     if ramp_start < kd:
@@ -682,105 +756,191 @@ def assign_shots(slots: list[dict], shots: list[dict], plan: dict) -> list[dict]
     return out
 
 
-# ----------------------------------------------------------------------------- render
+# ----------------------------------------------------------------------------- effects plan
 
-def fx_at(slot: dict, k: int, fps: int, style: str, first: bool) -> dict:
-    n = slot["f1"] - slot["f0"]
-    tau, d = k / fps, n / fps
-    p = k / max(1, n - 1)
-    z, sx, sy, flash, rgb, dark = 1.0, 0.0, 0.0, 0.0, 0.0, 0.0
-    kind = slot["kind"]
-    if kind == "intro":
-        z = 1 + 0.05 * p
-    elif kind == "ramp":
-        z = 1 + 0.16 * p * p
-        flash = 0.6 * min(1.0, max(0.0, (tau - (d - 0.12)) / 0.12))
-    elif kind in ("drop", "hit"):
-        strong, down = kind == "drop", slot["down"]
-        punch = 0.20 if strong else (0.10 if down else 0.05)
-        z = 1 + punch * math.exp(-tau / 0.10) + 0.03 * p
-        flash = (0.9 if strong else 0.45 if down else 0.18) * math.exp(-tau / 0.06)
-        amp = (34 if strong else 14 if down else 0) * math.exp(-tau / 0.16)
-        sx, sy = amp * math.sin(2 * math.pi * 19 * tau), amp * math.cos(2 * math.pi * 15 * tau)
-        rgb = (16 if strong else 7 if down else 0) * math.exp(-tau / 0.12)
-    elif kind == "outro":
-        z = 1 + 0.06 * p
-        dark = min(1.0, max(0.0, (tau - (d - 0.5)) / 0.5))
-    if first:
-        dark = max(dark, 1 - tau / 0.15)
-    if style == "smooth":
-        flash, sx, sy, rgb = flash * 0.4, sx * 0.4, sy * 0.4, rgb * 0.4
-    return {"z": z, "sx": sx, "sy": sy, "flash": flash, "rgb": rgb, "dark": dark}
+MOVE_CYCLE = ("punch", "pull", "tilt", "punch", "drift", "pull")
 
 
-def apply_fx(base: np.ndarray, fx: dict, ow: int, oh: int, scale: float) -> np.ndarray:
-    bh, bw = base.shape[:2]
-    z, sx, sy = fx["z"], fx["sx"] * scale, fx["sy"] * scale
-    if abs(z - 1) < 1e-4 and abs(sx) < 0.5 and abs(sy) < 0.5:
-        x0, y0 = (bw - ow) // 2, (bh - oh) // 2
-        out = base[y0:y0 + oh, x0:x0 + ow]
-    else:
-        data = (1 / z, 0, bw / 2 - ow / 2 / z + sx, 0, 1 / z, bh / 2 - oh / 2 / z + sy)
-        out = np.asarray(Image.fromarray(base).transform((ow, oh), Image.Transform.AFFINE, data, Image.Resampling.BICUBIC))
-    k = int(round(fx["rgb"] * scale))
-    if k >= 1:
-        out = out.copy()
-        out[..., 0] = np.roll(out[..., 0], k, axis=1)
-        out[..., 2] = np.roll(out[..., 2], -k, axis=1)
-    if fx["flash"] > 0.01 or fx["dark"] > 0.01:
-        f = out.astype(np.float32)
-        if fx["flash"] > 0.01:
-            f += fx["flash"] * (255.0 - f)
-        if fx["dark"] > 0.01:
-            f *= 1.0 - fx["dark"]
-        out = np.clip(f, 0, 255).astype(np.uint8)
-    return out
+def design_effects(items: list[dict], style: str, plan: dict) -> None:
+    """Give every cut its speed ramp, camera move, transition in/out and accents."""
+    hype = style == "hype"
+    over = plan.get("transitions", {})
+    downs = ups = moves = 0
+    for i, it in enumerate(items):
+        kind = it["kind"]
+        if kind == "intro":
+            prof, move, amt = ("const", 1.0), "push", 0.10
+        elif kind == "ramp":
+            prof, move, amt = ("decel", 1.4, 0.3), "push_fast", 0.30
+        elif kind == "drop":
+            prof, move, amt = ("accel", 0.3, 1.5), "punch", 0.32
+        elif kind == "hit":
+            prof = ("velocity", 0.45, 2.4) if hype else ("velocity", 0.7, 1.35)
+            move = MOVE_CYCLE[moves % len(MOVE_CYCLE)]
+            amt = ({"punch": 0.24, "pull": 0.2} if hype else {"punch": 0.12, "pull": 0.1}).get(move, 0.0)
+            moves += 1
+        else:  # outro: slow motion, slow pull-back
+            prof, move, amt = ("const", 0.6), "pull", 0.12
+        if i == 0:
+            entry = "none"
+        elif kind in ("ramp", "outro", "intro"):
+            entry = "zoom"
+        elif kind == "drop":
+            entry = "glitch"
+        elif it["down"]:
+            entry = ("spin", "zoom")[downs % 2]
+            downs += 1
+        else:
+            entry = ("whip", "flash", "cut")[ups % 3]
+            ups += 1
+        if not hype:
+            entry = {"spin": "zoom", "whip": "flash", "glitch": "flash"}.get(entry, entry)
+        if i > 0 and i + 1 in over:
+            entry = over[i + 1]
+        down_hit = kind == "hit" and it["down"]
+        flash = 0.9 if kind == "drop" else 0.35 if down_hit else 0.12 if kind == "hit" else 0.0
+        if entry == "flash":
+            flash = max(flash, 0.6)
+        shake = 34 if kind == "drop" else 14 if down_hit else 0
+        rgb = 18 if kind == "drop" else 8 if down_hit else 0
+        if not hype:
+            flash, shake, rgb = flash * 0.5, shake * 0.4, rgb * 0.4
+        it.update(profile=prof, move=move, amt=amt, entry=entry, tdir=1 if i % 2 else -1,
+                  flash=flash, shake=shake, rgb=rgb, handheld=hype and kind in ("drop", "hit"),
+                  bloom_kick=0.5 if kind == "drop" else 0.0)
+    for i, it in enumerate(items):  # each cut's exit continues the next cut's entry motion
+        nxt = items[i + 1] if i + 1 < len(items) else None
+        it["exit"] = nxt["entry"] if nxt and nxt["entry"] in ("zoom", "spin", "whip") else "none"
+        it["xdir"] = nxt["tdir"] if nxt else 1
 
 
-def title_layer(text: str, ow: int, oh: int):
-    size = int(ow * (0.12 if ow < oh else 0.075))
-    font = find_font(size)
-    while font.getlength(text) > ow * 0.9 and size > 20:
-        size = int(size * 0.9)
-        font = find_font(size)
-    stroke = max(3, size // 14)
-    l, t, r, b = font.getbbox(text, stroke_width=stroke)
-    im = Image.new("RGBA", (ow, b - t + 2 * stroke + 8), (0, 0, 0, 0))
-    ImageDraw.Draw(im).text(((ow - (r - l)) / 2 - l, stroke + 4 - t), text, font=font, fill=(255, 255, 255, 255),
-                            stroke_width=stroke, stroke_fill=(0, 0, 0, 255))
-    arr = np.asarray(im).astype(np.float32)
-    y = int(oh * (0.68 if ow < oh else 0.72))
-    return arr[..., :3], arr[..., 3:] / 255.0, y
+def place_windows(items: list[dict], byid: dict, fps: int) -> None:
+    """Fit each cut's speed ramp into its shot: how much source it plays and where it starts."""
+    for it in items:
+        s = byid[it["shot"]]
+        n = it["f1"] - it["f0"]
+        need = float(fx.remap_times(it["profile"], n, fps)[-1])
+        usable = s["end"] - s["start"] - 2 * MARGIN
+        scale = min(1.0, usable / need) if need > 0 else 1.0
+        src_len = need * scale
+        centre = it["src_start"] + it["dur"] * it["speed"] / 2
+        lo, hi = s["start"] + MARGIN, s["end"] - MARGIN - src_len
+        it["src_start"] = round(min(max(centre - src_len / 2, lo), max(lo, hi)), 3)
+        it["pscale"] = scale
+        it["speed"] = round(src_len / it["dur"], 4)
 
 
-def decode_segment(clip: dict, item: dict, out_wh: tuple[int, int], fps: int, grade: str, log):
-    ow, oh = out_wh
-    bw, bh = even(ow * OVERSIZE), even(oh * OVERSIZE)
-    ar = bw / bh
-    focus = item["focus"] if item["focus"] is not None else 0.5
-    vf = (f"setpts=(PTS-STARTPTS)/{item['speed']:.5f},fps={fps},"
-          f"crop=w='trunc(min(iw\\,ih*{ar:.6f})/2)*2':h='trunc(min(ih\\,iw/{ar:.6f})/2)*2':"
-          f"x='max(0\\,min(iw-ow\\,{focus:.4f}*iw-ow/2))':y='(ih-oh)/2',"
-          f"scale={bw}:{bh}:flags=lanczos,setsar=1")
-    if GRADES[grade]:
-        vf += "," + GRADES[grade]
-    n = item["f1"] - item["f0"]
-    cmd = ["ffmpeg", "-v", "error", "-ss", f"{item['src_start']:.3f}", "-i", clip["path"], "-an", "-vf", vf,
-           "-frames:v", str(n), "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=log)
-    size = bw * bh * 3
-    last = None
-    for _ in range(n):
-        buf = proc.stdout.read(size) if proc.stdout else b""
-        if len(buf) == size:
-            last = np.frombuffer(buf, np.uint8).reshape(bh, bw, 3)
-        yield last if last is not None else np.zeros((bh, bw, 3), np.uint8)
-    if proc.stdout:
-        proc.stdout.close()
-    proc.wait()
+def camera_at(it: dict, t: float, out_wh: tuple, base_wh: tuple) -> dict:
+    """Where the virtual camera is at time t (s) inside a cut: zoom, rotation (degrees), shift (pixels)."""
+    ow, _ = out_wh
+    dur = it["dur"]
+    p = fx.clamp01(t / dur)
+    d = it["tdir"]
+    sc = ow / 1080
+    z, rot, tx, ty = 1.0, 0.0, 0.0, 0.0
+    mv, amt = it["move"], it["amt"]
+    if mv == "push":
+        z = 1 + amt * fx.smooth(p)
+    elif mv == "push_fast":
+        z = 1 + amt * fx.ease_in(p)
+    elif mv == "punch":
+        z = 1 + amt * (1 - fx.ease_out(t / 0.32)) + 0.04 * p
+    elif mv == "pull":
+        z = 1 + amt * (1 - fx.smooth(p))
+    elif mv == "tilt":
+        rot, z = d * (-4.5 + 9 * fx.smooth(p)), 1.04
+    elif mv == "drift":
+        tx, z = d * ow * (-0.05 + 0.1 * fx.smooth(p)), 1.05
+    tt = max(t, 0.0)
+    amp = it["shake"] * sc * math.exp(-tt / 0.16)
+    tx += amp * math.sin(2 * math.pi * 19 * tt)
+    ty += amp * math.cos(2 * math.pi * 15 * tt)
+    if it["handheld"]:
+        g = it["t0"] + t
+        tx += 5 * sc * (0.6 * math.sin(2 * math.pi * 1.3 * g) + 0.4 * math.sin(2 * math.pi * 3.1 * g + 1))
+        ty += 5 * sc * (0.6 * math.sin(2 * math.pi * 1.7 * g + 2) + 0.4 * math.sin(2 * math.pi * 2.6 * g))
+    z = max(z, fx.cover_zoom(rot, tx, ty, base_wh, out_wh))  # never show past the frame edge
+    ent, ex, rem = it["entry"], it["exit"], dur - t
+    if ent == "zoom":
+        z *= 1 + 0.6 * (1 - fx.ease_out(t / 0.2))
+    elif ent == "spin":
+        k = 1 - fx.ease_out(t / 0.22)
+        rot += -d * 36 * k
+        z *= 1 + 0.25 * k
+    elif ent == "whip":
+        tx += -d * ow * 0.9 * (1 - fx.ease_out(t / 0.17))
+    if ex == "zoom":
+        z *= 1 + 0.55 * fx.ease_in(1 - rem / 0.13)
+    elif ex == "spin":
+        k = fx.ease_in(1 - rem / 0.13)
+        rot += it["xdir"] * 36 * k
+        z *= 1 + 0.2 * k
+    elif ex == "whip":
+        tx += it["xdir"] * ow * 0.9 * fx.ease_in(1 - rem / 0.12)
+    return {"z": z, "rot": rot, "tx": tx, "ty": ty}
 
 
-def render(work: Path, plan_path: Path | None, out: Path, style: str, grade: str, fps: int,
+def accents_at(it: dict, t: float, first: bool) -> dict:
+    dur = it["dur"]
+    tt = max(t, 0.0)
+    flash = it["flash"] * math.exp(-tt / 0.07)
+    rgb = it["rgb"] * math.exp(-tt / 0.12)
+    if it["entry"] in ("spin", "zoom", "whip"):
+        rgb = max(rgb, 10 * (1 - fx.clamp01(t / 0.15)))
+    if it["exit"] in ("spin", "zoom", "whip"):
+        rgb = max(rgb, 10 * fx.clamp01(1 - (dur - t) / 0.1))
+    g = max(0.0, 1 - t / 0.25) if it["entry"] == "glitch" else 0.0
+    if it["kind"] == "ramp":  # white-out building into the drop
+        flash = max(flash, 0.65 * fx.clamp01((t - (dur - 0.15)) / 0.15))
+    dark = 1 - fx.clamp01(t / 0.12) if first else 0.0
+    if it["kind"] == "outro":
+        dark = max(dark, fx.clamp01((t - (dur - 0.5)) / 0.5))
+    bloom = 0.22 + it["bloom_kick"] * math.exp(-tt / 0.25)
+    return {"flash": flash, "rgb": rgb, "glitch": g, "dark": dark, "bloom": bloom}
+
+
+class SourceReader:
+    """Streams one cut's source frames (cropped, scaled and graded by ffmpeg) at the clip's own frame rate."""
+
+    def __init__(self, clip: dict, it: dict, base_wh: tuple, grade: str, src_fps: float, seconds: float, log):
+        bw, bh = base_wh
+        ar = bw / bh
+        focus = it["focus"] if it["focus"] is not None else 0.5
+        vf = (f"fps={src_fps:.4f},"
+              f"crop=w='trunc(min(iw\\,ih*{ar:.6f})/2)*2':h='trunc(min(ih\\,iw/{ar:.6f})/2)*2':"
+              f"x='max(0\\,min(iw-ow\\,{focus:.4f}*iw-ow/2))':y='(ih-oh)/2',"
+              f"scale={bw}:{bh}:flags=lanczos,setsar=1")
+        if GRADES[grade]:
+            vf += "," + GRADES[grade]
+        cmd = ["ffmpeg", "-v", "error", "-ss", f"{it['src_start']:.3f}", "-i", clip["path"], "-t", f"{seconds:.3f}",
+               "-an", "-vf", vf, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"]
+        self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=log)
+        self.size, self.shape = bw * bh * 3, (bh, bw, 3)
+        self.frames: dict[int, np.ndarray] = {}
+        self.next = 0
+        self.last = None
+
+    def get(self, i: int) -> np.ndarray:
+        while self.next <= i:
+            buf = self.proc.stdout.read(self.size) if self.proc.stdout else b""
+            if len(buf) < self.size:
+                break
+            self.last = np.frombuffer(buf, np.uint8).reshape(self.shape)
+            self.frames[self.next] = self.last
+            self.next += 1
+        for k in [k for k in self.frames if k < i - 8]:
+            del self.frames[k]
+        if i in self.frames:
+            return self.frames[i]
+        return self.last if self.last is not None else np.zeros(self.shape, np.uint8)
+
+    def close(self) -> None:
+        if self.proc.stdout:
+            self.proc.stdout.close()
+        self.proc.wait()
+
+
+def render(work: Path, plan_path: Path | None, out: Path, style: str, grade: str, fps: int | None,
            title: str | None, fmt: str | None, crf: int = 19, quiet: bool = False) -> dict:
     need_tools()
     say = (lambda *a: None) if quiet else print
@@ -789,21 +949,27 @@ def render(work: Path, plan_path: Path | None, out: Path, style: str, grade: str
         raise EditError(f"run 'analyze' first: {ap} not found")
     A = json.loads(ap.read_text())
     fmt = fmt or A["format"]
-    if fmt not in FORMATS or style not in ("hype", "smooth") or grade not in GRADES or fps not in (24, 30, 60):
+    if fmt not in FORMATS or style not in ("hype", "smooth") or grade not in GRADES or fps not in (None, 24, 30, 60):
         raise EditError("bad --format/--style/--grade/--fps value")
     ow, oh = FORMATS[fmt]
     song, clips, shots = A["song"], A["clips"], A["shots"]
     plan = load_plan(plan_path, shots)
     if title:
-        plan["title"] = "".join(ch for ch in title if ch.isprintable()).strip()[:40] or None
+        plan["title"] = clean_text(title, 40) or None
+    if fps is None:  # match smooth (twixtor / 60 fps) footage, otherwise 30
+        fps = 60 if clips and min(c.get("fps") or 0 for c in clips) >= 50 else 30
     slots = build_slots(song, style, fps)
     items = assign_shots(slots, shots, plan)
     byid = {s["id"]: s for s in shots}
-    for it in items:  # focus for this output shape unless the plan set one
+    for it in items:
         if it["focus"] is None:
             c = clips[it["clip"]]
             it["focus"] = focus_x(byid[it["shot"]]["col"], crop_frac_for(c["width"], c["height"], ow, oh))
+        it["t0"] = it["f0"] / fps
+    design_effects(items, style, plan)
+    place_windows(items, byid, fps)
 
+    bw, bh = even(ow * OVERSIZE), even(oh * OVERSIZE)
     L = song["duration"]
     total_frames = int(round(L * fps))
     out = out.resolve()
@@ -817,27 +983,53 @@ def render(work: Path, plan_path: Path | None, out: Path, style: str, grade: str
          "-c:v", "libx264", "-preset", "medium", "-crf", str(crf), "-pix_fmt", "yuv420p",
          "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", str(tmp)],
         stdin=subprocess.PIPE, stderr=log)
-    scale = ow / 1080
-    tl = title_layer(plan["title"], ow, oh) if plan.get("title") else None
+    text = fx.KineticText((ow, oh), plan.get("accent", (90, 200, 255)))
+    grain = fx.Grain(ow, oh)
+    lyrics, captions = plan.get("lyrics", []), plan.get("captions", {})
+    title_text = plan.get("title")
     title_slot = 0 if plan.get("title_at") == "start" else len(items) - 1
+    beats = np.asarray(song["beats"])
     written = 0
     say(f"rendering {len(items)} cuts, {L:.1f}s at {fps} fps ...")
     try:
         for si, it in enumerate(items):
-            for k, base in enumerate(decode_segment(clips[it["clip"]], it, (ow, oh), fps, grade, log)):
-                frame = apply_fx(base, fx_at(it, k, fps, style, si == 0), ow, oh, scale)
-                if tl is not None and si == title_slot:
-                    rgb, alpha, y = tl
-                    a = alpha * min(1.0, k / (0.3 * fps))
-                    fx = fx_at(it, k, fps, style, si == 0)
-                    if fx["dark"] > 0:
-                        a = a * (1 - fx["dark"])
-                    h = min(rgb.shape[0], oh - y)
-                    region = frame[y:y + h].astype(np.float32)
+            clip = clips[it["clip"]]
+            src_fps = clip["fps"] if (clip.get("fps") or 0) >= 1 else 30.0
+            n = it["f1"] - it["f0"]
+            times = fx.remap_times(it["profile"], n, fps, it["pscale"])
+            ia, ib = times[:-1] * src_fps, times[1:] * src_fps
+            reader = SourceReader(clip, it, (bw, bh), grade, src_fps, float(times[-1]) + 4 / src_fps + 0.05, log)
+            cam_fn = lambda tt, it=it: camera_at(it, tt, (ow, oh), (bw, bh))  # noqa: E731
+            cap = captions.get(it["shot"])
+            for k in range(n):
+                a, b = ia[k], ib[k]
+                if b - a > 1.5:  # fast-forward: blend the skipped frames (natural motion blur)
+                    idxs = range(int(a), int(a) + min(5, max(2, int(round(b - a)))))
+                else:
+                    idxs = [int(round(a))]
+                base = fx.blend_frames([reader.get(i) for i in idxs])
+                t = k / fps
+                frame = fx.shoot(base, cam_fn, t, fps, (ow, oh))
+                if not frame.flags.writeable:
                     frame = frame.copy()
-                    frame[y:y + h] = (region * (1 - a[:h]) + rgb[:h] * a[:h]).astype(np.uint8)
+                tg = it["t0"] + t
+                j = int(np.searchsorted(beats, tg, side="right")) - 1
+                kick = math.exp(-(tg - beats[j]) / 0.08) if j >= 0 else 0.0
+                if lyrics:
+                    frame = text.draw_lyrics(frame, lyrics, tg, kick)
+                if cap:
+                    frame = text.draw_caption(frame, cap, t, it["dur"])
+                if title_text and si == title_slot:
+                    frame = text.draw_caption(frame, title_text, t, 1e9, y_frac=0.70)
+                acc = accents_at(it, t, si == 0)
+                frame = fx.rgb_split(frame, int(acc["rgb"] * ow / 1080))
+                frame = fx.glitch(frame, acc["glitch"], seed=it["f0"] + k)
+                frame = fx.flash_dark(frame, acc["flash"], acc["dark"])
+                frame = fx.bloom(frame, acc["bloom"])
+                frame = grain.apply(frame)
                 enc.stdin.write(np.ascontiguousarray(frame).tobytes())
                 written += 1
+            reader.close()
         enc.stdin.close()
     except BrokenPipeError:
         pass
@@ -858,10 +1050,11 @@ def render(work: Path, plan_path: Path | None, out: Path, style: str, grade: str
     log.close()
 
     review = review_sheet(work, out, items, fps, (ow, oh))
+    keys = ("kind", "f0", "f1", "shot", "clip", "src_start", "speed", "focus", "move", "entry", "exit")
     edit = {"output": str(out), "size_mb": round(out.stat().st_size / 2**20, 2), "duration": L, "fps": fps,
             "format": fmt, "style": style, "grade": grade, "bpm": song["bpm"], "song_start": song["start"],
             "title": plan.get("title"), "review_sheet": review.name,
-            "cuts": [{k: it[k] for k in ("kind", "f0", "f1", "shot", "clip", "src_start", "speed", "focus")} for it in items]}
+            "cuts": [{**{k: it[k] for k in keys}, "ramp": list(it["profile"])} for it in items]}
     (work / "edit.json").write_text(json.dumps(edit, indent=1))
     say(f"done: {out} ({edit['size_mb']} MB). Review sheet: {review}")
     return edit
@@ -889,6 +1082,52 @@ def review_sheet(work: Path, video: Path, items: list[dict], fps: int, out_wh: t
     return p
 
 
+def change_song(work: Path, song: str, length: float, song_start: float | None) -> dict:
+    ap = work / "analysis.json"
+    if not ap.is_file():
+        raise EditError(f"run 'analyze' first: {ap} not found")
+    if not 3 <= length <= 180:
+        raise EditError("--length must be between 3 and 180 seconds")
+    path = Path(song).resolve()
+    if not path.is_file():
+        raise EditError(f"song not found: {song}")
+    A = json.loads(ap.read_text())
+    A["song"] = analyze_song(path, length, song_start)
+    ap.write_text(json.dumps(A, indent=1))
+    s = A["song"]
+    drop = f"drop at {s['drop']:.2f}s" if s["drop"] is not None else "no clear drop"
+    print(f"{s['bpm']:.1f} BPM, using {s['start']:.2f}s to {s['start'] + s['duration']:.2f}s, {drop}")
+    return s
+
+
+def time_lyrics(work: Path, model_size: str, language: str | None) -> list[dict]:
+    """Transcribe the part of the song the edit uses, with a start time for every word -> lyrics.json."""
+    ap = work / "analysis.json"
+    if not ap.is_file():
+        raise EditError(f"run 'analyze' first: {ap} not found")
+    try:
+        from faster_whisper import WhisperModel
+    except ImportError:
+        raise EditError("lyrics needs faster-whisper: python3 -m pip install --user faster-whisper") from None
+    song = json.loads(ap.read_text())["song"]
+    raw = run(["ffmpeg", "-v", "error", "-ss", f"{song['start']:.3f}", "-t", f"{song['duration']:.3f}",
+               "-i", song["path"], "-vn", "-ac", "1", "-ar", "16000", "-f", "f32le", "-"])
+    audio = np.frombuffer(raw, np.float32).copy()  # pass samples, not a path (avoids PyAV version issues)
+    model = WhisperModel(model_size, device="cpu", compute_type="int8")
+    segs, _ = model.transcribe(audio, word_timestamps=True, language=language, beam_size=5, vad_filter=False)
+    lines = []
+    for s in segs:
+        words = [(round(w.start, 3), w.word.strip()) for w in (s.words or []) if w.word.strip()]
+        if words:
+            lines.append({"text": " ".join(w for _, w in words).upper(), "start": round(words[0][0], 3),
+                          "end": round(max(s.end, words[-1][0] + 0.2), 3), "times": [t for t, _ in words]})
+    (work / "lyrics.json").write_text(json.dumps(lines, indent=1))
+    for ln in lines:
+        print(f"[{ln['start']:5.2f}-{ln['end']:5.2f}] {ln['text']}")
+    print(f"wrote {work / 'lyrics.json'}: copy the lines into plan.json as \"lyrics\" (fix spelling first)")
+    return lines
+
+
 # ----------------------------------------------------------------------------- CLI
 
 def main(argv: list[str] | None = None) -> int:
@@ -909,7 +1148,8 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--out", type=Path, default=None, help="output MP4 (default <work>/edit.mp4)")
         p.add_argument("--style", choices=["hype", "smooth"], default="hype")
         p.add_argument("--grade", choices=sorted(GRADES), default="punchy")
-        p.add_argument("--fps", type=int, choices=[24, 30, 60], default=30)
+        p.add_argument("--fps", type=int, choices=[24, 30, 60], default=None,
+                       help="default: 60 for smooth 50+ fps footage (twixtor clips), else 30")
         p.add_argument("--title", default=None, help="text shown on the last shot, e.g. 'GOJO SATORU'")
         p.add_argument("--crf", type=int, default=19)
 
@@ -924,9 +1164,24 @@ def main(argv: list[str] | None = None) -> int:
     pu.add_argument("--work", type=Path, required=True)
     add_analyze(pu)
     add_render(pu, with_plan=False)
+    ps = sub.add_parser("song", help="switch to another song (or part of it) without rescanning the clips")
+    ps.add_argument("--work", type=Path, required=True)
+    ps.add_argument("--song", required=True)
+    ps.add_argument("--length", type=float, default=20.0)
+    ps.add_argument("--song-start", type=float, default=None)
+    pl = sub.add_parser("lyrics", help="time the song's words with Whisper (needs: pip install faster-whisper)")
+    pl.add_argument("--work", type=Path, required=True)
+    pl.add_argument("--model", default="small", help="Whisper model size (tiny/base/small/medium)")
+    pl.add_argument("--language", default=None, help="language code, e.g. en (default: detect)")
 
     a = ap.parse_args(argv)
     try:
+        if a.cmd == "lyrics":
+            time_lyrics(a.work, a.model, a.language)
+            return 0
+        if a.cmd == "song":
+            change_song(a.work, a.song, a.length, a.song_start)
+            return 0
         if a.cmd in ("analyze", "auto"):
             analyze(a.clips, a.song, a.work, a.length, a.song_start, a.format, a.max_shots)
         if a.cmd in ("render", "auto"):
