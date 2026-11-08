@@ -847,9 +847,15 @@ class JSlot extends Button:
 			var tint := Color.WHITE
 			if kind in ["lodger", "guardian", "mini"]:
 				p.y = size.y - _tex.get_height() - 2.0   # creatures stand on the bottom of the cell
+				if p.y < 1.0:
+					p.y = 1.0   # a tall one shows from its head down; the cell clips its feet
 				if e["known"] and kind != "mini":
 					tint = Enemy.DEFS.get(e["id"], {}).get("tint", Color.WHITE)
-			draw_texture(_tex, p, tint)
+			# QA-12: only the part inside the cell is drawn (a tall portrait never spills over its
+			# neighbour); the selection ring may still sit 1 px outside
+			var vis := Rect2(p, _tex.get_size()).intersection(Rect2(Vector2.ZERO, size))
+			if vis.size.x > 0.0 and vis.size.y > 0.0:
+				draw_texture_rect_region(_tex, vis, Rect2(vis.position - p, vis.size), tint)
 		if j.sel == idx:
 			draw_style_box(UI.focus_box(), r)
 		if e.get("new_key", "") != "" and Records.is_new(e["new_key"]):
