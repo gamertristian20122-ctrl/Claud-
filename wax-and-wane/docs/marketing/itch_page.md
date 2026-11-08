@@ -28,7 +28,7 @@ itch.io can go live the same day you upload, so it's where the first sales come 
 | Inputs | Keyboard, Mouse, Xbox controller, Playstation controller, Touchscreen |
 | Average session | About a half-hour (a run takes about 5 to 20 minutes) |
 | Languages | English |
-| Accessibility | Configurable controls (touch sticks, swap sticks, aim assist) |
+| Accessibility | Leave empty: the touch sticks can be swapped and aim assist turned on, but keys and buttons can't be remapped yet |
 | Community | Comments |
 | AI generation disclosure | **Yes.** Tick **Graphics**, **Sound**, **Text** and **Code** (see the note below) |
 | Privacy policy | Paste the link from `PRIVACY.md` into the description (section 3 has the line) |
