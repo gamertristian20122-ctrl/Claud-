@@ -387,14 +387,23 @@ def keep_pad():
 def wax_time():
     """A candle = a clock: wax is time."""
     cv = Chalk(48, 30, 41)
-    # the candle
-    x = 8
-    cv.ember(x + 3, 6)
-    cv.dot(x + 3, 7, WARM)                            # the wick
-    cv.rrect(x, 8, 7, 14, WARM)
-    cv.line(x + 2, 10, x + 2, 12, WARM, grain=False)   # a drip
-    cv.line(x - 2, 21, x + 8, 21, WARM, grain=False)   # the dish
-    cv.text(x + 13, 13, "=")
+    # Tallow (2.0 look): a chubby gumdrop with a drippy lip, dot eyes, stub arms, in his dish
+    x = 11
+    cv.ember(x, 6)
+    cv.dot(x, 7, WARM)                                  # the wick
+    cv.rrect(x - 6, 8, 13, 11, WARM)                    # the body
+    cv.line(x - 4, 9, x - 4, 11, WARM, grain=False)     # wax drips under the lip ...
+    cv.line(x + 3, 9, x + 3, 10, WARM, grain=False)
+    cv.dot(x - 7, 10, WARM)                             # ... and a tear stuck on his side
+    cv.dot(x - 7, 11, WARM)
+    for ex in (x - 3, x + 2):                           # the eyes
+        cv.dot(ex, 13, WARM)
+        cv.dot(ex, 14, WARM)
+    cv.dot(x - 8, 15, WARM)                             # stub arms
+    cv.dot(x + 8, 15, WARM)
+    cv.line(x - 9, 20, x + 9, 20, WARM, grain=False)    # the dish
+    cv.line(x - 7, 21, x + 7, 21, WARM, grain=False)
+    cv.text(x + 12, 13, "=")
     # the clock: 12 at the top, the little hand on two
     cx, cy = 35, 14
     cv.circle(cx, cy, 8, WARM, gap=(222, 232))
