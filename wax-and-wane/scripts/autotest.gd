@@ -44,6 +44,8 @@ func _ready() -> void:
 			Controls.set_device(Controls.TOUCH)   # the main tour shows the phone HUD
 	if args.has("audiotest"):
 		mode = "audiotest"
+	if args.has("designcheck"):   # design pass: latency, share text, floor-1 layouts (DesignCheck)
+		mode = "designcheck"
 	if args.has("bench"):
 		mode = "bench"
 	if args.has("shots-store") or args.has("keyart"):
@@ -65,6 +67,9 @@ func _ready() -> void:
 		_tour()
 	elif mode == "audiotest":
 		add_child(load("res://scripts/audio_check.gd").new())
+	elif mode == "designcheck":
+		await DesignCheck.run(self)
+		get_tree().quit()
 	elif mode == "bench":
 		_bench()
 	else:
@@ -181,7 +186,11 @@ func _process(dt: float) -> void:
 		print("[diag]    ", " | ".join(parts))
 		var src: Array = _diag_src.keys()
 		src.sort_custom(func(a, b): return _diag_src[a] > _diag_src[b])
-		print("[diag]    hit by ", src.slice(0, 6).map(func(k): return "%s %d" % [k, _diag_src[k]]))
+		print("[diag]    hit by ", src.slice(0, 8).map(func(k): return "%s %d" % [k, _diag_src[k]]))
+		if _diag_dark[0] > 0:
+			print("[diag]    shot hits %d: from beyond half the light %d, beyond the light %d, mean distance %.0f px" % [
+				_diag_dark[0], _diag_dark[1], _diag_dark[2], _diag_dark[3] / _diag_dark[0]])
+		_diag_dark = [0, 0, 0, 0.0]
 		_diag_src = {}
 		_diag = {}
 		_diag_wax = -1.0
@@ -202,7 +211,7 @@ func _process(dt: float) -> void:
 
 ## Called by the world every physics frame: returns [move, aim] or [] to leave input alone.
 func drive(w: Node) -> Array:
-	if (mode == "tour" or mode == "audiotest") and not args.has("drive"):
+	if (mode == "tour" or mode == "audiotest" or mode == "designcheck") and not args.has("drive"):
 		return []
 	var p: Player = w.player
 	if args.has("god") and p:
@@ -342,6 +351,43 @@ func _hit_source(w: Node, p: Player) -> String:
 	return "shot or hazard"
 
 
+## Design pass: every enemy shot's origin, so a hit can say how far (and from how deep in the dark)
+## the shot came. id -> [origin, last position]; _diag_dark = [shot hits, from beyond half the light
+## radius, from beyond the light radius, sum of distances, hits by an unseen (unlit) shooter].
+var _shot_from := {}
+var _diag_dark := [0, 0, 0, 0.0]
+
+
+func _diag_shot_origin(w: Node, p: Player) -> float:
+	var at: Vector2 = p.global_position + Vector2(0, -8)
+	var best := -1.0
+	var bd := 18.0 * 18.0
+	for id in _shot_from:
+		var rec: Array = _shot_from[id]
+		var o = instance_from_id(id)
+		var gone: bool = o == null or not is_instance_valid(o) or o._dead
+		if gone and (rec[1] as Vector2).distance_squared_to(at) < bd:
+			bd = (rec[1] as Vector2).distance_squared_to(at)
+			best = (rec[0] as Vector2).distance_to(p.global_position)
+	return best
+
+
+func _diag_track_shots(w: Node) -> void:
+	var seen := {}
+	for sh in w.enemy_shots:
+		if not is_instance_valid(sh) or sh._dead:
+			continue
+		var id: int = sh.get_instance_id()
+		seen[id] = true
+		if _shot_from.has(id):
+			_shot_from[id][1] = sh.global_position
+		else:
+			_shot_from[id] = [sh.global_position, sh.global_position]
+	for id in _shot_from.keys():
+		if not seen.has(id):
+			_shot_from.erase(id)
+
+
 func _diag_tick(w: Node, p: Player) -> void:
 	if p == null or p.dead or mode != "playtest":
 		return
@@ -352,9 +398,21 @@ func _diag_tick(w: Node, p: Player) -> void:
 		if dw < -0.5:
 			d[1] += 1
 			d[2] += -dw
-			_diag_src[_hit_source(w, p)] = int(_diag_src.get(_hit_source(w, p), 0)) + 1
+			var src := _hit_source(w, p)
+			if src == "shot or hazard" and w.has_meta("last_hit") and Engine.get_physics_frames() - int(w.get_meta("last_hit_frame", -99)) <= 2:
+				src = "via " + str(w.get_meta("last_hit"))   # Records' blame: the shooter or the hazard
+			var od := _diag_shot_origin(w, p)
+			if od >= 0.0:
+				var lr: float = p.light.texture_scale * 128.0 if p.light else 160.0
+				_diag_dark[0] += 1
+				_diag_dark[1] += 1 if od > lr * 0.5 else 0
+				_diag_dark[2] += 1 if od > lr else 0
+				_diag_dark[3] += od
+				src = "shot(" + src.replace("via ", "") + ")"
+			_diag_src[src] = int(_diag_src.get(src, 0)) + 1
 		elif dw > 0.05:
 			d[3] += dw
+	_diag_track_shots(w)
 	d[0] += w.get_physics_process_delta_time()
 	_diag[f] = d
 	_diag_floor = f

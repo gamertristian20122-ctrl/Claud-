@@ -127,6 +127,55 @@ static func _add_hollow(res: Dictionary, rng: RandomNumberGenerator) -> void:
 		"visited": false, "seen": false, "pickups": [], "seed": rng.randi(), "dist": 99, "revealed": false}
 
 
+## Layout tags that keep a room "easy": no pits, spikes, fire, oil, webs, choke points or flyers.
+const EASY_TAGS := ["open", "cover", "furniture"]
+
+
+## A template's tier: "hard" (tagged so), "easy" (only EASY_TAGS and 2-3 lodger slots), or "normal".
+static func tier_of_template(t: Dictionary) -> String:
+	var tags: Array = t.get("tags", [])
+	if "hard" in tags:
+		return "hard"
+	for tag in tags:
+		if not tag in EASY_TAGS:
+			return "normal"
+	var n := slots_in("".join(t["rows"]))
+	return "easy" if n >= 2 and n <= 3 else "normal"
+
+
+static func slots_in(s: String) -> int:
+	return s.count("e") + s.count("h") + s.count("f")
+
+
+## The tier of an ordinary room as built: from its template id when the floor stored it, otherwise by
+## matching its grid against every template and its mirror images (DesignCheck reads old layouts too).
+static func tier_of(cell: Dictionary) -> String:
+	if cell.has("tpl"):
+		for t in RoomTemplates.NORMAL:
+			if t["id"] == cell["tpl"]:
+				return tier_of_template(t)
+	var have := _grid_sig(cell["grid"])
+	for t in RoomTemplates.NORMAL:
+		var rows: Array = t["rows"]
+		for flip in 4:
+			var r := rows.duplicate()
+			if flip & 1:
+				for i in r.size():
+					r[i] = (r[i] as String).reverse()
+			if flip & 2:
+				r.reverse()
+			if _grid_sig(RoomTemplates.to_grid(r)) == have:
+				return tier_of_template(t)
+	return "?"
+
+
+static func _grid_sig(g: Array) -> String:
+	var s := ""
+	for row in g:
+		s += "".join(row)
+	return s.replace("Q", "R").replace("Z", "U")
+
+
 static func _neighbours(cells: Dictionary, c: Vector2i) -> int:
 	var n := 0
 	for d in DIRS:
