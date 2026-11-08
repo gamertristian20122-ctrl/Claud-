@@ -1,7 +1,13 @@
 # itch.io page kit: Wax & Wane
 
-itch.io can go live the same day you upload, so it's where the first sales come from.
-**[CHECK]** = depends on v2.0. **[NEED]** = only you know it.
+> **OWNER ONLY: fill these in before you publish (nothing else on this page needs editing)**
+> - Your itch.io username (the page lives at `<username>.itch.io/wax-and-wane`): `________`
+> - Developer name shown on the page: `________`
+> - Public contact email (optional on itch; use the same one as Google Play): `________`
+> - Price: `________` (recommended: **$4.99 minimum**, "let people pay more" ticked; see section 2)
+
+itch.io can go live the same day you upload, so it's where the first sales come from. Every number here matches
+`facts.md`. The upload steps, file by file, are in `POST_IT.md`.
 
 ---
 
@@ -10,54 +16,73 @@ itch.io can go live the same day you upload, so it's where the first sales come 
 | Field | What to enter |
 |---|---|
 | Title | Wax & Wane |
-| Project URL | `[NEED: yourname].itch.io/wax-and-wane` |
+| Project URL | `wax-and-wane` |
 | Short description or tagline | A twin-stick roguelite where your health bar is a burning candle. |
 | Classification | Games |
 | Kind of project | Downloadable |
-| Release status | Released (or "In development" if you upload before v2.0 is final) |
+| Release status | **Released** (2.0.0 is content-complete, with a true ending; not Early Access) |
+| Pricing | Paid, $4.99, "Let people pay more" ticked (section 2) |
 | Genre | Action |
 | Made with | Godot |
-| Platforms (tick by upload) | Windows, Linux, Android [CHECK: Mac only if you build one] |
-| Inputs | Keyboard, Mouse, Xbox controller, Playstation controller, Touchscreen [CHECK pad] |
-| Average session | About a half-hour [NEED: change to match real run times] |
+| Platforms (ticked by the uploads) | Windows, Linux, Android |
+| Inputs | Keyboard, Mouse, Xbox controller, Playstation controller, Touchscreen |
+| Average session | About a half-hour (a run takes about 5 to 20 minutes) |
 | Languages | English |
-| Community | Comments on |
-| AI generation disclosure | Yes. Tick **Graphics**, **Sound** and **Code**. Same reason as the Steam page: the art and music scripts were written by an AI assistant. [CHECK each v2.0 stream's notes] |
+| Accessibility | Leave empty: the touch sticks can be swapped and aim assist turned on, but keys and buttons can't be remapped yet |
+| Community | Comments |
+| AI generation disclosure | **Yes.** Tick **Graphics**, **Sound**, **Text** and **Code** (see the note below) |
+| Privacy policy | Paste the link from `PRIVACY.md` into the description (section 3 has the line) |
+
+**Why each AI box is ticked** (same facts as the Steam disclosure in `steam_store.md` section 6):
+- Graphics: Tallow, the house's own creatures, relics, rooms and effects were drawn by scripts written with
+  Claude (an AI assistant) and checked one by one by the developer. The 0x72 tiles and creatures are hand-drawn.
+- Sound: the trailer's narration is an AI voice (Kokoro TTS), and the sound effects and two jingles were
+  layered or synthesized by AI-written scripts. The music is the human-made Ninja Adventure soundtrack (CC0).
+- Text: the in-game names, lore lines and menus were written with the AI assistant and edited by the developer.
+- Code: the game's code was written with the AI assistant.
 
 **Tags** (itch allows 10):
-`roguelite`, `roguelike`, `twin-stick-shooter`, `pixel-art`, `dungeon-crawler`, `bullet-hell`, `top-down-shooter`, `procedural-generation`, `spooky`, `singleplayer`
+`roguelite`, `roguelike`, `twin-stick-shooter`, `pixel-art`, `dungeon-crawler`, `bullet-hell`, `top-down-shooter`,
+`procedural-generation`, `spooky`, `singleplayer`
 
 **Images**
-- Cover image: 630 x 500 (itch's recommended size). Tallow, the flame and the logo, nothing else.
-- Screenshots: 4 to 6, same picks as the Steam list. Put the low-wax "tiny light circle" shot first.
-- Optional: a GIF of the clock and the shrinking candle as the first screenshot. itch shows GIFs moving.
+- Cover image: `docs/marketing/store_assets/itch/cover_630x500.png` (630 x 500).
+- Screenshots, in this order: `store_assets/screenshots/06_low_wax`, `01_cellar_fight`, `02_boss_fight`,
+  `03_chapel_light`, `04_seance`, `07_treasure` (all 1920 x 1080).
+- First "screenshot": `loop_fight.gif` (itch shows GIFs moving; made by `./tools/make_trailer.sh all`).
+- Trailer: the YouTube link of `trailer_60s.mp4` (the cut that ends on OUT NOW ON ITCH.IO), in the
+  "Gameplay video or trailer" field.
 
 ---
 
-## 2. Pricing
+## 2. Pricing and files
 
 **Recommendation: $4.99 minimum, with "Let people pay more" ticked.**
 
-1. The free demo (below) covers people who want to try first, so the full game doesn't need to be pay-what-you-want.
-2. $4.99 sits a dollar under the planned Steam price. Most itch buyers are on desktop and many of them also use Steam; pricing lower here is fine and rewards early fans.
-3. itch takes 10% by default (you can change the split in your account's seller settings), and the payment processor takes a small fee on top. Expect about $4.00 per sale.
-4. Launch sale: 20% off for the first 7 days ($3.99). itch lets you run sales any time, so use them around devlogs.
+1. $4.99 sits a dollar under the planned Steam price. Most itch buyers are on desktop and many of them also use
+   Steam; pricing lower here is fine and rewards early fans.
+2. itch takes 10% by default (you can change the split in your account's seller settings), and the payment
+   processor takes a small fee on top. Expect about $4.00 per sale.
+3. Launch sale: 20% off for the first 7 days ($3.99). itch lets you run sales any time, so use them around devlogs.
+4. There is **no demo** in 2.0.0, so don't mention one. If you want one later, it has to be built first (a run
+   that ends after the Crypt's guardian with a "get the full game" card, about half a day of work).
 
-**Files to upload**
+**Files to upload** (Edit game > Uploads; each one is a normal browser upload, up to 1 GB each)
 
-| File | Price flag |
-|---|---|
-| `WaxAndWane_v2.0_windows.zip` | paid |
-| `WaxAndWane_v2.0_linux.zip` | paid |
-| `WaxAndWane_v2.0_android.apk` | paid |
-| `WaxAndWane_Demo_windows.zip` | tick "This file is a demo and can be downloaded for free" |
-| `WaxAndWane_Demo_android.apk` | demo, free |
+| File | Size (about) | Tick |
+|---|---|---|
+| `build/WaxAndWane_2.0.0_windows.zip` | 48 MB | Windows |
+| `build/WaxAndWane_2.0.0_linux.zip` | 38 MB | Linux |
+| `build/WaxAndWane_v2.0.0.apk` | 38 MB | Android |
+| `build/WaxAndWane_presskit_2.0.0.zip` (optional) | a few MB | none; set it as "free" (press kit, not the game) |
 
-Demo scope: the Cellar and the Crypt with one boss each [CHECK what the demo build allows]. Stop the demo after the Crypt boss with a screen that says where to buy the full game.
+Give the uploads these display names: "Windows (64-bit)", "Linux (64-bit)", "Android phone (APK)". If you later
+use the `butler` command-line uploader instead (`tools/upload_itch.sh`), it creates the same three channels.
 
-**Later experiment:** a browser demo on its own free page. Browser games get far more clicks on itch's browse pages. Only do it if the Godot web export runs smoothly on a normal laptop and a phone [CHECK].
-
-**Android note:** Google is rolling out "developer verification" for apps installed from outside the Play Store (Indonesia, Singapore and Thailand from Sept 30, 2026; worldwide in 2027). Once you have a Play Console account, register the app's package name (`com.tallow.waxandwane`) and signing key there, so the itch APK keeps installing on people's phones.
+**Android note:** Google is rolling out "developer verification" for apps installed from outside the Play Store
+(Indonesia, Singapore and Thailand from Sept 30, 2026; worldwide in 2027). Once you have a Play Console account,
+register the app's package name (`com.tallow.waxandwane`) and signing key there, so the itch APK keeps installing
+on people's phones.
 
 ---
 
@@ -65,75 +90,84 @@ Demo scope: the Cellar and the Crypt with one boss each [CHECK what the demo bui
 
 > **A twin-stick roguelite where your health bar is a burning candle.**
 >
-> You are Tallow, the last candle burning in the cellar of an old house, and at midnight the house wakes up. Your wax is your health and your clock. It reads 12:00 AM when you start and 2:00 AM when you're out. Every hit melts more of it. Kills, cleared rooms and wax drippings buy minutes back.
+> You are Tallow, the last candle burning in the cellar of an old house, and at midnight the house wakes up. Your wax is your health and your clock. It reads 12:00 AM when you start and 2:00 AM when you're out: a full candle lasts eight minutes if nothing touches you. Every hit melts more of it. Kills, cleared rooms and wax drippings buy minutes back.
 >
 > As the wax goes, Tallow gets shorter and the light around you shrinks, so a bad run gets darker as it gets harder.
 >
-> **In the full game**
-> - Four floors, rebuilt every run: the Cellar, the Crypt, the Chapel and the Belfry
-> - Around 64 relics [CHECK]. Twin Wick, Sharp Wick and Ember Heart together fire two piercing flames that set everything alight
-> - Candle Rites for collecting sets, Keepsakes you charge by clearing rooms, and the Smoke Altar, where power costs minutes off your candle for the rest of the night
-> - 8 bosses [CHECK], from Old Rot in the Cellar to the Hour Fiend in the Belfry
-> - Four more candles to unlock, a secret Hollow on every floor, and Tonight's Candle: one seeded house a night, the same for everyone
+> **What's in the house**
+> - Four floors, rebuilt every run from 69 hand-made rooms: the Cellar, the Crypt, the Chapel and the Belfry. Be done by 1:00 AM and a secret fifth floor opens: the Clock Tower, and the true ending
+> - 64 relics. Twin Wick, Sharp Wick and Ember Heart together fire two piercing flames that set everything alight
+> - 6 Candle Rites for collecting sets, 8 keepsakes you charge by clearing rooms, and the Smoke Altar, where power costs minutes off your candle for the rest of the night
+> - 35 kinds of lodger, 9 guardians with versus cards and 6 house champions
+> - 5 special rooms: the Seance, the Cracked Mirror, the Music Box, the Study and the Wax Font
+> - 5 more candles to unlock, a secret Hollow on every floor, Tonight's Candle (one seeded house a night, the same for everyone), the Journal and 52 achievements
 >
 > **Which file do I want?**
-> - Windows or Linux: download the zip, unzip it, run the game.
-> - Android: download the .apk on your phone and open it. When your phone asks, allow your browser to install apps.
-> - Not sure yet? Grab the free demo (the Cellar and the Crypt).
+> - Windows: download the Windows zip, unzip it, run `WaxAndWane.exe`. If Windows says "Windows protected your PC", click **More info**, then **Run anyway** (the game isn't code-signed yet; that's all the warning means).
+> - Linux and Steam Deck desktop mode: download the Linux zip, unzip it, run `WaxAndWane.x86_64`.
+> - Android: download the .apk on your phone and open it. When your phone asks, allow your browser to install apps. A newer APK from this page installs over it and keeps your save.
 >
-> **Controls:** keyboard and mouse, a gamepad, or touch with two thumbs on Android.
+> **Controls:** keyboard and mouse, a gamepad, or touch with two thumbs on Android. Save and quit any time.
 >
-> **On Steam soon:** [Wishlist Wax & Wane on Steam](STEAM_LINK)
+> **Privacy:** the game collects no data and never goes online. Policy: https://github.com/gamertristian20122-ctrl/Claud-/blob/ccr-37a74654-pp10xa/wax-and-wane/PRIVACY.md
 >
-> Made by [NEED: your name], one person with an AI coding assistant. Dungeon tiles and creatures by 0x72 (CC0), sound effects by Kenney (CC0). Full credits are in the game.
+> Made by one developer with Claude, an AI assistant (see the AI disclosure). Dungeon tiles and about 20 creatures by 0x72, music by Pixel-boy and AAA (Ninja Adventure), sound effects built from Kenney's packs, all CC0. Full credits and licences are in the game (Title > Credits).
+
+**Add later, when the Steam page is live** (one line under "Controls"):
+
+> **On Steam too:** [Wishlist Wax & Wane on Steam](paste the Steam store link here)
+
+**Add later, when the Play listing is live:**
+
+> **On Google Play:** [Wax & Wane on Google Play](paste the Play link here)
 
 ---
 
 ## 4. Devlog post #1
 
-Post it the day the page goes live (Dashboard > Devlog > New post). Add 2 GIFs: the shrinking candle, and a Kindling streak pouring minutes back.
+Post it the day the page goes live (Dashboard > Devlog > New post). Add `loop_fight.gif`.
 
 **Title:** Your health bar is a candle
 
-**Post type:** Game release (or "Announcement" if it's the demo first)
+**Post type:** Game release
 
-> Wax & Wane is a twin-stick roguelite about Tallow, a small living candle in a haunted house. This first devlog is about the rule the whole game hangs on.
+> Wax & Wane is a twin-stick roguelite about Tallow, a small living candle in a haunted house. It's out today for Windows, Linux and Android. This first devlog is about the rule the whole game hangs on.
 >
 > **The candle is the timer**
 >
-> Your wax is your health, and it's also the clock. The candle in the corner reads 12:00 AM when a run starts and 2:00 AM when you're out. It melts every second: a full candle lasts about nine and a half minutes if nothing ever touches you. Monsters melt it faster. Kills, cleared rooms and drippings put wax back.
+> Your wax is your health, and it's also the clock. The candle in the corner reads 12:00 AM when a run starts and 2:00 AM when you're out. It melts every second: a full candle lasts eight minutes if nothing ever touches you. Monsters melt it faster. Kills, cleared rooms and drippings put wax back.
 >
 > That one rule changes how you play. The clock keeps burning while you hide in a corner, so the only way to stay alive is to go and fight.
 >
 > **Three rules that keep it fair**
 >
-> - **Spilled Wax.** When you take a hit, half the wax you lost splashes onto the floor as warm drops. You have four seconds to grab them back before they cool.
+> - **Spilled Wax.** When you take a hit, about a third of the wax you lost splashes onto the floor as warm drops. You have two and a half seconds to grab them back before they cool.
 > - **Kindling.** Kills less than 2.2 seconds apart chain into a streak. A x3 streak pours a minute back into the candle and x5 gives two. Getting hit douses the streak.
 > - **Guttering.** Once per floor, a hit that would snuff you leaves you hanging on at one minute instead.
 >
 > Tallow also gets shorter as the wax goes, and your light shrinks with it. You can read how a run is going from the size of the candle without looking at the HUD.
 >
-> **What's in 2.0** [CHECK every line against the final build]
+> **What's in 2.0**
 >
-> - Around 64 relics and 32+ kinds of monster
-> - 8 bosses, each with a versus card
-> - Stains that stay on the floor, more sound, decorated rooms with flickering light
-> - Keyboard and mouse, gamepad, save and continue, achievements
-> - Windows and Linux builds next to the Android one
+> - 64 relics, 6 Candle Rites and 8 keepsakes
+> - 35 kinds of lodger, 9 guardians and 6 house champions
+> - 5 special rooms, and a secret fifth floor with its own ending
+> - 6 candles to play, Tonight's Candle, the Journal and 52 achievements
+> - Keyboard and mouse, gamepad and touch; save and continue; Windows, Linux and Android builds
 >
 > **What's next**
 >
-> [NEED: one or two lines on the next update, e.g. a journal, new rooms, balance changes.]
->
-> [NEED: one or two sentences in your own words about why you made this. Readers can tell when a devlog has no person in it.]
+> A Steam page, and small free updates based on what you tell me.
 >
 > **One favour**
 >
-> If you play the demo, tell me in the comments which room got you and what time the clock said. That tells me more about the difficulty than anything else.
->
-> The game is coming to Steam too. Steam emails everyone who [wishlisted it](STEAM_LINK) on launch day, and following here gets you the next devlog.
+> Tell me in the comments which room got you and what time the clock said. That tells me more about the difficulty than anything else.
 
-Devlog rhythm after this: one post a month, each about one thing (a new boss, a relic combo, a balance change with before/after numbers).
+Optional, and only you can write it: one or two sentences in your own words about why you made this, before
+"One favour". Readers can tell when a devlog has a person in it.
+
+Devlog rhythm after this: one post a month, each about one thing (a new boss, a relic combo, a balance change
+with before/after numbers).
 
 ---
 

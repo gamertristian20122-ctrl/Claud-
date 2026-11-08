@@ -16,6 +16,22 @@ current build with one command (bottom of this page). They are not kept in git (
 | `loop_fight.gif` | 6.5 s loop: the fire build melts a full room (game size, 384x216) | 6.5 s | 1.1 MB | GIF, 15 fps | none |
 | `loop_fight.webm` | The same loop, twice the size (768x432) | 6.5 s | 0.9 MB | VP9, 30 fps | none |
 | `trailer_60s.srt`, `short_a_...srt`, `short_c_...srt` | The narration as subtitles, timed to each video | | | | |
+| `trailer_60s_play.mp4` (+ `.srt`) | The trailer ending on GET IT ON GOOGLE PLAY, for the Play listing | same | | | |
+| `trailer_60s_steam.mp4` (+ `.srt`) | The trailer ending on WISHLIST ON STEAM, only once the Steam page is live | same | | | |
+
+### One trailer, three endings (the `CTA` setting)
+The end card's call to action is a setting, so each place gets the right ending from the same footage, with no
+re-recording (`tools/trailer_edit.py`, `CTAS`):
+
+| Command (from `wax-and-wane/`) | End card | Files | Post it on |
+|---|---|---|---|
+| `./tools/make_trailer.sh edit` | OUT NOW ON ITCH.IO (Windows - Linux - Android) | `trailer_60s.mp4`, the shorts, the loop | YouTube, itch.io, TikTok / Shorts / Reels, X, Bluesky, Reddit |
+| `CTA=play ./tools/make_trailer.sh edit --only trailer` | GET IT ON GOOGLE PLAY | `trailer_60s_play.mp4` | a second YouTube upload (unlisted is fine) whose link goes in Play's promo video field |
+| `CTA=steam ./tools/make_trailer.sh edit --only trailer,short_a,short_b,short_c` | WISHLIST ON STEAM | `trailer_60s_steam.mp4`, `short_*_steam.mp4` | the Steam page, and your socials once the Steam page is live |
+| `CTA=none ./tools/make_trailer.sh edit` | no store line | `*_none.mp4` | anywhere a store name doesn't fit |
+
+`edit` needs the recorded footage in `build/trailer_raw/` (made by `./tools/make_trailer.sh all` or `record`).
+`COPY_TO` copies only the default (itch.io) cut; the other cuts stay in `build/videos/`.
 
 `tools/make_trailer.sh check` prints this table again for the current files (lengths, sizes, loudness).
 
@@ -30,22 +46,26 @@ current build with one command (bottom of this page). They are not kept in git (
 6. 0:34 Four versus cards and the Hour Fiend's clock hands. 0:40 A ladder of light, the Clock Tower, the Keeper
    stops time. *"One secret."*
 7. 0:45 1:58 AM, no music, the Hour Fiend on a sliver; the last flame lands. *"Be done by two... or burn out trying."*
-8. 0:50 The title: the logo flickers on. *"Wax and Wane. Light the wick."* End card: **WISHLIST ON STEAM**.
+8. 0:50 The title: the logo flickers on. *"Wax and Wane. Light the wick."* End card: **OUT NOW ON ITCH.IO**
+   (or GET IT ON GOOGLE PLAY / WISHLIST ON STEAM in the other cuts, see above).
 
 Steam starts trailers muted, so the short text cards ("YOUR WAX IS YOUR CLOCK", "64 RELICS THAT STACK",
 "9 GUARDIANS"...) tell the story without sound.
 
 ## Where to post each one
 
-1. **Steam store page** (Steamworks > Store page > Trailers): upload `trailer_60s.mp4`, put it first. In the
-   "About this game" text, add `loop_fight.gif` with "Insert image" (it is 1.1 MB, under Steam's limits).
+1. **Steam store page** (Steamworks > Store page > Trailers), once the Coming Soon page is ready: upload
+   `trailer_60s_steam.mp4`, put it first. In the "About this game" text, add `loop_fight.gif` with "Insert image"
+   (it is 1.1 MB, under Steam's limits).
 2. **YouTube** (normal video, not a Short): upload `trailer_60s.mp4`.
    - Title: `Wax & Wane - Trailer | a roguelite where your health bar is a candle`
    - Description: `You are Tallow, a little living candle. Your wax is your health and your clock: 12:00 AM full,
-     2:00 AM gone. Four floors, one secret. Wishlist on Steam: [STEAM LINK]` and on its own line:
-     `Narration: AI-generated voice (Kokoro TTS).`
+     2:00 AM gone. Four floors, one secret. Out now on itch.io:` followed by your itch.io page link, and on its
+     own line: `Narration: AI-generated voice (Kokoro TTS).` Add the Google Play and Steam links as each goes live.
    - Subtitles: *Subtitles > Add language > English > Upload file > With timing*: `trailer_60s.srt`.
-   - Then paste the YouTube link into Google Play (Store listing > Promo video), the press kit and the itch page.
+   - Then paste the YouTube link into the press kit and the itch page. For Google Play, upload
+     `trailer_60s_play.mp4` to YouTube as well (unlisted is fine, same title and description) and paste that
+     link into Play (Main store listing > Video).
 3. **TikTok, YouTube Shorts and Instagram Reels**: post the same file on all three. One short per day is
    plenty (see the weekly plan in `launch_plan.md`). Use 3 to 5 hashtags, not 20.
 
@@ -55,7 +75,8 @@ Steam starts trailers muted, so the short text cards ("YOUR WAX IS YOUR CLOCK", 
    | B | `Seven fire relics on one little candle. Which one should I add next? #indiegame #roguelite #pixelart #gamedev` |
    | C | `1:58 AM and the Hour Fiend is still standing. Would you have made it? #indiegame #roguelite #pixelart #indiedev` |
 
-   Pin a comment with the Steam link (or put it in your bio). Reply to comments in the first hour.
+   Pin a comment with the itch.io link (later the Steam and Play links), or put it in your bio. Reply to
+   comments in the first hour.
 4. **itch.io page**: embed the YouTube trailer; add `loop_fight.gif` to the screenshots.
 5. **X / Bluesky / Reddit / Discord**: `trailer_60s.mp4` or a short as a video post; `loop_fight.webm` (or the
    GIF) for a quick loop. On X and Bluesky use `#indiedev #gamedev #pixelart #madewithgodot` (and

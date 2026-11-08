@@ -1,0 +1,17 @@
+Wax & Wane
+
+Copyright (c) 2026 the Wax & Wane developer. All rights reserved.
+
+The source code and original art in this folder are shown for reference only. You may read them,
+but you may not copy, modify, publish, sell or redistribute the game, its code or its original art
+(including builds made from this folder) without written permission from the developer.
+
+Third-party assets keep their own licences. They are listed, with each licence text, in
+assets/licenses/ (and in README.md, section "Credits & licences"):
+- 0x72 "16x16 DungeonTileset II": CC0 1.0
+- Kenney fonts and audio packs: CC0 1.0
+- Ninja Adventure Asset Pack (Pixel-boy and AAA), music and some sounds: CC0 1.0
+- Godot Engine: MIT (Engine.get_license_text(); third-party notices in
+  assets/licenses/Godot_third_party_notices.txt)
+
+Videos and streams: you may record, stream and monetise videos of the game without asking.

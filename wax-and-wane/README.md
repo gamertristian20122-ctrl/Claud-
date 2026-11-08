@@ -173,7 +173,13 @@ other. Desktop builds are not code-signed. Bump `version/code` in the "Android" 
 "Android Play").
 
 ## Credits & licences
-Every licence text is in `assets/licenses/`. All third-party assets are CC0 1.0 (public domain) or MIT.
+The game itself: `LICENSE` (all rights reserved; source shown for reference). Privacy policy: `PRIVACY.md`
+(no data collected; also in the game under Title > Credits > Privacy).
+
+Every licence text the game needs is in `assets/licenses/` (shipped inside every build and in the PC zips'
+`licenses/` folder, and shown in the game under Title > Credits > Licences). Every third-party asset in the
+game is CC0 1.0 (public domain); the engine is MIT. The only other licence is Apache-2.0 for the trailer's
+AI narrator, which is not in the game.
 - **Dungeon tiles, the 0x72 creatures and guardians, chests, coins, bombs, flasks**: *16x16 DungeonTileset
   II* by **0x72** (CC0), https://0x72.itch.io/dungeontileset-ii -
   `0x72_DungeonTilesetII_CC0.txt`; how the room art uses it: `CREDITS_rooms.txt`.
@@ -199,15 +205,20 @@ Every licence text is in `assets/licenses/`. All third-party assets are CC0 1.0 
   | True ending and credits | 15 - Credit Theme |
 
   The victory and death jingles are original, synthesized for this game (`tools/make_audio.py`).
-- **Engine**: Godot Engine (MIT), https://godotengine.org - `Godot_MIT.txt`.
+- **Engine**: Godot Engine (MIT), https://godotengine.org - `Godot_MIT.txt`; Godot's own third-party notices
+  (written by the engine: `Engine.get_copyright_info()` / `get_license_info()`) - `Godot_third_party_notices.txt`.
 - **Trailer narration (AI-generated)**: the narrator of the trailer and the shorts is an AI voice made with
   **Kokoro TTS** (*Kokoro-82M* by hexgrad, open weights, Apache-2.0; voice `am_michael`; misaki G2P,
-  Apache-2.0), https://huggingface.co/hexgrad/Kokoro-82M - `Kokoro_TTS_Apache-2.0.txt`. Only the videos
-  use it, not the game. The lines and how to swap in a real voice: `docs/marketing/voice/`.
-- **Original work**: design, code, the hero, the house's own creatures and guardians, the Keeper,
+  Apache-2.0), https://huggingface.co/hexgrad/Kokoro-82M - `docs/marketing/voice/Kokoro_TTS_Apache-2.0.txt`
+  (kept out of the game builds). Only the videos use it, not the game. The lines and how to swap in a real voice: `docs/marketing/voice/`.
+- **Original work**: design, code, the in-game text, Tallow and the other candles, the house's own 15
+  lodgers and 5 guardians (the Wax Mother, the Sexton, the Melted Choir, the Great Pendulum and the Keeper),
   relic and keepsake icons, costumes, effects, rooms, decor, special rooms, the Clock Tower, chalk
-  drawings, UI, logo, app and store icons, and the jingles were made for this game with **Claude**
-  (`tools/art_*.py`, `tools/make_audio.py`), built from and matched to the 0x72 palette.
+  drawings, UI, logo, app and store icons, and the jingles were made for this game by one developer with
+  **Claude** (an AI assistant): the pixel art is drawn by scripts Claude wrote (`tools/art_*.py`,
+  `tools/make_audio.py`), built from and matched to the 0x72 palette, and checked by the developer.
+  The other 20 lodgers and 4 guardians (Old Rot, the Gaoler, the Hollow Warden, the Hour Fiend) use 0x72's
+  sprites. The numbers are counted from the code in `docs/marketing/facts.md`.
 - The free packs were obtained through the curated `series-ai/jam-ready-assets` library, which records
   each pack's licence.
 

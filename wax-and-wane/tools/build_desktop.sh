@@ -23,7 +23,7 @@ chmod +x build/linux/WaxAndWane.x86_64
 for d in build/windows build/linux; do
 	mkdir -p "$d/licenses"
 	cp assets/licenses/*.txt "$d/licenses/"
-	printf 'Wax & Wane %s\n\nA little candle burns through a haunted house before 2 AM.\n\nKeyboard: WASD move, arrow keys shoot (or hold the left mouse button to fire at the cursor),\nE / Space / right mouse bomb, Q keepsake, Esc pause, F11 fullscreen.\nGamepad: left stick move, right stick or ABXY shoot, RB bomb, LB keepsake, Start pause.\n\nSaves live in your user folder (Godot app_userdata / Wax & Wane).\n' "$VER" > "$d/README.txt"
+	printf 'Wax & Wane %s\n\nA little candle burns through a haunted house before 2 AM.\n\nKeyboard: WASD move, arrow keys shoot (or hold the left mouse button to fire at the cursor),\nE / Space / right mouse bomb, Q keepsake, Esc pause, F11 fullscreen.\nGamepad: left stick move, right stick or ABXY shoot, RB bomb, LB keepsake, Start pause.\n\nYour saves: %%APPDATA%%\\WaxAndWane on Windows, ~/.local/share/WaxAndWane on Linux.\n' "$VER" > "$d/README.txt"
 done
 
 rm -f "build/WaxAndWane_${VER}_windows.zip" "build/WaxAndWane_${VER}_linux.zip"

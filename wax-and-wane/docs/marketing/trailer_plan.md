@@ -21,7 +21,7 @@ Everything here uses real gameplay only. No fake UI, no scenes the game can't pr
 
 ## 1. Main trailer: 58 seconds (Steam, itch, Play promo video, YouTube)
 
-Music: one track from the game's own soundtrack, the boss or Belfry theme [CHECK which tracks v2.0 ships]. Cut on its beats. Cue points below assume a steady tempo; shift shots to the nearest downbeat.
+Music: one track from the game's own soundtrack (the CC0 Ninja Adventure tracks the game uses; the finished cut uses the boss and Belfry themes). Cut on its beats. Cue points below assume a steady tempo; shift shots to the nearest downbeat.
 
 | Time | Shot (real gameplay) | Text card / overlay | Music + sound cue |
 |---|---|---|---|
@@ -31,9 +31,9 @@ Music: one track from the game's own soundtrack, the boss or Belfry theme [CHECK
 | 0:13 to 0:19 | Room clears: candelabras light, doors open. Then four 1.5 s cuts, one room from each floor: Cellar, Crypt, Chapel, Belfry. | "Four floors. Midnight to 2 AM." | One cut per beat |
 | 0:19 to 0:29 | Builds. Relic pop-ups (Twin Wick, Will-o'-Wisp, Hot Drip), a Rite banner, then a room filling with seeking, piercing fire. | "Stack relics into builds that shouldn't work" | Build-up from 0:19; melody enters at 0:24 |
 | 0:29 to 0:35 | Smoke Altar: Tallow takes the deal, the top of the wax bar is cut off, then the next room gets wiped. | "Trade minutes off your candle for power" | Low drone under the altar choice; hit at 0:33 |
-| 0:35 to 0:46 | Bosses: two versus cards slam in (Old Rot, one v2.0 boss), then the Hour Fiend's clock hands sweeping the room while Tallow weaves through. | "8 bosses" [CHECK] | Biggest hit of the track on the first versus card at 0:35. Bell toll SFX at 0:41 |
+| 0:35 to 0:46 | Bosses: two versus cards slam in (Old Rot, one v2.0 boss), then the Hour Fiend's clock hands sweeping the room while Tallow weaves through. | "9 GUARDIANS" | Biggest hit of the track on the first versus card at 0:35. Bell toll SFX at 0:41 |
 | 0:46 to 0:51 | Clutch. The candle is Guttering at one minute, the boss has a sliver of health; last shot lands. | (none) | **Music cuts out at 0:46.** Only the flame and footsteps. Final hit at 0:49 brings the whole track back |
-| 0:51 to 0:58 | End card: logo over a lit room. | "Wishlist on Steam" + "Steam, itch.io, Google Play" + release window [NEED] | Track ends on a held note; one clock tick at 0:57 |
+| 0:51 to 0:58 | End card: logo over a lit room. | One call to action per cut (`CTA=itch` OUT NOW ON ITCH.IO, `CTA=play` GET IT ON GOOGLE PLAY, `CTA=steam` WISHLIST ON STEAM; see `videos.md`) | Track ends on a held note; one clock tick at 0:57 |
 
 Rules for the edit:
 - No shot longer than 3 seconds before 0:35.
@@ -58,7 +58,7 @@ Layout for all three: top 400 px for the hook text, gameplay crop in the middle,
 ### Short B: "Every fire relic on one candle" (22 s)
 - **Hook text (0 to 2 s):** "I stacked every fire relic on a candle"
 - **0 to 3 s:** Tallow alone, one weak flame, in a full room. Caption: "Relic 0".
-- **3 to 15 s:** Quick cuts of each pickup with a counter: "1: Twin Wick", "2: Sharp Wick", "3: Ember Heart", "4: Hot Drip", "5: Will-o'-Wisp" [CHECK that these stack this way in the final build].
+- **3 to 15 s:** Quick cuts of each pickup with a counter: "1: Twin Wick", "2: Sharp Wick", "3: Ember Heart", "4: Hot Drip", "5: Will-o'-Wisp" (the finished Short B stacks seven fire relics).
 - **15 to 22 s:** One full-length room where the build melts everything in about 3 seconds.
 - **On-screen end text:** "Which relic should I add next?"
 - **Why it works:** a counter gives people a reason to watch to the end, and the closing question gets comments.
@@ -78,7 +78,7 @@ Posting notes: post the same file to all three apps. Use 3 to 5 hashtags, not 20
 
 1. **"A candle that is also a timer"**: a 10 s explainer with the clock in the corner and nothing else.
 2. **Devlog: how the candle shrinks**: side by side, full wax and one minute left.
-3. **Before/after juice**: the same room in v1.1 and v2.0 [CHECK v2.0 footage].
+3. **Before/after juice**: the same room in v1.1 and 2.0 (v1.1 footage has to be recorded from an old build).
 4. **Tonight's Candle challenge**: "Today's house. Beat my time" with the date on screen. Post daily for a week.
 5. **Near-death clutch compilation**: three Guttering saves in 20 s.
 6. **"Rate this build 1 to 10"**: one ridiculous end-of-run build.
@@ -101,4 +101,4 @@ Posting notes: post the same file to all three apps. Use 3 to 5 hashtags, not 20
 
 ## Sources
 - Pixel scaling numbers come from the game's own geometry (`DESIGN.md`: 384 x 216 viewport, 272 x 192 rooms).
-- Mechanic numbers (Kindling, Guttering, 9.5-minute candle) come from `README.md` and `scripts/game/world.gd`.
+- Mechanic numbers (Kindling, Guttering, the 8-minute candle) come from `facts.md` (made from `scripts/game/world.gd`).

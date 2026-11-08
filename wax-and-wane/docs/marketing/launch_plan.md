@@ -22,12 +22,12 @@ Take-home per sale (estimates after store cut, tax and payment fees):
 | Store | Price | You keep (about) |
 |---|---|---|
 | itch.io | $4.99 | $4.00 |
-| Google Play unlock | $3.99 | $2.70 to $3.10 |
+| Google Play (paid app) | $2.99 | $2.10 to $2.40 |
 | Steam | $5.99 ($4.79 launch week) | $3.50 ($2.90 launch week) |
 
-**Month one, $100:** about 15 itch.io sales + 15 Play unlocks.
+**Month one, $100:** about 15 itch.io sales + 20 Google Play sales.
 
-**Year one, $1,000:** about 200 Steam sales + 50 itch.io + 60 Play.
+**Year one, $1,000:** about 200 Steam sales + 50 itch.io + 80 Play.
 
 **Steam wishlists target: 1,000 by launch day.**
 - Recent data (Chris Zukowski, games released 2023 to 2025): on average about 0.22 sales per wishlist in the first month and 0.70 in the first year.
@@ -46,12 +46,12 @@ If 1 viewer in 100 taps through and 1 in 20 of those buys, 30 sales need about 6
 2. Pay the **Steam Direct** fee: $100 per game, paid back once the game earns $1,000 on Steam.
 3. Fill in Steam's tax and bank forms today. Valve says they take 15 to 30 days.
 4. Text 20 people with Android phones and ask them to be testers. You need 12 to stay opted in for 14 days straight.
-5. Make the same handle on TikTok, YouTube, Instagram, X and Bluesky, e.g. `@waxandwanegame` [NEED: check it's free].
+5. Make the same handle on TikTok, YouTube, Instagram, X and Bluesky, e.g. `@waxandwanegame` (each app tells you if a name is taken; pick one that is free on all five).
 6. Post your first short (Short A in `trailer_plan.md`) using v1.1 footage. Starting early matters; new accounts take weeks to warm up.
 
 ### The day v2.0 is ready (aim: late November 2026)
-7. Publish the **itch.io page**: paid builds, free demo, devlog #1, 20% launch sale for 7 days (`itch_page.md`).
-8. Upload the .aab to Google Play **closed testing** the same day and send testers the opt-in link (`google_play.md`).
+7. Publish the **itch.io page**: the Windows, Linux and Android builds, devlog #1, 20% launch sale for 7 days (`itch_page.md`, steps in `POST_IT.md`).
+8. Upload the .aab to Google Play **closed testing** the same day and send testers the opt-in link (`google_play.md`). Testers buy a paid app even in the closed test: `google_play.md` section 2 has three ways to keep that cheap (the lowest price during the test is the easiest).
 9. Post on itch.io's "Release Announcements" forum board and one subreddit a day for a week (section 5).
 
 ### About 14 days later
@@ -69,25 +69,25 @@ If 1 viewer in 100 taps through and 1 in 20 of those buys, 30 sales need about 6
 15. Ship one free update with something you can film (a new boss, relic or room).
 16. **Skip the February 2027 Next Fest.** Registration closes Jan 10, 2027, which is too soon to collect wishlists, and a game only gets one Next Fest.
 17. **Register for the June 2027 Next Fest by April 25, 2027** (Steamworks > Upcoming Events).
-18. Make the Steam demo as its own app: the Cellar and the Crypt.
+18. Optional: build a Steam demo (2.0.0 has no demo mode; about half a day of work: the run ends after the Crypt's guardian with a "get the full game" card) and set it up as its own app.
 
 ### May 2027
-19. Submit the demo and store page for review by **May 10** if you want the demo live for the Press Preview (June 3). May 24 is the last day to submit.
-20. Email streamers and YouTubers about the demo (section 6).
+19. If you built the demo: submit it and the store page for review by **May 10** to be live for the Press Preview (June 3). May 24 is the last day to submit.
+20. Email streamers and YouTubers (section 6), with Steam keys or itch.io download keys.
 
 ### June 14 to 21, 2027: Steam Next Fest
-21. Demo live. Post a short every day of the fest. If you can, run a livestream on your store page during the fest [CHECK Steamworks broadcast setup].
+21. Post a short every day of the fest. If you can, run a livestream on your store page during the fest (Steamworks > Broadcasting explains the setup; it needs a live game build on Steam).
 22. Watch the wishlist count each day in Steamworks.
 
 ### July 2027: Steam launch
-23. Pick a launch date 2 to 6 weeks after Next Fest, outside the Steam Summer Sale week [CHECK Steam's sale dates].
+23. Pick a launch date 2 to 6 weeks after Next Fest, outside the Steam Summer Sale week (Valve lists the sale dates in Steamworks > Upcoming Events).
 24. Send keys to streamers 2 weeks before launch.
 25. Launch with a 20% discount for 7 days. Steam emails everyone who wishlisted the game.
 26. Post a launch short, a Reddit post, and a devlog on the same day.
 
 ### August to December 2027
 27. Follow the discount plan in `steam_store.md` (30 days between discounts, deeper each sale).
-28. Opt into Steam's October Scream Fest; a haunted house fits [CHECK eligibility].
+28. Opt into Steam's October Scream Fest when sign-ups open (Steamworks > Upcoming Events lists who can join); a haunted house fits.
 29. Second free update around October. Winter Sale at 50% off.
 
 ---
@@ -119,14 +119,14 @@ Hashtags (3 to 5 per post, not 20):
 | Subreddit | Use it for |
 |---|---|
 | r/indiegames | Gameplay GIFs and launch posts. Mods allow game promotion but remove promo dressed up as "feedback?" |
-| r/IndieGaming | Short gameplay GIFs with a plain title [CHECK rules] |
+| r/IndieGaming | Short gameplay GIFs with a plain title |
 | r/IndieDev | Devlog-style posts: "how the candle shrinks", before/after juice |
-| r/roguelites | Genre fans. Lead with a build or a clutch moment [CHECK self-promo rule] |
-| r/godot | Show what you made in Godot; use the right flair [CHECK] |
-| r/pixelart | Tallow's sprite or an animation as art first, game second [CHECK game-promo rule] |
-| r/playmygame | The free demo |
+| r/roguelites | Genre fans. Lead with a build or a clutch moment |
+| r/godot | Show what you made in Godot; use the right flair |
+| r/pixelart | Tallow's sprite or an animation as art first, game second |
+| r/playmygame | A free itch.io download key or two for feedback |
 | r/DestroyMyGame | Honest feedback on the trailer and Steam page before Next Fest |
-| r/AndroidGaming | The Google Play launch [CHECK developer-post rules] |
+| r/AndroidGaming | The Google Play launch |
 | r/gamedev | No promo posts; join discussions only |
 
 **Discord.** Join two or three servers: the official Godot server, plus indie-game or roguelite fan servers with a #self-promo or #showcase channel. Talk to people first, and post the game only in those channels.
@@ -172,14 +172,14 @@ Write these five numbers in a note every week:
 1. Views on each video
 2. Steam wishlists (Steamworks > Wishlists)
 3. itch.io page views and purchases
-4. Play installs and unlocks
+4. Play installs (sales)
 5. Money in
 
 What to do with them:
 - A video gets 3x your usual views: make three more like it that week.
 - Four weeks of daily posts and nothing passes 1,000 views: change the first 2 seconds of your videos (the hook text and first shot).
-- Lots of itch page views but few sales: move the GIF of the shrinking candle to the top and check the demo works.
-- Lots of Play installs but few unlocks: the free part may be too generous or too short. Watch where testers stop.
+- Lots of itch page views but few sales: move the GIF of the shrinking candle to the top and check that each download works on a clean machine.
+- Lots of Play page visits but few sales: put the clock-and-candle screenshot first and check the first three screenshots read on a small phone.
 
 ---
 

@@ -5,6 +5,7 @@ scripts/trailer.gd staged and Godot's movie writer recorded. tools/make_trailer.
   python3 tools/trailer_edit.py --raw build/trailer_raw --out build/videos --voice docs/marketing/voice/ai_narrator
           [--only trailer,short_a,short_b,short_c,loop] [--stills DIR]
   python3 tools/trailer_edit.py --check --out build/videos      lengths, sizes, loudness, frames of the finals
+  CTA=itch|play|steam|none ...   the end cards' call to action (default itch: OUT NOW ON ITCH.IO; see CTAS)
 
 Picture: the game's own 384x216 frames, scaled x5 with nearest-neighbour (1920x1080, every pixel sharp); the
 close-up crops a 192x108 window around Tallow and scales it x10. Text cards are drawn in the game's Kenney
@@ -537,16 +538,43 @@ def add_hook(tl, text, t0, t1, color=CREAM):
 
 # ---------------------------------------------------------------- end cards
 
+# The call to action on every end card, picked with the CTA environment variable, so the same footage cuts
+# the right ending for each place a video is posted, with no re-recording (./tools/make_trailer.sh edit):
+#   CTA=itch  (default)  OUT NOW ON ITCH.IO      YouTube, itch.io and socials, from the itch.io launch on
+#   CTA=play             GET IT ON GOOGLE PLAY   the Play listing's promo video (a YouTube link)
+#   CTA=steam            WISHLIST ON STEAM       only once the Steam Coming Soon page is live
+#   CTA=none             no store line
+# Any CTA but the default adds its name to the file names: trailer_60s_play.mp4, short_a_..._steam.mp4 ...
+CTAS = {
+    "itch": ("OUT NOW ON ITCH.IO", "Windows  -  Linux  -  Android"),
+    "play": ("GET IT ON GOOGLE PLAY", "Android phones and tablets"),
+    "steam": ("WISHLIST ON STEAM", "Steam  -  Google Play  -  itch.io"),
+    "none": ("", ""),
+}
+CTA_DEFAULT = "itch"
+CTA = os.environ.get("CTA", CTA_DEFAULT).strip().lower() or CTA_DEFAULT
+if CTA not in CTAS:
+    sys.exit("trailer_edit: CTA=%s? use one of: %s" % (CTA, ", ".join(CTAS)))
+CTA_LINE, CTA_SUB = CTAS[CTA]
+
+
+def final_name(name):
+    """trailer_60s.mp4 -> trailer_60s_play.mp4 for every CTA but the default."""
+    base, ext = os.path.splitext(name)
+    return name if CTA == CTA_DEFAULT else "%s_%s%s" % (base, CTA, ext)
+
+
 def cta(img_native):
     """The call to action band on the game's own title picture (logo, tagline, lit Tallow): drawn at
     384x216, so it is on the same pixel grid as the game."""
     im = img_native.copy()
-    band("WISHLIST ON STEAM", 32, GOLD, y=191, sub="Steam  -  Google Play  -  itch.io", sub_color=WAX,
-         alpha=235)(im, 99, 999)
+    if CTA_LINE:
+        band(CTA_LINE, 32, GOLD, y=191, sub=CTA_SUB, sub_color=WAX, alpha=235)(im, 99, 999)
     return im
 
 
-def end_card_vertical(bg_game, line, sub="WISHLIST ON STEAM"):
+def end_card_vertical(bg_game, line, sub=None):
+    sub = CTA_LINE if sub is None else sub
     c = vertical(bg_game)
     c = Image.blend(c, Image.new("RGB", c.size, NIGHT), 0.72).convert("RGBA")
     lg = Image.open(os.path.join(ROOT, "assets/art/ui/title_logo.png")).convert("RGBA")
@@ -1156,15 +1184,16 @@ def main():
     F = lambda name: footage(args.raw, name)
     V = Voice(args.voice)
     only = args.only.split(",")
+    print("[trailer_edit] end card: CTA=%s (%s)" % (CTA, CTA_LINE or "no store line"), flush=True)
     if "trailer" in only:
-        build(trailer(F, V), os.path.join(args.out, FINALS["trailer"]), "landscape", -16, 18, args.stills,
+        build(trailer(F, V), os.path.join(args.out, final_name(FINALS["trailer"])), "landscape", -16, 18, args.stills,
               args.audio_only)
     for k, fn in [("short_a", short_a), ("short_b", short_b), ("short_c", short_c)]:
         if k in only:
             tl = fn(F, V)
             if tl.t < 15.5:   # live fights vary a little between recordings: the end card holds longer
                 tl.segs[-1].n += sec(15.5 - tl.t)
-            build(tl, os.path.join(args.out, FINALS[k]), "vertical", -14, 19, args.stills, args.audio_only)
+            build(tl, os.path.join(args.out, final_name(FINALS[k])), "vertical", -14, 19, args.stills, args.audio_only)
     if "loop" in only:
         render_loop(F, args.out, args.stills)
 

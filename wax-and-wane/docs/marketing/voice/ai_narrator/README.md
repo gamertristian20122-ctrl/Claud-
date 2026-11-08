@@ -5,7 +5,7 @@ on this machine, not a person reading.
 
 | | |
 |---|---|
-| Model | **Kokoro-82M** (`hexgrad/Kokoro-82M` on Hugging Face), open weights, **Apache-2.0** licence. Words to sounds: **misaki** (Apache-2.0). Licence text: `assets/licenses/Kokoro_TTS_Apache-2.0.txt` |
+| Model | **Kokoro-82M** (`hexgrad/Kokoro-82M` on Hugging Face), open weights, **Apache-2.0** licence. Words to sounds: **misaki** (Apache-2.0). Licence text: `docs/marketing/voice/Kokoro_TTS_Apache-2.0.txt` (kept out of the game builds: only the videos use the voice) |
 | Voice | `am_michael` (an American male voice), speed 0.86 (line 2 a little slower: 0.88 of that) |
 | Picked from | `bm_george`, `bm_fable` (British male), `am_michael` (American male), `af_heart` (American female). All four read every line right; `am_michael` was the warmest *clear* voice: the deepest pitch, the best clarity score and the most presence (it stays clear over music). `bm_george` sounded very dark/boomy, `bm_fable` had a buzzy top end (9% of its energy above 7 kHz) |
 | Files | 24 kHz mono WAV, one per line, silence trimmed, each at **-16 LUFS** with peaks under -1 dB |
