@@ -11,6 +11,9 @@ static var _spawn_frame := -1
 
 static func run(at: Node) -> void:
 	var a: Dictionary = at.args
+	if a.has("floorshots"):   # (with xvfb and --shots=dir) for tools/design_contrast.py
+		await floor_shots(at)
+		return
 	var any := a.has("latency") or a.has("share") or a.has("floors")
 	if not any or a.has("share"):
 		share_check()
@@ -302,6 +305,58 @@ static func _enemy_hit_probe(tree: SceneTree, w: Node, p: Player) -> Array:
 	if hit_f < 0:
 		return [99, 99]
 	return [flash_f - hit_f if flash_f >= 0 else 99, snd_f - hit_f if snd_f >= 0 else 99]
+
+
+# ================================================================ 3. fair deaths: what bullets sit on
+
+const BULLETS := ["bullet_purple", "bullet_green", "bullet_water", "bolt_bone", "bolt_cog", "bolt_page", "bolt_ring", "bolt_wax"]
+
+
+## Per floor (1-5): a cleared ordinary room with Tallow in the middle ("floorbg_N", the floor colours
+## the contrast tool samples), then every enemy bullet held still in a row across the lit floor
+## ("floorbullets_N", to look at). Prints the room's rect in the shot so the tool knows where to look.
+static func floor_shots(at: Node) -> void:
+	var tree: SceneTree = at.get_tree()
+	DirAccess.make_dir_recursive_absolute(at._shots_dir)
+	at.main.goto("game", {"seed": 4242})
+	while not (at.main.current and at.main.current.name == "Game" and at.main.current.get("player") != null and not at.main._busy):
+		await tree.process_frame
+	var w: Node = at.main.current
+	await at._wait(1.0)
+	for n in [1, 2, 3, 4, 5]:
+		w._start_floor(n)
+		await at._wait(3.0)
+		var cells: Array = at._normal_cells(w)
+		if cells.is_empty():
+			continue
+		var c: Vector2i = cells[0]
+		w.layout["cells"][c]["cleared"] = true
+		at._jump(w, c)
+		for e in w.enemies:
+			if is_instance_valid(e):
+				e.queue_free()
+		w.player.position = w.room.center() + Vector2(0, 10)
+		w.player.wax = 100.0
+		await at._wait(1.2)
+		var xf: Transform2D = w.room.get_global_transform_with_canvas()
+		var o: Vector2 = xf.origin
+		var pl: Vector2 = w.player.get_global_transform_with_canvas().origin
+		print("[design] floorbg %d room_rect %d %d %d %d player %d %d" % [n, o.x, o.y, 272, 192, pl.x, pl.y])
+		await at._shot("floorbg_%d" % n)
+		var shots: Array = []
+		var i := 0
+		for k in BULLETS:
+			var s := Shot.new()
+			s.setup(w, w.player.global_position + Vector2(-70 + i * 20, -30), Vector2.ZERO, k, false)
+			s.life = 99.0
+			w.fx_layer.add_child(s)
+			shots.append(s)
+			i += 1
+		await at._wait(0.3)
+		await at._shot("floorbullets_%d" % n)
+		for s in shots:
+			if is_instance_valid(s):
+				s.queue_free()
 
 
 # ================================================================ 5. the share text

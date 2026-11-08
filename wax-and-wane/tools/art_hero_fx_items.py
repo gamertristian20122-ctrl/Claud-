@@ -419,31 +419,34 @@ def ember_frames(remap=None):
     return [grid(f, 7, 7, remap=remap) for f in EMBER]
 
 
-# Enemy shots: outlined orbs, light from the top-left, 2-frame pulse.
+# Enemy shots: outlined orbs, light from the top-left, 2-frame pulse. A hot core (C, 6-8 px of the
+# hue's brightest tone that clears 3:1 on every lit floor; cream for purple, whose own light tone does
+# not) inside a colour ring: the design pass measured the old orbs at 1.6-2.9:1 on the floors
+# (tools/design_contrast.py, docs/design/MDA.md). The dark rim stays for the light floors.
 ORB = [
     """
     ..kkk..
-    .kMLMk.
-    kMHLMDk
-    kMLMMDk
-    kMMMDDk
-    .kDDDk.
+    .kLCLk.
+    kLCHCMk
+    kLCCLMk
+    kMLLMDk
+    .kDMDk.
     ..kkk..
     """,
     """
     ..kkk..
-    .kLLMk.
-    kLHHLMk
-    kLHLMDk
-    kMLMMDk
+    .kCCLk.
+    kCHHCMk
+    kLCCLMk
+    kMLLMDk
     .kDMDk.
     ..kkk..
     """,
 ]
 ORB_COLS = {
-    "purple": {"D": "v", "M": "p", "L": "P", "H": "w"},
-    "green": {"D": "G", "M": "g", "L": "l", "H": "w"},
-    "water": {"D": "B", "M": "b", "L": "t", "H": "w"},
+    "purple": {"D": "v", "M": "p", "L": "P", "C": "w", "H": "w"},
+    "green": {"D": "G", "M": "g", "L": "l", "C": "l", "H": "w"},
+    "water": {"D": "B", "M": "b", "L": "t", "C": "t", "H": "w"},
 }
 
 

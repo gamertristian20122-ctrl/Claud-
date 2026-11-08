@@ -65,6 +65,15 @@ func _px(p: Vector2, col: Color) -> void:
 	draw_rect(Rect2(p.round(), Vector2.ONE), col)
 
 
+## Design pass (docs/design/MDA.md): every other dot of a red or pink warning burns in a hot palette
+## partner, so the mark still reads on the lit cellar floor (red 1.4:1 -> 3.6:1, tools/design_contrast.py).
+const HOT := {"da4e38": Color("#facb3e"), "f78697": Color("#fdf7ed")}
+
+
+static func _hot(col: Color) -> Color:
+	return HOT.get(col.to_html(false), col)
+
+
 func _draw() -> void:
 	for s in shapes:
 		# blink faster as the strike gets closer
@@ -73,6 +82,7 @@ func _draw() -> void:
 		if fmod(_t, rate * 2.0) > rate * 1.35:
 			continue
 		var col: Color = s["col"]
+		var hot := _hot(col)
 		match s["k"]:
 			"line":
 				var a: Vector2 = to_local(s["a"])
@@ -80,7 +90,7 @@ func _draw() -> void:
 				var n := int(a.distance_to(b) / 3.0)
 				for i in n + 1:
 					var p := a.lerp(b, float(i) / maxf(1.0, n))
-					_px(p, col)
+					_px(p, col if i % 2 == 0 else hot)
 					if i % 2 == 0:
 						_px(p + Vector2(0, 1), col.darkened(0.35))
 			"ring":
@@ -89,10 +99,12 @@ func _draw() -> void:
 				var n2 := maxi(10, int(r * 1.6))
 				for i in n2:
 					var ang := TAU * i / n2
-					_px(c + Vector2(cos(ang) * r, sin(ang) * r * 0.6), col)
+					_px(c + Vector2(cos(ang) * r, sin(ang) * r * 0.6), col if i % 2 == 0 else hot)
 			"path":
+				var j := 0
 				for p2 in s["pts"]:
-					_px(to_local(p2), col)
+					_px(to_local(p2), col if j % 2 == 0 else hot)
+					j += 1
 
 
 func _draw_rod() -> void:
