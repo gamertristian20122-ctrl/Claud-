@@ -131,6 +131,11 @@ in contact, else floor spikes under Tallow, else the nearest creature within 34 
   errors. `--playtest --speed=4 --runs=2`: 2 wins (12:32, 12:37 AM), no script errors.
 - Full `--tour` (1600x720): 36 shots, no script errors; the start room shows the chalk.
 - `--tour --journal` at 1600x720 (480x216) and 1152x648 (384x216): every screen fits.
+- Unlock balance, same four seeds (`--seed=7300 --runs=4`; a seeded run uses the starting pool, the way a
+  fresh profile does) against `--unlockall` (all 64 relics and 8 keepsakes): **3 wins in 4 both ways**
+  (starting pool: 12:18 - 12:41 AM, one loss on floor 2; everything: one loss on floor 2). The 18 locked
+  relics change which build you find more than how often you win, so the lock-in costs a new player little
+  and each unlock is a new toy rather than a power spike. No script errors in any run.
 
 ## Art
 `python3 tools/art_chalk.py [--review=<dir>]` writes 14 drawings to `assets/art/chalk/` (and review
