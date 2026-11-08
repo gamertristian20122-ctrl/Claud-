@@ -217,22 +217,6 @@ static func _blob(w: int, h: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
-## A guardian's ground shadow: a flat ellipse about 3/4 of its width, a little darker than a lodger's.
-static func _boss_shadow(w: int) -> Texture2D:
-	var sw := clampi(int(w * 0.75) | 1, 23, 41)
-	if not _boss_shadows.has(sw):
-		var img := Image.create(sw, 7, false, Image.FORMAT_RGBA8)
-		var c := Color(0.13, 0.08, 0.1, 0.6)
-		for y in 7:
-			var dy := (y + 0.5 - 3.5) / 3.5
-			var half := sqrt(maxf(0.0, 1.0 - dy * dy)) * sw / 2.0
-			for x in sw:
-				if absf(x + 0.5 - sw / 2.0) <= half:
-					img.set_pixel(x, y, c)
-		_boss_shadows[sw] = ImageTexture.create_from_image(img)
-	return _boss_shadows[sw]
-
-
 ## The floor's guardian out of `opts` (world FLOORS[n]["bosses"]), picked from the run seed so
 ## Tonight's Candle is the same for everyone. Until a player has won once, a normal run always ends
 ## with the first finale (the Hour Fiend).
@@ -288,6 +272,22 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 ## The colour this creature's remains leave on the floor (for death splats).
 func stain_color() -> Color:
 	return def.get("stain", Color("#483b3a"))
+
+
+## A guardian's ground shadow: a flat ellipse about 3/4 of its width, a little darker than a lodger's.
+static func _boss_shadow(w: int) -> Texture2D:
+	var sw := clampi(int(w * 0.75) | 1, 23, 41)
+	if not _boss_shadows.has(sw):
+		var img := Image.create(sw, 7, false, Image.FORMAT_RGBA8)
+		var c := Color(0.13, 0.08, 0.1, 0.6)
+		for y in 7:
+			var dy := (y + 0.5 - 3.5) / 3.5
+			var half := sqrt(maxf(0.0, 1.0 - dy * dy)) * sw / 2.0
+			for x in sw:
+				if absf(x + 0.5 - sw / 2.0) <= half:
+					img.set_pixel(x, y, c)
+		_boss_shadows[sw] = ImageTexture.create_from_image(img)
+	return _boss_shadows[sw]
 
 
 func _ready() -> void:
