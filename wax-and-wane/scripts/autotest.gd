@@ -12,6 +12,7 @@ extends Node
 ##   -- --autotest --shots-store --shots=/abs/dir [--phone]        staged store screenshots (scripts/store_shots.gd)
 ##   -- --autotest --keyart --shots=/abs/dir                       the key-art scene, no HUD (tools/store_art.py)
 ##   -- --autotest --lightjudge --shots=/abs/dir                   light pass judge images (tools/light_judge.py)
+##   -- --autotest --trailer=<scene>                               staged trailer footage (scripts/trailer.gd, tools/make_trailer.sh)
 
 var main: Node
 var args := {}
@@ -28,6 +29,7 @@ var _bomb_cd := 0.0
 var _room_t := 0.0
 var _room_t_total := 0.0
 var _last_cell := Vector2i(-99, -99)
+var trailer: Node = null   # scripts/trailer.gd while it stages a scene (it may steer Tallow in drive())
 
 
 func _ready() -> void:
@@ -49,7 +51,7 @@ func _ready() -> void:
 		mode = "designcheck"
 	if args.has("bench"):
 		mode = "bench"
-	if args.has("shots-store") or args.has("keyart"):
+	if args.has("shots-store") or args.has("keyart") or args.has("trailer"):
 		mode = "tour"   # store art: the bot only plays when the staging asks it to
 	if args.has("lightjudge"):
 		mode = "tour"   # light pass judge images (scripts/game/light_judge.gd, tools/light_judge.py)
@@ -66,6 +68,9 @@ func _ready() -> void:
 		get_tree().quit()
 	elif args.has("shots-store") or args.has("keyart"):
 		await load("res://scripts/store_shots.gd").run(self)
+		get_tree().quit()
+	elif args.has("trailer"):
+		await load("res://scripts/trailer.gd").run(self)
 		get_tree().quit()
 	elif mode == "tour" and args.has("relictour"):
 		_relic_tour()
@@ -220,6 +225,9 @@ func _process(dt: float) -> void:
 
 ## Called by the world every physics frame: returns [move, aim] or [] to leave input alone.
 func drive(w: Node) -> Array:
+	var td: Array = trailer.drive(w) if trailer != null else []
+	if not td.is_empty():
+		return td
 	if (mode == "tour" or mode == "audiotest" or mode == "designcheck") and not args.has("drive"):
 		return []
 	var p: Player = w.player
