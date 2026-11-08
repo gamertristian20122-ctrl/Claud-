@@ -139,12 +139,18 @@ func _on_node_added(n: Node) -> void:
 
 ## Floor, walls, decor, obstacles and stains: anything under the rooms layer that is not a creature,
 ## a pickup or Tallow. (The title has no rooms layer: its backdrop counts as a room piece.)
+## A prop that carries its own light (a candelabra, a hearth) is fire: it keeps its colour too.
 func _is_room_piece(n: Node) -> bool:
 	var p: Node = n
 	while p != null and p != host:
 		if p is Enemy or p is Pickup or p is Player:
 			return false
 		p = p.get_parent()
+	var par := n.get_parent()
+	if par != null and not (par is Room) and par != _rooms:
+		for s in par.get_children():
+			if s is Light2D:
+				return false
 	return _rooms == null or _rooms.is_ancestor_of(n)
 
 
