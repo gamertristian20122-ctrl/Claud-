@@ -6,3 +6,5 @@ build/
 export_credentials.cfg
 keystore/
 __pycache__/
+# Godot Android build template (~230 MB, re-created from the export templates by tools/build_aab.sh)
+android/
