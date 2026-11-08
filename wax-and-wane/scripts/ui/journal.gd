@@ -356,6 +356,7 @@ func _entries(t: String) -> Array:
 			for c in Candles.ORDER:
 				out.append({"kind": "candle", "id": c, "known": Candles.is_unlocked(c), "new_key": "c:" + c})
 		"records":
+			out.append({"kind": "howto", "id": "", "known": true})   # UX-07: the intro's rules, any time
 			out.append({"kind": "totals", "id": "", "known": true})
 			out.append({"kind": "nights", "id": "", "known": true})
 			var hist: Array = Game.records.get("run_history", [])
@@ -426,6 +427,8 @@ func icon_of(e: Dictionary) -> Texture2D:
 		"run":
 			var r: Dictionary = e["run"]
 			tex = Art.tex("ui/icon_medal") if r.get("won", false) else Records.killer_icon(str(r.get("killer", "")), false)
+		"howto":
+			tex = Art.tex("hero/hero_preview")
 		"totals":
 			tex = Art.tex("ui/icon_medal")
 		"nights":
@@ -576,6 +579,7 @@ func _show_detail(e: Dictionary) -> void:
 		"room": _d_room(e)
 		"mini": _d_mini(e)
 		"candle": _d_candle(e)
+		"howto": _d_howto()
 		"totals": _d_totals()
 		"nights": _d_nights()
 		"run": _d_run(e["run"])
@@ -753,6 +757,14 @@ func _d_candle(e: Dictionary) -> void:
 		_text("Not won with yet", UI.WAX)
 
 
+## The rules from the one-time intro (world._intro), for anyone who skipped it.
+func _d_howto() -> void:
+	_head(_pic(Art.tex("hero/hero_preview"), 2), "How to play", [["The rules of the night", UI.EMBER]])
+	_text("The old house wakes when the clock strikes twelve. You are Tallow, the last candle in the cellar. Burn down through four floors and snuff the Hour Fiend before the clock strikes two.")
+	_text("Your wax is your life - and your time. Every hit melts you. Wax drippings mend you.", UI.WAX)
+	_text(Controls.intro_line(), UI.DIM)
+
+
 func _d_totals() -> void:
 	var rec := Game.records
 	_head(_pic(Art.tex("ui/icon_medal"), 2), "The Ledger", [["Everything you have burnt through", UI.EMBER]])
@@ -840,7 +852,7 @@ class JSlot extends Button:
 		var kind: String = e["kind"]
 		if kind == "candle":
 			CandleArt.paint(self, str(e["id"]), Vector2(size.x / 2.0, size.y - 6.0).floor(), not e["known"], 0)
-		elif kind == "run" or kind == "totals" or kind == "nights":
+		elif kind == "run" or kind == "totals" or kind == "nights" or kind == "howto":
 			_draw_row()
 		elif _tex:
 			var p := ((size - _tex.get_size()) / 2.0).floor()
@@ -867,6 +879,9 @@ class JSlot extends Button:
 		var line2 := ""
 		var c2 := UI.DIM
 		match str(e["kind"]):
+			"howto":
+				line1 = "How to play"
+				line2 = "Wax, time and the rules"
 			"totals":
 				line1 = "The Ledger"
 				line2 = "Totals and best times"

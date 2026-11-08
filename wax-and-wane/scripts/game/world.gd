@@ -190,13 +190,14 @@ func _intro() -> void:
 			"",
 			Controls.intro_line()]:
 		v.add_child(UI.label(line, 8, UI.CREAM if line != "" else UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
-	v.add_child(UI.button("Light the wick", func():
+	v.add_child(UI.button("Begin", func():   # UX-07: not the title button's name, and it waits 0.8 s
 		Game.records["seen_intro"] = true
 		Game.save()
 		root.queue_free()
 		paused = false
 		get_tree().paused = false
 		hud.show_hint(Controls.controls_hint(false), 8.0), 120))
+	UI.hold_presses(v.get_child(v.get_child_count() - 1), 0.8)
 
 
 # ---------------------------------------------------------------- floors & rooms
