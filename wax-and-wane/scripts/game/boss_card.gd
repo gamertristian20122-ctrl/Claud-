@@ -137,6 +137,7 @@ func _apply(dt: float) -> void:
 	_bands.queue_redraw()
 	var a := clampf(_t / 0.15, 0.0, 1.0) if not _out else 1.0 - clampf((_t - OUT_AT) / (END_T - OUT_AT), 0.0, 1.0)
 	_dim.color.a = 0.72 * a
+	_hud_alpha(1.0 - a)   # the HUD fades out under the card (no wax bar peeking over its band)
 	var bx := _boss_x()
 	# the guardian lags its band a little, then lands
 	var lag := s0 * 1.25 if not _out else s0
@@ -200,8 +201,9 @@ func _band(b: int, sx: float, fill: Color, hi: Color, edge: Color) -> void:
 
 func _process(dt: float) -> void:
 	if world.paused:
-		# the pause menu is open: hide and wait
+		# the pause menu is open: hide and wait (the menu lives on the HUD, so it shows again)
 		visible = false
+		_hud_alpha(1.0)
 		return
 	visible = true
 	get_tree().paused = true
@@ -229,7 +231,19 @@ func _input(event: InputEvent) -> void:
 			_out = true
 
 
+## The HUD's own layer (bar, clock, minimap, buttons) at this opacity.
+func _hud_alpha(a: float) -> void:
+	var hud: Variant = world.get("hud") if is_instance_valid(world) else null
+	if hud and is_instance_valid(hud) and hud.get("root"):
+		(hud.root as CanvasItem).modulate.a = a
+
+
+func _exit_tree() -> void:
+	_hud_alpha(1.0)   # also when a new card replaces this one
+
+
 func _finish() -> void:
+	_hud_alpha(1.0)
 	set_process(false)
 	set_process_input(false)
 	if not world.paused:
