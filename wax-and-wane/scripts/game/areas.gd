@@ -48,7 +48,7 @@ const LIST := {
 	"kitchen": {"name": "The Kitchen", "theme": "kitchen", "dark": Color(0.34, 0.25, 0.21), "music": "area_kitchen", "space": 1,
 		"bosses": ["stockpot", "wax_mother"], "gimmick": "stoves", "built": true,
 		"blurb": "Copper pots, a black range, flour on the flags. Stove tops glow on and off; shoot a boiling pot to spill it",
-		"pool": {"e": ["lid_crab", "goblin", "cinder_rat", "lid_crab", "swampy", "sootling", "chort"],
+		"pool": {"e": ["lid_crab", "goblin", "cinder_rat", "goblin", "swampy", "sootling", "chort"],
 			"h": ["ice_zombie", "chort", "slug", "masked_orc", "lid_crab", "doc"], "f": ["flour_ghost", "imp", "moth", "flour_ghost"]},
 		"likes": {"fire": 1.8, "oil": 1.6, "furniture": 1.8, "cover": 1.2, "webs": 0.5, "bones": 0.3, "pits": 0.6}},
 	"library": {"name": "The Library", "theme": "library", "dark": Color(0.23, 0.27, 0.26), "music": "area_library", "space": 1,
@@ -134,6 +134,44 @@ static func _raw_sequence(n: int) -> Array:
 ## Where an area sits in a night of `n` floors (1-based; 0 if it is not in that night).
 static func depth_in(id: String, n: int) -> int:
 	return sequence(n).find(id) + 1
+
+
+## Every built area in the order of the house, the Clock Tower last (the Journal).
+static func house_order() -> Array:
+	return sequence(max_floors()) + ["tower"]
+
+
+## "the Kitchen" for "kitchen".
+static func the_name(id: String) -> String:
+	var nm := str(def(id).get("name", "the house"))
+	return ("the " + nm.substr(4)) if nm.begins_with("The ") else nm
+
+
+static func _and(names: Array) -> String:
+	if names.size() <= 1:
+		return "".join(names)
+	return ", ".join(names.slice(0, names.size() - 1)) + " and " + names[names.size() - 1]
+
+
+## The Journal's line for a lodger: the areas it haunts ("" if none).
+static func haunts_text(kind: String) -> String:
+	if kind == "ink_drop":
+		return "Drips off an Inkblot"
+	var where: Array = []
+	for id in house_order():
+		for slot in (pool(id) as Dictionary).values():
+			if kind in slot and not the_name(id) in where:
+				where.append(the_name(id))
+	return ("Haunts " + _and(where)) if not where.is_empty() else ""
+
+
+## The areas a guardian keeps ("" if none): "the Cellar and the Kitchen".
+static func guards_text(kind: String) -> String:
+	var where: Array = []
+	for id in house_order():
+		if kind in def(id).get("bosses", []):
+			where.append(the_name(id))
+	return _and(where)
 
 
 ## A floor entry shaped like world.FLOORS[n] (name, theme, dark, music, boss, bosses) for area `id`.

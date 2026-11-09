@@ -107,7 +107,7 @@ const DEFS := {
 	"gutterspout": {"hp": 18.0, "speed": 0.0, "ai": "turret", "r": 6.0, "heavy": true, "cd": 1.2, "name": "Gutterspout", "glow_px": ["#facb3e"],
 		"lore": "Spat rain off the belfry roof for centuries. It aims better now.", "stain": Color("#7b8994")},
 	# ---- the Long Night's new areas (scripts/game/area_ai.gd, art in assets/art/areas/<area>/)
-	"lid_crab": {"hp": 8.0, "speed": 30.0, "ai": "area_crab", "r": 6.0, "cd": 1.4, "no_flip": true, "sprite": "areas/kitchen/lid_crab",
+	"lid_crab": {"hp": 6.0, "speed": 30.0, "ai": "area_crab", "r": 6.0, "cd": 1.8, "no_flip": true, "sprite": "areas/kitchen/lid_crab",
 		"name": "Pot-Lid Crab", "lore": "Found a copper lid under the dresser and never let it go. Hit it where the lid isn't.",
 		"stain": Color("#da4e38")},
 	"flour_ghost": {"hp": 7.0, "speed": 34.0, "ai": "area_flour", "r": 5.0, "fly": true, "cd": 3.4, "sprite": "areas/kitchen/flour_ghost",

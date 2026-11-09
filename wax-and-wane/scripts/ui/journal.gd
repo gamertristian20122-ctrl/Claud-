@@ -623,19 +623,7 @@ func _d_relic(e: Dictionary) -> void:
 
 
 func _haunts(kind: String) -> String:
-	var fl: Array = []
-	var pools: Dictionary = preload("res://scripts/game/world.gd").POOLS
-	var ns: Array = pools.keys()
-	ns.sort()
-	for n in ns:
-		for slot in pools[n].values():
-			if kind in slot and not Records.floor_name(n, true) in fl:
-				fl.append(Records.floor_name(n, true))
-	if fl.is_empty():
-		return ""
-	if fl.size() == 1:
-		return "Haunts " + fl[0]
-	return "Haunts " + ", ".join(fl.slice(0, fl.size() - 1)) + " and " + fl[fl.size() - 1]
+	return Areas.haunts_text(kind)   # every area of the house, in order (scripts/game/areas.gd)
 
 
 func _d_lodger(e: Dictionary) -> void:
@@ -661,11 +649,7 @@ func _d_guardian(e: Dictionary) -> void:
 	var kind: String = e["id"]
 	var d: Dictionary = Enemy.DEFS[kind]
 	var known: bool = e["known"]
-	var fl := ""
-	var floors: Dictionary = preload("res://scripts/game/world.gd").FLOORS
-	for n in floors:
-		if kind in floors[n]["bosses"]:
-			fl = Records.floor_name(n, true)
+	var fl := Areas.guards_text(kind)   # e.g. "the Cellar and the Kitchen"
 	var subs: Array = [["Guardian of " + fl, UI.EMBER]]
 	_head(_creature_pic(kind, known), Records.title_case(str(d.get("name", kind))) if known else "???", subs, UI.GOLD if known else UI.DIM)
 	if not known:

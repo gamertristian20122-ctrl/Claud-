@@ -39,7 +39,7 @@ func area_crab(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 	var want := 1.0 if to_p.x >= 0.0 else -1.0
 	if want != face and absf(to_p.x) > 6.0 and e.state != "snap":
 		e.mem["turn"] = float(e.mem.get("turn", 0.0)) + ddt
-		if float(e.mem["turn"]) > 0.6:
+		if float(e.mem["turn"]) > 0.75:
 			e.mem["face"] = want
 			e.mem["turn"] = 0.0
 			e.spr.flip_h = want < 0.0
@@ -77,7 +77,7 @@ func hit_area_crab(e: Enemy, dmg: float, knock: Vector2) -> bool:
 	if dmg >= 8.0 or knock.length() < 0.01:
 		return true
 	var face: float = e.mem.get("face", 1.0)
-	if knock.normalized().x * face < -0.4:
+	if knock.normalized().x * face < -0.65:
 		Audio.play("hit_wall", -2.0, 0.1, 1.5)
 		e.world.fx_sparks(e.global_position + Vector2(face * 7.0, -8.0), Vector2(face, -0.3), 3)
 		HouseAI._tip(e, "lid_crab", "The lid takes it: hit the crab from behind, above or below")

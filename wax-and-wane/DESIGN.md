@@ -140,6 +140,22 @@ opaque; the game draws them at one alpha (0.5), lit like the floor. Lines drop o
 - `tower/light/moon_slats.png` 64x88: striped moonlight (light texture).
 - Round things (gears, dials) are rasterised from fixed integer maths, never resampled.
 
+### The Long Night's areas (areas/<area>/) - `art_areas.py` (v2.2, docs/streams/v22_areas.md)
+- Rooms `rooms/room_<kitchen|library|attic>(_1|_2).png` (Kitchen: orange brick caps, a cream-and-blue tiled
+  backsplash, quarry tiles / a slate-and-terracotta scullery / flags round a rag rug; Library: green caps, damask over a
+  walnut dado, a green carpet / a runner / a compass star; Attic: pine caps, planks and rafters, pale dusty boards /
+  a loft hatch / a dressmaker's patterns). Sconces `decor/sconce_<area>_top|side`, wall pieces `decor/wall_<area>_*`,
+  side pieces `decor/side_<area>`, furniture `decor/prop_<area>_*` (Kitchen tables `_l/_m/_r`, range, block, sacks;
+  Library shelves `_l/_m/_r`, the sliding shelf `prop_library_slide`, desk, globe, book stack; Attic dust sheets
+  `sheet_a/b/c` over a wardrobe, chair and mirror, and the trunk).
+- `areas/<area>/floor_*` and `foot_*` floor / wall-foot decals; gimmick props: `kitchen/stove` + `stove_glow_f0..2`
+  (warning, hot), `kitchen/pot` + `pot_steam_f0..3` + `pot_spilt`, `kitchen/scald_f0..2` 32x20 (drawn unlit),
+  `kitchen/flour_f0..3` 24x20, `library/rail_l|m|r`, `library/shelfdoor_f0..3` 32x30, `attic/lantern_off|on|glow`
+  10x15, `attic/window_round(_glass)` 22x22, `attic/sheet_fly_f0..3` 20x16, `attic/light/moon_round.png` (light texture).
+- Creatures `areas/<area>/<name>_<idle|run|atk>_f0..3` (Enemy.DEFS `sprite` = "areas/<area>/<name>"):
+  lid_crab, flour_ghost (Kitchen), bookworm, inkblot, ink_drop (Library), mannequin, trunk (Attic) 16x16 to 16x22;
+  guardians stockpot 44x40, librarian 32x52, dress_form 40x48. Enemy shot `fx/bolt_pin_f0..1` 7x7 (UX-02 recipe).
+
 ### UI (ui/) - `art_ui.py`, `art_platform.py`, `art_icon.py`
 - Wax/time bar, 14 px tall: `bar_frame_left.png` (10 px), `bar_frame_right.png` (4 px), `bar_wax_fill.png` and
   `bar_wax_empty.png` (1 px wide columns, tiled horizontally).
