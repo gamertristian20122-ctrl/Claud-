@@ -106,8 +106,10 @@ static func _game_page(body: VBoxContainer, _parent: Control) -> void:
 		var fs := UI.toggle("Fullscreen (F11)", Game.settings.get("fullscreen", false), func(b): Game.set_setting("fullscreen", b))
 		grid.add_child(fs)
 	body.add_child(grid)
-	var lite := UI.label(L.t("Effects Lite: no heat haze or shockwaves."), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
-	body.add_child(lite)
+	# the hint fits under three rows of toggles; on a PC the Fullscreen row takes its place (216 px tall)
+	if grid.get_child_count() <= 6:
+		var lite := UI.label(L.t("Effects Lite: no heat haze or shockwaves."), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+		body.add_child(lite)
 
 
 static func _controls_page(body: VBoxContainer) -> void:
