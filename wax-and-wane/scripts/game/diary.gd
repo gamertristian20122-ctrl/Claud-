@@ -52,7 +52,7 @@ const PAGES := [
 		"text": "Every chore in this house is written in the Book of Rounds: wind the clock at twelve, bank the furnace, lock the crypt, ring the bell at one. The first line is in the clockmaker's own hand, and the ink is three hundred years old."},
 	{"id": "the_rule", "title": "The house's one rule", "from": LOOSE,
 		"text": "In this house, anything done every night for long enough starts to do itself. The organ plays itself. The pot stirs itself. Mind your habits here. They will outlive you."},
-	{"id": "under_stairs", "title": "Under the cellar stairs", "from": ["guardian:cellar"],
+	{"id": "under_stairs", "title": "Under the stairs", "from": ["guardian:cellar"],
 		"text": "The clockmaker let the room under the cellar stairs to pay for his clock. The lodger never left, and never paid. Every candle end this house ever burnt has run down there into one warm pink pool. We call her Mother. She counts every drip."},
 	{"id": "cook", "title": "Cook's one law", "from": ["area:kitchen", "guardian:kitchen"],
 		"text": "Cook's one law: the stockpot never goes off the boil. It was boiling before her, she said, and it would be boiling after her. She was right. Mind the stove tops. They light themselves now."},
@@ -274,7 +274,7 @@ func _plan_floor() -> void:
 		var cells: Array = []
 		for c in w.layout["cells"].keys():
 			var d: Dictionary = w.layout["cells"][c]
-			if d["type"] == "normal" and int(d.get("dist", 0)) >= 1:
+			if d["type"] == "normal" and int(d.get("dist", 0)) >= 1 and not d.has("mini"):
 				cells.append(c)
 		cells.sort()
 		if not cells.is_empty():
