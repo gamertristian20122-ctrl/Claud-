@@ -219,6 +219,9 @@ const CHAMP_TINT := {
 }
 var alive := true
 var active := false
+## v2.4: true while a guardian makes its entrance (BossIntro): no AI, no touch, no hits.
+var intro := false
+var spawn_tw: Tween   # the spawn-in fade (a guardian's entrance replaces it)
 var boss := false
 var flying := false
 var heavy := false
@@ -424,7 +427,8 @@ func _ready() -> void:
 	spr.modulate.a = 0.0
 	if not boss:
 		scale = Vector2(0.4, 1.6)
-	var tw := create_tween()
+	spawn_tw = create_tween()
+	var tw := spawn_tw
 	tw.tween_property(spr, "modulate:a", 1.0, 0.35)
 	if not boss:
 		tw.parallel().tween_property(self, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -480,7 +484,7 @@ func _physics_process(dt: float) -> void:
 				return
 	else:
 		spr.self_modulate = Color.WHITE
-	if not active and not buried:
+	if (not active and not buried) or intro:
 		return
 	var p: Player = world.player
 	var slow: float = world.time_scale_enemies()
@@ -995,7 +999,7 @@ func _ai_boss_fiend(ddt: float, to_p: Vector2, dist: float) -> void:
 # ---------------------------------------------------------------- damage
 
 func take_hit(dmg: float, knock: Vector2, burn := 0.0) -> void:
-	if not alive or not active:
+	if not alive or not active or intro:
 		return
 	if _ext and _brain.get_object().has_method("hit_" + def["ai"]) and not _brain.get_object().call("hit_" + def["ai"], self, dmg, knock):
 		return   # the behaviour turned the hit away (the Pot-Lid Crab's lid)

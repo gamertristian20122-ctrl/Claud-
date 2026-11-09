@@ -95,6 +95,7 @@ scripts/game/enemy.gd             Enemy.DEFS (every creature and guardian), FLOO
 scripts/game/enemies/             house_ai.gd (lodger AIs), boss_ai.gd (guardians), telegraph.gd,
                                   soot_patch.gd, gallery.gd (bestiary review sheets)
 scripts/game/keeper.gd            the Clock Tower's creatures and the Keeper of Hours
+scripts/game/boss_intro.gd        each guardian's entrance where its fight starts (v2.4), --tour --intros
 scripts/game/tower.gd             the Clock Tower: unlock, ladder, floor 5 layout and dressing, true ending hook
 scripts/game/areas.gd             the Long Night's areas of the house (Kitchen, Library, Attic + the 2.0 floors), sequence()
 scripts/game/area_ai.gd           the areas' lodgers and guardians (the Stockpot, the Head Librarian, the Dressmaker's Form)
@@ -172,6 +173,7 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
     ... --tour --gallery      every creature and guardian labelled, then each floor's lodgers in a room
     ... --tour --bosses [--only=kind]   each guardian mid-fight
     ... --tour --boss=<kind>  one guardian: its versus card, then two shots in each phase, mid-pattern
+    ... --tour --intros[=kind]  every guardian's entrance, two shots each mid-animation, a skip, one with the card
     ... --tour --relictour    costumes, curses, helpers, Blowlamp, pause, shop, treasure, results
     ... --tour --specials     every special room, Seance waves, the champions, the minimap marks
     ... --tour --journal      every Journal tab, death note, seed keypad, credits, chalk start room

@@ -572,13 +572,13 @@ func _start_boss() -> void:
 	Audio.play("boss_roar")
 	Juice.of(self).boss_card(kind, name)
 	var tw := create_tween()
-	tw.tween_interval(0.9)
+	tw.tween_interval(0.5)   # v2.4: was 0.9; the guardian's entrance (BossIntro) is the rest of the reveal
 	tw.tween_callback(func():
 		boss = spawn_enemy(kind, room.center() + Vector2(0, -24))
 		hud.set_boss(name, true)
 		player.frozen = false
 		room_spawned = true
-		shake(4.0))
+		BossIntro.play(self, boss))   # its entrance (1.4-2.0 s, any tap skips); it shakes on its own beats
 
 
 func go_through(dir: Vector2i) -> void:
