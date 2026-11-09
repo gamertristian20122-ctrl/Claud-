@@ -1620,6 +1620,9 @@ func toggle_pause() -> void:
 	get_tree().paused = paused
 	Audio.set_paused(paused)
 	if paused:
+		# a hit's freeze (hitstop) or the guardian's slow fall ends with a tween that waits out the pause: the
+		# menus (and Save & quit's fade) must not run at x0.05 meanwhile
+		Engine.time_scale = Game.base_time_scale
 		hud.open_pause()
 	else:
 		hud.close_pause()

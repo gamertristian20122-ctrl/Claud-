@@ -24,6 +24,7 @@ static func run(at: Node) -> int:
 	await _banner_swap(at)
 	await _back_matrix(at)
 	await _stove_embers(at)
+	await _pause_in_hitstop(at)
 	print("[qa] %d failed -> %s" % [fails, "PASS" if fails == 0 else "FAIL"])
 	return fails
 
@@ -227,3 +228,23 @@ static func _stove_embers(at: Node) -> void:
 	_say("hot stove tops throw embers (Kitchen)", hot > 0 and embers >= hot, "%d embers over %d hot tops" % [embers, hot])
 	await _shot(at, "qa_stove_hot")
 	w.player.invuln = 0.0
+
+
+## A hit's freeze (world.hitstop: time x0.05-0.15 for a moment) ends with a tween that waits while the game is
+## paused. Pausing in that moment (II, Back, a call or notification taking the screen) left the pause menu,
+## Settings, the Journal and Save & quit's screen fade running at that speed (a 0.42 s fade took 8 s).
+static func _pause_in_hitstop(at: Node) -> void:
+	var tree: SceneTree = at.get_tree()
+	var w: Node = await _new_run(at, {"seed": 4242})
+	w.hitstop(0.35, 0.05)   # the guardian's fall uses 0.35 s; a hit 0.06 s
+	w.toggle_pause()
+	await _frames(tree, 4)
+	var paused_ts := Engine.time_scale
+	var t0 := Time.get_ticks_msec()
+	RunSave.flush()
+	at.main.goto("title")   # Save & quit
+	while not (at.main.current and at.main.current.name == "Title" and not at.main._busy) and Time.get_ticks_msec() - t0 < 20000:
+		await tree.process_frame
+	var quit_s := (Time.get_ticks_msec() - t0) / 1000.0
+	_say("a pause during a hit's freeze: menus at full speed", is_equal_approx(paused_ts, Game.base_time_scale) and quit_s < 2.0,
+		"time x%.2f while paused, Save & quit's fade %.1f s" % [paused_ts, quit_s])
