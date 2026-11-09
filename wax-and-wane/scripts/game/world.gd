@@ -2,11 +2,11 @@ extends Node2D
 ## One run: floors, rooms, the candle, enemies, drops, the clock and every effect.
 
 const FLOORS := {
-	1: {"name": "The Cellar", "theme": "cellar", "dark": Color(0.32, 0.26, 0.27), "music": "floor_1", "boss": "big_zombie", "bosses": ["big_zombie", "wax_mother"]},
-	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.25, 0.27, 0.34), "music": "floor_2", "boss": "ogre", "bosses": ["ogre", "sexton"]},
-	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.28, 0.24, 0.34), "music": "floor_3", "boss": "necro_boss", "bosses": ["necro_boss", "choir"]},
-	# a new player's first Belfry is always The Great Pendulum (Enemy.pick_boss); the Hour Fiend joins after a win
-	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "boss": "pendulum", "bosses": ["pendulum", "big_demon"]},
+	1: {"name": "The Cellar", "theme": "cellar", "dark": Color(0.32, 0.26, 0.27), "music": "floor_1", "boss": "big_zombie", "bosses": ["big_zombie", "wax_mother", "furnace"]},
+	2: {"name": "The Crypt", "theme": "crypt", "dark": Color(0.25, 0.27, 0.34), "music": "floor_2", "boss": "ogre", "bosses": ["ogre", "sexton", "ossuary"]},
+	3: {"name": "The Chapel", "theme": "chapel", "dark": Color(0.28, 0.24, 0.34), "music": "floor_3", "boss": "necro_boss", "bosses": ["necro_boss", "choir", "organist"]},
+	# a new player's first Belfry is always The Great Pendulum (Enemy.pick_boss); the others join after a win
+	4: {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "boss": "pendulum", "bosses": ["pendulum", "big_demon", "weathercock"]},
 	# the secret fifth floor (scripts/game/tower.gd): beat the Belfry by 1:00 AM to climb to it
 	5: {"name": "The Clock Tower", "theme": "tower", "dark": Color(0.27, 0.29, 0.40), "music": "floor_5", "boss": "keeper", "bosses": ["keeper"]},
 }

@@ -133,6 +133,23 @@ const DEFS := {
 		"title": "The Hour Fiend's heart swings", "phase_lines": ["", "Tick... tock... TICK!", "It is nearly two!"],
 		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
+	# ---- v2.1: a third guardian for every floor (scripts/game/guardians_v21.gd)
+	"furnace": {"hp": 86.0, "speed": 13.0, "ai": "g21_furnace", "r": 13.0, "boss": true, "heavy": true, "name": "THE COAL FURNACE",
+		"glow_px": ["#facb3e", "#ee8e2e", "#e46e33", "#fdf7ed"], "title": "It has warmed the house for a hundred winters",
+		"phase_lines": ["", "Full steam!", "It is overheating!"],
+		"lore": "The cellar boiler ate a coal heap every winter and never once felt full. Tonight it smells wax.", "stain": Color("#483b3a")},
+	"ossuary": {"hp": 106.0, "speed": 18.0, "ai": "g21_ossuary", "r": 14.0, "boss": true, "heavy": true, "name": "THE OSSUARY",
+		"glow_px": ["#72d6ce", "#49a790"], "title": "Every bone the crypt ever tidied away",
+		"phase_lines": ["", "It falls to pieces...", "Every bone rattles!"],
+		"lore": "When the crypt ran out of room, the old bones were stacked in a corner. One night the stack stood up.", "stain": Color("#aa8d7a")},
+	"organist": {"hp": 152.0, "speed": 12.0, "ai": "g21_organist", "r": 15.0, "boss": true, "heavy": true, "name": "THE ORGANIST",
+		"no_flip": true, "glow_px": ["#cae6f5"], "title": "It plays for the empty pews",
+		"phase_lines": ["", "It plays in chords...", "Every stop pulled out!"],
+		"lore": "The chapel organ played itself the night its organist was buried. It has not missed a service since.", "stain": Color("#8f4029")},
+	"weathercock": {"hp": 234.0, "speed": 22.0, "ai": "g21_weathercock", "r": 12.0, "boss": true, "heavy": true, "name": "THE WEATHERCOCK",
+		"no_flip": true, "glow_px": ["#facb3e"], "title": "It turns with every wind", "victory": "THE WEATHERCOCK FALLS SILENT",
+		"phase_lines": ["", "The wind changes!", "A storm breaks over the belfry!"],
+		"lore": "The copper rooster on the belfry roof. A hundred years of storms taught it which way to blow.", "stain": Color("#49a790")},
 	"keeper": {"hp": 380.0, "speed": 0.0, "ai": "tower_keeper", "r": 14.0, "boss": true, "heavy": true, "name": "THE KEEPER OF HOURS",
 		"title": "It winds the house, every night", "phase_lines": ["", "Time stands still...", "It chimes for you!"],
 		"victory": "THE KEEPER OF HOURS IS STILLED", "no_flip": true, "secret": true,
@@ -346,7 +363,7 @@ func _ready() -> void:
 			_house = HouseAI.new()
 			_bosses = BossAI.new()
 		_ext = true
-		_brain = Callable(Keeper.ai() if ai.begins_with("tower_") else (_bosses if ai.begins_with("boss_") else _house), ai)
+		_brain = Callable(Keeper.ai() if ai.begins_with("tower_") else (GuardiansV21.ai() if ai.begins_with("g21_") else (_bosses if ai.begins_with("boss_") else _house)), ai)
 		if _brain.get_object().has_method("init_" + ai):
 			_brain.get_object().call("init_" + ai, self)
 	# some arrive in a flutter of friends
