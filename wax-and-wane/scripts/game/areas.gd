@@ -140,6 +140,29 @@ static func depth_in(id: String, n: int) -> int:
 	return sequence(n).find(id) + 1
 
 
+## A per-floor table of the 4-floor house (index 0 = floor 1 ... 3 = the Belfry, 4 = the Clock Tower) read at a
+## depth on that scale (world.depth): a whole depth is its own entry, exactly; between two floors (a longer
+## night's middle floors) the two entries are mixed in proportion.
+static func at_depth(tbl: Array, d: float) -> float:
+	var i := clampf(d, 1.0, float(tbl.size())) - 1.0
+	var lo := int(floor(i))
+	if float(lo) == i:
+		return float(tbl[lo])
+	var hi := mini(lo + 1, tbl.size() - 1)
+	return lerpf(float(tbl[lo]), float(tbl[hi]), i - float(lo))
+
+
+## The depth a guardian's health (Enemy.DEFS hp) was tuned for: the floor of the 4-floor house that keeps it
+## (1 Cellar .. 4 Belfry, 5 the Clock Tower), or the depth the new areas' guardians were tuned at (TEST_DEPTH,
+## the Chapel's). Enemy.setup scales its health to the depth it is met at (FLOOR_HP there / FLOOR_HP here).
+static func home_depth(kind: String) -> float:
+	var house := ["cellar", "crypt", "chapel", "belfry", "tower"]
+	for i in house.size():
+		if kind in def(house[i]).get("bosses", []):
+			return float(i + 1)
+	return float(TEST_DEPTH)
+
+
 ## Every built area in the order of the house, the Clock Tower last (the Journal).
 static func house_order() -> Array:
 	return sequence(max_floors()) + ["tower"]

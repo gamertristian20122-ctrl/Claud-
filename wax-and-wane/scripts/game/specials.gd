@@ -676,7 +676,7 @@ func _tune(d: Dictionary) -> void:
 			var lst: Array = world.fpool(n)["e"]
 			d["cleared"] = false
 			world.room.set_open(false)
-			for i in (1 if n < 3 else 2):
+			for i in (1 if world.depth() < 3.0 else 2):   # by depth on a longer night
 				var e: Enemy = world.spawn_enemy(lst[world.rng.randi() % lst.size()], c + Vector2(-8 + 16 * i, 6))
 				if e:
 					e.kvel = fly.call() * 2.0

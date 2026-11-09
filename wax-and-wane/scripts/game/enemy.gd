@@ -189,9 +189,11 @@ const DEFS := {
 		"lore": "It has wound the house clock every night for three hundred years. Tonight it wants to wind you.", "stain": Color("#5f2d56")},
 }
 
-## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
+## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up. Read by depth
+## (world.depth, Areas.at_depth): a longer night's middle floors sit between two entries; [4] = the Clock Tower.
+## Guardians: their DEFS hp at their home depth (Areas.home_depth), scaled by this table where they are met.
 const FLOOR_HP := [1.0, 1.35, 1.85, 2.4, 3.0]
-## Contact damage per floor for creatures without their own "touch" (bosses: 8). Balance: polish.md.
+## Contact damage per floor (by depth) for creatures without their own "touch" (bosses: 8). Balance: polish.md.
 const TOUCH := [5, 6, 7, 7, 7]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
@@ -205,6 +207,8 @@ var def: Dictionary
 var hp := 1.0
 var max_hp := 1.0
 var speed := 20.0
+var _depth := 1.0         # the floor's depth on the 4-floor scale when this one was set up (world.depth)
+var _touch_floor := 5.0   # contact damage there (TOUCH by depth), for creatures without their own "touch"
 var radius := 5.0
 var half_h := 6.0
 ## Marked foes: tougher, glowing, and they pay out (set by the world before _ready).
@@ -313,8 +317,13 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 	kind = k
 	def = DEFS[k]
 	position = pos
-	var f := float(floor_num - 1)
-	max_hp = float(def["hp"]) * FLOOR_HP[clampi(floor_num, 1, FLOOR_HP.size()) - 1] if not def.get("boss", false) else float(def["hp"])
+	_depth = float(w.depth(floor_num)) if w and w.has_method("depth") else float(floor_num)   # the Long Night: by depth
+	var f := _depth - 1.0
+	if not def.get("boss", false):
+		max_hp = float(def["hp"]) * Areas.at_depth(FLOOR_HP, _depth)
+	else:   # a guardian met away from its home depth (the Wax Mother in a long night's Kitchen) grows or shrinks
+		max_hp = float(def["hp"]) * (Areas.at_depth(FLOOR_HP, _depth) / Areas.at_depth(FLOOR_HP, Areas.home_depth(k)))
+	_touch_floor = Areas.at_depth(TOUCH, minf(_depth, 4.0))
 	max_hp *= float(w.difficulty()["hp"]) if w and w.has_method("difficulty") else 1.0   # the slot's level (world.LEVELS)
 	hp = max_hp
 	speed = float(def["speed"]) * (1.0 + 0.05 * f)
@@ -324,6 +333,11 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 	heavy = def.get("heavy", false)
 	cd = float(def.get("cd", 1.5)) * randf_range(0.6, 1.2)
 	_wob = randf() * TAU
+
+
+## Contact damage of the floor world `w` is on, for creatures without their own "touch" (TOUCH by depth).
+static func touch_at(w: Node) -> float:
+	return Areas.at_depth(TOUCH, minf(float(w.depth()), 4.0))
 
 
 ## The colour this creature's remains leave on the floor (for death splats).
@@ -500,7 +514,7 @@ func _physics_process(dt: float) -> void:
 	elif absf(to_p.x) > 2 and state != "charge" and state != "still":
 		spr.flip_h = to_p.x < 0
 	# contact damage
-	var touch: float = def.get("touch", 8.0 if boss else float(TOUCH[clampi(world.floor_num, 1, 4) - 1]))
+	var touch: float = def.get("touch", 8.0 if boss else _touch_floor)
 	if touch > 0.0 and not buried and not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
 		if champ == "chilled" and not p.dead:
 			if p.chill_t <= 0.0:
@@ -619,7 +633,7 @@ func _ai_hop(ddt: float, to_p: Vector2, _dist: float) -> void:
 				t = 0.42
 				dir = (to_p.normalized() + Vector2(randf_range(-0.4, 0.4), randf_range(-0.4, 0.4))).normalized()
 		"hop":
-			_walk(ddt, dir, 115.0 * (1.0 + 0.05 * world.floor_num))
+			_walk(ddt, dir, 115.0 * (1.0 + 0.05 * _depth))
 			_jump_h = sin((1.0 - t / 0.42) * PI) * 9.0
 			if t <= 0:
 				state = "idle"
@@ -711,7 +725,7 @@ func _ai_jumper(ddt: float, to_p: Vector2, _dist: float) -> void:
 				state = "idle"
 				cd = randf_range(1.4, 2.0)
 				world.shake(1.5)
-				if world.floor_num >= 3:
+				if _depth >= 3.0:
 					world.burst(global_position + Vector2(0, -4), 6, 70.0, "bullet_purple", randf() * TAU)
 
 

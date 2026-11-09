@@ -175,7 +175,7 @@ func _pick_relic() -> String:
 func _weight(q: int, pool: String) -> float:
 	var w: float = [10.0, 8.0, 5.5, 3.0, 1.4][clampi(q, 0, 4)]
 	if q >= 3:
-		w *= 1.0 + 0.2 * (world.floor_num - 1)
+		w *= 1.0 + 0.2 * ((world.depth() if world.has_method("depth") else float(world.floor_num)) - 1.0)   # by depth (v2.2)
 	match pool:
 		"boss":
 			w *= [0.35, 0.7, 1.0, 1.3, 1.6][clampi(q, 0, 4)]

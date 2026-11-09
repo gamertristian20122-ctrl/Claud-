@@ -332,9 +332,15 @@ func difficulty() -> Dictionary:
 	return LEVELS.get(level, LEVELS[DEFAULT_LEVEL])
 
 
-## This floor's entry of a per-floor table (FLOOR_DRAIN, KINDLE_CAP, QUICK_WAX, WAX_ODDS).
+## This floor's entry of a per-floor table (FLOOR_DRAIN, KINDLE_CAP, QUICK_WAX, WAX_ODDS, the marked-foe odds):
+## read at the floor's depth (a longer night's middle floors sit between two entries; Areas.at_depth).
 func floor_k(tbl: Array) -> float:
-	return float(tbl[clampi(floor_num, 1, tbl.size()) - 1])
+	return Areas.at_depth(tbl, depth())
+
+
+## Contact damage of this floor's creatures (Enemy.TOUCH at its depth; guardians and champions have their own).
+func touch_damage() -> float:
+	return Enemy.touch_at(self)
 
 
 func _start_floor(n: int) -> void:
@@ -379,7 +385,7 @@ func _start_floor(n: int) -> void:
 	Audio.music(fdef(n)["music"])
 	Audio.set_space(int(fdef(n).get("space", n)))
 	var steady := 0.0
-	if n in STEADY_FLOORS and player.wax < STEADY_BELOW:
+	if not is_tower(n) and roundi(depth(n)) in STEADY_FLOORS and player.wax < STEADY_BELOW:   # by depth: a longer night steadies more often
 		steady = minf(STEADY_ADD, STEADY_BELOW - player.wax)
 		player.heal(steady)
 		fx_text(player.global_position + Vector2(0, -30), "YOUR WICK STEADIES  +%d min" % int(steady), UI.GOLD)
@@ -482,9 +488,12 @@ func _on_enter_room() -> void:
 		tw.tween_callback(_spawn_room_enemies)
 
 
+## Marked foes per floor (by depth; [4] = the Clock Tower), times the level's.
+const CHAMP_ODDS := [0.03, 0.06, 0.09, 0.12, 0.14]
+
+
 func champ_chance() -> float:
-	var c: float = [0.03, 0.06, 0.09, 0.12, 0.14][floor_num - 1]
-	return c * float(difficulty()["champ"])
+	return floor_k(CHAMP_ODDS) * float(difficulty()["champ"])
 
 
 func _spawn_room_enemies() -> void:
@@ -591,7 +600,7 @@ func _clear_room() -> void:
 	rooms_cleared += 1
 	RelicFx.on_clear(self)
 	if d["type"] == "normal":
-		charge_keepsake(2 if run_time - room_t0 <= 8.0 + 2.5 * floor_num else 1)
+		charge_keepsake(2 if run_time - room_t0 <= 8.0 + 2.5 * depth() else 1)
 	room.set_open(true)
 	room.light_candles()
 	Juice.of(self).room_cleared()
@@ -608,8 +617,8 @@ func _clear_room() -> void:
 			floor_clean += 1
 			player.heal(1.0)
 			fx_text(player.global_position + Vector2(0, -34), "CLEAN  +1 min", UI.GOLD)
-		var par := 8.0 + 2.5 * floor_num
-		var quick := floor_k(QUICK_WAX)
+		var par := 8.0 + 2.5 * depth()
+		var quick := floorf(floor_k(QUICK_WAX))   # whole minutes, as the text says (a longer night's middle floors)
 		if run_time - room_t0 <= par and quick > 0.0:
 			player.heal(quick)
 			fx_text(player.global_position + Vector2(0, -44), "QUICK  +%d min" % int(quick), UI.EMBER)
@@ -648,7 +657,7 @@ func _next_relic() -> String:
 
 func _stock_shop() -> void:
 	var c := room.center()
-	add_pickup("relic", c + Vector2(-40, -4), _next_relic(), 10 + 2 * floor_num)
+	add_pickup("relic", c + Vector2(-40, -4), _next_relic(), 10 + roundi(2.0 * depth()))
 	var tonics := Items.TONICS.keys()
 	add_pickup("tonic", c + Vector2(0, -4), tonics[rng.randi() % tonics.size()], 5)
 	if floor_num >= 2 and rng.randf() < 0.35:
@@ -1065,8 +1074,8 @@ func assist_aim(pos: Vector2, dir: Vector2) -> Vector2:
 
 
 func enemy_dmg_mult() -> float:
-	# the Clock Tower hits as hard as the Belfry; the level scales every blow a foe lands
-	return (1.0 + 0.12 * (mini(floor_num, LAST_FLOOR) - 1)) * float(difficulty()["dmg"])
+	# by depth (the Clock Tower hits as hard as the Belfry); the level scales every blow a foe lands
+	return (1.0 + 0.12 * (minf(depth(), float(LAST_FLOOR)) - 1.0)) * float(difficulty()["dmg"])
 
 
 func time_scale_enemies() -> float:
@@ -1208,7 +1217,7 @@ func _explode(pos: Vector2, r: Room) -> void:
 	for e in enemies:
 		if is_instance_valid(e) and e.alive and e.global_position.distance_to(pos) < bomb_radius + e.radius:
 			e.active = true
-			e.take_hit(10.0 + 2.0 * floor_num, (e.global_position - pos).normalized() * 150.0)
+			e.take_hit(10.0 + 2.0 * depth(), (e.global_position - pos).normalized() * 150.0)
 	if player.global_position.distance_to(pos) < bomb_radius * 0.8:
 		Records.blame("bomb")
 		player.hurt(10.0, player.global_position - pos)
