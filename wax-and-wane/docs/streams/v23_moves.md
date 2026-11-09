@@ -95,4 +95,35 @@ star (5x5, 3 frames), the Sparkler's flash (17x17, 3), the Slam's shockwave ring
   `--strict FILES` fails on any unwrapped string in those files (every new script of this stream passes).
   Every new visible string of this stream goes through `L.t`.
 
-JUDGE_PLACEHOLDER
+## Checks (final code)
+- `--checkscripts`: 70 scripts, 0 errors. `--checkrooms`: 0 problems (69 layouts, 1776 dressed rooms, 657 area rooms).
+- `--playtest --speed=4 --runs=1 --god`: reaches the end (WIN at 12:40 AM, Flare Up used 8 times). Earlier on this
+  branch: `--god --runs=2` both WIN (one climbed to the Clock Tower); a normal `--runs=2`: 0 script errors.
+- `--autotest --movescheck` (MovesTour.check): 29 checks PASS: the input map and rebinding (G, a clash with
+  the bomb, the bomb on Left Shift refused, Reset), Skip 48.8 px after 8 frames / 49.6 px at rest with 0.30 s
+  i-frames through a shot, Sparkler hits all 4 foes (1.6 per spark) and pops 3 of 3 shots, Slam roots the candle
+  (0.0 px) then stuns 3 of 3 lodgers in reach (not the far one) and only slows a guardian, Blink over one rock
+  (56 px), stops in front of two (20 px), over a two-tile pit, never out of the room, Flare Up pays 2.0 minutes,
+  x1.5 + burn for 3 s, refused at 4.5 minutes, Snuff fools lodgers, no shots in the dark, then x3 / pierce 3;
+  never while holding a relic aloft, and the cooldown waits through a pause.
+- **Frame timing**: key -> move **1** physics frame, touch on the move button -> **1** frame (the next physics
+  step, as the design pass measures shots). The design latency probe is unchanged (fire 1, tap 10, flick 1,
+  reverse 3, hit feedback 0).
+- **Fit**: `--tour --moves --fit` at 1600x720, 1280x800 and 1920x1080: 25 shots each, 0 flags; the main
+  `--tour` (36 shots), `--tour --platform` (fails=0 at all three sizes) and `--tour --journal` (27): 0 flags.
+- **Thumb reach** (centre distances from the resting right thumb, the ghost aim stick): 480x216: move
+  48 px (about 15 mm on a 6.5" phone), bomb 69 px (21 mm), keepsake 100 px (31 mm); move to bomb 36 px; hit areas
+  42 px (move) and 38 px (bomb, keepsake); all three inside the safe area (also at 384x240 and 384x216).
+- **Balance** (fresh profiles, `--unlockall --difficulty=2`, 8 fresh-seed runs; the owner stopped the judging
+  after Tallow): Tallow with Flare Up 3 / 8 (38%; wins at 1:45, 12:48 and 1:51 AM; losses on floors 2-3; 3-8 uses
+  a run), Tallow with `--nomoves` 3 / 8 (38%; wins at 12:28, 1:27, 12:40 AM). So the move does not push Tallow up.
+  The other five candles were not measured.
+
+## Known issues
+- Per-candle balance was not measured (owner's call); `MovesBot` and `--nomoves` are ready for it
+  (`--playtest --speed=4 --runs=8 --unlockall --candle=<id> --difficulty=2 [--nomoves]`).
+- Pre-existing, not from this stream: with Swap sticks on a 384-wide screen a banner subtitle can run off
+  screen (`hud._place_banner` uses `keep_btn.position.x` as its right edge, and Swap sticks puts that button on
+  the left); `creature_glow.gdshader` prints a `custom_samplers` error in logs.
+- The chalk drawings show the default keys (SHIFT / F, LT) even after a rebind; the Keys page also shows on
+  phones (harmless, it needs a keyboard or pad).
