@@ -85,6 +85,7 @@ func _seasoned_profile() -> void:
 	Game.records["unlocked"] = Candles.ORDER.duplicate()
 	Game.records["seen_intro"] = true
 	Game.records["runs"] = maxi(int(Game.records.get("runs", 0)), 12)
+	Game.records["wins"] = maxi(int(Game.records.get("wins", 0)), 3)   # the ladder of light needs an earlier win
 
 
 ## The hint line under the room (tips, "Hand Bell is ready"...) and the item line at the bottom never show
@@ -651,7 +652,7 @@ func _ladder() -> void:
 	_mark("kill")
 	var lad: Node2D = null
 	var t := 0.0
-	while t < 4.0 and lad == null:
+	while t < 4.0 and lad == null and is_instance_valid(w) and w.room:
 		for o in w.room.objects.get_children():
 			if o is Pickup and o.kind == "trapdoor":
 				lad = o
