@@ -15,7 +15,7 @@ const NAMES := [
 ]
 const TAKES := {"shoot": 3, "hit_enemy": 3, "enemy_die": 3, "step": 4, "coin_pickup": 3, "hit_wall": 3, "splash": 3}
 const MUSIC := ["title", "floor_1", "floor_2", "floor_3", "floor_4", "shop", "boss", "final_boss",
-	"victory_jingle", "death_jingle"]
+	"victory_jingle", "death_jingle", "area_kitchen", "area_library", "area_attic"]
 
 var main: Node
 var fails := 0

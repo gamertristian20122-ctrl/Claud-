@@ -198,6 +198,9 @@ AI narrator, which is not in the game.
   | The Crypt | 21 - Dungeon |
   | The Chapel | 12 - Temple |
   | The Belfry | 24 - Final Area |
+  | The Kitchen (longer nights) | 14 - Curse |
+  | The Library (longer nights) | 30 - Ruins |
+  | The Attic (longer nights) | 16 - Melancholia |
   | The Clock Tower | 19 - Ascension |
   | Shop | 39 - Boat |
   | Guardians (floors 1-3) | 17 - Fight |
