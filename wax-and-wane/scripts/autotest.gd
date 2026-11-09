@@ -78,6 +78,7 @@ func _ready() -> void:
 		await load("res://scripts/trailer.gd").run(self)
 		get_tree().quit()
 	elif args.has("artjudge"): await ArtJudge.run(self)   # fix/art: scripts/game/art_judge.gd, tools/art_judge.py
+	elif args.has("shotjudge"): await ShotJudge.run(self)   # v2.1 shots: scripts/game/shot_judge.gd, tools/shot_judge.py
 	elif mode == "tour" and args.has("relictour"):
 		_relic_tour()
 	elif mode == "tour":
