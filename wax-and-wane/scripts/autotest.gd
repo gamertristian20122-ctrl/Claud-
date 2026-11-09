@@ -210,25 +210,31 @@ var _cycling := false
 
 func _save_cycle() -> void:
 	_cycling = true
+	# the Long Night: the same area, night length and rooms must come back. Both sides are read the moment their
+	# floor starts: a room the bot walks into writes its candelabras / emptied chest cells into its grid, and
+	# what it breaks comes back on a Continue by design (the floor starts again).
+	var house_before := _house_sig(main.current)
 	await get_tree().create_timer(0.8).timeout
 	var w: Node = main.current
 	# compare with the floor-start snapshot (relics picked up since then are not in it, by design)
 	var pd: Dictionary = RunSave.snap.get("player", {})
 	var before: String = "snapshot relics %d wax %.0f" % [pd.get("relics", []).size(), float(pd.get("wax", 0.0))]
-	var house_before := _house_sig(w)   # the Long Night: the same area, night length and rooms must come back
 	RunSave.flush()
 	main.goto("title")
 	await get_tree().create_timer(1.6).timeout
 	RunSave.continue_run(main)
-	var waited := 0.0
-	while waited < 8.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null and not main._busy):
-		await get_tree().create_timer(0.1).timeout
-		waited += 0.1
+	var waited := 0
+	while waited < 2000 and not (main.current and main.current.name == "Game" and main.current.get("player") != null):
+		await get_tree().process_frame
+		waited += 1
+	var house_after := _house_sig(main.current) if main.current and main.current.name == "Game" else "no game"
+	while waited < 2000 and main._busy:
+		await get_tree().process_frame
+		waited += 1
 	await get_tree().create_timer(0.5).timeout
 	w = main.current
 	_stress_cell = w.cur_cell   # the restored run must match its snapshot exactly (no stress relic yet)
 	print("[savecycle] floor %d: %s -> %s (floor %d)" % [_cycled, before, "relics %d wax %.0f" % [w.player.relics.size(), w.player.wax], w.floor_num])
-	var house_after := _house_sig(w)
 	print("[savecycle]    house %s -> %s: %s" % [house_before, house_after, "SAME" if house_before == house_after else "DIFFERENT"])
 	_cycling = false
 
