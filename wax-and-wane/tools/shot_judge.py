@@ -86,18 +86,20 @@ def measure(a, t, x, y):
 
 
 def tele_marks(t, b):
-    """Telegraph dots (T vs B). Every coloured mark pixel (luminance >= 0.05: not the dark outline) is a dot; it
-    reads by the better of its own contrast with the floor (in the dark) and that of the darkest mark pixel next
-    to it (its dark outline, on a light floor). Floor = B's median in a 9 x 9 window round the dot, mark pixels
-    left out.
+    """Telegraph dots (T vs B). A dot is a coloured mark pixel: it differs from B by >= 32 in some channel (the
+    flicker of Tallow's flame and the wall candles between the two captures moves the floor by a few levels
+    only) and is not the dark outline (luminance >= 0.05). It reads by the better of its own contrast with the
+    floor (in the dark) and that of the darkest mark pixel next to it (its dark outline, on a light floor). Floor =
+    B's median in a 9 x 9 window round the dot, mark pixels (any change >= 8) left out.
     Returns the min / median dot contrast and the share of dots >= 3:1."""
-    m = np.abs(t - b).sum(-1) > 0
+    diff = np.abs(t - b).max(-1)
+    m = diff >= 8
     if not m.any():
         return None
     Lt, Lb = lum(t), lum(b)
     h, w = m.shape
     cs = []
-    for y, x in zip(*np.nonzero(m & (Lt >= 0.05))):
+    for y, x in zip(*np.nonzero((diff >= 32) & (Lt >= 0.05))):
         y0, y1, x0, x1 = max(0, y - 4), min(h, y + 5), max(0, x - 4), min(w, x + 5)
         floor = ~m[y0:y1, x0:x1]
         if not floor.any():
@@ -196,17 +198,17 @@ def report(rows, title):
     return sm
 
 
-def sheet(after_dir, before_dir, path, scale=3):
-    """Before / after at phone scale: the same layout (floor 2 and the tower at 20 % wax, floor 1 lit), full screen."""
+def sheet(after_dir, before_dir, path, scale=2, zoom=4):
+    """Before / after: columns 2.0 / 2.1 Normal / 2.1 Large, rows floor 1 at full wax and floors 2, 3 and the tower
+    at 20 % wax. Each cell is the whole screen at `scale` (x2 is about the size it has on a 6.5 inch phone held at
+    arm's length on a desktop monitor) with the lit row and the shadowed corner below it at `zoom`."""
     ja = json.load(open(os.path.join(after_dir, "judge.json")))
     jb = json.load(open(os.path.join(before_dir, "judge.json")))
     picks = [(1, 1.0), (2, 0.2), (3, 0.2), (5, 0.2)]
-    sizes_a = ja["sizes"]
-    cols = [("2.0", jb, before_dir, jb["sizes"][0])] + [("2.1 " + s, ja, after_dir, s) for s in sizes_a]
+    cols = [("2.0", jb, before_dir, jb["sizes"][0])] + [("2.1 " + s, ja, after_dir, s) for s in ja["sizes"]]
     cw, ch = 480 * scale, 216 * scale
-    crop = (232, 84, 352, 132)   # the lit row's right half and the corner block, zoomed
-    zc = 3
-    zw, zh = (crop[2] - crop[0]) * scale * zc // 3, (crop[3] - crop[1]) * scale * zc // 3
+    lit, corner = (160, 86, 320, 106), (276, 49, 348, 85)   # screen rects of the lit row and the corner block
+    zh = (corner[3] - corner[1]) * zoom
     out = Image.new("RGB", (cw * len(cols) + 8 * (len(cols) - 1), (ch + zh + 30) * len(picks)), (12, 10, 12))
     d = ImageDraw.Draw(out)
     for ri, (fl, wax) in enumerate(picks):
@@ -217,8 +219,10 @@ def sheet(after_dir, before_dir, path, scale=3):
             y = ri * (ch + zh + 30)
             d.text((x + 4, y + 2), "%s - floor %d, %d%% wax" % (lab, fl, int(wax * 100)), fill=(240, 230, 210))
             out.paste(im.resize((cw, ch), Image.NEAREST), (x, y + 14))
-            z = im.crop(crop).resize((zw, zh), Image.NEAREST)
-            out.paste(z, (x, y + 14 + ch + 8))
+            zl = im.crop(lit)
+            zc = im.crop(corner)
+            out.paste(zl.resize((zl.width * zoom, zl.height * zoom), Image.NEAREST), (x, y + 14 + ch + 8))
+            out.paste(zc.resize((zc.width * zoom, zc.height * zoom), Image.NEAREST), (x + cw - zc.width * zoom, y + 14 + ch + 8))
     out.save(path)
     return path
 
