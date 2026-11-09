@@ -449,6 +449,36 @@ static func floor_count() -> int:
 	return int(preload("res://scripts/game/world.gd").LAST_FLOOR)
 
 
+const NUMBER_WORDS := ["twelve", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"]
+
+
+## "seven" for 7 (0 reads "twelve": the clock's midnight).
+static func number_word(n: int) -> String:
+	return NUMBER_WORDS[n] if n >= 0 and n < NUMBER_WORDS.size() else str(n)
+
+
+## A time of the night in words: "one", "half past three"; other minutes as the clock shows them ("1:45 AM").
+static func hour_words(minutes: float, capital := false) -> String:
+	var m := roundi(minutes)
+	var out := Game.clock_text(minutes, false)
+	if m % 60 == 0:
+		out = number_word(m / 60)
+	elif m % 60 == 30:
+		out = "half past " + number_word(m / 60)
+	return (out.substr(0, 1).to_upper() + out.substr(1)) if capital else out
+
+
+## How a night of `floors` floors must end: "before it strikes two" (4 floors), "before half past three" (7),
+## "before dawn" (10).
+static func night_end_phrase(floors: int) -> String:
+	var end := Game.night_minutes(floors)
+	if end >= Game.DAWN_MINUTES:
+		return "before dawn"
+	if roundi(end) % 60 == 0:
+		return "before it strikes " + hour_words(end)
+	return "before " + hour_words(end)
+
+
 ## The save slot's night length (the Night length picker on the Slots screen): 4 .. Areas.max_floors(), 4 until
 ## the slot picks another. world.setup reads it for every run but Tonight's Candle (always 4).
 static func night_floors() -> int:

@@ -22,9 +22,13 @@ const DEFAULT_LEVEL := 2      # Midnight: the game as it was made (and always To
 const OLD_SAVE := "user://save_2.0.cfg"   # the 2.0 save file, kept as it was before the move
 const OLD_RUN := "user://run.cfg"         # 2.0's saved run (moves to run1.cfg)
 
-## In-game clock: the run starts at midnight and the flame dies at 2:00 AM.
+## In-game clock: the run starts at midnight and the flame dies at the end of the night: 2:00 AM for the
+## 4-floor night as it was made, NIGHT_STEP later for every floor past four (the Long Night: 3:30 AM for 7
+## floors, dawn at 5:00 AM for 10). night_minutes() is the one place that length is worked out.
 const START_MINUTES := 0.0      # 12:00 AM
-const END_MINUTES := 120.0      # 2:00 AM
+const END_MINUTES := 120.0      # 2:00 AM: the end of a 4-floor night (night_minutes(4))
+const NIGHT_STEP := 30.0        # minutes each floor past four adds to the night (and to a full candle)
+const DAWN_MINUTES := 300.0     # 5:00 AM: the end of the longest night (10 floors); the clock never reads later
 
 ## 1.0 normally; the play-test bot raises it to run faster than real time.
 var base_time_scale := 1.0
@@ -339,12 +343,18 @@ func vibrate(ms: int) -> void:
 		Input.start_joy_vibration(pad, 0.5 * k, 0.8 * k, ms / 1000.0)
 
 
-## 0..120 minutes after midnight -> "12:47 AM" / "1:05 AM" / "2:00 AM".
+## Minutes in a night of `floors` floors: 120 (2:00 AM) for 4, 30 more for every floor past four. A full
+## candle holds the whole night (world.night_minutes, the candle's wax), so the clock = night - wax.
+static func night_minutes(floors: int) -> float:
+	return END_MINUTES + NIGHT_STEP * float(maxi(0, floors - 4))
+
+
+## 0..300 minutes after midnight -> "12:47 AM" / "1:05 AM" / "2:00 AM" / "3:30 AM".
 ## The night never starts before midnight: wax past a full candle (minutes < 0) reads
 ## "12:00 AM +8 min" (8 spare minutes). `spare = false` gives just "12:00 AM" (the HUD shows the
 ## spare minutes in their own small label, see spare_minutes()).
 static func clock_text(minutes: float, spare := true) -> String:
-	var m := clampi(int(floor(minutes)), 0, 120)
+	var m := clampi(int(floor(minutes)), 0, int(DAWN_MINUTES))
 	var h := m / 60
 	var t := "%d:%02d AM" % [12 if h == 0 else h, m % 60]
 	var s := spare_minutes(minutes)

@@ -19,7 +19,8 @@ const CHEEK := Color("#f78697")
 const GLINT := Color("#cae6f5")
 const GLINT_SH := Color("#72d6ce")
 const RADIUS := 5.0
-## Mood thresholds in wax (= minutes of clock left): worried from 12:45 AM (the mid stage), tired from 1:27.
+## Mood thresholds in wax as a 4-floor candle shows it (shown_wax: the fraction of the night left x 120):
+## worried from 12:45 AM on a 4-floor night (the mid stage), tired from 1:27; the same fractions on longer nights.
 const WORRIED_AT := 75.0
 const TIRED_AT := 33.0
 ## The wavy melted edge under the lip: 1 = it runs one pixel lower at this column (x = -6..6, repeats).
@@ -312,8 +313,21 @@ func set_blue(b: bool) -> void:
 	light.color = Color(0.6, 0.8, 1.0) if b else Color(1.0, 0.74, 0.44)
 
 
+## Minutes in tonight's night (world.night_minutes: 120 for 4 floors, 210 for 7); 120 away from a run.
+func night() -> float:
+	return float(world.night_minutes()) if world and world.has_method("night_minutes") else Game.END_MINUTES
+
+
+## The fraction of the night the wax still holds (1.0 = a full candle; up to 1.35 with spare minutes).
 func wax_frac() -> float:
-	return clampf(wax / 120.0, 0.0, 1.35)
+	return clampf(wax / night(), 0.0, 1.35)
+
+
+## The wax as a 4-floor candle shows it: the body, the face, the dish and the light follow the fraction of the
+## night left, so a full 7-floor candle looks like a full 4-floor one (no giant candles). Danger cues (the
+## sputter, the HUD's low-wax warnings) stay in real minutes.
+func shown_wax() -> float:
+	return wax * Game.END_MINUTES / night()
 
 
 ## Wax rows at this much wax: one row melts every 18 minutes. Full Tallow (120 wax) = 12 rows, 72 = 9
@@ -323,7 +337,7 @@ static func rows_for(wax_amount: float) -> int:
 
 
 func body_height() -> int:
-	return Player.rows_for(wax)
+	return Player.rows_for(shown_wax())
 
 
 ## Where the wick tip is (local), for the title's match and anything that lights or watches the flame.
@@ -558,7 +572,7 @@ func _process(dt: float) -> void:
 	# light: flicker + shrink with wax (and die with the flame)
 	var t := Time.get_ticks_msec() / 1000.0
 	var flick := 1.0 + 0.045 * sin(t * 13.0) + 0.03 * sin(t * 23.7 + 1.3) + randf_range(-0.015, 0.015)
-	var wf := clampf(wax / 120.0, 0.0, 1.0)
+	var wf := clampf(wax_frac(), 0.0, 1.0)
 	light.texture_scale = lerpf(0.95, 1.5, wf) * flick * light_mult
 	if world and world.get("omen") == "smoky_halls":
 		light.texture_scale = maxf(0.95 * light_mult, light.texture_scale * 0.85)
@@ -594,9 +608,9 @@ func _process(dt: float) -> void:
 
 
 func _mood() -> String:
-	if wax < TIRED_AT:
+	if shown_wax() < TIRED_AT:
 		return "tired"
-	if wax < WORRIED_AT:
+	if shown_wax() < WORRIED_AT:
 		return "worried"
 	return ""
 
@@ -672,7 +686,7 @@ func _juice_step(dt: float) -> void:
 		if vel.x < 0.0:
 			a.reverse()
 		_arms = a
-	elif wax < TIRED_AT:
+	elif shown_wax() < TIRED_AT:
 		_arms = ["low", "low"]
 	else:
 		_arms = ["rest", "rest"]
@@ -811,11 +825,12 @@ func _draw_front() -> void:
 	var d := o + Vector2(0, -_lift)
 	if not dead:
 		# clean at full wax, a puddle from about a quarter gone, spilling over the lip near the end
-		var p := clampf((105.0 - wax) / 65.0, 0.0, 1.0)
+		var sw := shown_wax()
+		var p := clampf((105.0 - sw) / 65.0, 0.0, 1.0)
 		var span := int(roundf(2.0 + 5.0 * p)) if p > 0.05 else 0
 		var runs := Vector2i.ZERO
-		if wax < 42.0:
-			runs = Vector2i(3 if wax < 18.0 else (2 if wax < 34.0 else 1), 2 if wax < 18.0 else 1)
+		if sw < 42.0:
+			runs = Vector2i(3 if sw < 18.0 else (2 if sw < 34.0 else 1), 2 if sw < 18.0 else 1)
 		Player.paint_dish_wax(_front, d, span, runs, c)
 	if _h > 0 and not dead:
 		Player.paint_arms(_front, o, _g, c, _arms)

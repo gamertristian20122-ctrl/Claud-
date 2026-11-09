@@ -35,7 +35,8 @@ const OMENS := {
 	"long_night": {"name": "Long Night", "desc": "A bigger floor with two treasure rooms"},
 	"smoky_halls": {"name": "Smoky Halls", "desc": "Your light is shorter, but rooms give twice"},
 }
-## Base melt: a full candle (120 wax) lasts 8 minutes if you never get hit; kills, clears and drips buy time back.
+## Base melt: a full 4-floor candle (120 wax) lasts 8 minutes if you never get hit; kills, clears and drips buy
+## time back. Wax is minutes on every night: a longer night's candle holds more of them, it melts no faster.
 const DRAIN_PER_SEC := 120.0 / (8.0 * 60.0)
 ## The night speeds up as you climb: the melt per floor (x DRAIN_PER_SEC; [4] = the Clock Tower), and the
 ## deeper floors pay fewer minutes back, so a winning run still feels the clock (C1: wins used to end at
@@ -190,6 +191,9 @@ func _ready() -> void:
 	player = Player.new()
 	player.world = self
 	player.apply_candle(candle_id)   # the level's melt is read live in _physics_process (difficulty)
+	# a longer night: every candle holds the extra half hours (it is lit at the same time on any night)
+	player.wax += night_minutes() - Game.END_MINUTES
+	player.wax_max += night_minutes() - Game.END_MINUTES
 	actors.add_child(player)
 	var cd: Dictionary = Candles.def_of(candle_id)
 	if cd.has("start_relic"):
@@ -230,8 +234,8 @@ func _intro() -> void:
 	var v: VBoxContainer = m[1]
 	for line in ["The old house wakes when the clock strikes twelve.",
 			"You are Tallow, the last candle in the cellar.",
-			"Burn down through four floors to the belfry",
-			"and still the clock before it strikes two.",
+			"Burn down through %s floors to the belfry" % Records.number_word(night_floors),
+			"and still the clock %s." % Records.night_end_phrase(night_floors),
 			"",
 			"Your wax is your life - and your time.",
 			"Every hit melts you. Wax drippings mend you.",
@@ -1324,9 +1328,15 @@ func give_up() -> void:
 	on_player_died()
 
 
-## Clock minutes past midnight: a full 120-wax candle = 12:00 AM, an empty one = 2:00 AM.
+## Minutes in tonight's night: 120 (2:00 AM) for 4 floors, 30 more per floor past four (Game.night_minutes).
+func night_minutes() -> float:
+	return Game.night_minutes(night_floors)
+
+
+## Clock minutes past midnight: a full candle (the whole night of wax) = 12:00 AM, an empty one = the end of
+## the night (2:00 AM on a 4-floor night, 3:30 AM on a 7-floor one).
 func clock_minutes() -> float:
-	return 120.0 - player.wax
+	return night_minutes() - player.wax
 
 
 # ---------------------------------------------------------------- loop
@@ -1379,9 +1389,24 @@ func _physics_process(dt: float) -> void:
 	_update_moths(dt)
 
 
+## The bells of the night: every hour it strikes before the last half hour, then half an hour before the end
+## ("Half past one. Hurry." on a 4-floor night) and a quarter before ("Your wick is nearly gone").
+func bell_marks() -> Array:
+	var end := night_minutes()
+	var out: Array = []
+	var h := 60.0
+	while h < end - 30.0:
+		out.append(h)
+		h += 60.0
+	out.append(end - 30.0)
+	out.append(end - 15.0)
+	return out
+
+
 func _clock_events() -> void:
 	var m := clock_minutes()
-	for mark in [60.0, 90.0, 105.0]:
+	var end := night_minutes()
+	for mark in bell_marks():
 		if m >= mark and not _bells.has(mark):
 			_bells[mark] = true
 			Audio.play("bell_toll")
@@ -1389,10 +1414,14 @@ func _clock_events() -> void:
 				_bell_paid[mark] = true
 				player.heal(4.0)
 				fx_text(player.global_position + Vector2(0, -34), "+4 min", UI.GOLD)
-			match int(mark):
-				60: hud.show_banner("1:00 AM", "The clock strikes one", 1.8)
-				90: hud.show_banner("1:30 AM", "Half past one. Hurry.", 1.6)
-				105: hud.show_banner("1:45 AM", "Your wick is nearly gone", 1.6)
+			var at := Game.clock_text(mark, false)
+			if is_equal_approx(mark, end - 15.0):
+				hud.show_banner(at, "Your wick is nearly gone", 1.6)
+			elif is_equal_approx(mark, end - 30.0):
+				var words := Records.hour_words(mark, true) + (" o'clock" if roundi(mark) % 60 == 0 else "")
+				hud.show_banner(at, "%s. Hurry." % words, 1.6)
+			else:
+				hud.show_banner(at, "The clock strikes %s" % Records.hour_words(mark), 1.8)
 		elif m < mark - 10.0 and _bells.has(mark):
 			_bells.erase(mark)
 	Audio.set_low_wax(player.wax < 15.0 and not player.dead, player.wax / 15.0)

@@ -61,7 +61,7 @@ func moth(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 	e._wob += ddt * 7.0
 	var p: Player = e.world.player
 	# the brighter Tallow burns, the harder they pull
-	var pull := 0.7 + 0.55 * clampf(p.wax / 120.0, 0.0, 1.0)
+	var pull := 0.7 + 0.55 * clampf(p.wax_frac(), 0.0, 1.0)   # the fraction of the night left (any night length)
 	var n := to_p.normalized()
 	var want := n + n.orthogonal() * sin(e._wob + float(e.get_instance_id() % 7)) * 0.95
 	if e.state == "bump":
