@@ -63,7 +63,7 @@ const LEVELS := {
 	3: {"name": "Witching Hour", "line": "Harder: a faster melt, harder hits, more marked foes.",
 		"melt": 1.1, "dmg": 1.2, "hp": 1.15, "champ": 1.5, "wax": 1.0},
 	4: {"name": "Two O'Clock", "line": "Brutal: tough foes, cruel hits and thin wax.",
-		"melt": 1.15, "dmg": 1.3, "hp": 1.3, "champ": 2.0, "wax": 0.85},
+		"melt": 1.2, "dmg": 1.4, "hp": 1.3, "champ": 2.0, "wax": 0.8},
 }
 const DEFAULT_LEVEL := 2
 
