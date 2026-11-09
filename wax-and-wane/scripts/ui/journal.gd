@@ -711,12 +711,14 @@ func _d_candle(e: Dictionary) -> void:
 	art.id = c
 	art.sil = not known
 	art.custom_minimum_size = Vector2(28, 48)
-	_head(art, str(d["name"]) if known else "???", [["%d minutes of wax" % int(d["wax"]), UI.EMBER]] if known else [], UI.GOLD if known else UI.DIM)
+	var subs: Array = [["%d minutes of wax" % int(d["wax"]), UI.EMBER]] if known else []
+	if known and Moves.for_candle(c) != "":
+		subs.append(_move_row(c))   # v2.3: the candle's special move, beside the portrait (no extra height)
+	_head(art, str(d["name"]) if known else "???", subs, UI.GOLD if known else UI.DIM)
 	if not known:
 		_text("Locked: " + str(d["unlock_text"]), UI.EMBER)
 		return
 	_text(str(d["line"]), UI.CREAM)
-	_move_row(c)   # v2.3: the candle's special move
 	if d.has("blurb"):
 		_text(str(d["blurb"]), UI.DIM)
 	var bits: Array = []
@@ -748,12 +750,10 @@ func _d_candle(e: Dictionary) -> void:
 		_text("Not won with yet", UI.WAX)
 
 
-## v2.3: a candle's special move in its Candles page: the icon, "Skip: a quick dash ...", and how
-## many times it was used in this slot.
-func _move_row(c: String) -> void:
+## v2.3: a candle's special move for its Candles page head: the icon, "Skip: a quick dash ...", and how
+## many times it was used in this slot (the short line on a 384-wide screen).
+func _move_row(c: String) -> Control:
 	var mv := Moves.for_candle(c)
-	if mv == "":
-		return
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	row.add_child(_pic(Art.tex(Moves.icon(mv))))
@@ -765,10 +765,10 @@ func _move_row(c: String) -> void:
 		txt += " " + L.t("(used {n})", {"n": used})
 	var l := UI.label(txt, 8, UI.GOLD)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size = Vector2(130, 0)
+	l.custom_minimum_size = Vector2(90, 0)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(l)
-	_detail.add_child(row)
+	return row
 
 
 ## The rules from the one-time intro (world._intro), for anyone who skipped it.
