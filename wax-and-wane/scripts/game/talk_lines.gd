@@ -28,7 +28,7 @@ const SPEAKERS := {
 	"me": {"voice": ["tick", [1.55], -15.0]},
 	"martha": {"voice": ["ui_click", [0.92], -13.0]},
 	"big_zombie": {"crop": [4, 6], "voice": ["step", [0.55], -11.0]},
-	"wax_mother": {"crop": [8, 4], "voice": ["ui_back", [0.78], -12.0]},
+	"wax_mother": {"crop": [8, 7], "voice": ["ui_back", [0.78], -12.0]},
 	"furnace": {"crop": [8, 1], "voice": ["step", [0.72], -10.0]},
 	"ogre": {"crop": [6, 8], "voice": ["ui_back", [0.6], -11.0]},
 	"sexton": {"crop": [4, 5], "voice": ["step", [0.68], -11.0]},
@@ -42,7 +42,7 @@ const SPEAKERS := {
 	"stockpot": {"crop": [10, 2], "voice": ["ui_back", [0.9], -12.0]},
 	"librarian": {"crop": [4, 1], "voice": ["ui_move", [1.12], -14.0]},
 	"dress_form": {"crop": [8, 1], "voice": ["ui_click", [1.1], -13.0]},
-	"keeper": {"crop": [12, 4], "voice": ["tick", [0.45], -13.0]},
+	"keeper": {"crop": [12, 6], "voice": ["tick", [0.45], -13.0]},
 }
 
 ## The first time a save slot meets a guardian: a short exchange after its entrance, before the fight.

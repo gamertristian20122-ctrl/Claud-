@@ -106,6 +106,26 @@ static func tour(bot: Node) -> void:
 	Talk.force = true
 	bot.args["nocard"] = true
 	var w: Node = await _world(bot)
+	if str(bot.args.get("talk", "")) == "all":   # --tour --talk=all: every guardian's first two lines (portraits, crops)
+		for item in BossIntro.TOUR:
+			var g: Enemy = await _meet(bot, w, str(item[0]))
+			if Talk.live == null:
+				print("[talk] tour: no scene for ", item[0])
+				continue
+			await _typed(bot)
+			await bot._shot("all_%s_1" % item[0])
+			await bot._wait(Talk.HOLD)
+			await _press(bot)
+			await _typed(bot)
+			await bot._shot("all_%s_2" % item[0])
+			Talk.live.skip()
+			await _until_closed(bot)
+			BossIntro._tour_clear(w)
+			if g:
+				pass
+		Talk.force = false
+		print("[talk] tour done")
+		return
 	# ---- four first meetings: a line mid-typing, the candle's answer, and the last line
 	for kind in ["big_zombie", "wax_mother", "organist", "weathercock"]:
 		var e: Enemy = await _meet(bot, w, kind)
