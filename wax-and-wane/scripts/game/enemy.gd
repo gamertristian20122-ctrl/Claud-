@@ -263,6 +263,7 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 	position = pos
 	var f := float(floor_num - 1)
 	max_hp = float(def["hp"]) * FLOOR_HP[clampi(floor_num, 1, FLOOR_HP.size()) - 1] if not def.get("boss", false) else float(def["hp"])
+	max_hp *= float(w.difficulty()["hp"]) if w and w.has_method("difficulty") else 1.0   # the slot's level (world.LEVELS)
 	hp = max_hp
 	speed = float(def["speed"]) * (1.0 + 0.05 * f)
 	radius = float(def["r"])
@@ -935,9 +936,10 @@ func take_hit(dmg: float, knock: Vector2, burn := 0.0) -> void:
 		kvel += knock
 	else:
 		kvel += knock * 0.15
-	mat.set_shader_parameter("tint", Color(1, 1, 1))
+	var dark := Candles.dark_mult(world, self)   # the Black Taper: a foe out in the dark takes more (1.0 otherwise)
+	mat.set_shader_parameter("tint", Color(1, 1, 1) if dark == 1.0 else Color(0.8, 0.62, 1.0))   # a dark hit flashes violet
 	_flash = 1.0
-	_damage(dmg, true)
+	_damage(dmg * dark, true)
 
 
 func _damage(dmg: float, sound: bool) -> void:

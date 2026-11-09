@@ -63,9 +63,10 @@ reasons to come back.
 - **35 kinds of lodger**, marked foes that pay out wax, coins or bombs, and omens that twist each floor.
 - **9 guardians** with versus cards (two per floor, picked by the run's seed, plus the secret Keeper of Hours) and **6 house champions**.
 - **5 special rooms**: the Seance, the Cracked Mirror, the Music Box, the Study and the Wax Font.
-- **6 candles**: Tallow, Tea Light, Party Candle, Altar Pillar, the hard-mode Black Taper and the secret Moonwick.
+- **6 candles**: Tallow, Tea Light, Party Candle, Altar Pillar, the Black Taper (a short light, but foes in the dark take more damage) and the secret Moonwick.
+- **3 save slots, 4 difficulty levels**: every slot keeps its own level (1 Gentle, 2 Midnight, 3 Witching Hour, 4 Two O'Clock), Journal and unlocks.
 - **Tonight's Candle**: one seeded house a night, the same for every player. Typed-in seeds too.
-- **The Journal** and **52 achievements** (in the game).
+- **The Journal** and **54 achievements** (in the game).
 - **Save and continue**, keyboard and mouse, gamepad and touch.
 
 ---

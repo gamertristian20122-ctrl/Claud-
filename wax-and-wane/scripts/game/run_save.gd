@@ -1,12 +1,14 @@
 extends Node
 ## Save & Continue (autoload "RunSave").
 ##
-## At the start of every floor the run is snapshotted to user://run.cfg (atomic write, like
-## Game.save): the run seed, floor, candle, daily flag, the omens so far, the relic pool, every
-## plain player stat (final values, so relic effects come back exactly), relics, rites, keepsake +
-## charge, coins, bombs, wax, wax_max, guttering and the run counters.
+## At the start of every floor the run is snapshotted to the save slot's own file, user://run<N>.cfg
+## (Game.run_path; atomic write, like Game.save): the run seed, floor, candle, level, daily flag, the
+## omens so far, the relic pool, every plain player stat (final values, so relic effects come back
+## exactly), relics, rites, keepsake + charge, coins, bombs, wax, wax_max, guttering and the run
+## counters. `snap` is the snapshot of the slot in use (Game.slot); peek(n) reads another slot's.
 ## "Continue" rebuilds that floor from the seed (the same house, the same loot) and restores the
-## stats. The snapshot is deleted the moment a run ends (death, win, give up).
+## stats, at the level the run was lit at. The snapshot is deleted the moment a run ends (death,
+## win, give up).
 ##
 ## world.gd hooks (one line each):
 ##   _ready():        _start_floor(RunSave.begin(self))     # floor 1, or the saved floor
@@ -15,7 +17,6 @@ extends Node
 ## save_extra() -> Dictionary / load_extra(d: Dictionary). New Player stats are picked up by
 ## themselves (any plain script variable not in SKIP_PLAYER and not starting with "_").
 
-const PATH := "user://run.cfg"
 const FORMAT := 1
 ## Player variables that are moment-to-moment state, not stats.
 const SKIP_PLAYER := ["world", "vel", "move_input", "aim_input", "facing", "fire_cd", "invuln", "dead",
@@ -33,7 +34,14 @@ var _world: Node
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	snap = _read()
+	snap = _read(Game.run_path(Game.slot))
+
+
+## Game.use_slot: the slot in use changed (or came back from the disk).
+func reload() -> void:
+	_pending = false
+	_restore = {}
+	snap = _read(Game.run_path(Game.slot))
 
 
 func has_snapshot() -> bool:
@@ -42,10 +50,19 @@ func has_snapshot() -> bool:
 
 ## "Floor 3 - 12:41 AM"
 func summary() -> String:
-	if snap.is_empty():
+	return summary_of(snap)
+
+
+static func summary_of(s: Dictionary) -> String:
+	if s.is_empty():
 		return ""
-	var r: Dictionary = snap["run"]
+	var r: Dictionary = s["run"]
 	return "Floor %d - %s" % [int(r["floor"]), Game.clock_text(float(r["clock"]))]
+
+
+## Another slot's saved run ({} if it has none); the slot in use answers from memory.
+func peek(n: int) -> Dictionary:
+	return snap if n == Game.slot else _read(Game.run_path(n))
 
 
 ## The title's Continue button.
@@ -59,7 +76,8 @@ func continue_run(main: Node) -> void:
 	# Snapshots from before 2.0 kept the flag only in the Journal's extra.
 	var old: Dictionary = (snap["world"].get("__extra", {}) as Dictionary).get("records", {})
 	var params := {"seed": int(r["run_seed"]), "candle": str(r["candle"]), "daily": bool(r["daily"]),
-		"seeded": bool(r.get("seeded", old.get("seeded", false))), "continued": true}
+		"seeded": bool(r.get("seeded", old.get("seeded", false))), "continued": true,
+		"level": int(r.get("level", Game.level))}   # the level it was lit at (2.0 runs: the slot's)
 	if r.has("date"):
 		params["date"] = str(r["date"])   # Tonight's Candle keeps the night it was lit
 	main.goto("game", params)
@@ -112,8 +130,19 @@ func on_floor_start(w: Node) -> void:
 func clear() -> void:
 	snap = {}
 	_restore = {}
-	if FileAccess.file_exists(PATH):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH))
+	var path := Game.run_path(Game.slot)
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+## Throw away slot n's saved run (a new run in that slot replaces it).
+func clear_slot(n: int) -> void:
+	if n == Game.slot:
+		clear()
+		return
+	var path := Game.run_path(n)
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
 ## Make sure the floor-start snapshot is on disk (window closed, app sent to the background).
@@ -189,6 +218,7 @@ func _capture(w: Node) -> Dictionary:
 		"run_seed": int(w.run_seed),
 		"floor": int(w.floor_num),
 		"candle": str(w.candle_id),
+		"level": int(w.level),
 		"daily": bool(w.daily),
 		"seeded": bool(w.get_meta("seeded", false)),
 		"date": str(w.daily_date),
@@ -253,14 +283,15 @@ func _write(s: Dictionary) -> void:
 		var d: Dictionary = s[sec]
 		for k in d:
 			cf.set_value(sec, k, d[k])
-	var tmp := PATH + ".tmp"
+	var path := Game.run_path(Game.slot)
+	var tmp := path + ".tmp"
 	if cf.save(tmp) == OK:
-		DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(PATH))
+		DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(path))
 
 
-func _read() -> Dictionary:
+static func _read(path: String) -> Dictionary:
 	var cf := ConfigFile.new()
-	if cf.load(PATH) != OK:
+	if cf.load(path) != OK:
 		return {}
 	var s := {"run": {}, "player": {}, "world": {}}
 	for sec in s.keys():
@@ -276,7 +307,8 @@ func _read() -> Dictionary:
 
 # ---------------------------------------------------------------- title screen
 
-## Adds "Continue / Floor N - 12:41 AM" on top of the title menu (and moves the menu up to fit).
+## Adds "Continue / Slot 1: Floor N - 12:41 AM" on top of the title menu (and moves the menu up to
+## fit): the saved run of the slot played last.
 func add_continue_button(menu: Container, main: Node) -> Button:
 	if snap.is_empty():
 		return null
@@ -287,7 +319,7 @@ func add_continue_button(menu: Container, main: Node) -> Button:
 	top.offset_top = 1
 	top.offset_bottom = 17
 	b.add_child(top)
-	var sub := UI.label(summary(), 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	var sub := UI.label("Slot %d: %s" % [Game.slot, summary()], 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)   # the slot played last
 	sub.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	sub.offset_top = 17
 	sub.offset_bottom = 27

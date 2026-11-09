@@ -70,6 +70,7 @@ var slow_aura := 0.0
 var witching := false
 var hot_drip := false
 var hit_mult := 1.0
+var light_mult := 1.0     # the size of the candle's light (the Black Taper's is short: Candles "light")
 var charred := 0.0        # max wax sold at the Smoke Altar (shown burnt on the bar)
 var gutter_used := false  # once per floor a killing hit leaves you at 1 minute
 var chill_t := 0.0        # touched by a chilled foe: melt faster for a while
@@ -100,6 +101,7 @@ func apply_candle(id: String) -> void:
 	damage *= d["damage"]
 	fire_delay *= d["fire_delay"]
 	hit_mult *= d.get("hit", 1.0)
+	light_mult *= d.get("light", 1.0)
 	shots = d["shots"]
 	body_w = d["body_w"]
 	var cs: Array = d["colours"]
@@ -557,9 +559,9 @@ func _process(dt: float) -> void:
 	var t := Time.get_ticks_msec() / 1000.0
 	var flick := 1.0 + 0.045 * sin(t * 13.0) + 0.03 * sin(t * 23.7 + 1.3) + randf_range(-0.015, 0.015)
 	var wf := clampf(wax / 120.0, 0.0, 1.0)
-	light.texture_scale = lerpf(0.95, 1.5, wf) * flick
+	light.texture_scale = lerpf(0.95, 1.5, wf) * flick * light_mult
 	if world and world.get("omen") == "smoky_halls":
-		light.texture_scale = maxf(0.95, light.texture_scale * 0.85)
+		light.texture_scale = maxf(0.95 * light_mult, light.texture_scale * 0.85)
 	var keep := clampf(1.0 - _melt / 0.8, 0.0, 1.0)
 	if dead:
 		light.energy = 1.0 * keep * flick
@@ -1191,7 +1193,7 @@ static func paint_preview(ci: CanvasItem, feet: Vector2, cid: String, opts := {}
 		ci.draw_texture(front, o + Vector2(-9, -5))
 	Player.paint_arms(ci, o, g, c, ["rest", "rest"])
 	Player.paint_wick(ci, o, g, OUTLINE)
-	if sil != null:
+	if sil != null or opts.get("unlit", false):   # unlit: no flame (an empty save slot's sleeping candle)
 		return
 	var sf := Player.flame_frames(false)
 	var fr := int(opts.get("frame", 0))

@@ -80,6 +80,8 @@ often than with Tallow. It is now lit at 12:20 AM (100 wax, was 120), melts x1.4
 from hits (new candle key `"hit"`, read by `Player.apply_candle`; Save & Continue restores `hit_mult` with
 the other player numbers) and has no damage bonus (was x1.1). Line: "Hard mode. Lit at 12:20 AM. Melts
 fast; every boss offers a Smoke Altar." (293 px, fits the 300 px title label).
+(2.1: replaced. Difficulty is the save slot's level now and the Black Taper is a sidegrade with Tallow's
+wax and melt, a short light and x1.5 damage in the dark: `docs/streams/v21_slots.md`.)
 What the diagnostics showed: almost every loss is a run that reaches the Crypt with little wax and then
 takes 15-27 hits there (floor-2 wax lost to hits 105-150 vs 17-77 gained back). Runs that get through the
 Crypt with a few relics snowball and finish early. So the early contact damage is the strongest knob

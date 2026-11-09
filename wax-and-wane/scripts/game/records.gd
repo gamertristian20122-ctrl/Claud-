@@ -368,7 +368,7 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 	hist.push_front({"won": won, "candle": str(w.candle_id), "floor": int(w.floor_num), "clock": float(w.clock_minutes()),
 		"killer": killer, "relics": (w.player.relics as Array).duplicate(), "time": float(w.run_time), "kills": int(w.kills),
 		"streak": int(w.best_streak), "seed": int(w.run_seed), "daily": bool(w.daily), "date": lit,
-		"n": int(Game.records.get("runs", 0))})
+		"n": int(Game.records.get("runs", 0)), "level": int(w.level)})
 	while hist.size() > HISTORY:
 		hist.pop_back()
 	if bool(w.daily):
@@ -416,6 +416,17 @@ static func log_night(date: String, first: int, best: int, won: bool) -> void:
 		nights.push_front({"date": date, "first": first, "best": best, "won": won})
 	while nights.size() > NIGHTS:
 		nights.pop_back()
+
+
+## A difficulty level's entry in world.LEVELS (name, line and the multipliers world.difficulty() uses).
+static func level_def(n: int) -> Dictionary:
+	var lv: Dictionary = preload("res://scripts/game/world.gd").LEVELS
+	return lv.get(n, lv[preload("res://scripts/game/world.gd").DEFAULT_LEVEL])
+
+
+## "Level 3 - Witching Hour": the number is always shown with the name.
+static func level_text(n: int) -> String:
+	return "Level %d - %s" % [n, str(level_def(n)["name"])]
 
 
 ## "The Cellar" for floor 1 (any floor the world defines; "the House" past them).

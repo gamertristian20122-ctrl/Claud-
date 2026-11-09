@@ -50,6 +50,22 @@ const WAX_ODDS := [1.0, 1.0, 0.75, 0.65, 0.65]
 const STEADY_FLOORS := [3, 4]
 const STEADY_BELOW := 40.0
 const STEADY_ADD := 15.0
+## Difficulty levels: every save slot has one (the Slots screen); Tonight's Candle always plays 2.
+## difficulty() is the one place a level reaches the run: the melt (_physics_process), enemy contact /
+## shot damage (enemy_dmg_mult), creature and guardian health (Enemy.setup), the marked-foe chance
+## (champ_chance) and the wax a drip gives (wax_bonus). Level 2 is the game as it was made (all x1).
+## Names and lines are shown with the number (Records.level_text); Game.MAX_LEVEL must match.
+const LEVELS := {
+	1: {"name": "Gentle", "line": "For learning: you melt slower and foes hit softer.",
+		"melt": 0.75, "dmg": 0.5, "hp": 0.85, "champ": 1.0, "wax": 1.25},
+	2: {"name": "Midnight", "line": "The night as it was made: a fair fight.",
+		"melt": 1.0, "dmg": 1.0, "hp": 1.0, "champ": 1.0, "wax": 1.0},
+	3: {"name": "Witching Hour", "line": "Harder: a faster melt, harder hits, more marked foes.",
+		"melt": 1.1, "dmg": 1.2, "hp": 1.15, "champ": 1.5, "wax": 1.0},
+	4: {"name": "Two O'Clock", "line": "Brutal: tough foes, cruel hits and thin wax.",
+		"melt": 1.2, "dmg": 1.4, "hp": 1.3, "champ": 2.0, "wax": 0.8},
+}
+const DEFAULT_LEVEL := 2
 
 var main: Node
 var floor_num := 1
@@ -110,13 +126,16 @@ var _bell_paid := {}
 var daily := false
 var daily_date := ""   # Tonight's Candle: the date it was lit ("" for other runs)
 var unlocked_this_run: Array = []
+var level := DEFAULT_LEVEL   # this run's difficulty (LEVELS): the save slot's, 2 for Tonight's Candle
 
 
 func setup(params: Dictionary) -> void:
-	candle_id = params.get("candle", Game.settings.get("candle", "tallow"))
+	candle_id = params.get("candle", Game.records.get("candle", "tallow"))
 	if not Candles.is_unlocked(candle_id):
 		candle_id = "tallow"
 	daily = params.get("daily", false)
+	# the slot's level (a continued run keeps the level it was lit at); Tonight's Candle is the same for all
+	level = DEFAULT_LEVEL if daily else clampi(int(params.get("level", Game.level)), 1, LEVELS.size())
 	if params.has("seed"):
 		run_seed = int(params["seed"])
 	else:
@@ -162,7 +181,7 @@ func _ready() -> void:
 	FloorGen.shuffle(relic_pool, rng)
 	player = Player.new()
 	player.world = self
-	player.apply_candle(candle_id)   # Gentle burn is read live in _physics_process (gentle_mult)
+	player.apply_candle(candle_id)   # the level's melt is read live in _physics_process (difficulty)
 	actors.add_child(player)
 	var cd: Dictionary = Candles.def_of(candle_id)
 	if cd.has("start_relic"):
@@ -172,6 +191,7 @@ func _ready() -> void:
 		player.charge = int(Items.KEEPSAKES[player.keepsake]["pips"])
 	Game.unlocked_now.connect(_on_unlock)
 	Game.records["runs"] += 1
+	Game.light_slot()   # an empty save slot gets its file with the first candle lit in it
 	Game.save()
 	_start_floor(RunSave.begin(self))   # floor 1, or the saved floor when continuing
 	if not Game.records["seen_intro"] and main.autotest == null:
@@ -235,9 +255,14 @@ func recompute_discount() -> void:
 	shop_discount = (0.6 if player.relics.has("wax_seal") else 1.0) * (0.75 if omen == "smoky_halls" else 1.0)
 
 
-## Wax pickups give more under the Cold Draught.
+## Wax pickups give more under the Cold Draught (and with the level's wax income).
 func wax_bonus() -> float:
-	return 1.5 if omen == "draught" else 1.0
+	return (1.5 if omen == "draught" else 1.0) * float(difficulty()["wax"])
+
+
+## This run's difficulty: the LEVELS entry of its level (melt, dmg, hp, champ, wax multipliers).
+func difficulty() -> Dictionary:
+	return LEVELS.get(level, LEVELS[DEFAULT_LEVEL])
 
 
 ## This floor's entry of a per-floor table (FLOOR_DRAIN, KINDLE_CAP, QUICK_WAX, WAX_ODDS).
@@ -392,7 +417,7 @@ func _on_enter_room() -> void:
 
 func champ_chance() -> float:
 	var c: float = [0.03, 0.06, 0.09, 0.12, 0.14][floor_num - 1]
-	return c * (2.0 if candle_id == "black_taper" else 1.0)
+	return c * float(difficulty()["champ"])
 
 
 func _spawn_room_enemies() -> void:
@@ -730,10 +755,6 @@ func on_enemy_killed(e: Enemy) -> void:
 
 
 func _champ_drop(e: Enemy) -> void:
-	if candle_id == "black_taper" and e.champ in ["ember", "chilled"]:
-		for i in 3:
-			add_pickup("coin", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 40.0)
-		return
 	match e.champ:
 		"ember":
 			for i in 1:
@@ -793,11 +814,9 @@ func on_boss_hp(e: Enemy) -> void:
 ## After a floor boss: sometimes a Smoke Altar (relics for minutes), else a Vigil for struggling runs.
 func _offer_altar() -> void:
 	var chance := 0.2 + (0.3 if boss_hits == 0 else 0.0) + 0.05 * floor_clean
-	if candle_id == "black_taper":
-		chance = 1.0
 	chance = minf(chance, 0.85 if chance < 1.0 else 1.0)
 	var c := room.center()
-	if candle_id != "black_taper" and pact != "smoke" and (declined_smoke or player.wax < 48.0):
+	if pact != "smoke" and (declined_smoke or player.wax < 48.0):
 		if rng.randf() < 0.6:
 			var a := add_pickup("relic", c + Vector2(-44, -34), _next_relic())
 			var gift := "vigil_candle" if rng.randf() < 0.65 or player.relics.has("wax_seal") else "wax_seal"
@@ -979,7 +998,8 @@ func assist_aim(pos: Vector2, dir: Vector2) -> Vector2:
 
 
 func enemy_dmg_mult() -> float:
-	return 1.0 + 0.12 * (mini(floor_num, LAST_FLOOR) - 1)   # the Clock Tower hits as hard as the Belfry
+	# the Clock Tower hits as hard as the Belfry; the level scales every blow a foe lands
+	return (1.0 + 0.12 * (mini(floor_num, LAST_FLOOR) - 1)) * float(difficulty()["dmg"])
 
 
 func time_scale_enemies() -> float:
@@ -1216,7 +1236,8 @@ func _end_run(won: bool) -> void:
 			Game.records[key] = t if t != 0.0 else 0.001   # 0 means "never won"
 	Game.save()
 	main.goto("results", Records.end_run(self, won, {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
-		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins}))
+		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins,
+		"level": level}))
 
 
 func give_up() -> void:
@@ -1230,12 +1251,6 @@ func give_up() -> void:
 ## Clock minutes past midnight: a full 120-wax candle = 12:00 AM, an empty one = 2:00 AM.
 func clock_minutes() -> float:
 	return 120.0 - player.wax
-
-
-## Gentle burn (Settings > Game): the candle melts 25% slower. Read every frame, so switching it in the
-## pause menu works at once; never in Tonight's Candle (the same night for everyone).
-func gentle_mult() -> float:
-	return 0.75 if Game.settings.get("gentle", false) and not daily else 1.0
 
 
 # ---------------------------------------------------------------- loop
@@ -1257,7 +1272,7 @@ func _physics_process(dt: float) -> void:
 		return
 	if not transitioning and not player.dead and not player.frozen:
 		run_time += dt
-		var melt := DRAIN_PER_SEC * floor_k(FLOOR_DRAIN) * player.drain_mult * gentle_mult() * (1.15 if omen == "draught" else 1.0)
+		var melt := DRAIN_PER_SEC * floor_k(FLOOR_DRAIN) * player.drain_mult * float(difficulty()["melt"]) * (1.15 if omen == "draught" else 1.0)
 		if player.wax < 8.0:
 			melt *= 0.6       # the flame clings on when it is nearly out
 		if player.chill_t > 0.0:

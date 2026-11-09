@@ -1,6 +1,9 @@
 class_name Candles
 extends RefCounted
-## The Candle Box: playable candles, each with its own clock rules. Unlocked by goals.
+## The Candle Box: playable candles, each with its own clock rules. Unlocked by goals. Candles are
+## sidegrades: how hard a night is belongs to the save slot's difficulty level (world.LEVELS).
+## Stats: `wax`, `drain`, `speed`, `damage`, `fire_delay`, `shots`, `hit` (damage taken), `pierce`,
+## `light` (the light's size), `dark_hit` (damage to foes beyond the light, dark_mult).
 ## Look: `body_w` = wax width at the eyes (odd; Tallow 13), `colours` = [highlight, wax, shade, deep],
 ## `cheek` = the blush, `ink` = eyes and mouth, `straight` = no gumdrop belly (pillar), `foil` = a tea
 ## light cup, `stripes`.
@@ -35,10 +38,14 @@ const LIST := {
 		"start_relic": "wax_coat",
 		"unlock_text": "Snuff the Chapel's guardian (floor 3)",
 	},
+	# a sidegrade, not a hard mode (difficulty is the save slot's level now): Tallow's wax and melt,
+	# a short light, and foes out in the dark take more damage (dark_mult)
 	"black_taper": {
-		"name": "Black Taper", "line": "Hard mode. Lit at 12:20 AM. Melts fast; every boss offers a Smoke Altar.",
-		"wax": 100.0, "drain": 1.4, "speed": 1.0, "damage": 1.0, "fire_delay": 1.0, "shots": 1, "hit": 1.3,
+		"name": "Black Taper", "line": "A short, dark light. Foes out in the dark take 50% more damage.",
+		"wax": 120.0, "drain": 1.0, "speed": 1.0, "damage": 1.0, "fire_delay": 1.0, "shots": 1,
+		"light": 0.75, "dark_hit": 1.5,
 		"body_w": 11, "colours": ["#775c55", "#483b3a", "#333333", "#2a2a3a"], "cheek": "#9f294e", "ink": "#d3bfa9",
+		"blurb": "Burns black and quiet. It cannot see far, so it makes every spark in the dark count.",
 		"unlock_text": "Win a run",
 	},
 	# the Clock Tower's reward (scripts/game/tower.gd): a pale candle in a silver dish, lit by the moon
@@ -52,8 +59,40 @@ const LIST := {
 }
 
 
+## Where a candle's light ends, per unit of its texture_scale: the soft light falls to a quarter at
+## 88 of its 128 px. Scaled by the light itself, so the edge shrinks as the wax melts.
+const LIGHT_EDGE := 88.0
+
+
 static func is_unlocked(id: String) -> bool:
 	return id == "tallow" or id in Game.records.get("unlocked", [])
+
+
+## The edge of the player's own light, in px from Tallow (Black Taper's "the dark" starts here).
+static func light_reach(p: Node) -> float:
+	var l: Variant = p.get("light")
+	return LIGHT_EDGE * float((l as PointLight2D).texture_scale) if l != null and is_instance_valid(l) else 999.0
+
+
+## A candle's "dark_hit" (the Black Taper's 1.5) for a foe beyond the edge of its light, else 1.0.
+## Enemy.take_hit multiplies every blow by it (sparks, bombs, helpers alike).
+static func dark_mult(w: Node, e: Node2D) -> float:
+	var p: Variant = w.get("player") if w else null
+	if p == null or not is_instance_valid(p):
+		return 1.0
+	var k := float(def_of(str(p.candle_id)).get("dark_hit", 1.0))
+	if k == 1.0:
+		return 1.0
+	var dark: bool = e.global_position.distance_to((p as Node2D).global_position) > light_reach(p)
+	blows += 1
+	dark_blows += 1 if dark else 0
+	return k if dark else 1.0
+
+
+## Bot diagnostics (autotest prints them per run): blows landed by a dark_hit candle, and how many
+## of them were out in the dark.
+static var blows := 0
+static var dark_blows := 0
 
 
 static func def_of(id: String) -> Dictionary:

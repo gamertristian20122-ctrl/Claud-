@@ -955,7 +955,7 @@ func open_pause() -> void:
 	pause_layer = m[0]
 	pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	var v: VBoxContainer = m[1]
-	var info := UI.label("%s   %s" % [world.floor_title(), Game.clock_text(world.clock_minutes())], 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	var info := UI.label("%s   %s   %s" % [world.floor_title(), Game.clock_text(world.clock_minutes()), Records.level_text(int(world.level))], 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	v.add_child(info)
 	var p: Player = world.player
 	if not p.relics.is_empty():

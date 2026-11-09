@@ -87,8 +87,7 @@ static func _game_page(body: VBoxContainer, _parent: Control) -> void:
 		Game.set_setting("vibration", b)
 		if b:
 			Game.vibrate(60)))
-	grid.add_child(UI.toggle("Gentle burn", Game.settings.get("gentle", false), func(b): Game.set_setting("gentle", b)))
-	grid.add_child(_hint("Melts 25% slower, right away\nNot in Tonight's Candle"))
+	# (Gentle burn is gone: difficulty level 1 replaces it, chosen per save slot on the Slots screen)
 	grid.add_child(UI.cycle("Effects", ["full", "lite"], ["Full", "Lite"], Game.settings.get("effects", "full"),
 		func(v): Game.set_setting("effects", v)))
 	grid.add_child(_hint("Lite: no heat haze or shockwaves"))

@@ -27,7 +27,9 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Candles (playable) | **6** (5 to unlock) | `Candles.LIST` |
 | Special rooms | **5**: The Seance, The Cracked Mirror, The Music Box, The Study, The Wax Font | `Specials.INFO` |
 | Omens (floor twists) | **4**: Cold Draught, Tallow Moon, Long Night, Smoky Halls | `world.OMENS` |
-| Achievements | **52** (13 hidden), shown in the game | `Achievements.LIST` |
+| Achievements | **54** (13 hidden), shown in the game | `Achievements.LIST` |
+| Save slots | **3**, each with its own difficulty level, records, Journal, unlocks, achievements and saved run; settings are shared | `Game.SLOTS` |
+| Difficulty levels | **4**: 1 Gentle (melt x0.8, foe damage x0.6, foe health x0.85, drip wax x1.25); 2 Midnight (the game as it was made); 3 Witching Hour (melt x1.1, foe damage x1.3, foe health x1.15, marked foes x1.5); 4 Two O'Clock (melt x1.2, foe damage x1.6, foe health x1.3, marked foes x2, drip wax x0.8). Tonight's Candle always plays level 2 | `world.LEVELS` |
 | Music | 10 tracks + 2 original jingles | `assets/licenses/CREDITS_music.txt` |
 | Sound effect files | 74 | `assets/audio/sfx/` |
 | Builds | Android, Windows Desktop, Linux, Android Play | `export_presets.cfg` |
@@ -42,7 +44,7 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Tea Light | 12:40 AM | 6.7 min | Reach the Crypt | Lit at 12:40 AM. Small, quick and quick-firing. |
 | Party Candle | 12:20 AM | 6.1 min | Reach a x8 Kindling streak | Two flames, thin wax. Starts with a Flare Match. |
 | Altar Pillar | 11:45 PM | 7.8 min | Snuff the Chapel's guardian (floor 3) | Starts with 15 spare minutes. Slow, sturdy, hits hard. |
-| Black Taper | 12:20 AM | 4.8 min | Win a run | Hard mode. Lit at 12:20 AM. Melts fast; every boss offers a Smoke Altar. |
+| Black Taper | 12:00 AM | 8.0 min | Win a run | A short, dark light. Foes out in the dark take 50% more damage. |
 | Moonwick | 12:12 AM | 7.2 min | Be done by one, then climb | Lit by the moon. Quick and thin; its sparks pass through. |
 
 ### The guardians
@@ -82,7 +84,7 @@ title: 22 - Dream, floor_1: 40 - Crypt, floor_2: 21 - Dungeon, floor_3: 12 - Tem
 | Data collected | None. No ads, analytics, accounts or network access | `PRIVACY.md`; the Android build's only permission is listed above |
 | Blood | Cartoon only: creatures burst into small chunks that fade and leave flat coloured splats on the floor; some splats are red (`#9f294e`, `#62232f`, `#da4e38`) | `scripts/game/fx_gibs.gd`, `stains.gd`, `Enemy.DEFS` stain colours |
 | Random rewards | Chests, the Music Box (3 in-game coins a crank) and the Wax Font use in-game coins or wax only. No real money anywhere | `scripts/game/specials.gd` |
-| Steam features at launch | No Steam achievements or Steam overlay calls yet (GodotSteam is not in the build); the 52 achievements are in-game. Steam Cloud works without code (Auto-Cloud) | `scripts/autoload/achievements.gd` (Steam bridge waits for GodotSteam) |
+| Steam features at launch | No Steam achievements or Steam overlay calls yet (GodotSteam is not in the build); the 54 achievements are in-game. Steam Cloud works without code (Auto-Cloud) | `scripts/autoload/achievements.gd` (Steam bridge waits for GodotSteam) |
 | Demo | None. There is no demo build; do not promise one | |
 | Languages | English only | |
 

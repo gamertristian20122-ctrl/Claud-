@@ -2,6 +2,8 @@ extends Node
 ## Automated play-test bot + screenshot tour.
 ##   -- --autotest --playtest [--runs=N] [--speed=4] [--seed=N]   plays full runs, prints a summary
 ##        [--god] [--stress] [--unlockall --candle=id] [--relics=a,b] [--savecycle: Save & quit + Continue each floor]
+##        [--slot=1-3: the save slot to play in] [--difficulty=1-4: that slot's level (world.LEVELS)]
+##   -- --autotest --tour --slots --shots=/abs/dir                 the Slots screen, the level picker, a 2.0 save moved in
 ##   -- --autotest --tour --shots=/abs/dir                         screenshots of every screen
 ##        [--fit]: after each shot, FitCheck lists text/buttons off the screen or on other text
 ##   -- --autotest --audiotest                                     audio catalogue + live-mix check (audio_check.gd)
@@ -57,6 +59,13 @@ func _ready() -> void:
 	if args.has("lightjudge"):
 		mode = "tour"   # light pass judge images (scripts/game/light_judge.gd, tools/light_judge.py)
 	runs_left = int(args.get("runs", "1"))
+	# save slots (v2.1): --slot=N plays in that slot, --difficulty=N (1-4) sets its level first
+	if args.has("slot"):
+		Game.use_slot(int(args["slot"]))
+	if args.has("difficulty"):
+		Game.set_level(Game.slot, int(args["difficulty"]))
+	if args.has("slot") or args.has("difficulty"):
+		print("[slots] slot %d, level %d (%s)" % [Game.slot, Game.level, Records.level_text(Game.level)])
 	_shots_dir = str(args.get("shots", ""))
 	Game.base_time_scale = float(args.get("speed", "1"))
 	Engine.time_scale = Game.base_time_scale
@@ -102,6 +111,8 @@ func _next_run() -> void:
 		Unlocks.force_all = true   # every relic and keepsake in the pool
 	if args.has("candle"):
 		params["candle"] = str(args["candle"])
+		if not Candles.is_unlocked(params["candle"]):   # just this candle: the relic pool stays the profile's own
+			(Game.records["unlocked"] as Array).append(params["candle"])
 	if args.has("seed"):
 		params["seed"] = int(args["seed"]) + results.size()
 	_cycled = -1
@@ -196,6 +207,11 @@ func _process(dt: float) -> void:
 		print("[playtest] run %d: %s floor=%d clock=%s kills=%d rooms=%d time=%.0fs relics=%s" % [
 			results.size(), "WIN" if p["won"] else "LOSS", p["floor"], Game.clock_text(p["clock"]), p["kills"], p["rooms"], p["time"], p["relics"]])
 		print("[playtest]    best streak x%d, hits %d" % [p.get("streak", 0), p.get("hits", 0)])
+		print("[playtest]    level %d, candle %s, seed %d, slot %d" % [int(p.get("level", 2)), p.get("candle", "?"), int(p.get("seed", 0)), Game.slot])
+		if Candles.blows > 0:   # a dark_hit candle (the Black Taper): how many blows landed out in the dark
+			print("[playtest]    blows %d, in the dark %d (%d%%)" % [Candles.blows, Candles.dark_blows, roundi(100.0 * Candles.dark_blows / Candles.blows)])
+		Candles.blows = 0
+		Candles.dark_blows = 0
 		var parts: Array = []
 		for f in _diag.keys():
 			var d: Array = _diag[f]
@@ -654,6 +670,12 @@ func _tour() -> void:
 	if args.has("gallery") or args.has("bosses"):
 		await _wait(1.0)
 		await BestiaryGallery.tour(self)
+		get_tree().quit()
+		return
+	if args.has("slots"):   # v2.1: the save slots, the level picker, a 2.0 save moved into Slot 1
+		await _wait(0.5)
+		await load("res://scripts/ui/slots_tour.gd").tour(self)
+		Audio.stop_all()
 		get_tree().quit()
 		return
 	if args.has("journal"):   # meta stream: the Journal, the death note, the chalk start room

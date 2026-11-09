@@ -4,7 +4,7 @@ extends RefCounted
 ## like a daily-puzzle share. No relic, lodger or guardian names; just how far the candle got.
 ##
 ##   Wax & Wane - Tonight's Candle 2026-11-08
-##   Tallow: done by 1:41 AM
+##   Tallow at level 2: done by 1:41 AM
 ##   🔥🔥🔥🔥  7 relics, Kindling x14
 ##
 ## One glyph per floor of the house: 🔥 floor cleared, 🔔 snuffed by its guardian, 💨 snuffed in its
@@ -30,7 +30,8 @@ static func text(p: Dictionary) -> String:
 		head += "Tonight's Candle %s" % str(p.get("date", ""))
 	else:
 		head += "seed %s" % Records.seed_text(int(p.get("seed", 0)))
-	var candle := str(Candles.def_of(str(p.get("candle", "tallow")))["name"])
+	# the candle and the run's difficulty level ("Tallow at level 3"; Tonight's Candle is always 2)
+	var candle := "%s at level %d" % [str(Candles.def_of(str(p.get("candle", "tallow")))["name"]), int(p.get("level", 2))]
 	var how := ""
 	if won:
 		how = "%s: done by %s" % [candle, Game.clock_text(float(p.get("clock", 120.0)))]
