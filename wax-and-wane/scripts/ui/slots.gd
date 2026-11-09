@@ -660,9 +660,10 @@ class NightSlider extends Button:
 		var x0 := _x0()
 		var x1 := _x1()
 		var kx := _x_of(value)
-		draw_rect(Rect2(x0, ty, x1 - x0 + 1, 3), UI.INK)
-		draw_rect(Rect2(x0, ty, x1 - x0, 2), Color("#483b3a"))
-		draw_rect(Rect2(x0, ty, kx - x0, 2), UI.EMBER)
+		# v2.6: the kit's sunken track, lit up to the knob (like Settings' volume sliders)
+		draw_style_box(UI.KitSlider._box("kit_track"), Rect2(x0 - 3, ty - 2, x1 - x0 + 7, 7))
+		if kx > x0:
+			draw_style_box(UI.KitSlider._box("kit_track_fill"), Rect2(x0 - 3, ty - 2, kx - x0 + 6, 7))
 		for v in range(lo, hi + 1):
 			var x := _x_of(v)
 			draw_rect(Rect2(x, ty - 2, 1, 6), UI.GOLD if v <= value else Color("#775c55"))
@@ -671,10 +672,8 @@ class NightSlider extends Button:
 			var p := Vector2(roundf(x - tw / 2.0 + 0.5), 24)
 			draw_string(f, p + Vector2(1, 1), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, UI.INK)
 			draw_string(f, p, t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, UI.GOLD if v == value else UI.DIM)
-		# the knob: a little candle flame on the chosen night
-		draw_rect(Rect2(kx - 3, ty - 5, 7, 9), UI.INK)
-		draw_rect(Rect2(kx - 2, ty - 4, 5, 7), UI.GOLD)
-		draw_rect(Rect2(kx - 1, ty - 3, 2, 3), UI.CREAM)
-		draw_rect(Rect2(kx - 2, ty + 2, 5, 1), UI.EMBER)
+		# the knob: the kit's little candle flame on the chosen night
+		var knob := Art.tex("ui/kit_knob")
+		draw_texture(knob, Vector2(kx - 3, ty - 6))
 		if has_focus() and Controls.uses_buttons():   # the focus ring shows for keys and gamepads only
 			draw_style_box(UI.focus_box(), Rect2(Vector2.ZERO, size))

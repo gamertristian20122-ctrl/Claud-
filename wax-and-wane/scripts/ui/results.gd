@@ -19,9 +19,10 @@ var _scroll: ScrollContainer
 var _body: VBoxContainer
 var _buttons: HBoxContainer
 const EDGE := 4          # px kept free at the screen edges
-const MAX_NEWS := 3      # unlocks shown in their card; the rest is "+N more in the Journal"
+const MAX_NEWS := 2      # unlocks shown in their card (one row); the rest is "+N more in the Journal" in its heading
 const RELIC_ROW := 16    # relic icons in the row (a longer collection: 15 and a "+N" button)
-const BODY_W := 306      # the column's width (fits 384 px with the panel's frame)
+const BODY_W := 306      # the column's width on a 384-wide screen; wider screens (the phone's 480) get up to BODY_MAX
+const BODY_MAX := 400
 var _relic_row: HFlowContainer
 
 
@@ -59,7 +60,8 @@ func _ready() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 3)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	v.custom_minimum_size.x = BODY_W
+	var bw := clampf(get_viewport_rect().size.x - 64.0, BODY_W, BODY_MAX)
+	v.custom_minimum_size.x = bw
 	_scroll.add_child(v)
 	_body = v
 	_header(v, won, f)
@@ -75,7 +77,7 @@ func _ready() -> void:
 		_fill_relics(relics, false)
 		_info = UI.label(L.t("{n} relics. Select one to read it.", {"n": relics.size()}) if relics.size() != 1 else L.t("One relic. Select it to read it."), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 		_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # a long description wraps, never widens the panel
-		_info.custom_minimum_size = Vector2(BODY_W - 6, 0)
+		_info.custom_minimum_size = Vector2(bw - 6.0, 0)
 		_info.resized.connect(_fit)
 		v.add_child(_info)
 	# ---- what moved into the house and the achievements: two small cards side by side
@@ -138,7 +140,8 @@ func _news_card(news: Array) -> PanelContainer:
 	var cv := VBoxContainer.new()
 	cv.add_theme_constant_override("separation", 1)
 	card.add_child(cv)
-	cv.add_child(UI.label(L.t("NEW IN THE HOUSE"), 8, UI.GOLD))
+	var nh := L.t("NEW IN THE HOUSE") + ("   " + L.t("+{n} more", {"n": news.size() - MAX_NEWS}) if news.size() > MAX_NEWS else "")
+	cv.add_child(UI.label(nh, 8, UI.GOLD))
 	var flow := HFlowContainer.new()
 	flow.add_theme_constant_override("h_separation", 6)
 	flow.add_theme_constant_override("v_separation", 0)
@@ -155,8 +158,6 @@ func _news_card(news: Array) -> PanelContainer:
 		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(l)
 		flow.add_child(row)
-	if news.size() > MAX_NEWS:
-		cv.add_child(UI.label(L.t("+{n} more in the Journal", {"n": news.size() - MAX_NEWS}), 8, UI.DIM))
 	return card
 
 

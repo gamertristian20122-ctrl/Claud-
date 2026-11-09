@@ -113,7 +113,7 @@ static func theme() -> Theme:
 	# panels
 	t.set_stylebox("panel", &"PanelContainer", _tex_box("kit_panel", [8, 8, 8, 8], [9, 8, 9, 8]))
 	t.set_type_variation(&"CardPanel", &"PanelContainer")
-	t.set_stylebox("panel", &"CardPanel", _tex_box("kit_card", [4, 4, 4, 4], [6, 4, 6, 4]))
+	t.set_stylebox("panel", &"CardPanel", _tex_box("kit_card", [4, 4, 4, 4], [5, 3, 5, 3]))
 	t.set_type_variation(&"InsetPanel", &"PanelContainer")
 	t.set_stylebox("panel", &"InsetPanel", _tex_box("kit_inset", [3, 3, 3, 3], [3, 3, 3, 3]))
 	t.set_type_variation(&"PlatePanel", &"PanelContainer")
