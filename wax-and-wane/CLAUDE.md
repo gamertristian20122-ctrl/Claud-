@@ -100,6 +100,9 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   godot-export, pixel-art-sprites and roguelike.)
 
 ## Where things stand (handoff, 2026-11-09)
+- **Queue after v2.1 + Long Night batch 1:** `docs/design/ROADMAP_V2.md` (special moves -> Challenge Nights ->
+  diary pages -> translations -> Boss Rush; Long Night batch 2 as a side track). Design of the long night:
+  `docs/design/LONG_NIGHT.md`.
 - Latest build: **2.0.0** (versionCode 9), the release candidate: APK, Play AAB (PLAY-READY), Windows and Linux
   zips, sent to the owner. Everything is merged on `ccr-37a74654-pp10xa`.
 - A four-reviewer studio review (critic, QA, mobile UX, release manager; all findings in
