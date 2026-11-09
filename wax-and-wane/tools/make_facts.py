@@ -140,7 +140,8 @@ def facts():
     for k, t, sec in en:
         sprite = field(t, "sprite", k)
         row = {"id": k, "name": field(t, "name"), "x72": is_0x72(sprite), "secret": bool(field(t, "secret", False)),
-               "tower_only": k in pools.get(5, set()) and not any(k in v for n, v in pools.items() if n != 5)}
+               "tower_only": k in pools.get(5, set()) and not any(k in v for n, v in pools.items() if n != 5),
+               "area": str(sprite).startswith("areas/")}   # the Long Night's new areas (areas.gd, LONG_NIGHT.md)
         (guardians if field(t, "boss", False) else lodgers).append(row)
     f["lodgers"], f["guardians"] = lodgers, guardians
     sp = read("scripts/game/specials.gd")
@@ -246,12 +247,15 @@ def md(f):
     a("| Spilled Wax | %d%% of the wax a hit melts splashes out as warm drops that cool after %g s | `world.gd`, `pickup.gd` |" % (round(f["spill"] * 100), f["warm_life"]))
     a("| Rooms per floor | %s (with the start, shop, treasure and boss rooms), plus a hidden Hollow and any special rooms | `floor_gen.gd` |" % " / ".join(str(n) for n in f["rooms_per_floor"]))
     a("| Hand-made room layouts | **%d** | `RoomTemplates.NORMAL` |" % f["layouts"])
-    a("| Lodgers (creatures) | **%d**: %d from 0x72's DungeonTileset II, %d made for this game (%d of them only in the Clock Tower) | `Enemy.DEFS` |" % (
-        len(lod), l72, len(lod) - l72, sum(1 for x in lod if x["tower_only"])))
+    a("| Lodgers (creatures) | **%d**: %d from 0x72's DungeonTileset II, %d made for this game (%d of them only in the Clock Tower, %d only in the Long Night's new areas) | `Enemy.DEFS` |" % (
+        len(lod), l72, len(lod) - l72, sum(1 for x in lod if x["tower_only"]), sum(1 for x in lod if x["area"])))
     per = {len(bs) for fn, _nm, _b1, bs in f["floors"] if fn <= 4}
     per = ("%s per floor" % ["no", "one", "two", "three", "four", "five"][per.pop()]) if len(per) == 1 else "per floor"
-    a("| Guardians (bosses) | **%d**: %d on the four floors (%s, picked by the run seed) + a secret one, %s. %d use 0x72 sprites, %d were made for this game | `Enemy.DEFS`, `world.FLOORS` |" % (
-        len(gua), sum(1 for x in gua if not x["secret"]), per, ", ".join(title(x["name"]) for x in gua if x["secret"]), g72, len(gua) - g72))
+    ga = [x for x in gua if x["area"]]
+    a("| Guardians (bosses) | **%d**: %d on the four floors (%s, picked by the run seed)%s + a secret one, %s. %d use 0x72 sprites, %d were made for this game | `Enemy.DEFS`, `world.FLOORS`, `Areas.LIST` |" % (
+        len(gua), sum(1 for x in gua if not x["secret"] and not x["area"]), per,
+        (", %d in the Long Night's new areas (%s)" % (len(ga), ", ".join(title(x["name"]) for x in ga))) if ga else "",
+        ", ".join(title(x["name"]) for x in gua if x["secret"]), g72, len(gua) - g72))
     a("| House champions (mini-bosses) | **%d**: %s | `Specials.MINIS` |" % (len(f["minis"]), ", ".join(f["minis"])))
     a("| Relics | **%d** in %d quality tiers; %d of them move into the house as you earn achievements | `Items.RELICS`, `Unlocks.TABLE` |" % (
         len(f["relics"]), len({q for _, q in f["relics"]}), f["unlock_relics"]))

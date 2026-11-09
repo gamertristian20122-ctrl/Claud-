@@ -3,7 +3,7 @@
 The one list every store text, the press kit and the trailer cards are checked against. The first part
 is written by `python3 tools/make_facts.py` from the game's own code (do not edit it by hand: re-run the
 script after any content change; `--check` tells you if it is out of date). Game version in the code:
-**2.0.0** (the store release is 2.0.0).
+**2.1.0** (the store release is 2.0.0).
 
 ## From the code
 
@@ -17,8 +17,8 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Spilled Wax | 30% of the wax a hit melts splashes out as warm drops that cool after 2.5 s | `world.gd`, `pickup.gd` |
 | Rooms per floor | 8 / 10 / 12 / 14 (with the start, shop, treasure and boss rooms), plus a hidden Hollow and any special rooms | `floor_gen.gd` |
 | Hand-made room layouts | **69** | `RoomTemplates.NORMAL` |
-| Lodgers (creatures) | **35**: 20 from 0x72's DungeonTileset II, 15 made for this game (2 of them only in the Clock Tower) | `Enemy.DEFS` |
-| Guardians (bosses) | **13**: 12 on the four floors (three per floor, picked by the run seed) + a secret one, The Keeper of Hours. 3 use 0x72 sprites, 10 were made for this game | `Enemy.DEFS`, `world.FLOORS` |
+| Lodgers (creatures) | **42**: 20 from 0x72's DungeonTileset II, 22 made for this game (2 of them only in the Clock Tower, 7 only in the Long Night's new areas) | `Enemy.DEFS` |
+| Guardians (bosses) | **16**: 12 on the four floors (three per floor, picked by the run seed), 3 in the Long Night's new areas (The Stockpot, The Head Librarian, The Dressmaker's Form) + a secret one, The Keeper of Hours. 3 use 0x72 sprites, 13 were made for this game | `Enemy.DEFS`, `world.FLOORS`, `Areas.LIST` |
 | House champions (mini-bosses) | **6**: The Great Sootling, The Bone Landlord, The Kitchen Devil, The Rafter King, The Deathwatch Queen, The Icebox Giant | `Specials.MINIS` |
 | Relics | **64** in 5 quality tiers; 18 of them move into the house as you earn achievements | `Items.RELICS`, `Unlocks.TABLE` |
 | Candle Rites (set bonuses) | **6**: Hearth, Clock, Moth, Many Wicks, Household, Seance | `Items.RITES` |
@@ -29,8 +29,8 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Omens (floor twists) | **4**: Cold Draught, Tallow Moon, Long Night, Smoky Halls | `world.OMENS` |
 | Achievements | **54** (13 hidden), shown in the game | `Achievements.LIST` |
 | Save slots | **3**, each with its own difficulty level, records, Journal, unlocks, achievements and saved run; settings are shared | `Game.SLOTS` |
-| Difficulty levels | **4**: 1 Gentle (melt x0.8, foe damage x0.6, foe health x0.85, drip wax x1.25); 2 Midnight (the game as it was made); 3 Witching Hour (melt x1.1, foe damage x1.3, foe health x1.15, marked foes x1.5); 4 Two O'Clock (melt x1.2, foe damage x1.6, foe health x1.3, marked foes x2, drip wax x0.8). Tonight's Candle always plays level 2 | `world.LEVELS` |
-| Music | 10 tracks + 2 original jingles | `assets/licenses/CREDITS_music.txt` |
+| Difficulty levels | **4**: 1 Gentle (melt x0.75, foe damage x0.5, foe health x0.85, drip wax x1.25); 2 Midnight (the game as it was made); 3 Witching Hour (melt x1.1, foe damage x1.2, foe health x1.15, marked foes x1.5); 4 Two O'Clock (melt x1.2, foe damage x1.4, foe health x1.3, marked foes x2, drip wax x0.8). Tonight's Candle always plays level 2 | `world.LEVELS` |
+| Music | 13 tracks + 2 original jingles | `assets/licenses/CREDITS_music.txt` |
 | Sound effect files | 74 | `assets/audio/sfx/` |
 | Builds | Android, Windows Desktop, Linux, Android Play | `export_presets.cfg` |
 | Android | package `com.tallow.waxandwane`, min SDK 24, target SDK 36, permissions: vibrate; Auto Backup on | `export_presets.cfg` |
@@ -59,12 +59,12 @@ script after any content change; `--check` tells you if it is out of date). Game
 
 ### The lodgers
 
-- Made for this game (15): Rose Melt, Melt Drop, Lamp Moth, Iron Snuffer, Grave Light, Sootling, Waxwork Bride, Cinder Rat, Restless Psalter, Clapper Bat, Deathwatch Beetle, Grave Hand, Cog Sentry, Minute-Hand Wraith, Gutterspout
+- Made for this game (22): Rose Melt, Melt Drop, Lamp Moth, Iron Snuffer, Grave Light, Sootling, Waxwork Bride, Cinder Rat, Restless Psalter, Clapper Bat, Deathwatch Beetle, Grave Hand, Cog Sentry, Minute-Hand Wraith, Gutterspout, Pot-Lid Crab, Flour Ghost, Bookworm, Inkblot, Ink Drop, Lantern-Shy Mannequin, Snapping Trunk
 - From 0x72, renamed and given their own lore (20): Coal-Bin Shambler, Larder Thief, Damp Slug, Cistern Slug, Puddle Lump, Drain Hopper, Flue Imp, Bone Lodger, Harvest Head, Hearth Devil, Rafter Leaper, Green Chanter, Masked Porter, Hooded Mourner, Tincture Doctor, Icebox Corpse, Hungry Chest, Gilt Cherub, Belfry Brute, Potted Sleeper
 
 ### Music slots
 
-title: 22 - Dream, floor_1: 40 - Crypt, floor_2: 21 - Dungeon, floor_3: 12 - Temple, floor_4: 24 - Final Area, shop: 39 - Boat, boss: 17 - Fight, final_boss: 28 - Tension, floor_5: 19 - Ascension, ending: 15 - Credit Theme.
+title: 22 - Dream, floor_1: 40 - Crypt, floor_2: 21 - Dungeon, floor_3: 12 - Temple, floor_4: 24 - Final Area, shop: 39 - Boat, boss: 17 - Fight, final_boss: 28 - Tension, floor_5: 19 - Ascension, ending: 15 - Credit Theme, area_kitchen: 14 - Curse, area_library: 30 - Ruins, area_attic: 16 - Melancholia.
 
 ## Checked by hand (not in the code)
 
