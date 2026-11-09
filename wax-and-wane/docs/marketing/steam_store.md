@@ -22,7 +22,7 @@ The step-by-step posting order is in `POST_IT.md`.
 
 **Use this one (283 characters):**
 
-> A twin-stick roguelite where your health bar is a burning candle. Play Tallow, a little living candle in a haunted house, and shoot room to room from midnight to 2:00 AM. Every hit melts your wax. Every kill buys a little time back. Snuff the Hour Fiend before the clock strikes two.
+> A twin-stick roguelite where your health bar is a burning candle. Play Tallow, a little living candle in a haunted house, and shoot room to room from midnight to 2:00 AM. Every hit melts your wax. Every kill buys a little time back. Snuff the Belfry's guardian before the clock strikes two.
 
 Why: people skim this next to the capsule. The first sentence names the genre and the hook in one go, so a
 roguelite fan knows in four seconds whether to scroll.

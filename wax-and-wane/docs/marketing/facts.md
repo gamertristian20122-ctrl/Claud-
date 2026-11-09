@@ -3,7 +3,7 @@
 The one list every store text, the press kit and the trailer cards are checked against. The first part
 is written by `python3 tools/make_facts.py` from the game's own code (do not edit it by hand: re-run the
 script after any content change; `--check` tells you if it is out of date). Game version in the code:
-**1.9.3** (the store release is 2.0.0).
+**2.0.0** (the store release is 2.0.0).
 
 ## From the code
 
@@ -12,13 +12,13 @@ script after any content change; `--check` tells you if it is out of date). Game
 | The candle | 120 wax = 12:00 AM to 2:00 AM; one minute of wax is one minute on the clock | `world.gd`, `candles.gd` |
 | A full candle lasts | **8 minutes** of real time if you are never hit | `world.DRAIN_PER_SEC` = 120 / (8 x 60) |
 | Floors | **4**: The Cellar, The Crypt, The Chapel, The Belfry, plus a secret fifth floor, **The Clock Tower** | `world.FLOORS` |
-| The secret floor opens | if the Belfry's guardian falls by **1:00 AM** (you arrive with +12 minutes of wax) | `Tower.UNLOCK_CLOCK`, `ARRIVAL_WAX` |
+| The secret floor opens | if the Belfry's guardian falls by **1:00 AM** (you arrive with +5 minutes of wax) | `Tower.UNLOCK_CLOCK`, `ARRIVAL_WAX` |
 | Kindling | kills less than 2.2 s apart chain; x3 gives +1 min, x5 gives +2 min | `world._kindle` |
 | Spilled Wax | 30% of the wax a hit melts splashes out as warm drops that cool after 2.5 s | `world.gd`, `pickup.gd` |
 | Rooms per floor | 8 / 10 / 12 / 14 (with the start, shop, treasure and boss rooms), plus a hidden Hollow and any special rooms | `floor_gen.gd` |
 | Hand-made room layouts | **69** | `RoomTemplates.NORMAL` |
 | Lodgers (creatures) | **35**: 20 from 0x72's DungeonTileset II, 15 made for this game (2 of them only in the Clock Tower) | `Enemy.DEFS` |
-| Guardians (bosses) | **9**: 8 on the four floors (two per floor, picked by the run seed) + a secret one, The Keeper of Hours. 4 use 0x72 sprites, 5 were made for this game | `Enemy.DEFS`, `world.FLOORS` |
+| Guardians (bosses) | **9**: 8 on the four floors (two per floor, picked by the run seed) + a secret one, The Keeper of Hours. 3 use 0x72 sprites, 6 were made for this game | `Enemy.DEFS`, `world.FLOORS` |
 | House champions (mini-bosses) | **6**: The Great Sootling, The Bone Landlord, The Kitchen Devil, The Rafter King, The Deathwatch Queen, The Icebox Giant | `Specials.MINIS` |
 | Relics | **64** in 5 quality tiers; 18 of them move into the house as you earn achievements | `Items.RELICS`, `Unlocks.TABLE` |
 | Candle Rites (set bonuses) | **6**: Hearth, Clock, Moth, Many Wicks, Household, Seance | `Items.RITES` |
@@ -41,7 +41,7 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Tallow | 12:00 AM | 8.0 min | from the start | The last candle in the cellar. |
 | Tea Light | 12:40 AM | 6.7 min | Reach the Crypt | Lit at 12:40 AM. Small, quick and quick-firing. |
 | Party Candle | 12:20 AM | 6.1 min | Reach a x8 Kindling streak | Two flames, thin wax. Starts with a Flare Match. |
-| Altar Pillar | 11:45 PM | 7.8 min | Snuff the Hollow Warden (floor 3) | Lit at 11:45 PM. Slow, sturdy, hits hard. |
+| Altar Pillar | 11:45 PM | 7.8 min | Snuff the Chapel's guardian (floor 3) | Starts with 15 spare minutes. Slow, sturdy, hits hard. |
 | Black Taper | 12:20 AM | 4.8 min | Win a run | Hard mode. Lit at 12:20 AM. Melts fast; every boss offers a Smoke Altar. |
 | Moonwick | 12:12 AM | 7.2 min | Be done by one, then climb | Lit by the moon. Quick and thin; its sparks pass through. |
 
@@ -51,8 +51,8 @@ script after any content change; `--check` tells you if it is out of date). Game
 |---|---|
 | The Cellar | Old Rot (0x72 sprite) or The Wax Mother |
 | The Crypt | The Gaoler (0x72 sprite) or The Sexton |
-| The Chapel | The Hollow Warden (0x72 sprite) or The Melted Choir |
-| The Belfry | The Hour Fiend (0x72 sprite) or The Great Pendulum |
+| The Chapel | The Hollow Warden or The Melted Choir |
+| The Belfry | The Great Pendulum or The Hour Fiend (0x72 sprite) |
 | The Clock Tower | The Keeper of Hours |
 
 ### The lodgers

@@ -670,8 +670,8 @@ func _d_guardian(e: Dictionary) -> void:
 	_head(_creature_pic(kind, known), Records.title_case(str(d.get("name", kind))) if known else "???", subs, UI.GOLD if known else UI.DIM)
 	if not known:
 		_text("It waits at the end of %s." % fl, UI.DIM)
-		if kind == "pendulum" and int(Game.records.get("wins", 0)) <= 0:
-			_text("Some say the Hour Fiend has a heart. Win once to hear it.", LOCK)
+		if kind == "big_demon" and int(Game.records.get("wins", 0)) <= 0:
+			_text("Some say the Pendulum has a master. Win once to meet it.", LOCK)
 		return
 	_text("\"%s\"" % str(d.get("title", "")), UI.EMBER)
 	_text(str(d.get("lore", "")), UI.CREAM)
@@ -761,7 +761,7 @@ func _d_candle(e: Dictionary) -> void:
 func _d_howto() -> void:
 	# short enough for the 384-wide Journal (the detail panel must not push the Back row off the screen)
 	_head(_pic(Art.tex("hero/hero_preview"), 2), "How to play", [["Midnight to two", UI.EMBER]])
-	_text("Burn down four floors and snuff the Hour Fiend before the clock strikes two.")
+	_text("Burn down four floors and snuff the Belfry's guardian before the clock strikes two.")
 	_text("Your wax is your life and your time: hits melt it, drippings mend it.", UI.WAX)
 	_text(Controls.intro_line(), UI.DIM)
 

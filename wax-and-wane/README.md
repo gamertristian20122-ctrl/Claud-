@@ -217,7 +217,7 @@ AI narrator, which is not in the game.
   drawings, UI, logo, app and store icons, and the jingles were made for this game by one developer with
   **Claude** (an AI assistant): the pixel art is drawn by scripts Claude wrote (`tools/art_*.py`,
   `tools/make_audio.py`), built from and matched to the 0x72 palette, and checked by the developer.
-  The other 20 lodgers and 4 guardians (Old Rot, the Gaoler, the Hollow Warden, the Hour Fiend) use 0x72's
+  The other 20 lodgers and 3 guardians (Old Rot, the Gaoler, the Hour Fiend) use 0x72's
   sprites. The numbers are counted from the code in `docs/marketing/facts.md`.
 - The free packs were obtained through the curated `series-ai/jam-ready-assets` library, which records
   each pack's licence.

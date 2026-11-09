@@ -19,7 +19,7 @@ const LIST := [
 	{"id": "boss_crypt", "name": "Crypt Sealed", "desc": "Snuff the guardian of the Crypt."},
 	{"id": "boss_chapel", "name": "Last Rites", "desc": "Snuff the guardian of the Chapel."},
 	{"id": "boss_untouched", "name": "Not a Scratch", "desc": "Snuff a guardian without a scratch."},
-	{"id": "win", "name": "Before Two", "desc": "Snuff the Hour Fiend before two."},
+	{"id": "win", "name": "Before Two", "desc": "Win a night before two."},
 	{"id": "win_early", "name": "Early to Bed", "desc": "Win before 1:00 AM."},
 	{"id": "win_tea_light", "name": "Small Mercies", "desc": "Win as the Tea Light."},
 	{"id": "win_party", "name": "Party's Over", "desc": "Win as the Party Candle."},
