@@ -253,7 +253,8 @@ static func test_result(bot: Node, params: Dictionary) -> void:
 	var st: Dictionary = bot.get_meta("area_run", {})
 	if not st.get("done", false):
 		var d: Array = bot._diag.get(int(params.get("floor", 0)), [0.0, 0, 0.0, 0.0])
-		print("[area] %s DIED on floor %d after %.0f s (%s), hits %d, wax lost %.0f, gained %.0f" % [str(bot.args.get("area", "?")),
+		var how := "CLEARED (the night's last floor)" if params.get("won", false) else "DIED"
+		print("[area] %s %s on floor %d after %.0f s (%s), hits %d, wax lost %.0f, gained %.0f" % [str(bot.args.get("area", "?")), how,
 			int(params.get("floor", 0)), float(d[0]), "at the guardian" if st.has("boss_t") else "before the guardian", int(d[1]),
 			float(d[2]), float(d[3])])
 	bot.set_meta("area_run", {})

@@ -557,12 +557,24 @@ func _busy(c: Vector2i) -> bool:
 	return false
 
 
+## Tallow left mid-roll: the room's data takes the case where it was going (the room is rebuilt from it).
+func _exit_tree() -> void:
+	for s in shelves:
+		if s.get("moving", false):
+			s["moving"] = false
+			var from: Vector2i = s["from"]
+			room.data["grid"][from.y][from.x] = "."
+			(s["rail"] as Dictionary)["at"] = s["nat"]
+
+
 func _slide(s: Dictionary, c: Vector2i, nc: Vector2i, nat: int) -> void:
 	var rail: Dictionary = s["rail"]
 	var node: Node2D = room.obstacle_nodes[c]
 	room.data["grid"][nc.y][nc.x] = "B"          # both cells are solid while it rolls
 	room._flow_to = Vector2i(-99, -99)
 	s["moving"] = true
+	s["from"] = c
+	s["nat"] = nat
 	Audio.play("thud_heavy", -14.0, 0.1, 0.7)
 	var tw := node.create_tween()
 	tw.tween_property(node, "position", room.cell_pos(nc) + Vector2(8, 16), SHELF_SLIDE).set_trans(Tween.TRANS_SINE)
