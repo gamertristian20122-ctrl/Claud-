@@ -254,9 +254,10 @@ AI narrator, which is not in the game.
   **Kokoro TTS** (*Kokoro-82M* by hexgrad, open weights, Apache-2.0; voice `am_michael`; misaki G2P,
   Apache-2.0), https://huggingface.co/hexgrad/Kokoro-82M - `docs/marketing/voice/Kokoro_TTS_Apache-2.0.txt`
   (kept out of the game builds). Only the videos use it, not the game. The lines and how to swap in a real voice: `docs/marketing/voice/`.
-- **Original work**: design, code, the in-game text, Tallow and the other candles, the house's own 15
-  lodgers and 10 guardians (the Wax Mother, the Sexton, the Hollow Warden, the Melted Choir, the Great Pendulum,
-  the Coal Furnace, the Ossuary, the Organist, the Weathercock and the Keeper),
+- **Original work**: design, code, the in-game text, Tallow and the other candles, the house's own 22
+  lodgers and 13 guardians (the Wax Mother, the Sexton, the Hollow Warden, the Melted Choir, the Great Pendulum,
+  the Coal Furnace, the Ossuary, the Organist, the Weathercock, the Stockpot, the Head Librarian, the Dressmaker's
+  Form and the Keeper), the special moves' art,
   relic and keepsake icons, costumes, effects, rooms, decor, special rooms, the Clock Tower, chalk
   drawings, UI, logo, app and store icons, and the jingles were made for this game by one developer with
   **Claude** (an AI assistant): the pixel art is drawn by scripts Claude wrote (`tools/art_*.py`,
