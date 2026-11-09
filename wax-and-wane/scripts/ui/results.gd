@@ -150,6 +150,7 @@ func _ready() -> void:
 	_buttons.add_child(UI.button("Title", func(): main.goto("title")))
 	add_child(_buttons)
 	Tower.on_results(self, v, params)   # the Clock Tower: TRUE ENDING, its floor name, the hint after a first win
+	Diary.on_results(self, v, params)   # v2.5: the ending's name, tonight's diary pages, their reading cards
 	_fit()
 	_fit.call_deferred()   # again once the flow rows and labels have their real sizes
 	get_viewport().size_changed.connect(_fit)

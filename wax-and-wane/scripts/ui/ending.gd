@@ -26,6 +26,7 @@ const STARS := [Vector2(12, 8), Vector2(28, 40), Vector2(52, 14), Vector2(64, 30
 
 var _clock := 0.0
 var _candle := "tallow"
+var ending := "true"   # v2.5: "true", "housekeeper", "windows", "whole_story" (Diary.ENDINGS)
 var _done: Callable
 var _root: Control
 var _vs := Vector2(384, 216)

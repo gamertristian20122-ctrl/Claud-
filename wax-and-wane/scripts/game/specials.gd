@@ -396,6 +396,7 @@ func _stock(t: String, d: Dictionary) -> void:
 			var m: Pickup = world.add_pickup("offer", c + Vector2(46, 24), "map")
 			for p in [a, b, m]:
 				p.record["group"] = "study"
+			Diary.on_study(world, c)   # v2.5: a diary page by the lectern, sometimes (it never crumbles)
 
 
 # ================================================================ every frame
