@@ -148,10 +148,11 @@ func _finish() -> void:
 		print("[intro] %s %s at %.2f s of %.1f" % [kind, "skipped" if _skipped else "played", t, dur])
 	if is_instance_valid(e) and e.alive:
 		_rest()
-		e.intro = false
-		e.active = true
-		if _skipped:
-			e._telegraph(Color(1, 1, 1))
+		if not Talk.meet(w, e, _skipped):   # v2.7: a first meeting's words first (the scene starts the fight when it ends)
+			e.intro = false
+			e.active = true
+			if _skipped:
+				e._telegraph(Color(1, 1, 1))
 	queue_free()
 
 

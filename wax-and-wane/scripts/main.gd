@@ -6,6 +6,7 @@ const SCREENS := {
 	"title": "res://scripts/ui/title.gd",
 	"game": "res://scripts/game/world.gd",
 	"results": "res://scripts/ui/results.gd",
+	"opening": "res://scripts/ui/opening.gd",   # v2.7: the story's opening (a slot's first run; see goto)
 }
 
 var current: Node
@@ -74,6 +75,10 @@ func _process(_dt: float) -> void:
 func goto(screen: String, params := {}) -> void:
 	if _busy:
 		return
+	# v2.7 dialogue: a slot's first run opens with the story (scripts/ui/opening.gd), which then goes on to this same
+	# run; the run's own first-run primer (onboarding) plays inside the run, after it. Never under a test.
+	if screen == "game" and Opening.wanted(self, params):
+		screen = "opening"
 	_busy = true
 	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
 	var tw := create_tween()

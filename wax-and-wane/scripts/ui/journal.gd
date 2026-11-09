@@ -50,6 +50,7 @@ var _page_lbl: Label
 var _count_lbl: Label
 var _prev: Button
 var _next: Button
+var _watch: Button   # v2.7: Watch the beginning (the Diary tab)
 var _slots: Array = []
 var _anim: TextureRect
 var _anim_sf: SpriteFrames
@@ -134,6 +135,13 @@ func _ready() -> void:
 	bottom.add_child(_page_lbl)
 	_next = UI.button(">", func(): _turn(1), 22)
 	bottom.add_child(_next)
+	# v2.7: the Diary tab (one page) shows the story's opening in place of the page arrows (scripts/ui/opening.gd)
+	_watch = UI.icon_button(L.t("Watch the beginning"), "ui/ico_flame", func(): Opening.watch(self), 0)
+	_watch.draw.connect(func():
+		if not Talk.seen("opening"):   # a gold dot until it has been watched
+			_dot(_watch, Vector2(_watch.size.x - 5, 2)))
+	_watch.visible = false
+	bottom.add_child(_watch)
 	_count_lbl = UI.label("", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	_count_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_count_lbl.size_flags_vertical = Control.SIZE_FILL
@@ -225,6 +233,9 @@ func _fill(grab: bool) -> void:
 	_next.disabled = _pages() <= 1
 	_prev.modulate.a = 0.35 if _pages() <= 1 else 1.0
 	_next.modulate.a = 0.35 if _pages() <= 1 else 1.0
+	for c in [_prev, _page_lbl, _next]:   # v2.7: the Diary tab has one page; Watch the beginning stands there instead
+		c.visible = t != "diary"
+	_watch.visible = t == "diary"
 	_count_lbl.text = _counts(t)
 	sel = clampi(sel, from, maxi(from, mini(entries.size(), from + _per_page()) - 1))
 	_select(sel, false)

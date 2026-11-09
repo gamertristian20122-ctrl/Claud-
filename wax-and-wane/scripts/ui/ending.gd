@@ -236,7 +236,21 @@ func _next_card() -> void:
 	tw.tween_property(_stage, "modulate:a", 1.0, FADE)
 	tw.parallel().tween_property(t1, "modulate:a", 1.0, FADE).set_delay(0.3)
 	tw.parallel().tween_property(t2, "modulate:a", 1.0, FADE).set_delay(0.7)
+	# v2.7: one card of each ending closes with a few words (the candle and Martha's memory; scripts/ui/talk.gd)
+	var beat := Talk.ending_lines(self, ending, _card, _candle)
+	if not beat.is_empty():
+		tw.tween_interval(1.8)
+		tw.tween_callback(func(): Talk.ending_beat(_root, beat, _candle, [t1, t2], _card_out.bind(t1, t2, null)))
+		return
 	tw.tween_interval(CARD - FADE * 2.0)
+	_card_out(t1, t2, tw)
+
+
+## The card's end: the scene and its lines fade, then the next card (v2.7: after a closing beat, on a fresh tween).
+func _card_out(t1: Label, t2: Label, tw: Tween) -> void:
+	if tw == null:
+		tw = create_tween()
+		tw.tween_interval(0.5)
 	tw.tween_property(_stage, "modulate:a", 0.0, FADE)
 	tw.parallel().tween_property(t1, "modulate:a", 0.0, FADE)
 	tw.parallel().tween_property(t2, "modulate:a", 0.0, FADE)

@@ -97,6 +97,8 @@ scripts/game/enemies/             house_ai.gd (lodger AIs), boss_ai.gd (guardian
                                   soot_patch.gd, gallery.gd (bestiary review sheets)
 scripts/game/keeper.gd            the Clock Tower's creatures and the Keeper of Hours
 scripts/game/boss_intro.gd        each guardian's entrance where its fight starts (v2.4), --tour --intros
+scripts/game/talk_lines.gd        v2.7: every line of the talking scenes (guardians, Martha, the opening, the endings)
+scripts/game/talk_tour.gd         v2.7: --talkcheck, --tour --talk
 scripts/game/tower.gd             the Clock Tower: unlock, ladder, floor 5 layout and dressing, true ending hook
 scripts/game/areas.gd             the Long Night's areas of the house (Kitchen, Library, Attic + the 2.0 floors), sequence()
 scripts/game/area_ai.gd           the areas' lodgers and guardians (the Stockpot, the Head Librarian, the Dressmaker's Form)
@@ -117,7 +119,8 @@ scripts/game/hud.gd               wax / clock bar, minimap, boss bar, touch stic
 scripts/game/meta_tour.gd         the --tour --journal screenshot tour
 scripts/ui/                       title.gd (menu, Candle Box, seed keypad, credits), slots.gd (the save slots, the level
                                   picker; slots_tour.gd its --tour --slots), results.gd, journal.gd,
-                                  ending.gd (true ending + credits roll), settings_panel.gd, key_catcher.gd, ui.gd
+                                  ending.gd (true ending + credits roll), settings_panel.gd, key_catcher.gd, ui.gd,
+                                  talk.gd + talk_portrait.gd (v2.7 talking scenes), opening.gd (v2.7 story opening)
 scripts/autotest.gd               play-test bot, screenshot tours, bench
 scripts/audio_check.gd            --audiotest
 scripts/store_shots.gd            --shots-store and --keyart staging for the store images
@@ -179,6 +182,9 @@ godot --headless --path . -- --autotest --diarycheck                  # v2.5 sto
                                                                       #   no repeats, no reading card in a fight (exit 1 on a FAIL)
 godot --headless --path . -- --autotest --ending=<id> [--speed=4] [--shots=/abs/dir]   # stage an ending: true,
                                                                       #   housekeeper, windows, whole_story
+godot --headless --path . -- --autotest --talkcheck                   # v2.7 dialogue: every guardian's scenes, never with
+                                                                      #   a live foe, Story scenes, Tonight's Candle, the bot,
+                                                                      #   saves, the opening, the endings' beats (exit 1 on a FAIL)
 
 # screenshot tours (look at the pictures!). 1600x720 = a 480x216 phone screen
 xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 \
@@ -199,6 +205,9 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
                               the Kitchen / Library / Attic banners, long-night results and Journal
     ... --tour --diary        a diary page in a room, its reading card (and the card waiting out a fight), the Diary
                               tab, every ending's cards, the results line (docs/streams/v25_story.md)
+    ... --tour --talk         v2.7: the story's opening (8 shots), four guardian conversations, a fall with Martha's
+                              memory, a later one-liner, the Story scenes row, Watch the beginning, an ending's beat
+                              (--talk=all: every guardian's first two lines and every candle's portrait; --talk=candles: just those)
     ... --tour --feel         v2.6: the pickup magnet mid-sweep, a hit's mark, Aim: Auto, the full map, the pause menu,
                               Restart, the Aim and Pickup magnet rows (docs/streams/v26_feel.md)
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)

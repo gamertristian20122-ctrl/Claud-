@@ -50,6 +50,7 @@ var settings := {
 	"magnet": true,             # v2.6: a cleared room's loose drops drift to Tallow (pickup.gd _sweep_wants)
 	"aim": "assist",            # v2.6: assist / auto (touch: the right thumb just fires, world.auto_aim) / off
 	"reduce_motion": false,     # v2.6: no panel pops, screen wipes or menu slides (UI.calm)
+	"talk": "first",            # v2.7: Story scenes: first (a guardian's whole scene once per slot) / always / off (Talk)
 }
 ## A fresh slot's records (each slot has its own copy in Game.records).
 const RECORDS := {
@@ -80,6 +81,7 @@ const RECORDS := {
 	"rooms_found": {},    # special room type -> 1
 	"journal_new": {},    # Journal entry key -> 1 until it has been looked at
 	"unlocks_known": [],  # unlocked relics / keepsakes already announced
+	"talks": {},          # v2.7: talking scenes shown ("meet:<kind>", "fall:<kind>", "opening" -> times; Talk)
 }
 var records: Dictionary = RECORDS.duplicate(true)
 var slot := 1                 # the save slot in use (1-3), remembered in save.cfg

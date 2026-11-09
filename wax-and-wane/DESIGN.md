@@ -58,6 +58,9 @@ All PNG, RGBA, pixel-exact. `assets/art/...`, loaded with `Art.tex("folder/name"
   the ring handle, over the body at (-9, -5)); `holder_full.png` 23x7 both. Brass #facb3e/#ee8e2e/#c56025/#8f4029.
 - `face_<open|blink|brave|shout|worried|blink_worried|tired|blink_tired|hurt|happy>.png` 11x6: 2x3 eyes and the
   mouth; x = eye centre - 5, y = the eyes' top row. Cheeks are drawn in code in each candle's colour.
+  v2.7 (`art_talk.py`, the talking scenes): `face_<open|worried|tired|happy>_talk` (the other mouth for the 2-frame
+  talk), `face_teary`, `face_teary_talk`, `face_blink_teary` (worried eyes, a #cae6f5 / #72d6ce tear under each),
+  built from the concept's own eyes and mouths.
 - `hero_preview.png` 24x27: the full-wax idle frame (results screen).
 - `flame_f0..f5.png` 9x13 (the old flame) stays for the HUD wax bar, the Kindling streak and the title logo.
 
@@ -155,6 +158,15 @@ opaque; the game draws them at one alpha (0.5), lit like the floor. Lines drop o
 - Creatures `areas/<area>/<name>_<idle|run|atk>_f0..3` (Enemy.DEFS `sprite` = "areas/<area>/<name>"):
   lid_crab, flour_ghost (Kitchen), bookworm, inkblot, ink_drop (Library), mannequin, trunk (Attic) 16x16 to 16x22;
   guardians stockpot 44x40, librarian 32x52, dress_form 40x48. Enemy shot `fx/bolt_pin_f0..1` 7x7 (UX-02 recipe).
+
+### The talking scenes (talk/) - `art_talk.py` (v2.7, docs/streams/v27_dialogue.md)
+- `martha_f0|f1|blink|smile.png` 24x24: Martha Fenn as a memory, a sepia bust (the palette's warm browns only), shown
+  x2 in a talk portrait (mouth shut / open, a blink, eyes creased in a smile).
+- `martha_stand|match|light.png` 36x52: Martha at her kitchen table (story/end_kitchen scale), facing right: hands
+  folded, a struck match held up, a long match reaching to the wick (its flame at (32, 2)).
+- `open_cellar.png` 192x96: the opening's cellar (stone walls, flags, the stairs up to a lit door, barrels, the coal
+  heap, Martha's chalk circle); the opening lights it from the candle in code.
+- Guardians' talk portraits are their own first idle frame, a 24x24 crop x2 (`TalkLines.SPEAKERS` "crop").
 
 ### UI (ui/) - `art_ui.py`, `art_platform.py`, `art_icon.py`
 - Wax/time bar, 14 px tall: `bar_frame_left.png` (10 px), `bar_frame_right.png` (4 px), `bar_wax_fill.png` and
