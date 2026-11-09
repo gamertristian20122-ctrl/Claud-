@@ -25,6 +25,7 @@ static func run(at: Node) -> int:
 	await _back_matrix(at)
 	await _stove_embers(at)
 	await _pause_in_hitstop(at)
+	await _card_in_hitstop(at)
 	await _restart_kinds(at)
 	print("[qa] %d failed -> %s" % [fails, "PASS" if fails == 0 else "FAIL"])
 	return fails
@@ -249,6 +250,28 @@ static func _pause_in_hitstop(at: Node) -> void:
 	var quit_s := (Time.get_ticks_msec() - t0) / 1000.0
 	_say("a pause during a hit's freeze: menus at full speed", is_equal_approx(paused_ts, Game.base_time_scale) and quit_s < 2.0,
 		"time x%.2f while paused, Save & quit's fade %.1f s" % [paused_ts, quit_s])
+
+
+## The same freeze when a reading card (or the versus card) pauses the house instead of the pause menu: a diary
+## page's card opening on the frame Tallow is hurt (a hot stove top, his own bomb) ran at x0.05, so its 0.6 s
+## "unread" hold kept every tap out for about 12 s.
+static func _card_in_hitstop(at: Node) -> void:
+	var tree: SceneTree = at.get_tree()
+	var w: Node = await _new_run(at, {"seed": 4242})
+	at.args["diary"] = true   # the card stays open until closed here
+	var d := Diary.of(w)
+	w.hitstop(0.06, 0.05)   # a hit (world.on_player_hurt)
+	d._open_card("family")
+	await tree.create_timer(0.7, true, false, true).timeout   # real time
+	var ts := Engine.time_scale
+	var card: PageCard = d.card as PageCard
+	var held: float = card._t if card and is_instance_valid(card) else -1.0
+	_say("a reading card opened during a hit's freeze", is_equal_approx(ts, Game.base_time_scale) and held >= PageCard.HOLD,
+		"time x%.2f, the card's hold %.2f s of %.1f after 0.7 s" % [ts / Game.base_time_scale, held, PageCard.HOLD])
+	if card and is_instance_valid(card):
+		card.close()
+	await tree.create_timer(0.3, true, false, true).timeout
+	at.args.erase("diary")
 
 
 ## Quick restart (pause menu > Restart) from Tonight's Candle and from a 7-floor night in a level-3 slot: the
