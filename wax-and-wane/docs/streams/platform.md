@@ -143,6 +143,7 @@ Steamworks with **exactly these API names**:
 | candle_box | Full Candle Box | Unlock every candle. | |
 | win_level3 | Spellbound | Win a night on level 3 (Witching Hour) or higher. | |
 | win_level4 | Dead of Night | Win a night on level 4 (Two O'Clock). | |
+| long_night | The Long Night | Win a night of seven floors or more. | |
 
 Bosses are matched by floor, not by boss kind, so a new boss line-up (bestiary stream) keeps working.
 The medal icons (`icon_medal.png` / `icon_medal_off.png`) are 9x9; Steam needs 64x64 JPG/PNG icons per
