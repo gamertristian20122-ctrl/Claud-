@@ -256,9 +256,8 @@ const OPENING := [
 	{"panel": "kitchen", "text": "She lit him every night for a year, until the house learned to do it for her."},
 	{"panel": "cellar", "text": "Now, at twelve, the match strikes itself, and Tallow wakes alone."},
 	{"panel": "cellar", "who": "me", "face": "worried", "text": "...Martha?"},
-	{"panel": "cellar", "text": "He's scared of the dark. He goes up anyway."},
-	# v2.7 merge: the goal, said once here (the old 12:00 AM card no longer follows the opening)
-	{"panel": "cellar", "text": "Up through the house to the clock in the belfry, before his wax runs out."},
+	# v2.7 merge: the goal rides on the last line (the old 12:00 AM card no longer follows the opening)
+	{"panel": "cellar", "text": "He's scared of the dark. He goes up anyway, to the clock in the belfry, before his wax runs out."},
 ]
 
 

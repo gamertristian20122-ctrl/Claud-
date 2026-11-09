@@ -235,7 +235,8 @@ static func _light(at: Node, seed_n: int) -> Node:
 	Game.start_slot(1, 2)
 	Records.set_night_floors(4)
 	main.autotest = null   # the world starts as it does for a real player (the story card, no test-only hints)
-	main.goto("game", {"candle": "tallow", "floors": 4, "seed": seed_n, "seeded": false})
+	# v2.7 merge: "opened" = the story's opening (opening.gd) has just played, as it does before a real first run
+	main.goto("game", {"candle": "tallow", "floors": 4, "seed": seed_n, "seeded": false, "opened": true})
 	waited = 0.0
 	while waited < 10.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null):
 		await at._wait(0.05)
@@ -389,6 +390,8 @@ static func _leave(at: Node, w: Node) -> void:
 static func _run(at: Node, params: Dictionary) -> Node:
 	var main: Node = at.main
 	main.autotest = null
+	if not params.has("opened"):
+		params["opened"] = true   # v2.7 merge: as after the story's opening, which a real first run plays first
 	main.goto("game", params)
 	var waited := 0.0
 	while waited < 10.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null and not main._busy):
