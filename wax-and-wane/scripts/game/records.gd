@@ -260,6 +260,8 @@ static func killer_name(k: String) -> String:
 		"spikes": return "Floor Spikes"
 		"hearth": return "a Lit Hearth"
 		"oil": return "an Oil Jar"
+		"stove": return "a Hot Stove"
+		"scald": return "Scalding Broth"
 		"bomb": return "Your Own Bomb"
 		"clock": return "the Clock"
 		"gave_up": return "Your Own Breath"
@@ -275,6 +277,8 @@ static func short_killer(k: String) -> String:
 		"spikes": return "Floor spikes"
 		"hearth": return "A lit hearth"
 		"oil": return "An oil jar"
+		"stove": return "A hot stove"
+		"scald": return "Scalding broth"
 	return killer_name(k)
 
 
@@ -297,6 +301,7 @@ static func killer_icon(k: String, big := true) -> Texture2D:
 	if k.begins_with("e:"):
 		return portrait(k.substr(2))
 	var path: String = {"spikes": "0x72/floor_spikes_anim_f3", "hearth": "decor/prop_hearth", "oil": "decor/prop_oil_jar",
+		"stove": "areas/kitchen/stove", "scald": "areas/kitchen/pot",
 		"bomb": "0x72/bomb_f0", "clock": "items/pocket_watch", "gave_up": "items/snuffer_cap"}.get(k, "items/snuffer_cap")
 	for p in [path, "items/snuffer_cap"]:
 		if Art.has(p):

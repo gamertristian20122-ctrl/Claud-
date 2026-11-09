@@ -158,6 +158,7 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 		if char_at(hc) == "G":
 			lit_fires += 1
 	decor.setup(self, candles.size() + lit_fires)
+	AreaGimmicks.attach(self)   # the Long Night's areas: stoves, sliding shelves, lanterns... (area_gimmicks.gd)
 	set_open(data["cleared"], true)
 	if data["cleared"]:
 		light_candles(true)
@@ -256,6 +257,9 @@ func _furniture_tex(c: Vector2i) -> Texture2D:
 
 
 func _obstacle_tex(c: Vector2i, ch: String) -> Texture2D:
+	var area_tex := AreaGimmicks.obstacle_tex(self, c, ch)   # the areas' furniture, crates and boiling pots
+	if area_tex:
+		return area_tex
 	match ch:
 		"R": return Art.tex("rooms/rock" if (c.x + c.y) % 3 != 0 or not Art.has("rooms/rock_b") else "rooms/rock_b")
 		"Q": return Art.tex("decor/prop_soot_rock")
@@ -632,6 +636,8 @@ func inner_rect() -> Rect2:
 ## A shot at world position: returns true when it hits something solid (and damages breakables).
 ## Player embers (`friendly`) burn cobwebs as they fly through them.
 func shot_hits(wp: Vector2, dmg: float, friendly := true) -> bool:
+	if AreaGimmicks.shot_at(self, wp, dmg, friendly):   # flour clouds, hush rings, lanterns, dust sheets, shelf-doors
+		return true
 	var lp := wp - position
 	if lp.x < IN.x or lp.x > IN.x + COLS * TILE or lp.y < IN.y - 4 or lp.y > IN.y + ROWS * TILE:
 		return true
@@ -725,12 +731,15 @@ func break_obstacle(c: Vector2i) -> void:
 		world.add_pickup("wax_big" if world.rng.randf() < 0.6 else "chest", wp + Vector2(0, 4))
 	match ch:
 		"U":
-			Audio.play("urn_break")
-			if Art.has("rooms/urn_broken"):
-				var s := Sprite2D.new()
-				s.texture = Art.tex("rooms/urn_broken")
-				s.position = cell_pos(c) + Vector2(8, 8)
-				floor_layer.add_child(s)
+			if AreaGimmicks.urn_broken(self, c):   # a kitchen's boiling pot spills instead
+				pass
+			else:
+				Audio.play("urn_break")
+				if Art.has("rooms/urn_broken"):
+					var s := Sprite2D.new()
+					s.texture = Art.tex("rooms/urn_broken")
+					s.position = cell_pos(c) + Vector2(8, 8)
+					floor_layer.add_child(s)
 		"C":
 			Audio.play("crate_break")
 		"B":

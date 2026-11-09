@@ -2,10 +2,13 @@
 
 importer="oggvorbisstr"
 type="AudioStreamOggVorbis"
+uid="uid://dahfpomvgtfrv"
+path="res://.godot/imported/area_library.ogg-836625b29078368bc2f50cdc98eca782.oggvorbisstr"
 
 [deps]
 
 source_file="res://assets/audio/music/area_library.ogg"
+dest_files=["res://.godot/imported/area_library.ogg-836625b29078368bc2f50cdc98eca782.oggvorbisstr"]
 
 [params]
 
