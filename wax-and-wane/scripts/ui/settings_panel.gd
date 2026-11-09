@@ -40,7 +40,7 @@ static func open(parent: Control, page := 0) -> void:
 			_keys_page(body, func(): (st["show"] as Callable).call(2, false))
 		for k in tab_btns.size():
 			var on := k == i
-			tab_btns[k].add_theme_color_override("font_color", UI.GOLD if on else UI.DIM)
+			tab_btns[k].theme_type_variation = UI.KINDS["tab_on" if on else "tab"]   # v2.6: the kit's tabs
 			tab_btns[k].set_meta("default_focus", on)
 		if focus_tab:
 			tab_btns[i].grab_focus(not Controls.uses_buttons())
@@ -48,7 +48,7 @@ static func open(parent: Control, page := 0) -> void:
 	# the Keys page needs keys or a pad: a phone played by touch alone does not list it
 	var n_pages := PAGES.size() if OS.has_feature("pc") or Controls.device != Controls.TOUCH else PAGES.size() - 1
 	for i in n_pages:
-		var b := UI.button(L.t(PAGES[i]), func(): pass, 72)
+		var b := UI.button(L.t(PAGES[i]), func(): pass, 72, "tab")
 		b.pressed.connect(func(): show_page.call(i, true))
 		tabs.add_child(b)
 		tab_btns.append(b)
@@ -97,7 +97,8 @@ static func _game_page(body: VBoxContainer, _parent: Control) -> void:
 	# (Gentle burn is gone: difficulty level 1 replaces it, chosen per save slot on the Slots screen)
 	grid.add_child(UI.cycle("Effects", ["full", "lite"], ["Full", "Lite"], Game.settings.get("effects", "full"),
 		func(v): Game.set_setting("effects", v)))
-	grid.add_child(_hint("Lite: no heat haze or shockwaves"))
+	# v2.6: menus without the pops, wipes and slides (UI.calm)
+	grid.add_child(UI.toggle(L.t("Reduce motion"), Game.settings.get("reduce_motion", false), func(b): Game.set_setting("reduce_motion", b)))
 	grid.add_child(UI.toggle("FPS counter", Game.settings["show_fps"], func(b): Game.set_setting("show_fps", b)))
 	# v2.6: a cleared room's coins, bombs and wax drift to Tallow (pickup.gd)
 	grid.add_child(UI.toggle(L.t("Pickup magnet"), Game.settings.get("magnet", true), func(b): Game.set_setting("magnet", b)))
@@ -105,6 +106,8 @@ static func _game_page(body: VBoxContainer, _parent: Control) -> void:
 		var fs := UI.toggle("Fullscreen (F11)", Game.settings.get("fullscreen", false), func(b): Game.set_setting("fullscreen", b))
 		grid.add_child(fs)
 	body.add_child(grid)
+	var lite := UI.label(L.t("Effects Lite: no heat haze or shockwaves."), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	body.add_child(lite)
 
 
 static func _controls_page(body: VBoxContainer) -> void:

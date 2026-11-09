@@ -93,10 +93,7 @@ func _ready() -> void:
 	_glyph_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tabs.add_child(_glyph_l)
 	for i in TABS.size():
-		var b := UI.button(L.t("Diary") if TABS[i] == "diary" else TAB_NAMES[i], func(): _set_tab(i, true), 0)
-		b.add_theme_stylebox_override("normal", _tab_box(false))
-		b.add_theme_stylebox_override("hover", _tab_box(false))
-		b.add_theme_stylebox_override("pressed", _tab_box(true))
+		var b := UI.button(L.t(TAB_NAMES[i]), func(): _set_tab(i, true), 0, "tab")   # v2.6: the kit's tabs
 		b.draw.connect(_draw_tab_dot.bind(b, i))
 		tabs.add_child(b)
 		_tab_btns.append(b)
@@ -153,18 +150,12 @@ func _ready() -> void:
 	_on_device(Controls.device)
 	Audio.play("page_flip")
 	_set_tab(tab, false)
+	UI.wipe_in(self)   # v2.6: a candle-light edge sweeps the screen in (Reduce motion: at once)
 
 
 func close() -> void:
 	Audio.play("ui_back")
 	queue_free()
-
-
-static func _tab_box(on: bool) -> StyleBox:
-	var sb: StyleBox = UI._box("ui/button_9_pressed" if on else "ui/button_9", 6, Color(0.2, 0.14, 0.14, 1))
-	sb.content_margin_left = 5
-	sb.content_margin_right = 5
-	return sb
 
 
 func _on_device(_d: String) -> void:
@@ -182,10 +173,7 @@ func _set_tab(i: int, sound: bool) -> void:
 	if sound:
 		Audio.play("page_flip", -4.0)
 	for k in _tab_btns.size():
-		var on := k == tab
-		_tab_btns[k].add_theme_color_override("font_color", UI.GOLD if on else UI.DIM)
-		_tab_btns[k].add_theme_stylebox_override("normal", _tab_box(on))
-		_tab_btns[k].add_theme_stylebox_override("hover", _tab_box(on))
+		_tab_btns[k].theme_type_variation = UI.KINDS["tab_on" if k == tab else "tab"]
 		_tab_btns[k].queue_redraw()
 	entries = _entries(TABS[tab])
 	_fill(true)

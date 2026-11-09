@@ -33,19 +33,31 @@ var _bomb_idx := -1
 var _bomb_press := Vector2.ZERO
 var _bomb_ms := 0
 var ghost_sticks := false
-var banner_band: ColorRect
+var banner_band: NinePatchRect   # v2.6: the brass plate under the banner title
 var keep_btn: Control
 var _keep_idx := -1
 var _keep_press := Vector2.ZERO
 var _keep_ms := 0
 var streak_box: Control
 var streak_label: Label
-var hint_band: ColorRect
+var hint_band: NinePatchRect
 var _banner_tw: Tween
 var _hint_tw: Tween
 var _held_tips: Array = []      # [text, dur]: tips that landed mid guardian fight, shown after it (UX-04)
 var _hint_scope := []           # [floor, cell] of the special room a hint belongs to, or [] (C11)
 var _banner_scope := []
+## v2.6 (docs/streams/v26_gui.md): the candle gauge = the clock's big digits on a brass-rimmed plate sitting on
+## the wax bar's holder; coins and bombs in chips; the floor's name with a pip per floor; the banner's title on
+## a brass plate with its line on a dark ribbon; hints on the same ribbon; a framed boss bar.
+var clock_face: Control         # the plate and the big digits (hud_digits.png); clock_label is its "AM"
+var _clock_digits := "12:00"
+var _clock_hot := false
+var floor_pips: Control
+var banner_strip: NinePatchRect  # the ribbon under the banner's plate (banner_band is the plate)
+const DIGIT_ADV := 7             # a digit cell is 8 px (1 px ink each side): neighbours share an outline
+const COLON_ADV := 4
+const PLATE_H := 18
+const BOSS_W := 200.0
 
 var shown_wax := 120.0
 var ghost_wax := 120.0
@@ -110,12 +122,18 @@ func _ready() -> void:
 	vignette.modulate.a = 0.0
 	vignette.material = Lighting.dither_material()   # stepped + dithered, not a smooth ramp
 	root.add_child(vignette)
-	# --- wax bar
+	# --- the candle gauge: the clock plate (big digits + AM) on the wax bar's brass holder
 	bar = Control.new()
-	bar.position = Vector2(6, 5)
-	bar.size = Vector2(150, 14)
+	bar.position = Vector2(4, 22)
+	bar.size = Vector2(142, 14)
 	bar.draw.connect(_draw_bar)
-	root.add_child(bar)
+	clock_face = Control.new()
+	clock_face.size = Vector2(52, PLATE_H)
+	clock_face.draw.connect(_draw_clock)
+	root.add_child(clock_face)
+	root.add_child(bar)   # over the plate: the flame at the burning end walks under the clock as the night goes
+	clock_label = UI.label("AM", 8, UI.CREAM)
+	clock_face.add_child(clock_label)
 	streak_box = Control.new()
 	streak_box.size = Vector2(40, 16)
 	streak_box.draw.connect(_draw_streak)
@@ -123,29 +141,22 @@ func _ready() -> void:
 	streak_label = UI.label("", 16, UI.EMBER)
 	streak_label.position = Vector2(10, -1)
 	streak_box.add_child(streak_label)
-	clock_label = UI.label("12:00 AM", 16, UI.CREAM)
-	clock_label.position = Vector2(8, 17)
-	root.add_child(clock_label)
 	spare_label = UI.label("", 8, UI.GOLD)
 	root.add_child(spare_label)
-	floor_label = UI.label("", 8, UI.DIM)
-	floor_label.position = Vector2(66, 22)
+	floor_label = UI.label("", 8, UI.WAX)
 	root.add_child(floor_label)
-	# --- counters
+	floor_pips = Control.new()
+	floor_pips.size = Vector2(60, 5)
+	floor_pips.draw.connect(_draw_pips)
+	root.add_child(floor_pips)
+	# --- counters: a chip each (icon + number)
 	var cbox := HBoxContainer.new()
-	cbox.position = Vector2(8, 34)
-	cbox.add_theme_constant_override("separation", 3)
+	cbox.position = Vector2(4, 39)
+	cbox.add_theme_constant_override("separation", 2)
 	root.add_child(cbox)
-	cbox.add_child(_icon("ui/icon_coin", "0x72/coin_anim_f0"))
-	coin_label = UI.label("0", 16, UI.GOLD)
-	cbox.add_child(coin_label)
-	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(6, 0)
-	cbox.add_child(gap)
-	cbox.add_child(_icon("ui/icon_bomb", "0x72/bomb_f0"))
-	bomb_label = UI.label("1", 16, UI.CREAM)
-	cbox.add_child(bomb_label)
-	# --- minimap (top right)
+	coin_label = _chip(cbox, "ui/hud_coin", UI.GOLD)
+	bomb_label = _chip(cbox, "ui/hud_bomb", UI.CREAM)
+	# --- minimap (top right; v2.6: 10x7 cells)
 	minimap = Control.new()
 	minimap.size = Vector2(72, 48)
 	minimap.draw.connect(_draw_minimap)
@@ -179,26 +190,22 @@ func _ready() -> void:
 	boss_box = Control.new()
 	boss_box.visible = false
 	root.add_child(boss_box)
-	boss_name = UI.label("", 8, UI.RED, HORIZONTAL_ALIGNMENT_CENTER)
-	boss_name.size = Vector2(170, 10)
-	boss_name.position = Vector2(0, -10)
+	boss_name = UI.outlined(UI.label("", 16, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))   # v2.6: the guardian's name, readable
+	boss_name.size = Vector2(BOSS_W, 16)
+	boss_name.position = Vector2(0, -17)
 	boss_box.add_child(boss_name)
 	boss_bar = Control.new()
-	boss_bar.size = Vector2(170, 6)
+	boss_bar.size = Vector2(BOSS_W, 10)
 	boss_bar.draw.connect(_draw_boss_bar)
 	boss_box.add_child(boss_bar)
 	# --- banners
-	banner_band = ColorRect.new()
-	banner_band.color = Color(0.13, 0.08, 0.1, 0.78)
-	banner_band.modulate.a = 0
-	banner_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner_strip = _nine("ui/kit_strip", 5, 4)
+	root.add_child(banner_strip)
+	banner_band = _nine("ui/kit_plate", 5, 5)
 	root.add_child(banner_band)
-	hint_band = ColorRect.new()
-	hint_band.color = Color(0.13, 0.08, 0.1, 0.78)
-	hint_band.modulate.a = 0
-	hint_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hint_band = _nine("ui/kit_strip", 5, 4)
 	root.add_child(hint_band)
-	banner = UI.label("", 16, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	banner = UI.engraved(UI.label("", 16, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER))   # cut into the brass plate
 	banner.modulate.a = 0
 	root.add_child(banner)
 	banner_sub = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
@@ -225,8 +232,8 @@ func _ready() -> void:
 	for b in [pause_btn, bomb_btn]:
 		b.focus_mode = Control.FOCUS_NONE
 	# FitCheck (--fit tours): which pieces of the HUD are laid out together
-	for pair in [[bar, "status"], [clock_label, "status"], [spare_label, "status"], [streak_box, "status"],
-			[floor_label, "status"], [coin_label.get_parent(), "status"], [minimap, "map"], [pause_btn, "map"],
+	for pair in [[bar, "status"], [clock_face, "status"], [spare_label, "status"], [streak_box, "status"],
+			[floor_label, "status"], [cbox, "status"], [minimap, "map"], [pause_btn, "map"],
 			[banner, "banner"], [banner_sub, "banner"], [hint, "hints"], [preview, "hints"],
 			[boss_box, "boss"], [bomb_btn, "buttons"], [keep_btn, "buttons"]]:
 		(pair[0] as Node).set_meta("fit_group", pair[1])
@@ -242,12 +249,39 @@ func _exit_tree() -> void:
 	Controls.want_crosshair(false)
 
 
-func _icon(path: String, fallback: String) -> TextureRect:
+## A counter chip: [icon] 23, on a small dark plate. Returns its number label.
+func _chip(row: HBoxContainer, icon: String, col: Color) -> Label:
+	var chip := PanelContainer.new()
+	chip.theme_type_variation = &"ChipPanel"
+	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(chip)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 2)
+	chip.add_child(h)
 	var tr := TextureRect.new()
-	tr.texture = Art.tex(path) if Art.has(path) else Art.tex(fallback)
+	tr.texture = Art.tex(icon)
 	tr.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	tr.custom_minimum_size = Vector2(11, 13)
-	return tr
+	tr.custom_minimum_size = Vector2(12, 12)
+	tr.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(tr)
+	var l := UI.label("0", 16, col)
+	l.custom_minimum_size = Vector2(7, 12)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	h.add_child(l)
+	return l
+
+
+## A pixel-exact nine-patch (banner plate, ribbons, the map's frame), hidden until shown.
+func _nine(path: String, mx: int, my: int) -> NinePatchRect:
+	var n := NinePatchRect.new()
+	n.texture = Art.tex(path)
+	n.patch_margin_left = mx
+	n.patch_margin_right = mx
+	n.patch_margin_top = my
+	n.patch_margin_bottom = my
+	n.modulate.a = 0
+	n.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return n
 
 
 func _make_stick() -> Control:
@@ -288,13 +322,14 @@ func _layout() -> void:
 	var vs := view_size()
 	var ins := safe_insets()
 	_narrow = vs.x - ins.x - ins.y < 432.0
-	minimap.size = Vector2(72, 40 if _narrow else 48)
-	bar.position = Vector2(6 + ins.x, 9)
-	clock_label.position = Vector2(8 + ins.x, 21)
-	streak_box.position = Vector2(66 + ins.x, 22)
-	floor_label.position = Vector2(8 + ins.x, 52)
-	(coin_label.get_parent() as Control).position = Vector2(8 + ins.x, 37)
-	minimap.position = Vector2(vs.x - minimap.size.x - 28 - ins.y, 4)
+	minimap.size = Vector2(76, 40 if _narrow else 50)
+	# the gauge: the clock plate at the top-left corner, the wax bar's holder right under it
+	clock_face.position = Vector2(4 + ins.x, 3)
+	bar.position = Vector2(4 + ins.x, 3 + PLATE_H + 1)
+	_place_clock()
+	(coin_label.get_parent().get_parent().get_parent() as Control).position = Vector2(4 + ins.x, 39)
+	floor_label.position = Vector2(6 + ins.x, 58)
+	minimap.position = Vector2(vs.x - minimap.size.x - 30 - ins.y, 5)
 	pause_btn.position = Vector2(vs.x - 26 - ins.y, 3)
 	bomb_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 118)
 	keep_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 154)
@@ -303,12 +338,11 @@ func _layout() -> void:
 		# lower, clear of the floor name in the left gutter)
 		bomb_btn.position = Vector2(3 + ins.x, vs.y - 108)
 		keep_btn.position = Vector2(3 + ins.x, vs.y - 144)
-	boss_box.position = Vector2((vs.x - 170) / 2.0, vs.y - 12)
+	boss_box.position = Vector2(floorf((vs.x - BOSS_W) / 2.0), vs.y - 11)
 	_place_banner()
 	hint.size = Vector2(vs.x, 10)
 	hint_band.size = Vector2(300, 25)
 	_place_hints()
-	spare_label.position = bar.position + Vector2(146, 2)
 	if move_btn:
 		move_btn.place()   # v2.3: the move button joins the bomb / keepsake column
 
@@ -317,7 +351,7 @@ func _layout() -> void:
 ## (they must never cover the boss's name or bar).
 func _place_hints() -> void:
 	var vs := view_size()
-	var lift := 24.0 if boss_box.visible else 0.0
+	var lift := 30.0 if boss_box.visible else 0.0
 	var ph := 10.0 * _preview_lines   # an item preview is one or two lines
 	preview.size = Vector2(vs.x - 16.0, ph)
 	preview.position = Vector2(8, vs.y - 13 - ph - lift)
@@ -326,18 +360,18 @@ func _place_hints() -> void:
 		# UX-04: during a guardian fight a hint is one line at the top, under the banner slot, with no
 		# band: the arena floor (and its bottom rows) stays clear
 		hint.position = Vector2(0, 66.0 if _narrow else 48.0)
-	hint_band.size.y = ph + 15.0
-	hint_band.position = Vector2(floorf((vs.x - hint_band.size.x) / 2.0), vs.y - 15 - ph - lift)
+	hint_band.size.y = ph + 16.0
+	hint_band.position = Vector2(floorf((vs.x - hint_band.size.x) / 2.0), vs.y - 16 - ph - lift)
 
 
 ## The dark band under hints / previews grows with the longest line (a shop line can be wide).
 func _fit_band(fresh: Label) -> void:
-	var w := 300.0
+	var w := 120.0
 	for l in [hint, preview]:
 		var lab: Label = l
 		if lab.text != "" and (lab == fresh or lab.modulate.a > 0.05):
 			for line in lab.text.split("\n"):
-				w = maxf(w, _tw8(line) + 16.0)
+				w = maxf(w, _tw8(line) + 24.0)   # the ribbon's brass ends + a little air
 	hint_band.size.x = minf(ceilf(w), view_size().x)
 	_place_hints()
 
@@ -368,10 +402,17 @@ func _place_banner() -> void:
 	banner_sub.max_lines_visible = 2
 	banner_sub.size = Vector2(w + 2.0, 10.0 * lines)
 	banner_sub.position = Vector2(floorf(mid - w / 2.0) - 1.0, sub_y)
+	# v2.6: the title on a brass plate (sized to its words), the line under it on a dark ribbon
 	var tw := Art.font.get_string_size(banner.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x if banner.text != "" else 0.0
-	var bw := ceilf(maxf(maxf(tw, w) + 20.0, 120.0))
-	banner_band.position = Vector2(floorf(mid - bw / 2.0), top - 2.0)
-	banner_band.size = Vector2(bw, sub_y - top + 10.0 * lines + 4.0)
+	var pw := ceilf(maxf(tw + 26.0, 72.0))
+	banner_band.position = Vector2(floorf(mid - pw / 2.0), top - 2.0)
+	banner_band.size = Vector2(pw, 19)
+	banner_band.visible = banner.text != ""
+	banner.position.y = top - 1.0
+	var sw2 := ceilf(maxf(w + 24.0, pw - 12.0))
+	banner_strip.position = Vector2(floorf(mid - sw2 / 2.0), sub_y - 3.0)
+	banner_strip.size = Vector2(sw2, 10.0 * lines + 6.0)
+	banner_strip.visible = banner_sub.text != ""
 
 
 func show_banner(title: String, sub := "", dur := 2.4) -> void:
@@ -385,9 +426,14 @@ func show_banner(title: String, sub := "", dur := 2.4) -> void:
 	if _banner_tw:
 		_banner_tw.kill()
 	_banner_tw = create_tween().set_parallel(true)
-	for l in [banner, banner_sub, banner_band]:
+	for l in [banner, banner_sub, banner_band, banner_strip]:
 		_banner_tw.tween_property(l, "modulate:a", 1.0, 0.2)
 		_banner_tw.tween_property(l, "modulate:a", 0.0, 0.6).set_delay(0.2 + dur)
+	if not UI.calm():   # v2.6: the plate drops 3 px into place as it appears
+		for l in [banner, banner_band]:
+			var y0: float = (l as Control).position.y
+			(l as Control).position.y = y0 - 3.0
+			_banner_tw.tween_property(l, "position:y", y0, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## Shown while standing next to a relic / shop item.
@@ -480,7 +526,7 @@ func _drop_room_text() -> void:
 		if _banner_tw:
 			_banner_tw.kill()
 		_banner_tw = create_tween().set_parallel(true)
-		for l in [banner, banner_sub, banner_band]:
+		for l in [banner, banner_sub, banner_band, banner_strip]:
 			_banner_tw.tween_property(l, "modulate:a", 0.0, 0.25)
 
 
@@ -527,7 +573,12 @@ func _process(dt: float) -> void:
 	hint_band.modulate.a = maxf(0.0 if boss_box.visible else hint.modulate.a, preview.modulate.a)
 	_drop_room_text()
 	bar.queue_redraw()
-	clock_label.text = Game.clock_text(world.clock_minutes(), false)
+	var ct := Game.clock_text(world.clock_minutes(), false)
+	var digits := ct.get_slice(" ", 0)
+	if digits != _clock_digits:
+		_clock_digits = digits
+		_place_clock()
+	clock_label.text = ct.get_slice(" ", 1)
 	var spare := Game.spare_minutes(world.clock_minutes())
 	spare_label.text = "+%d min" % spare if spare > 0 else ""
 	var low := p.wax < 20.0
@@ -535,8 +586,13 @@ func _process(dt: float) -> void:
 	if p.wax < 20.0 and not p.dead:
 		want = (0.35 + 0.25 * sin(_flame_t * 4.5)) * (1.0 - p.wax / 20.0) + 0.15
 	vignette.modulate.a = move_toward(vignette.modulate.a, want, dt * 2.0)
-	clock_label.add_theme_color_override("font_color", UI.RED if low and fmod(_flame_t, 0.8) < 0.4 else UI.CREAM)
-	floor_label.text = world.floor_title().replace("  -  ", "\n") if _narrow else world.floor_title()
+	var hot := low and fmod(_flame_t, 0.8) < 0.4   # low wax: the clock flashes red
+	if hot != _clock_hot:
+		_clock_hot = hot
+		clock_face.queue_redraw()
+	clock_label.add_theme_color_override("font_color", UI.RED if hot else UI.CREAM)
+	floor_label.text = _floor_name()
+	floor_pips.queue_redraw()
 	streak_box.visible = world.streak >= 2
 	if world.streak >= 2:
 		streak_label.text = "x%d" % world.streak
@@ -554,6 +610,81 @@ func _process(dt: float) -> void:
 	stick_r.queue_redraw()
 	if ghost_sticks:
 		root.queue_redraw()
+
+
+## The clock plate's size follows its digits ("1:05" is narrower than "12:05"); "AM" sits after them, the
+## spare minutes and the Kindling streak to the right of the plate.
+func _place_clock() -> void:
+	var w := _digits_w(_clock_digits)
+	var am := Art.font_small.get_string_size("AM", HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
+	clock_face.size = Vector2(4 + w + 2 + am + 4, PLATE_H)
+	clock_label.position = Vector2(4 + w + 2, 6)
+	clock_label.size = Vector2(am + 2, 10)
+	var right := clock_face.position.x + clock_face.size.x
+	spare_label.position = Vector2(right + 3, 7)
+	streak_box.position = Vector2(right + 3 + (Art.font_small.get_string_size(spare_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 4.0 if spare_label.text != "" else 0.0), 3)
+	clock_face.queue_redraw()
+
+
+static func _digits_w(t: String) -> float:
+	var x := 0.0
+	for ch in t:
+		x += COLON_ADV if ch == ":" else DIGIT_ADV
+	return x + 1.0
+
+
+func _draw_clock() -> void:
+	var sb: StyleBoxTexture = _plate_box()
+	clock_face.draw_style_box(sb, Rect2(Vector2.ZERO, clock_face.size))
+	var strip := Art.tex("ui/hud_digits_hot" if _clock_hot else "ui/hud_digits")
+	var x := 4.0
+	for ch in _clock_digits:
+		var i := "0123456789:".find(ch)
+		if i < 0:
+			continue
+		var at := Vector2(x - (2.0 if ch == ":" else 0.0), 3)
+		clock_face.draw_texture_rect_region(strip, Rect2(at, Vector2(8, 12)), Rect2(i * 8, 0, 8, 12))
+		x += COLON_ADV if ch == ":" else DIGIT_ADV
+
+
+static var _plate_sb: StyleBoxTexture
+
+
+static func _plate_box() -> StyleBoxTexture:
+	if _plate_sb == null:
+		_plate_sb = StyleBoxTexture.new()
+		_plate_sb.texture = Art.tex("ui/hud_clockplate")
+		for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+			_plate_sb.set_texture_margin(side, 4)
+	return _plate_sb
+
+
+## "The Cellar" (the floor's name), with a pip per floor of the night under it (pips: floor_pips).
+func _floor_name() -> String:
+	var t: String = world.floor_title()
+	return t.get_slice("  -  ", 0)
+
+
+## One pip per floor of the night: gold for the floors behind, a flame-white one for this floor, dark ahead;
+## above the bells (the Clock Tower) every pip is lit and a last one burns blue.
+func _draw_pips() -> void:
+	var n: int = world.last_floor() if world.has_method("last_floor") else 4
+	var f: int = int(world.get("floor_num"))
+	floor_pips.position = floor_label.position + Vector2(0, 11)
+	var tower := f > n
+	for i in n + (1 if tower else 0):
+		var x := float(i * 6)
+		var col := Color("#483b3a")
+		if i + 1 < f:
+			col = UI.GOLD
+		if i + 1 == f:
+			col = UI.CREAM
+		if tower and i == n:
+			col = Color("#72d6ce")
+		floor_pips.draw_rect(Rect2(x, 0, 5, 5), UI.INK)
+		floor_pips.draw_rect(Rect2(x + 1, 1, 3, 3), col)
+		if i + 1 == f and not tower:
+			floor_pips.draw_rect(Rect2(x + 1, 1, 3, 1), UI.GOLD)
 
 
 func _draw_bar() -> void:
@@ -690,16 +821,28 @@ func _draw_streak() -> void:
 	streak_box.draw_rect(Rect2(10, 14, w, 1), UI.EMBER)
 
 
+static var _boss_sb: StyleBoxTexture
+
+
 func _draw_boss_bar() -> void:
 	var w := boss_bar.size.x
-	boss_bar.draw_rect(Rect2(-1, -1, w + 2, 8), Color("#775c55"))
-	boss_bar.draw_rect(Rect2(0, 0, w, 6), Color("#21141b"))
-	var fw := roundf((w - 2) * boss_frac)
-	boss_bar.draw_rect(Rect2(1, 1, fw, 4), Color("#9f294e"))
-	boss_bar.draw_rect(Rect2(1, 1, fw, 1), Color("#dc4a7b"))
-	boss_bar.draw_rect(Rect2(1, 4, fw, 1), Color("#62232f"))
+	if _boss_sb == null:
+		_boss_sb = StyleBoxTexture.new()
+		_boss_sb.texture = Art.tex("ui/boss_frame")
+		_boss_sb.texture_margin_left = 5
+		_boss_sb.texture_margin_right = 5
+		_boss_sb.texture_margin_top = 4
+		_boss_sb.texture_margin_bottom = 4
+	boss_bar.draw_style_box(_boss_sb, Rect2(0, 0, w, 10))
+	var inner := w - 10.0
+	var fw := roundf(inner * boss_frac)
+	if fw > 0.0:
+		boss_bar.draw_rect(Rect2(5, 2, fw, 6), Color("#9f294e"))
+		boss_bar.draw_rect(Rect2(5, 2, fw, 1), Color("#dc4a7b"))
+		boss_bar.draw_rect(Rect2(5, 7, fw, 1), Color("#62232f"))
+		boss_bar.draw_rect(Rect2(5 + fw - 1, 2, 1, 6), Color("#f78697"))   # the bright edge where it was cut
 	var skull := Art.tex("0x72/skull")
-	boss_bar.draw_texture(skull, Vector2(-14, -6))
+	boss_bar.draw_texture(skull, Vector2(-skull.get_width() - 1, floorf((10 - skull.get_height()) / 2.0)))
 
 
 func _draw_minimap() -> void:
@@ -708,8 +851,8 @@ func _draw_minimap() -> void:
 		return
 	var cells: Dictionary = layout["cells"]
 	var cur: Vector2i = world.cur_cell
-	var cw := 9.0
-	var ch := 6.0
+	var cw := 10.0
+	var ch := 7.0
 	var origin := (minimap.size / 2.0 - Vector2(cw, ch) / 2.0).floor()
 	for c in cells.keys():
 		var d: Dictionary = cells[c]
@@ -1010,12 +1153,12 @@ func open_pause() -> void:
 		var relic_info := UI.label("Tap a relic to read it" if Controls.device == Controls.TOUCH else "Select a relic to read it",
 			8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 		for r in p.relics:
-			var tb := TextureButton.new()
-			tb.texture_normal = Art.tex(Items.icon(r))
+			var tb := Button.new()   # v2.6: an icon socket (the Theme's SlotButton)
+			tb.theme_type_variation = &"SlotButton"
+			tb.icon = Art.tex(Items.icon(r))
+			tb.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			tb.custom_minimum_size = Vector2(slot, slot)
-			tb.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
-			tb.ignore_texture_size = true
-			UI.focusable_slot(tb)
+			tb.focus_mode = Control.FOCUS_ALL
 			var rid: String = r
 			var read := func(): relic_info.text = "%s - %s" % [Items.display_name(rid), Items.desc(rid)]
 			tb.pressed.connect(read)
@@ -1023,7 +1166,7 @@ func open_pause() -> void:
 			row.add_child(tb)
 		v.add_child(row)
 		v.add_child(relic_info)
-	var resume := UI.button("Resume", func(): world.toggle_pause())
+	var resume := UI.primary("Resume", func(): world.toggle_pause())   # v2.6: the brass button
 	resume.set_meta("default_focus", true)
 	v.add_child(resume)
 	var row1 := HBoxContainer.new()   # Journal | Map | Settings: thirds, like the row below
@@ -1036,7 +1179,7 @@ func open_pause() -> void:
 	var row2 := HBoxContainer.new()
 	row2.add_theme_constant_override("separation", 6)
 	for b in [UI.button("Save & quit", _confirm_save_quit, 72), UI.button(L.t("Restart"), _confirm_restart, 72),
-			UI.button("Give up", _confirm_give_up, 72)]:
+			UI.danger("Give up", _confirm_give_up, 72)]:
 		(b as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL   # thirds under a wide relic row
 		row2.add_child(b)
 	v.add_child(row2)
@@ -1053,7 +1196,9 @@ func _confirm_save_quit() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_child(UI.button("Keep burning", func(): r.queue_free(), 100))
+	var keep := UI.primary("Keep burning", func(): r.queue_free(), 100)
+	keep.set_meta("default_focus", true)
+	row.add_child(keep)
 	row.add_child(UI.button("Save & quit", func():
 		RunSave.flush()
 		world.main.goto("title"), 90))
@@ -1091,8 +1236,10 @@ func _confirm_give_up() -> void:
 	r.process_mode = Node.PROCESS_MODE_ALWAYS
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	row.add_child(UI.button("Keep burning", func(): r.queue_free(), 100))
-	row.add_child(UI.button("Give up", func():
+	var keep := UI.primary("Keep burning", func(): r.queue_free(), 100)
+	keep.set_meta("default_focus", true)
+	row.add_child(keep)
+	row.add_child(UI.danger("Give up", func():
 		r.queue_free()
 		world.give_up(), 80))
 	(m[1] as VBoxContainer).add_child(row)

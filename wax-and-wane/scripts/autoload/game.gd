@@ -49,6 +49,7 @@ var settings := {
 	"binds": {},                # v2.3: rebound buttons (Controls.rebind; Settings > Keys)
 	"magnet": true,             # v2.6: a cleared room's loose drops drift to Tallow (pickup.gd _sweep_wants)
 	"aim": "assist",            # v2.6: assist / auto (touch: the right thumb just fires, world.auto_aim) / off
+	"reduce_motion": false,     # v2.6: no panel pops, screen wipes or menu slides (UI.calm)
 }
 ## A fresh slot's records (each slot has its own copy in Game.records).
 const RECORDS := {

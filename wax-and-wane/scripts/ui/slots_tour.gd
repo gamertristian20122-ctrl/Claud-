@@ -146,6 +146,9 @@ static func tour(at: Node) -> void:
 	await at._wait(0.4)
 	await at._shot("slots_pick_level_" + tag)
 	_press(_top_modal(title), "Witching Hour")
+	await at._wait(0.4)   # v2.2 put the night's length after the level: light it (the tour had stopped here since)
+	await at._shot("slots_pick_night_" + tag)
+	_press(_top_modal(title), "Light it")
 	var w: Node = await _wait_game(at)
 	_ok(w != null and w.level == 3 and Game.slot == empty and Game.level == 3 and FileAccess.file_exists(Game.slot_path(empty)),
 		"New candle in slot %d at level 3: run level %s, slot file %s" % [empty, w.level if w else "?", FileAccess.file_exists(Game.slot_path(empty))])

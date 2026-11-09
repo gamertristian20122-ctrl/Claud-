@@ -2,6 +2,12 @@ extends Control
 ## End of a run: snuffed out (with a death note: who or what did it, with its portrait), or done
 ## before two. The run's relics (select one to read it), the floor, clock, time played, kills, best
 ## streak, the seed (to share), Tonight's Candle score, and anything that just moved into the house.
+##
+## v2.6 (docs/streams/v26_gui.md), top to bottom: a headline card (the portrait; DONE BY 1:06 AM / SNUFFED OUT /
+## the ending's name; the line under it; the candle and where), five stat tiles (time played, floor, foes,
+## Kindling, diary pages or rooms), the relics in sockets with their description line, "new in the house" and the
+## achievements as two small cards side by side, then Tonight's score / the next candle and the level + seed.
+## Light another (brass) / Share / Title stay pinned to the bottom edge.
 
 var main: Node
 var params := {}
@@ -13,8 +19,10 @@ var _scroll: ScrollContainer
 var _body: VBoxContainer
 var _buttons: HBoxContainer
 const EDGE := 4          # px kept free at the screen edges
-const MAX_NEWS := 2      # unlock rows shown; the rest is "and N more - see the Journal"
+const MAX_NEWS := 2      # unlocks shown in their card (one row); the rest is "+N more in the Journal" in its heading
 const RELIC_ROW := 16    # relic icons in the row (a longer collection: 15 and a "+N" button)
+const BODY_W := 306      # the narrowest column (the screen minus 64 px, between BODY_W and BODY_MAX: 320 on 384, 400 on 480)
+const BODY_MAX := 400
 var _relic_row: HFlowContainer
 
 
@@ -26,7 +34,7 @@ func _ready() -> void:
 	main = get_parent()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var bg := ColorRect.new()
-	bg.color = Color(0.035, 0.027, 0.035)
+	bg.color = UI.VOID
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	var won: bool = params.get("won", false)
@@ -47,22 +55,18 @@ func _ready() -> void:
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.follow_focus = true   # a relic picked with the d-pad scrolls into view
-	_style_scroll(_scroll.get_v_scroll_bar())
+	_scroll.get_v_scroll_bar().custom_minimum_size.x = 3
 	_pnl.add_child(_scroll)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 2)
+	v.add_theme_constant_override("separation", 3)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var bw := clampf(get_viewport_rect().size.x - 64.0, BODY_W, BODY_MAX)
+	v.custom_minimum_size.x = bw
 	_scroll.add_child(v)
 	_body = v
 	_header(v, won, f)
-	# ---- the numbers
-	var t: float = params.get("time", 0.0)
-	# (when snuffed the clock always reads 2:00 AM - the wax is the clock - so show the rooms instead)
-	var mid := Game.clock_text(float(params.get("clock", 120.0))) if won else "Rooms %d" % int(params.get("rooms", 0))
-	var stats := "%s   %s   Played %d:%02d   Foes %d   Kindling x%d" % [_where(f, " "), mid,
-		int(t) / 60, int(t) % 60, int(params.get("kills", 0)), int(params.get("streak", 0))]
-	v.add_child(UI.label(stats, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
-	# ---- the relics (select one to read it): one row; a big collection ends in a "+N" that opens the rest
+	_tiles(v, f)
+	# ---- the relics (select one to read it): one row of sockets; a big collection ends in a "+N" that opens the rest
 	var relics: Array = params.get("relics", [])
 	if not relics.is_empty():
 		_relic_row = HFlowContainer.new()
@@ -71,74 +75,42 @@ func _ready() -> void:
 		_relic_row.add_theme_constant_override("v_separation", 1)
 		v.add_child(_relic_row)
 		_fill_relics(relics, false)
-		_info = UI.label("%d relics. Select one to read it." % relics.size() if relics.size() != 1 else "One relic. Select it to read it.", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+		_info = UI.label(L.t("{n} relics. Select one to read it.", {"n": relics.size()}) if relics.size() != 1 else L.t("One relic. Select it to read it."), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 		_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART   # a long description wraps, never widens the panel
-		_info.custom_minimum_size = Vector2(300, 0)
+		_info.custom_minimum_size = Vector2(bw - 6.0, 0)
 		_info.resized.connect(_fit)
 		v.add_child(_info)
-	# ---- what moved into the house: two rows at most (a first win can bring seven), the rest in the Journal
+	# ---- what moved into the house and the achievements: two small cards side by side
 	var news: Array = []
 	for id in params.get("new_unlocks", []):
-		news.append([Art.tex(Items.icon(id)), "NEW IN THE HOUSE: " + Items.display_name(id).to_upper(), Items.display_name(id).to_upper()])
+		news.append([Art.tex(Items.icon(id)), Items.display_name(id).to_upper()])
 	for key in params.get("unlocked", []):
-		news.append([null, "NEW CANDLE: %s" % Candles.def_of(key)["name"].to_upper(), ""])
-	var one_row := _news_row(news)   # two new relics side by side when they fit on one line
-	if one_row:
-		v.add_child(one_row)
-		Audio.play("unlock", -3.0)
-	elif not news.is_empty():
-		var last: HBoxContainer
-		for n in news.slice(0, MAX_NEWS):
-			last = HBoxContainer.new()
-			last.alignment = BoxContainer.ALIGNMENT_CENTER
-			last.add_theme_constant_override("separation", 3)
-			if n[0]:
-				var ic := TextureRect.new()
-				ic.texture = n[0]
-				ic.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-				last.add_child(ic)
-			var l := UI.label(n[1], 8, UI.GOLD)
-			l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			last.add_child(l)
-			v.add_child(last)
-		if news.size() > MAX_NEWS:
-			var more := UI.label("+%d more in the Journal" % (news.size() - MAX_NEWS), 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
-			more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			var n2: Array = news[MAX_NEWS - 1]
-			if (19.0 if n2[0] else 0.0) + _tw(n2[1]) + 11.0 + _tw(more.text) <= 320.0:
-				var gap := Control.new()
-				gap.custom_minimum_size = Vector2(5, 0)
-				last.add_child(gap)
-				last.add_child(more)   # on the same row as the second one
-			else:
-				v.add_child(more)
-		Audio.play("unlock", -3.0)
-	# ---- achievements earned as the run ended: listed here, never toasted over this screen
-	var got := Achievements.take_pending()
-	if not got.is_empty():
-		var names: Array = []
-		for id in got.slice(0, 3):
-			names.append(Achievements.name_of(id))
-		var line := ("ACHIEVEMENT: %s" if got.size() == 1 else "ACHIEVEMENTS: %s") % ", ".join(names)
-		if got.size() > 3:
-			line += " +%d" % (got.size() - 3)
-		var al := UI.label(line, 8, UI.WAX, HORIZONTAL_ALIGNMENT_CENTER)
-		al.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		al.custom_minimum_size = Vector2(300, 0)
-		v.add_child(al)
+		news.append([null, L.t("NEW CANDLE: {name}", {"name": L.t(str(Candles.def_of(key)["name"])).to_upper()})])
+	var got := Achievements.take_pending()   # achievements earned as the run ended: listed here, never toasted over this screen
+	if not news.is_empty() or not got.is_empty():
+		var cards := HBoxContainer.new()
+		cards.add_theme_constant_override("separation", 4)
+		v.add_child(cards)
+		if not news.is_empty():
+			cards.add_child(_news_card(news))
+			Audio.play("unlock", -3.0)
+		if not got.is_empty():
+			cards.add_child(_ach_card(got))
 	# ---- Tonight's Candle, or the next candle to unlock
 	if params.get("daily", false):
 		var score := _daily_score()
-		v.add_child(UI.label("Tonight's Candle: %d   (first try %d, best %d)" % [score, int(Game.records["daily_first"]), int(Game.records["daily_best"])], 8, UI.EMBER, HORIZONTAL_ALIGNMENT_CENTER))
+		v.add_child(UI.label(L.t("Tonight's Candle: {s}   (first try {f}, best {b})", {"s": score, "f": int(Game.records["daily_first"]), "b": int(Game.records["daily_best"])}), 8, UI.EMBER, HORIZONTAL_ALIGNMENT_CENTER))
 	else:
 		for k in Candles.ORDER:
 			if not Candles.is_unlocked(k):
-				v.add_child(UI.label("Next candle: %s - %s" % [Candles.def_of(k)["name"], Candles.def_of(k)["unlock_text"]], 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
+				v.add_child(UI.label(L.t("Next candle: {name} - {how}", {"name": L.t(str(Candles.def_of(k)["name"])), "how": L.t(str(Candles.def_of(k)["unlock_text"]))}), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
 				break
-	# ---- the seed, to share
+	# ---- the level and the seed, to share
+	var foot := Records.level_text(int(params.get("level", 2)))   # the run's difficulty (save slot)
 	if params.has("seed"):
-		var tag := "Tonight's Candle" if params.get("daily", false) else ("a seeded run" if params.get("seeded", false) else "share it with a friend")
-		v.add_child(UI.label("Seed %s  -  %s" % [Records.seed_text(int(params["seed"])), tag], 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
+		var tag := L.t("Tonight's Candle") if params.get("daily", false) else (L.t("a seeded run") if params.get("seeded", false) else L.t("share it with a friend"))
+		foot += "   " + L.t("Seed {seed} - {tag}", {"seed": Records.seed_text(int(params["seed"])), "tag": tag})
+	v.add_child(UI.label(foot, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	# ---- the buttons: pinned to the bottom edge, outside the scrolling part, always reachable
 	_buttons = HBoxContainer.new()
 	_buttons.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -146,62 +118,76 @@ func _ready() -> void:
 	# v2.6 Quick restart: one press lights the next candle in this slot - the same candle and night length
 	# (after Tonight's Candle: the slot's own candle, as before)
 	var next := {} if params.get("daily", false) else {"candle": str(params.get("candle", "tallow")), "floors": int(params.get("floors", 4))}
-	var again := UI.button("Light another", func(): main.goto("game", next))
+	var again := UI.icon_button(L.t("Light another"), "ui/ico_flame_dark", func(): main.goto("game", next), 116, "primary")
 	again.set_meta("default_focus", true)
 	_buttons.add_child(again)
-	_buttons.add_child(UI.button("Share", _share, 64))
-	_buttons.add_child(UI.button("Title", func(): main.goto("title")))
+	_buttons.add_child(UI.button(L.t("Share"), _share, 64))
+	_buttons.add_child(UI.button(L.t("Title"), func(): main.goto("title"), 80))
 	add_child(_buttons)
 	Tower.on_results(self, v, params)   # the Clock Tower: TRUE ENDING, its floor name, the hint after a first win
 	Diary.on_results(self, v, params)   # v2.5: the ending's name, tonight's diary pages, their reading cards
 	_fit()
 	_fit.call_deferred()   # again once the flow rows and labels have their real sizes
 	get_viewport().size_changed.connect(_fit)
-
-
-## "NEW IN THE HOUSE:  [icon] DUST BUNNY  [icon] BELL ROPE  +5 more in the Journal" on one line,
-## when the first two pieces of news are relics and the line fits; else null (one row each).
-func _news_row(news: Array) -> HBoxContainer:
-	if news.size() < 2 or news[0][0] == null or news[1][0] == null:
-		return null
-	# measured with the font (a Label's minimum size is not reliable before it is in the tree)
-	var more_text := "  +%d more in the Journal" % (news.size() - 2) if news.size() > 2 else ""
-	var w := _tw("NEW IN THE HOUSE:") + 3.0
-	for n in news.slice(0, 2):
-		w += 3.0 + 3.0 + (n[0] as Texture2D).get_width() + 3.0 + _tw(n[2]) + 3.0
-	if more_text != "":
-		w += _tw(more_text)
-	if w > 330.0:
-		return null
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 3)
-	var head := UI.label("NEW IN THE HOUSE:", 8, UI.GOLD)
-	head.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(head)
-	for n in news.slice(0, 2):
-		var gap := Control.new()
-		gap.custom_minimum_size = Vector2(3, 0)
-		row.add_child(gap)
-		var ic := TextureRect.new()
-		ic.texture = n[0]
-		ic.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-		row.add_child(ic)
-		var l := UI.label(n[2], 8, UI.GOLD)
-		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(l)
-	if more_text != "":
-		var more := UI.label(more_text, 8, UI.GOLD)
-		more.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(more)
-	return row
+	UI.pop_in(_pnl, _pnl, 6.0, 0.18)   # v2.6: the note rises into place as the burn clears
 
 
 static func _tw(text: String) -> float:
 	return Art.font_small.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 1.0
 
 
-## The relic icons: one row of RELIC_ROW; with more, RELIC_ROW - 1 and a "+N" that shows them all.
+## "NEW IN THE HOUSE": up to three new things (their icons and names), then "+N more in the Journal".
+func _news_card(news: Array) -> PanelContainer:
+	var card := UI.panel(Vector2.ZERO, "card")
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var cv := VBoxContainer.new()
+	cv.add_theme_constant_override("separation", 1)
+	card.add_child(cv)
+	var nh := L.t("NEW IN THE HOUSE") + ("   " + L.t("+{n} more", {"n": news.size() - MAX_NEWS}) if news.size() > MAX_NEWS else "")
+	cv.add_child(UI.label(nh, 8, UI.GOLD))
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", 6)
+	flow.add_theme_constant_override("v_separation", 0)
+	cv.add_child(flow)
+	for n in news.slice(0, MAX_NEWS):
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 2)
+		if n[0]:
+			var ic := TextureRect.new()
+			ic.texture = n[0]
+			ic.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+			row.add_child(ic)
+		var l := UI.label(n[1], 8, UI.CREAM)
+		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(l)
+		flow.add_child(row)
+	return card
+
+
+## "ACHIEVEMENTS": the names of the first three earned as the run ended (+N).
+func _ach_card(got: Array) -> PanelContainer:
+	var card := UI.panel(Vector2.ZERO, "card")
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var cv := VBoxContainer.new()
+	cv.add_theme_constant_override("separation", 1)
+	card.add_child(cv)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 3)
+	head.add_child(UI.picture("ui/icon_medal"))
+	head.add_child(UI.label(L.t("ACHIEVEMENT") if got.size() == 1 else L.t("ACHIEVEMENTS"), 8, UI.GOLD))
+	cv.add_child(head)
+	var names: Array = []
+	for id in got.slice(0, 3):
+		names.append(Achievements.name_of(id))
+	var line := ", ".join(names) + ("  +%d" % (got.size() - 3) if got.size() > 3 else "")
+	var al := UI.label(line, 8, UI.WAX)
+	al.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	al.custom_minimum_size = Vector2(110, 0)
+	cv.add_child(al)
+	return card
+
+
+## The relic icons in sockets: one row of RELIC_ROW; with more, RELIC_ROW - 1 and a "+N" that shows them all.
 func _fill_relics(relics: Array, all: bool) -> void:
 	for c in _relic_row.get_children():
 		c.queue_free()
@@ -209,12 +195,12 @@ func _fill_relics(relics: Array, all: bool) -> void:
 	var cells := shown.size() + (1 if shown.size() < relics.size() else 0)
 	_relic_row.custom_minimum_size = Vector2(mini(cells, RELIC_ROW) * 19 - 1, ceili(cells / float(RELIC_ROW)) * 19 - 1)
 	for r in shown:
-		var tb := TextureButton.new()
-		tb.texture_normal = Art.tex(Items.icon(r))
+		var tb := Button.new()   # v2.6: an icon socket (the Theme's SlotButton)
+		tb.theme_type_variation = &"SlotButton"
+		tb.icon = Art.tex(Items.icon(r))
+		tb.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tb.custom_minimum_size = Vector2(18, 18)
-		tb.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
-		tb.ignore_texture_size = true
-		UI.focusable_slot(tb)
+		tb.focus_mode = Control.FOCUS_ALL
 		var rid: String = r
 		var read := func(): _info.text = "%s - %s" % [Items.display_name(rid), Items.desc(rid)]
 		tb.pressed.connect(read)
@@ -224,17 +210,13 @@ func _fill_relics(relics: Array, all: bool) -> void:
 	if shown.size() < relics.size():
 		var more := Button.new()
 		more.text = "+%d" % (relics.size() - shown.size())
-		more.flat = true
+		more.theme_type_variation = &"SlotButton"
 		more.custom_minimum_size = Vector2(18, 18)
 		more.focus_mode = Control.FOCUS_ALL
 		more.add_theme_font_override("font", Art.font_small)
 		more.add_theme_font_size_override("font_size", 8)
 		for st in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color"]:
 			more.add_theme_color_override(st, UI.GOLD if st != "font_color" else UI.DIM)
-		var empty := StyleBoxEmpty.new()
-		for st in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
-			more.add_theme_stylebox_override(st, empty)
-		more.add_theme_stylebox_override("focus", UI.focus_box())
 		more.pressed.connect(func():
 			Audio.play("ui_click")
 			_fill_relics(relics, true)
@@ -264,33 +246,16 @@ func _fit() -> void:
 	_pnl.position = Vector2(floorf((vs.x - psz.x) / 2.0), floorf(EDGE + (room_h - psz.y) / 2.0))
 
 
-## A thin pixel scroll bar (the default one is a smooth grey pill).
-func _style_scroll(bar: VScrollBar) -> void:
-	var track := StyleBoxFlat.new()
-	track.bg_color = Color("#21141b")
-	track.content_margin_left = 1.5
-	track.content_margin_right = 1.5
-	var grab := StyleBoxFlat.new()
-	grab.bg_color = UI.DIM
-	grab.anti_aliasing = false
-	var hot := grab.duplicate() as StyleBoxFlat
-	hot.bg_color = UI.GOLD
-	bar.add_theme_stylebox_override("scroll", track)
-	bar.add_theme_stylebox_override("scroll_focus", track)
-	bar.add_theme_stylebox_override("grabber", grab)
-	bar.add_theme_stylebox_override("grabber_highlight", hot)
-	bar.add_theme_stylebox_override("grabber_pressed", hot)
-	bar.custom_minimum_size.x = 3
-
-
-## The top of the note: who did it (portrait + "Snuffed by ..."), or the win.
+## The headline card: the portrait (who did it, or the candle), then DONE BY 1:06 AM / SNUFFED OUT, the line
+## under it and the candle (with where it went out).
 func _header(v: VBoxContainer, won: bool, f: int) -> void:
 	var clock := Game.clock_text(float(params.get("clock", 120.0)))
 	var killer := str(params.get("killer", "clock"))
+	var card := UI.panel(Vector2.ZERO, "card")
+	v.add_child(card)
 	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 8)
-	v.add_child(row)
+	card.add_child(row)
 	var box := CenterContainer.new()
 	box.custom_minimum_size = Vector2(40, 40)
 	row.add_child(box)
@@ -310,18 +275,55 @@ func _header(v: VBoxContainer, won: bool, f: int) -> void:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 0)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(col)
-	var lvl := UI.label(Records.level_text(int(params.get("level", 2))), 8, UI.DIM)   # the run's difficulty (save slot)
+	var cname := L.t(str(Candles.def_of(str(params.get("candle", "tallow")))["name"]))
 	if won:
 		col.add_child(UI.label("DONE BY %s" % clock, 16, UI.GOLD))
 		col.add_child(UI.label("The house is quiet. You can finally rest.", 8, UI.CREAM))
-		col.add_child(UI.label("%s - %s" % [Candles.def_of(str(params.get("candle", "tallow")))["name"], "Tonight's Candle" if params.get("daily", false) else "Snuffed every guardian"], 8, UI.EMBER))
-		col.add_child(lvl)
-		return
-	col.add_child(UI.label("SNUFFED OUT", 16, UI.RED))
-	col.add_child(UI.label(Records.death_line(killer, Records.night_of(params)), 8, UI.CREAM))
-	col.add_child(UI.label(_where(f, ", floor "), 8, UI.EMBER))
-	col.add_child(lvl)
+		col.add_child(UI.label("%s - %s" % [cname, L.t("Tonight's Candle") if params.get("daily", false) else L.t("Snuffed every guardian")], 8, UI.EMBER))
+	else:
+		col.add_child(UI.label(L.t("SNUFFED OUT"), 16, UI.RED))
+		col.add_child(UI.label(Records.death_line(killer, Records.night_of(params)), 8, UI.CREAM))
+		col.add_child(UI.label("%s - %s" % [cname, _where(f, ", floor ")], 8, UI.EMBER))
+	# the seal: gold for a night won, red wax for a flame snuffed
+	var seal := UI.picture("ui/kit_medal" if won else "ui/kit_seal")
+	seal.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	row.add_child(seal)
+
+
+## Five stat tiles: time played, the floor, foes snuffed, the best Kindling, and the diary pages found tonight
+## (or the rooms cleared when none were).
+func _tiles(v: VBoxContainer, f: int) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	v.add_child(row)
+	var t: float = params.get("time", 0.0)
+	var n := Records.night_of(params)
+	var pages: Array = params.get("diary_new", [])
+	var floor_v := ("%d/%d" % [f, n]) if f <= n else L.t("Tower")
+	for tile in [["ico_clock", "%d:%02d" % [int(t) / 60, int(t) % 60], L.t("PLAYED")],
+			["ico_stairs", floor_v, L.t("FLOOR")],
+			["ico_skull", str(int(params.get("kills", 0))), L.t("FOES")],
+			["ico_flame", "x%d" % int(params.get("streak", 0)), L.t("KINDLING")],
+			["ico_page", "+%d" % pages.size(), L.t("PAGES")] if not pages.is_empty() else ["ico_rooms", str(int(params.get("rooms", 0))), L.t("ROOMS")]]:
+		row.add_child(_tile(tile[0], tile[1], tile[2]))
+
+
+func _tile(icon: String, value: String, caption: String) -> PanelContainer:
+	var p := UI.panel(Vector2(56, 0), "card")
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var tv := VBoxContainer.new()
+	tv.add_theme_constant_override("separation", -3)
+	p.add_child(tv)
+	var top := HBoxContainer.new()
+	top.alignment = BoxContainer.ALIGNMENT_CENTER
+	top.add_theme_constant_override("separation", 3)
+	top.add_child(UI.picture("ui/" + icon))
+	top.add_child(UI.label(value, 16, UI.CREAM))
+	tv.add_child(top)
+	tv.add_child(UI.label(caption, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
+	return p
 
 
 ## "The Crypt 2/4" / "The Kitchen, floor 3 of 7"; the secret floor above the house is never "5/4".
@@ -373,8 +375,8 @@ func _share() -> void:
 	Audio.play("ui_click")
 	if is_instance_valid(_toast_box):
 		_toast_box.queue_free()
-	var box := UI.panel()
-	box.add_child(UI.label("Copied - paste it anywhere", 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
+	var box := UI.panel(Vector2.ZERO, "strip")
+	box.add_child(UI.label(L.t("Copied - paste it anywhere"), 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
 	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	box.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	box.grow_vertical = Control.GROW_DIRECTION_BEGIN

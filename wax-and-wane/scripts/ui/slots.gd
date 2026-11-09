@@ -66,6 +66,7 @@ func _ready() -> void:
 	Controls.on_modal_opened(self)   # keyboard / gamepad focus comes in (the last slot used), and goes back on close
 	get_viewport().size_changed.connect(_build)
 	Audio.play("ui_open")
+	UI.wipe_in(self)   # v2.6: a candle-light edge sweeps the screen in (Reduce motion: at once)
 
 
 func close() -> void:
@@ -102,7 +103,7 @@ func _card(n: int, cw: int) -> Control:
 	p.add_child(v)
 	var head := HBoxContainer.new()
 	head.custom_minimum_size.y = 24
-	var nm := UI.label("SLOT %d" % n, 16, UI.GOLD if n == Game.slot and not d.is_empty() else UI.CREAM)   # gold: played last
+	var nm := UI.label(L.t("SLOT {n}", {"n": n}), 16, UI.GOLD if n == Game.slot and not d.is_empty() else UI.CREAM)   # gold: played last
 	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	nm.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	head.add_child(nm)
@@ -110,26 +111,54 @@ func _card(n: int, cw: int) -> Control:
 	if d.is_empty():
 		_empty_card(n, v)
 		return p
-	head.add_child(UI.button("Delete", _delete.bind(n), 0))
+	head.add_child(UI.danger(L.t("Delete"), _delete.bind(n), 0))
 	var rec: Dictionary = d["records"]
 	var lvl := int(d["level"])
-	_line(v, Records.level_text(lvl), UI.EMBER)
-	_line(v, "Runs %d   Wins %d" % [int(rec.get("runs", 0)), int(rec.get("wins", 0))], UI.CREAM)
-	var best := best_finish(rec)
-	var long := best_long(rec)   # no 4-floor win yet: the best longer night says how long it was
-	if best > 0.0:
-		_line(v, "Best: done by %s" % Game.clock_text(best), UI.WAX)
-	elif not long.is_empty():
-		_line(v, "Best: %s, %d floors" % [Game.clock_text(float(long[1])), int(long[0])], UI.WAX)
-	else:
-		_line(v, "Not won yet", UI.DIM)
-	var j := journal_counts(rec)
-	_line(v, "Relics seen %d/%d" % [j[0], j[1]], UI.DIM)
-	_line(v, "Lodgers met %d/%d" % [j[2], j[3]], UI.DIM)
+	# v2.6: the slot's candle, big and lit, beside its numbers (level medal, best time, runs, the Journal's ring)
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 4)
+	v.add_child(body)
 	var cand := str(rec.get("candle", "tallow"))
 	if not Candles.LIST.has(cand):
 		cand = "tallow"
-	_line(v, "Last candle: %s" % Candles.def_of(cand)["name"], UI.DIM)
+	var art := SlotPortrait.new()
+	art.candle = cand
+	art.custom_minimum_size = Vector2(36, 56)
+	art.clip_contents = true   # a portrait: the dish's sides fall outside the niche
+	body.add_child(art)
+	# the level, as a brass medal pinned on the portrait's corner
+	var medal := UI.picture("ui/kit_medal")
+	medal.position = Vector2(0, 41)
+	medal.size = Vector2(15, 15)
+	var num := UI.engraved(UI.label(str(lvl), 16, UI.INK, HORIZONTAL_ALIGNMENT_CENTER))
+	num.position = Vector2(1, 0)
+	num.size = Vector2(15, 15)
+	medal.add_child(num)
+	art.add_child(medal)
+	var info := VBoxContainer.new()
+	info.add_theme_constant_override("separation", 1)
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.add_child(info)
+	_line(info, str(Records.level_def(lvl)["name"]), UI.EMBER)
+	var best := best_finish(rec)
+	var long := best_long(rec)   # no 4-floor win yet: the best longer night says how long it was
+	if best > 0.0:
+		_line(info, L.t("Best: {t}", {"t": Game.clock_text(best)}), UI.GOLD)
+	elif not long.is_empty():
+		_line(info, L.t("Best: {t}, {n} floors", {"t": Game.clock_text(float(long[1])), "n": int(long[0])}), UI.GOLD)
+	else:
+		_line(info, L.t("Not won yet"), UI.DIM)
+	_line(info, L.t("Runs {r}  Wins {w}", {"r": int(rec.get("runs", 0)), "w": int(rec.get("wins", 0))}), UI.CREAM)
+	var j := journal_counts(rec)
+	var ring := JournalRing.new()
+	ring.frac = float(j[0] + j[2]) / maxf(1.0, float(j[1] + j[3]))
+	var jr := HBoxContainer.new()
+	jr.add_theme_constant_override("separation", 3)
+	jr.add_child(ring)
+	var jl := UI.label(L.t("Journal {p}%", {"p": roundi(ring.frac * 100.0)}), 8, UI.DIM)
+	jl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	jr.add_child(jl)
+	info.add_child(jr)
 	var fill := Control.new()
 	fill.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	fill.custom_minimum_size.y = 3
@@ -137,7 +166,7 @@ func _card(n: int, cw: int) -> Control:
 	var saved: Dictionary = RunSave.peek(n)
 	var main_btn: Button
 	if not saved.is_empty():
-		var cont := two_line_button("Continue", RunSave.summary_of(saved), _continue.bind(n))
+		var cont := two_line_button(L.t("Continue"), RunSave.summary_of(saved), _continue.bind(n), 0, true)
 		v.add_child(cont)
 		var gap := Control.new()
 		gap.custom_minimum_size.y = 3
@@ -145,10 +174,10 @@ func _card(n: int, cw: int) -> Control:
 		main_btn = cont
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", GAP)
-	var play := two_line_button("Play", "%d floors" % slot_night(rec), _play.bind(n))   # the slot's night length
+	var play := two_line_button(L.t("Play"), L.t("{n} floors", {"n": slot_night(rec)}), _play.bind(n), 0, saved.is_empty())   # the slot's night length
 	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(play)
-	row.add_child(UI.button("Level", _change_level.bind(n), 0))
+	row.add_child(UI.button(L.t("Level"), _change_level.bind(n), 0))
 	v.add_child(row)
 	if main_btn == null:
 		main_btn = play
@@ -157,14 +186,17 @@ func _card(n: int, cw: int) -> Control:
 
 
 func _empty_card(n: int, v: VBoxContainer) -> void:
-	_line(v, "Empty", UI.DIM)
-	_line(v, "No candle lit here yet.", UI.DIM)
-	var art := SleepyCandle.new()   # Tallow asleep, wick unlit, waiting for a new candle
-	art.custom_minimum_size = Vector2(28, 40)
+	_line(v, L.t("Empty"), UI.DIM)
+	_line(v, L.t("A fresh candle waits here."), UI.DIM)
+	var art := SleepyCandle.new()   # Tallow asleep, wick unlit, waiting for a new candle (big, on his books)
+	art.custom_minimum_size = Vector2(40, 50)
 	art.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	v.add_child(art)
-	var b := UI.button("New candle", _new.bind(n), 0)
+	var any := false
+	for k in range(1, Game.SLOTS + 1):
+		any = any or not Game.slot_data(k).is_empty()
+	var b := UI.button(L.t("New candle"), _new.bind(n), 0, "" if any else "primary")
 	b.custom_minimum_size.y = 24
 	b.set_meta("default_focus", n == _focus_slot)
 	v.add_child(b)
@@ -174,28 +206,83 @@ func _line(v: VBoxContainer, text: String, col: Color) -> void:
 	v.add_child(UI.label(text, 8, col))
 
 
-## An empty slot's picture: Tallow drawn like the Candle Box (Player.paint_preview), eyes shut, no flame.
+## An empty slot's picture: Tallow drawn like the Candle Box (Player.paint_preview), eyes shut, no flame, twice the
+## size, standing in a sunken niche.
 class SleepyCandle extends Control:
 	func _draw() -> void:
-		# its feet a little under the middle of the free space, so the ~20 px candle sits in the centre
-		Player.paint_preview(self, Vector2(size.x / 2.0, size.y / 2.0 + 10.0).floor(), "tallow", {"unlit": true, "face": "blink"})
+		var feet := Vector2(size.x / 2.0, size.y / 2.0 + 16.0).floor()
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2(2, 2))
+		Player.paint_preview(self, (feet / 2.0).floor(), "tallow", {"unlit": true, "face": "blink"})
+
+
+## A used slot's candle, twice the size and lit (its flame flickers), in a sunken niche.
+class SlotPortrait extends Control:
+	var candle := "tallow"
+	var _t := 0.0
+
+	func _process(dt: float) -> void:
+		_t += dt
+		if int(_t * 8.0) != int((_t - dt) * 8.0):
+			queue_redraw()
+
+	func _draw() -> void:
+		draw_style_box(UI._tex_box("kit_inset", [3, 3, 3, 3], [0, 0, 0, 0]), Rect2(Vector2.ZERO, size))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2(2, 2))
+		var feet := Vector2(floorf(size.x / 4.0), floorf(size.y / 2.0))
+		Player.paint_preview(self, feet, candle, {"frame": int(_t * 8.0), "wax": 84.0})
+
+
+## The Journal's progress as a stepped ring (13x13): gold for the share of relics seen and lodgers met.
+class JournalRing extends Control:
+	var frac := 0.0
+	static var _pts: Array = []
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(13, 13)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	static func _ring() -> Array:
+		if not _pts.is_empty():
+			return _pts
+		var pts: Array = []
+		for y in range(-6, 7):
+			for x in range(-6, 7):
+				var d := sqrt(float(x * x + y * y))
+				if d >= 4.6 and d <= 6.2:
+					pts.append([atan2(float(x), -float(y)), Vector2(x + 6, y + 6)])
+		pts.sort_custom(func(a, b): return wrapf(a[0], 0.0, TAU) < wrapf(b[0], 0.0, TAU))
+		_pts = pts
+		return pts
+
+	func _draw() -> void:
+		var pts := _ring()
+		var lit := roundi(frac * pts.size())
+		for i in pts.size():
+			draw_rect(Rect2(pts[i][1], Vector2.ONE), UI.GOLD if i < lit else Color("#483b3a"))
+		draw_rect(Rect2(5, 5, 3, 3), UI.EMBER if frac > 0.0 else Color("#483b3a"))
 
 
 ## A button with a 16 px word and an 8 px gold line under it ("Continue" / "Floor 3 - 12:41 AM").
-static func two_line_button(top_text: String, sub_text: String, cb: Callable, w := 0) -> Button:
-	var b := UI.button("", cb, w)
+static func two_line_button(top_text: String, sub_text: String, cb: Callable, w := 0, brass := false) -> Button:
+	var b := UI.button("", cb, w, "primary" if brass else "")   # v2.6: brass when it is the slot's main action
 	b.custom_minimum_size.y = 30
-	var top := UI.label(top_text, 16, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+	var top := UI.label(top_text, 16, UI.INK if brass else UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+	if brass:
+		UI.engraved(top)
 	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	top.offset_top = 1
 	top.offset_bottom = 17
 	b.add_child(top)
-	var sub := UI.label(sub_text, 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	var sub := UI.label(sub_text, 8, UI.BRASS_DARK if brass else UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	if brass:
+		sub.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0))
 	sub.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	sub.offset_top = 17
 	sub.offset_bottom = 27
 	b.add_child(sub)
-	var hl := func(on: bool): top.add_theme_color_override("font_color", UI.GOLD if on else UI.CREAM)
+	var rest := UI.INK if brass else UI.CREAM
+	var hot := UI.INK if brass else UI.GOLD
+	var hl := func(on: bool): top.add_theme_color_override("font_color", hot if on else rest)
 	b.focus_entered.connect(hl.bind(true))
 	b.focus_exited.connect(hl.bind(false))
 	b.mouse_entered.connect(hl.bind(true))
@@ -573,9 +660,10 @@ class NightSlider extends Button:
 		var x0 := _x0()
 		var x1 := _x1()
 		var kx := _x_of(value)
-		draw_rect(Rect2(x0, ty, x1 - x0 + 1, 3), UI.INK)
-		draw_rect(Rect2(x0, ty, x1 - x0, 2), Color("#483b3a"))
-		draw_rect(Rect2(x0, ty, kx - x0, 2), UI.EMBER)
+		# v2.6: the kit's sunken track, lit up to the knob (like Settings' volume sliders)
+		draw_style_box(UI.KitSlider._box("kit_track"), Rect2(x0 - 3, ty - 2, x1 - x0 + 7, 7))
+		if kx > x0:
+			draw_style_box(UI.KitSlider._box("kit_track_fill"), Rect2(x0 - 3, ty - 2, kx - x0 + 6, 7))
 		for v in range(lo, hi + 1):
 			var x := _x_of(v)
 			draw_rect(Rect2(x, ty - 2, 1, 6), UI.GOLD if v <= value else Color("#775c55"))
@@ -584,10 +672,8 @@ class NightSlider extends Button:
 			var p := Vector2(roundf(x - tw / 2.0 + 0.5), 24)
 			draw_string(f, p + Vector2(1, 1), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, UI.INK)
 			draw_string(f, p, t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, UI.GOLD if v == value else UI.DIM)
-		# the knob: a little candle flame on the chosen night
-		draw_rect(Rect2(kx - 3, ty - 5, 7, 9), UI.INK)
-		draw_rect(Rect2(kx - 2, ty - 4, 5, 7), UI.GOLD)
-		draw_rect(Rect2(kx - 1, ty - 3, 2, 3), UI.CREAM)
-		draw_rect(Rect2(kx - 2, ty + 2, 5, 1), UI.EMBER)
+		# the knob: the kit's little candle flame on the chosen night
+		var knob := Art.tex("ui/kit_knob")
+		draw_texture(knob, Vector2(kx - 3, ty - 6))
 		if has_focus() and Controls.uses_buttons():   # the focus ring shows for keys and gamepads only
 			draw_style_box(UI.focus_box(), Rect2(Vector2.ZERO, size))

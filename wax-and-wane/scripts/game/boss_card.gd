@@ -20,6 +20,7 @@ var _bands: Node2D
 var _boss: AnimatedSprite2D
 var _hero: Node2D
 var _name: Label
+var _plate: PanelContainer   # v2.6: the guardian's name engraved on a brass plate (the UI kit)
 var _sub: Label
 var _who: Label
 var _dim: ColorRect
@@ -82,12 +83,14 @@ func _ready() -> void:
 	_hero.scale = Vector2(2, 2)
 	_hero.position = Vector2(_vs.x * 0.16, _band_bottom(1, _vs.x * 0.16) - 3)
 	# words
-	_name = UI.label(title, 16, UI.CREAM)
-	_name.position = Vector2(_vs.x * 0.07, 50)
-	add_child(_name)
+	_plate = UI.panel(Vector2.ZERO, "plate")
+	_plate.position = Vector2(_vs.x * 0.07 - 8, 46)
+	_name = UI.engraved(UI.label(title, 16, UI.CREAM))
+	_plate.add_child(_name)
+	add_child(_plate)
 	var fl: Dictionary = world.fdef() if world.has_method("fdef") else world.FLOORS.get(world.floor_num, {})   # the area (a longer night)
 	_sub = UI.label(str(d.get("title", "Guardian of %s" % fl.get("name", "the house"))), 8, Color("#d3bfa9"))
-	_sub.position = Vector2(_vs.x * 0.07 + 2, 70)
+	_sub.position = Vector2(_vs.x * 0.07 + 2, 73)
 	add_child(_sub)
 	var who := "TALLOW"
 	if p:
@@ -142,11 +145,11 @@ func _apply(dt: float) -> void:
 	# the guardian lags its band a little, then lands
 	var lag := s0 * 1.25 if not _out else s0
 	_boss.position = Vector2(round(bx + lag), round(_band_bottom(0, bx) + 2))
-	_name.position.x = round(_vs.x * 0.07 + s0 * 0.85)
+	_plate.position.x = round(_vs.x * 0.07 - 8 + s0 * 0.85)
 	_sub.position.x = round(_vs.x * 0.07 + 2 + s0 * 0.95)
 	_hero.position.x = round(_vs.x * 0.16 + s1)
 	_who.position.x = round(_vs.x * 0.16 + 26 + s1 * 1.1)
-	_name.visible = _t > 0.12
+	_plate.visible = _t > 0.12
 	_sub.visible = _t > 0.2
 	if not _landed and _t >= IN_T * 1.1:
 		_landed = true
