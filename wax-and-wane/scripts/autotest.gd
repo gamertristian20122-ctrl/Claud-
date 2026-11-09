@@ -786,6 +786,12 @@ func _tour() -> void:
 		await MovesTour.tour(self)
 		get_tree().quit()
 		return
+	if args.has("feel"):   # v2.6: the pickup magnet mid-sweep, a hit's mark, the full map, Aim / Pickup magnet rows, Restart
+		await _wait(0.5)
+		await FeelProbe.tour(self)
+		Audio.stop_all()
+		get_tree().quit()
+		return
 	if args.has("night"):   # the Long Night: the night length picker, a 7-floor run's HUD and banners, results, Journal
 		await _wait(0.5)
 		await load("res://scripts/night_check.gd").tour(self)

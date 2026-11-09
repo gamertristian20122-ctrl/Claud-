@@ -109,7 +109,9 @@ func _setup_actions() -> void:
 	lshift.location = KEY_LOCATION_LEFT
 	_add("special", [lshift, _key(KEY_F), _axis(JOY_AXIS_TRIGGER_LEFT, 1.0),
 		_mouse(MOUSE_BUTTON_XBUTTON1), _mouse(MOUSE_BUTTON_XBUTTON2)], TRIGGER_PRESS)
-	_add("pause", [_key(KEY_ESCAPE), _key(KEY_P), _btn(JOY_BUTTON_START), _btn(JOY_BUTTON_BACK)])
+	_add("pause", [_key(KEY_ESCAPE), _key(KEY_P), _btn(JOY_BUTTON_START)])
+	# v2.6: the full map of the floor (FullMap); the pad's Back / View button moved here from pause
+	_add("map", [_key(KEY_M), _key(KEY_TAB), _btn(JOY_BUTTON_BACK)])
 	# menus: WASD and the d-pad navigate too (the left stick is read in _menu_stick, with a
 	# repeat delay, so one flick moves one step); B / Esc go back
 	_add("ui_up", [_key(KEY_W), _btn(JOY_BUTTON_DPAD_UP)])

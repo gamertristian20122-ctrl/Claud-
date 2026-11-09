@@ -1390,16 +1390,20 @@ func _victory() -> void:
 	tw.tween_callback(func(): Diary.win_ending(self, func(): _end_run(true)))   # an ending's cards first, if the night earned one
 
 
-func _end_run(won: bool) -> void:
+func _end_run(won: bool, again := {}) -> void:
 	Game.records["kills"] += kills
 	Game.records["best_floor"] = maxi(int(Game.records["best_floor"]), floor_num)
 	if won:
 		Game.records["wins"] += 1
 		Records.note_finish(candle_id, night_floors, clock_minutes())   # kept per night length (a 7-floor finish is its own record)
 	Game.save()
-	main.goto("results", Records.end_run(self, won, {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
+	var res := Records.end_run(self, won, {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
 		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins,
-		"level": level, "floors": night_floors}))
+		"level": level, "floors": night_floors})
+	if not again.is_empty():
+		main.goto("game", again)   # v2.6 Quick restart: the run is recorded, the next candle is lit at once
+		return
+	main.goto("results", res)
 
 
 func give_up() -> void:
@@ -1408,6 +1412,43 @@ func give_up() -> void:
 	toggle_pause()
 	player.dead = true
 	on_player_died()
+
+
+## v2.6 Quick restart (the pause menu's Restart): the night is recorded as given up and the next is lit at once.
+func quick_restart() -> void:
+	if finished:
+		return
+	var again := restart_params()
+	if paused:
+		toggle_pause()
+	finished = true
+	player.dead = true
+	Records.on_died(self)   # "gave_up": blown out with wax to spare
+	hud.release_sticks()
+	_clear_shots()
+	Audio.play("snuff_out")
+	_end_run(false, again)
+
+
+## The same kind of night again: this candle and night length in this slot; a typed-in seed or Tonight's Candle
+## replays that same house, any other run lights a new one.
+func restart_params() -> Dictionary:
+	if daily:
+		return {"seed": run_seed, "daily": true, "candle": candle_id, "date": daily_date}
+	var p := {"candle": candle_id, "floors": night_floors}
+	if get_meta("seeded", false):
+		p["seed"] = run_seed
+		p["seeded"] = true
+	return p
+
+
+## v2.6: the full map of this floor over the pause menu (FullMap): the minimap tapped or clicked, M / Tab / Back.
+func open_map() -> void:
+	if finished or transitioning or player.dead or Juice.holding(self) or is_instance_valid(_intro_root):
+		return
+	if not paused:
+		toggle_pause()
+	hud.open_map()
 
 
 ## Minutes in tonight's night: 120 (2:00 AM) for 4 floors, 30 more per floor past four (Game.night_minutes).

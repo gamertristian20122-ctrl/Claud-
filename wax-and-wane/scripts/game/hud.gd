@@ -22,6 +22,7 @@ var bomb_btn: TextureButton
 var stick_l: Control
 var stick_r: Control
 var pause_layer: Control
+var map_layer: Control   # v2.6: the full map (FullMap), over the pause menu
 var vignette: TextureRect
 var preview: Label
 var _preview_t := 0.0
@@ -798,6 +799,14 @@ func _refresh_touch() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("map") and not world.finished and (not world.paused or is_instance_valid(map_layer)):
+		get_viewport().set_input_as_handled()   # v2.6: M / Tab / the pad's Back open the full map, again closes it
+		if is_instance_valid(map_layer):
+			map_layer.queue_free()
+			world.toggle_pause()
+		else:
+			world.open_map()
+		return
 	if event.is_action_pressed("pause") or (world.paused and event.is_action_pressed("ui_cancel")):
 		get_viewport().set_input_as_handled()
 		if world.paused:
@@ -829,6 +838,11 @@ func _input(event: InputEvent) -> void:
 		if event.pressed and keep_btn.visible and Rect2(keep_btn.position, keep_btn.size).has_point(event.position):
 			_mouse_block = true
 			world.use_keepsake()
+			get_viewport().set_input_as_handled()
+			return
+		if event.pressed and Rect2(minimap.position, minimap.size).has_point(event.position):
+			_mouse_block = true   # v2.6: a click on the minimap opens the full map
+			world.open_map()
 			get_viewport().set_input_as_handled()
 			return
 		if not event.pressed:
@@ -873,6 +887,10 @@ func _input(event: InputEvent) -> void:
 			# first finger into mouse clicks, and that finger is usually on the move stick)
 			if Rect2(pause_btn.position, pause_btn.size).grow(4).has_point(pos):
 				world.toggle_pause()
+				get_viewport().set_input_as_handled()
+				return
+			if Rect2(minimap.position, minimap.size).has_point(pos):
+				world.open_map()   # v2.6: tap the minimap for the whole floor
 				get_viewport().set_input_as_handled()
 				return
 			if keep_btn.visible and Rect2(keep_btn.position, keep_btn.size).grow(4).has_point(pos) and _keep_idx < 0:
@@ -1008,15 +1026,17 @@ func open_pause() -> void:
 	var resume := UI.button("Resume", func(): world.toggle_pause())
 	resume.set_meta("default_focus", true)
 	v.add_child(resume)
-	var row1 := HBoxContainer.new()   # Journal | Settings: two halves, like the row below
+	var row1 := HBoxContainer.new()   # Journal | Map | Settings: thirds, like the row below
 	row1.add_theme_constant_override("separation", 6)
-	for b in [UI.button("Journal", func(): Journal.open(root), 96), UI.button("Settings", func(): SettingsPanel.open(root), 96)]:
+	for b in [UI.button("Journal", func(): Journal.open(root), 72), UI.button(L.t("Map"), open_map, 72),
+			UI.button("Settings", func(): SettingsPanel.open(root), 72)]:
 		(b as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row1.add_child(b)
 	v.add_child(row1)
 	var row2 := HBoxContainer.new()
 	row2.add_theme_constant_override("separation", 6)
-	for b in [UI.button("Save & quit", _confirm_save_quit, 96), UI.button("Give up", _confirm_give_up, 96)]:
+	for b in [UI.button("Save & quit", _confirm_save_quit, 72), UI.button(L.t("Restart"), _confirm_restart, 72),
+			UI.button("Give up", _confirm_give_up, 72)]:
 		(b as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL   # two halves under a wide relic row
 		row2.add_child(b)
 	v.add_child(row2)
@@ -1040,6 +1060,31 @@ func _confirm_save_quit() -> void:
 	v.add_child(row)
 
 
+## v2.6 Quick restart: this night ends (as given up) and the next one is lit at once in the same slot, with the
+## same candle and night length (a typed-in seed or Tonight's Candle: that same house again). world.quick_restart
+func _confirm_restart() -> void:
+	var m := UI.modal(root, L.t("LIGHT A NEW CANDLE?"))
+	var r: Control = m[0]
+	r.process_mode = Node.PROCESS_MODE_ALWAYS
+	var v: VBoxContainer = m[1]
+	v.add_child(UI.label(L.t("This night ends here. The next starts at once."), 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(UI.button("Keep burning", func(): r.queue_free(), 100))
+	row.add_child(UI.button(L.t("Restart"), func():
+		r.queue_free()
+		world.quick_restart(), 80))
+	v.add_child(row)
+
+
+## v2.6: the full map over the pause menu (the minimap tapped, M / Tab / Back, the pause menu's Map).
+func open_map() -> void:
+	if is_instance_valid(map_layer):
+		return
+	map_layer = FullMap.open(world)
+
+
 func _confirm_give_up() -> void:
 	var m := UI.modal(root, "SNUFF YOUR FLAME?")
 	var r: Control = m[0]
@@ -1057,3 +1102,5 @@ func close_pause() -> void:
 	if pause_layer:
 		pause_layer.queue_free()
 		pause_layer = null
+	if is_instance_valid(map_layer):
+		map_layer.queue_free()

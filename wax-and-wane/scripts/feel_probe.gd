@@ -198,6 +198,10 @@ static func check(at: Node) -> void:
 		res["auto_front"] = au[0]
 		res["auto_override"] = au[1]
 		res["auto_rate"] = au[2]
+	if w.has_method("open_map"):
+		res["map"] = await _map(tree, w)
+	if w.has_method("quick_restart"):
+		res["restart"] = await _restart(at, tree, w)
 	print("[feel] check (physics frames at 60 Hz; 99 = never / eaten):")
 	for k in res:
 		print("[feel]   %s: %s" % [k, res[k]])
@@ -205,7 +209,52 @@ static func check(at: Node) -> void:
 	ok = ok and float(res["magnet"]) < 3.0 and bool(res["magnet_full"]) and bool(res["magnet_shop"])
 	ok = ok and res.has("auto_front") and bool(res["auto_front"]) and bool(res["auto_override"])
 	ok = ok and res.has("auto_rate") and absi(int(res["auto_rate"][0]) - int(res["auto_rate"][1])) <= 1
+	ok = ok and res.has("map") and str(res["map"]) == "opened paused, M closed and resumed"
+	ok = ok and res.has("restart") and str(res["restart"]).begins_with("lit")
 	print("[feel] check %s" % ("PASS" if ok else "FAIL"))
+
+
+## The full map: a tap on the minimap opens it over a paused game; M closes it and play goes on.
+static func _map(tree: SceneTree, w: Node) -> String:
+	Controls.set_device(Controls.TOUCH)
+	var mm: Control = w.hud.minimap
+	DesignCheck._touch(w, 5, mm.position + mm.size / 2.0, true)
+	await tree.process_frame
+	await tree.process_frame
+	DesignCheck._touch(w, 5, mm.position + mm.size / 2.0, false)
+	await tree.process_frame
+	var opened: bool = w.paused and is_instance_valid(w.hud.map_layer)
+	Controls.set_device(Controls.KEYS)
+	_press("map", true)
+	await tree.process_frame
+	await tree.process_frame
+	_press("map", false)
+	await tree.process_frame
+	await tree.process_frame
+	var closed: bool = not w.paused and not is_instance_valid(w.hud.map_layer)
+	if opened and closed:
+		return "opened paused, M closed and resumed"
+	return "opened=%s closed=%s" % [opened, closed]
+
+
+## Quick restart: the run is recorded (given up) and a new one is lit with the same candle and night length.
+static func _restart(at: Node, tree: SceneTree, w: Node) -> String:
+	var runs := int(Game.records["runs"])
+	var cid: String = w.candle_id
+	var nf: int = w.night_floors
+	var old_seed: int = w.run_seed
+	w.quick_restart()
+	var waited := 0
+	while waited < 600 and not (at.main.current != w and at.main.current and at.main.current.name == "Game" and not at.main._busy):
+		await tree.process_frame
+		waited += 1
+	var n: Node = at.main.current
+	if n == w or n == null or n.name != "Game":
+		return "no new run"
+	var hist: Array = Game.records.get("run_history", [])
+	var noted: bool = not hist.is_empty() and str(hist[0].get("killer", "")) == "gave_up"
+	return "lit %s, %d floors, runs %d -> %d, old run noted as given up: %s, same seed: %s" % [n.candle_id, n.night_floors,
+		runs, int(Game.records["runs"]), noted, n.run_seed == old_seed] if n.candle_id == cid and n.night_floors == nf else "wrong night"
 
 
 static func _press(action: String, on: bool) -> void:
@@ -421,3 +470,106 @@ static func _auto(tree: SceneTree, w: Node, p: Player) -> Array:
 		if is_instance_valid(e):
 			e.queue_free()
 	return [in_front, override, [n_auto, n_keys]]
+
+
+# ================================================================ --tour --feel: the v2.6 changes on screen
+## xvfb-run ... -- --autotest --tour --feel --shots=DIR [--fit]: the magnet mid-sweep, a hit's mark, Aim: Auto
+## firing, the full map, the pause menu (Map, Restart), the Restart question, Settings (Aim, Pickup magnet).
+static func tour(at: Node) -> void:
+	Controls.set_device(Controls.TOUCH)
+	at.main.goto("game", {"seed": 4242})
+	var tree: SceneTree = at.get_tree()
+	while not (at.main.current and at.main.current.name == "Game" and at.main.current.get("player") != null and not at.main._busy):
+		await tree.process_frame
+	var w: Node = at.main.current
+	var p: Player = w.player
+	await at._wait(3.0)   # the floor banner clears
+	p.invuln = 0.0
+	# walk a few rooms (cleared) so the map has a floor to show, and leave a drop behind in one of them
+	var order: Array = [w.cur_cell]
+	var cells: Dictionary = w.layout["cells"]
+	var i := 0
+	while i < order.size() and order.size() < 6:
+		for d in FloorGen.DIRS:
+			var n: Vector2i = order[i] + d
+			if cells.has(n) and not n in order and cells[n]["type"] in ["normal", "treasure", "shop"]:
+				order.append(n)
+		i += 1
+	var normal := Vector2i(-99, -99)
+	for c in order:
+		cells[c]["cleared"] = true
+		at._jump(w, c)
+		await at._wait(0.2)
+		if cells[c]["type"] == "normal":
+			normal = c
+	if normal != Vector2i(-99, -99) and normal != order[0]:
+		cells[order[0]]["pickups"].append({"kind": "wax_small", "pos": Vector2.ZERO, "item": "", "price": 0})
+	if normal != Vector2i(-99, -99):
+		at._jump(w, normal)
+	await at._wait(0.6)
+	# 1. the pickup magnet: drops spread over the room fly in (wax is wanted: the candle is not full)
+	var c0: Vector2 = w.room.center()
+	p.position = c0 + Vector2(-70, 6)
+	p.wax = 70.0
+	for off in [Vector2(60, -40), Vector2(90, 20), Vector2(40, 46), Vector2(100, -10), Vector2(20, -50)]:
+		w.add_pickup("coin", w.free_spot_near(c0 + off))
+	w.add_pickup("wax_small", w.free_spot_near(c0 + Vector2(70, 40)))
+	w.add_pickup("bomb", w.free_spot_near(c0 + Vector2(110, 30)))
+	await at._wait(0.72)
+	await at._shot("feel_magnet_sweep")
+	await at._wait(0.25)
+	await at._shot("feel_magnet_arrive")
+	await at._wait(1.0)
+	# 2. a hit's mark: a bolt from the left
+	p.invuln = 0.0
+	w.enemy_shot(p.global_position + Vector2(-34, -7), Vector2(170, 0))
+	var waited := 0
+	while p.invuln <= 0.0 and waited < 60:
+		await tree.physics_frame
+		waited += 1
+	await at._wait(0.06)
+	await at._shot("feel_hit_mark")
+	await at._wait(1.4)
+	# 3. Aim: Auto - the right thumb rests on the screen, Tallow fires at the foe in front
+	Game.settings["aim"] = "auto"
+	p.position = c0 + Vector2(-30, 6)
+	var foe: Enemy = w.spawn_enemy("slug", c0 + Vector2(40, -10))
+	var foe2: Enemy = w.spawn_enemy("slug", c0 + Vector2(-80, 30))
+	waited = 0
+	while waited < 240 and not (foe.active and foe2.active):
+		await tree.physics_frame
+		waited += 1
+	var vs: Vector2 = w.hud.view_size()
+	DesignCheck._touch(w, 3, Vector2(vs.x * 0.8, vs.y * 0.66), true)
+	await at._wait(0.75)
+	await at._shot("feel_aim_auto")
+	DesignCheck._touch(w, 3, Vector2(vs.x * 0.8, vs.y * 0.66), false)
+	Game.settings["aim"] = "assist"
+	for e in [foe, foe2]:
+		if is_instance_valid(e):
+			e.queue_free()
+	await at._wait(0.3)
+	# 4. the full map (as a tap on the minimap opens it), then the pause menu under it
+	w.open_map()
+	await at._wait(0.5)
+	await at._shot("feel_full_map")
+	if is_instance_valid(w.hud.map_layer):
+		w.hud.map_layer.queue_free()
+	await at._wait(0.3)
+	await at._shot("feel_pause_menu")
+	w.hud._confirm_restart()
+	await at._wait(0.3)
+	await at._shot("feel_restart_ask")
+	var top: Node = w.hud.root.get_child(w.hud.root.get_child_count() - 1)
+	top.queue_free()
+	await at._wait(0.2)
+	# 5. Settings: Controls (Aim) and Game (Pickup magnet)
+	SettingsPanel.open(w.hud.root, 1)
+	await at._wait(0.4)
+	await at._shot("feel_settings_controls")
+	top = w.hud.root.get_child(w.hud.root.get_child_count() - 1)
+	top.queue_free()
+	await at._wait(0.2)
+	SettingsPanel.open(w.hud.root, 0)
+	await at._wait(0.4)
+	await at._shot("feel_settings_game")
