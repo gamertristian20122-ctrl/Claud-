@@ -38,6 +38,7 @@ static func _phases(e: Enemy, ddt: float, busy := false) -> bool:
 		e.mem["seq"] = int(e.mem.get("seq", 0)) + 1   # queued notes / volleys of the old phase are dropped
 		e.spr.speed_scale = 1.0
 		e.spr.play("idle")
+		e._anim_lock = 0.0
 		e.spr.position = Vector2.ZERO
 		e.on_new_phase()
 		_set_floor(e)
@@ -156,7 +157,7 @@ func g21_furnace(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 			if e.t <= 0:
 				var from := e.global_position + F_PIPE
 				for tgt in e.mem["coal"]:
-					CoalLob.throw(e, from, tgt, 0.9, [0.0, 4.0, 4.5, 4.5][e.phase])
+					CoalLob.throw(e, from, tgt, 0.9, [0.0, 3.2, 3.6, 3.6][e.phase])
 				Audio.play("explosion", -10.0, 0.05, 1.4)
 				e.world.fx_smoke(from + Vector2(0, -4))
 				e.state = "rest"
@@ -180,7 +181,7 @@ static func _furnace_jet_tell(e: Enemy, mouth: Vector2) -> void:
 		lanes = [a - 0.6, a, a + 0.6]
 	e.mem["lanes"] = lanes
 	e.state = "jet_tell"
-	e.t = [0.0, 0.9, 0.8, 0.75][e.phase]
+	e.t = [0.0, 1.0, 0.9, 0.8][e.phase]
 	e.play_anim("atk", e.t + 0.8)
 	e._telegraph(Color(1, 0.6, 0.3))
 	for l in lanes:
@@ -191,7 +192,7 @@ static func _furnace_jet_tell(e: Enemy, mouth: Vector2) -> void:
 ## Coal: the stovepipe coughs lumps that land where the red rings are and smoulder for a while.
 static func _furnace_coal_tell(e: Enemy) -> void:
 	var p: Player = e.world.player
-	var n: int = [0, 3, 4, 5][e.phase]
+	var n: int = [0, 2, 3, 4][e.phase]
 	var pts: Array = [p.global_position]
 	for i in n - 1:
 		pts.append(e.free_spot(p.global_position, 26.0, 70.0))
@@ -293,7 +294,7 @@ class FireJet extends Node2D:
 		var p: Player = e.world.player
 		var c := p.global_position + Vector2(0, -6)
 		var q := Geometry2D.get_closest_point_to_segment(c, from + dir * tail, from + dir * cur)
-		if c.distance_to(q) < _half(q.distance_to(from)) + 3.0:
+		if c.distance_to(q) < _half(q.distance_to(from)) + 2.0:
 			GuardiansV21._hit(e, 8.0, q)
 
 	func _draw() -> void:
@@ -635,7 +636,7 @@ class RollSkull extends Node2D:
 			if not frames.is_empty():
 				spr.texture = frames[int(roll) % frames.size()]
 		var p: Player = e.world.player
-		if (p.global_position + Vector2(0, -5)).distance_to(global_position + Vector2(0, -5)) < 8.0:
+		if moving and (p.global_position + Vector2(0, -5)).distance_to(global_position + Vector2(0, -5)) < 8.0:
 			GuardiansV21._hit(e, 6.0, global_position)
 
 	func _draw() -> void:
@@ -695,9 +696,18 @@ const PIPE_Y := -31
 const ORGAN_FACE := Vector2(0, -22)
 
 
-## Each pipe always plays down the same lane, fanning across the chapel from left to right.
-static func _pipe_angle(i: int) -> float:
-	return deg_to_rad(lerpf(150.0, 30.0, i / 6.0))
+## The pipes' lanes fan out round the way Tallow was when a run of notes began (`mem.lane0`, the middle
+## pipe aims straight at him), a step of LANE_STEP apart, left to right: a scale sweeps across where he stands.
+const LANE_STEP := 0.3
+
+
+static func _pipe_angle(e: Enemy, i: int) -> float:
+	return float(e.mem.get("lane0", PI / 2)) + (i - 3) * LANE_STEP
+
+
+static func _aim_lanes(e: Enemy) -> void:
+	var p: Player = e.world.player
+	e.mem["lane0"] = (p.global_position + Vector2(0, -6) - (e.global_position + Vector2(0, PIPE_Y))).angle()
 
 
 static func _pipe_at(e: Enemy, i: int) -> Vector2:
@@ -768,13 +778,15 @@ func g21_organist(e: Enemy, ddt: float, _to_p: Vector2, _dist: float) -> void:
 		"rest":
 			if e.t <= 0:
 				e.state = "idle"
-				e.cd = [0.0, 1.2, 1.0, 0.9][e.phase]
+				e.cd = [0.0, 1.0, 0.85, 0.75][e.phase]
 
 
 ## A run of notes: each pipe lights and its lane blinks for `lead` seconds, then it plays three notes
 ## down the lane. Lanes come one after another, so there is always a clear stretch between them.
 static func _organ_play(e: Enemy, order: Array, step: float, lead: float) -> void:
 	var seq: int = e.mem.get("seq", 0)
+	_aim_lanes(e)
+	var notes := 3 if e.phase == 1 else 4
 	e.play_anim("atk", 0.0)
 	e.spr.pause()
 	e.spr.frame = 0
@@ -787,14 +799,14 @@ static func _organ_play(e: Enemy, order: Array, step: float, lead: float) -> voi
 		e.later(step * k + lead, func():
 			if int(e.mem.get("seq", 0)) == seq:
 				e.spr.frame = 1
-				_pipe_fire(e, i, 3))
+				_pipe_fire(e, i, notes))
 	e.state = "playing"
 	e.t = step * order.size() + lead + 0.4
 
 
 static func _pipe_tell(e: Enemy, i: int, lead: float) -> void:
 	var at := _pipe_at(e, i)
-	var a := _pipe_angle(i)
+	var a := _pipe_angle(e, i)
 	e.tele().line(at + Vector2.from_angle(a) * 4.0, at + Vector2.from_angle(a) * _reach(e, at, a), lead, RED)
 	(e.mem["lit"] as Dictionary)[i] = lead + 0.2
 	Audio.play("bell_small", -10.0, 0.0, 0.7 + 0.12 * i)
@@ -802,7 +814,7 @@ static func _pipe_tell(e: Enemy, i: int, lead: float) -> void:
 
 static func _pipe_fire(e: Enemy, i: int, n: int) -> void:
 	var at := _pipe_at(e, i)
-	var v := Vector2.from_angle(_pipe_angle(i)) * 94.0
+	var v := Vector2.from_angle(_pipe_angle(e, i)) * 94.0
 	for j in n:
 		e.later(0.07 * j, func(): e.world.enemy_shot(at, v, "bullet_water"))
 	Audio.play("enemy_shoot", -4.0, 0.05, 0.6 + 0.1 * i)
@@ -814,6 +826,7 @@ static func _organ_chords(e: Enemy) -> void:
 	var chords: Array = [[0, 3, 6], [1, 4], [2, 5]] if e._pattern % 2 == 0 else [[1, 3, 5], [0, 2, 4, 6]]
 	if e.phase < 3:
 		chords = chords.slice(0, 2)
+	_aim_lanes(e)
 	e.spr.play("sing")
 	e.spr.pause()
 	e.spr.frame = 0
@@ -871,11 +884,11 @@ static func _organ_ring_mark(e: Enemy, dur: float) -> void:
 static func _organ_ring_fire(e: Enemy) -> void:
 	var at := e.global_position + ORGAN_FACE
 	var gap: float = e.mem["gap"]
-	var n := 22
+	var n := 24
 	for i in n:
 		var a := TAU * i / n + gap
 		if absf(angle_difference(a, gap)) > 0.5:
-			e.world.enemy_shot(at, Vector2.from_angle(a) * 46.0, "bolt_ring")
+			e.world.enemy_shot(at, Vector2.from_angle(a) * 50.0, "bolt_ring")
 	e.spr.frame = 1
 	Audio.play("bell_toll", -4.0, 0.05, 1.2)
 
@@ -937,11 +950,17 @@ func g21_weathercock(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 			e.spr.flip_h = to_p.x < 0
 			if e.cd <= 0:
 				e._pattern += 1
-				var opts: Array = [["gust", "spin", "hop", "spin"], ["gust", "spin", "hop", "gust", "spin"],
-					["storm", "spin", "hop", "spin"]][e.phase - 1]
+				var opts: Array = [["gust", "fan", "spin", "fan", "hop"], ["gust", "fan", "spin", "hop", "gust", "fan", "spin"],
+					["storm", "fan", "spin", "hop", "fan", "spin"]][e.phase - 1]
 				match opts[(e._pattern - 1) % opts.size()]:
 					"gust", "storm":
 						_cock_gust(e)
+					"fan":
+						e.state = "fan_tell"
+						e.t = 0.45
+						e.play_anim("atk", 0.8)
+						e._telegraph(Color(1, 0.95, 0.75))
+						Audio.play("charge", -6.0, 0.05, 1.3)
 					"spin":
 						e.state = "spin_tell"
 						e.t = 0.7
@@ -960,10 +979,11 @@ func g21_weathercock(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				e.state = "gusting"
 				e.t = float(e.mem["blow"])
 				e.mem["volley"] = 0.6
+				e.mem["flashed"] = false
 				e.mem["spin_a"] = randf() * TAU
 				Audio.play("burn_whoosh", 2.0, 0.05, 0.6)
 		"gusting":
-			if e.phase == 2:
+			if e.phase <= 2:
 				# aimed volleys of three darts while the wind blows (each flashes first)
 				e.mem["volley"] = float(e.mem["volley"]) - ddt
 				if float(e.mem["volley"]) <= 0.35 and not e.mem.get("flashed", false):
@@ -980,6 +1000,22 @@ func g21_weathercock(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 			if e.t <= 0:
 				e.state = "rest"
 				e.t = 0.6
+		"fan_tell":
+			# an aimed fan of darts flung off the vane (and in phase 2+ a quick three after it)
+			if e.t <= 0:
+				var at3 := e.global_position + W_ARROW
+				_fan(e, at3, (p.global_position + Vector2(0, -6) - at3).angle(), [0, 5, 7, 9][e.phase], 0.2, 92.0, "bolt_bone")
+				Audio.play("enemy_shoot", 0.0, 0.05, 1.0)
+				if e.phase >= 2:
+					var seq: int = e.mem.get("seq", 0)
+					e.later(0.35, func():
+						if int(e.mem.get("seq", 0)) != seq:
+							return
+						var a4: Vector2 = e.global_position + W_ARROW
+						_fan(e, a4, (e.world.player.global_position + Vector2(0, -6) - a4).angle(), 3, 0.25, 92.0, "bolt_bone")
+						Audio.play("enemy_shoot", -2.0, 0.05, 1.2))
+				e.state = "rest"
+				e.t = 0.5
 		"spin_tell":
 			if e.t <= 0:
 				e.state = "spinning"
@@ -989,7 +1025,7 @@ func g21_weathercock(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				e.mem["volley"] = 0.0
 				Audio.play("burn_whoosh", -2.0, 0.05, 1.3)
 		"spinning":
-			_cock_spray(e, ddt, [0, 2, 3, 4][e.phase], 2.3, 78.0)
+			_cock_spray(e, ddt, [0, 3, 3, 4][e.phase], 2.3, 84.0)
 			if e.t <= 0:
 				e.spr.speed_scale = 1.0
 				e._anim_lock = 0.0
@@ -1031,7 +1067,7 @@ static func _cock_spray(e: Enemy, ddt: float, arms: int, turn: float, spd: float
 	e.mem["spin_a"] = float(e.mem["spin_a"]) + turn * ddt
 	e.mem["volley"] = float(e.mem["volley"]) - ddt
 	if float(e.mem["volley"]) <= 0.0:
-		e.mem["volley"] = 0.14
+		e.mem["volley"] = 0.12
 		var at := e.global_position + W_ARROW
 		for k in arms:
 			e.world.enemy_shot(at, Vector2.from_angle(float(e.mem["spin_a"]) + TAU * k / arms) * spd, "bolt_bone")
@@ -1164,7 +1200,7 @@ class Gust extends Node2D:
 const TRIAL_KIT := {1: ["bellows"], 2: ["bellows", "beeswax", "lamp_oil"],
 	3: ["bellows", "beeswax", "lamp_oil", "sharp_wick", "thimble"],
 	4: ["bellows", "beeswax", "lamp_oil", "sharp_wick", "thimble", "split_wick", "wax_coat"]}
-const TRIAL_WAX := {1: 100.0, 2: 88.0, 3: 78.0, 4: 72.0}
+const TRIAL_WAX := {1: 100.0, 2: 88.0, 3: 78.0, 4: 100.0}
 
 
 static func floor_of(kind: String) -> int:
