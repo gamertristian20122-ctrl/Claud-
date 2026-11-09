@@ -788,7 +788,7 @@ func _d_run(r: Dictionary) -> void:
 	var title := "Run %d" % int(r.get("n", 0))
 	var sub := ("Done by %s" % Game.clock_text(float(r.get("clock", 0.0)))) if won else Records.death_line(killer)
 	_head(_pic(tex, k), title, [[sub, UI.GOLD if won else UI.RED]], UI.GOLD)
-	var where := "%s - %s (%s)" % [Candles.def_of(str(r.get("candle", "tallow")))["name"], Records.floor_name(fl),
+	var where := "%s - %s (%s)" % [Candles.def_of(str(r.get("candle", "tallow")))["name"], Records.floor_name(fl, false, str(r.get("area", ""))),
 		"above the bells" if fl > Records.floor_count() else "%d/%d" % [fl, Records.floor_count()]]
 	if won:
 		where += " - " + Game.clock_text(float(r.get("clock", 0.0)))
@@ -875,7 +875,7 @@ class JSlot extends Button:
 				line2 = "%d night%s" % [(Game.records.get("daily_history", []) as Array).size(), "" if (Game.records.get("daily_history", []) as Array).size() == 1 else "s"]
 			"run":
 				var r: Dictionary = e["run"]
-				line1 = "Run %d  %s" % [int(r.get("n", 0)), Records.floor_name(maxi(1, int(r.get("floor", 1))))]
+				line1 = "Run %d  %s" % [int(r.get("n", 0)), Records.floor_name(maxi(1, int(r.get("floor", 1))), false, str(r.get("area", "")))]
 				if r.get("won", false):
 					line2 = "Done by " + Game.clock_text(float(r.get("clock", 0.0)))
 					c2 = UI.GOLD

@@ -360,6 +360,7 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 	params["seed"] = int(w.run_seed)
 	params["seeded"] = bool(w.get_meta("seeded", false))
 	params["candle"] = str(w.candle_id)
+	params["area"] = str(w.fdef().get("area", "")) if w.has_method("fdef") else ""   # the area the run ended in
 	if int(w.best_streak) > int(Game.records.get("best_streak", 0)):
 		Game.records["best_streak"] = int(w.best_streak)
 	if won:
@@ -373,7 +374,7 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 	hist.push_front({"won": won, "candle": str(w.candle_id), "floor": int(w.floor_num), "clock": float(w.clock_minutes()),
 		"killer": killer, "relics": (w.player.relics as Array).duplicate(), "time": float(w.run_time), "kills": int(w.kills),
 		"streak": int(w.best_streak), "seed": int(w.run_seed), "daily": bool(w.daily), "date": lit,
-		"n": int(Game.records.get("runs", 0))})
+		"n": int(Game.records.get("runs", 0)), "area": params["area"]})
 	while hist.size() > HISTORY:
 		hist.pop_back()
 	if bool(w.daily):
@@ -423,10 +424,13 @@ static func log_night(date: String, first: int, best: int, won: bool) -> void:
 		nights.pop_back()
 
 
-## "The Cellar" for floor 1 (any floor the world defines; "the House" past them).
-static func floor_name(n: int, lower_the := false) -> String:
+## "The Cellar" for floor 1 (any floor the world defines; "the House" past them). `area`: the area of the house the
+## floor was built from (world.fdef()["area"], kept with each run), which names it on longer nights.
+static func floor_name(n: int, lower_the := false, area := "") -> String:
 	var floors: Dictionary = preload("res://scripts/game/world.gd").FLOORS
 	var nm: String = str(floors[n]["name"]) if floors.has(n) else "The House"
+	if area != "" and Areas.LIST.has(area):
+		nm = str(Areas.def(area)["name"])
 	return ("the " + nm.substr(4)) if lower_the and nm.begins_with("The ") else nm
 
 

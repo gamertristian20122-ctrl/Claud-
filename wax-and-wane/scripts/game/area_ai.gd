@@ -301,12 +301,12 @@ func area_dummy(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				HouseAI._tip(e, "mannequin", "It only moves in the dark. Keep it in your light, or light a lantern")
 			var pd: Vector2 = e.world.room.path_dir(e.global_position, e.global_position + to_p)
 			e._walk(ddt, pd, e.speed)
-			if dist < 72.0 and dist > 18.0 and e.cd <= 0.0:
+			if dist < 64.0 and dist > 18.0 and e.cd <= 0.0:
 				e.state = "tell"
-				e.t = 0.5
+				e.t = 0.6
 				e.dir = to_p.normalized()
 				var reach := minf(dist + 24.0, 110.0)
-				e.tele().line(e.global_position + Vector2(0, -2), _clamp_in(e, e.global_position + e.dir * reach), 0.5, RED)
+				e.tele().line(e.global_position + Vector2(0, -2), _clamp_in(e, e.global_position + e.dir * reach), 0.6, RED)
 				e.play_anim("atk", 0.9)
 				e._telegraph(Color(1, 0.4, 0.3))
 

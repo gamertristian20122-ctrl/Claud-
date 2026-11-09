@@ -120,7 +120,7 @@ const DEFS := {
 		"stain": Color("#314152")},
 	"ink_drop": {"hp": 2.0, "speed": 40.0, "ai": "area_inkdrop", "r": 4.0, "touch": 4.0, "small_fry": true, "sprite": "areas/library/ink_drop",
 		"name": "Ink Drop", "lore": "A blot that got away. Whatever it crawls over stays sticky.", "stain": Color("#314152")},
-	"mannequin": {"hp": 14.0, "speed": 62.0, "ai": "area_dummy", "r": 6.0, "cd": 1.8, "sprite": "areas/attic/mannequin", "glow_px": ["#da4e38"],
+	"mannequin": {"hp": 14.0, "speed": 54.0, "ai": "area_dummy", "r": 6.0, "cd": 2.4, "sprite": "areas/attic/mannequin", "glow_px": ["#da4e38"],
 		"name": "Lantern-Shy Mannequin", "lore": "The artist's wooden figure from under the eaves. In the light it is only wood.",
 		"stain": Color("#d8a57d")},
 	"trunk": {"hp": 15.0, "speed": 70.0, "ai": "area_trunk", "r": 6.0, "cd": 1.6, "sprite": "areas/attic/trunk",
