@@ -109,7 +109,13 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
 - **Queue after v2.1 + Long Night batch 1:** `docs/design/ROADMAP_V2.md` (special moves -> Challenge Nights ->
   diary pages -> translations -> Boss Rush; Long Night batch 2 as a side track). Design of the long night:
   `docs/design/LONG_NIGHT.md`.
-- Latest build: **2.5.0** (versionCode 12), APK only, sent to the owner. On top of 2.3.0 it adds v2.4 boss intro
+- Latest build: **2.6.0** (versionCode 13), APK only, sent to the owner: v2.6 the GUI overhaul (a candlelit
+  wood-and-brass UI kit in `assets/art/ui/` from `tools/art_ui2.py`, built into one Theme by `UI.theme()` and
+  installed by `UI.install()` in main.gd: every screen uses it, no screen restyles itself; a new title, the HUD
+  clock+wax gauge, results tiles, Reduce motion; `docs/streams/v26_gui.md`, before/after in
+  `docs/streams/img/`) and v2.6 feel (pickup magnet, Aim Assist/Auto/Off, snappier rooms, hit direction, the full
+  map, Quick restart; `docs/streams/v26_feel.md`). Watch the magnet's buff at the next balance batch.
+- 2.5.0 added on top of 2.3.0 the v2.4 boss intro
   animations (every guardian makes a 1.4-2.0 s entrance, any tap skips; `scripts/game/boss_intro.gd`,
   `docs/streams/v24_boss_intros.md`) and v2.5 the story (`docs/design/STORY.md`: Martha Fenn, the housekeeper, made
   Tallow so the house could rest; 24 diary pages, the Diary tab, three new endings, `--diarycheck`, `--ending=<id>`;

@@ -3,7 +3,7 @@
 The one list every store text, the press kit and the trailer cards are checked against. The first part
 is written by `python3 tools/make_facts.py` from the game's own code (do not edit it by hand: re-run the
 script after any content change; `--check` tells you if it is out of date). Game version in the code:
-**2.5.0** (the store release is 2.0.0).
+**2.6.0** (the store release is 2.0.0).
 
 ## From the code
 
