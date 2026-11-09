@@ -27,7 +27,7 @@ static func _clamp_in(e: Enemy, p: Vector2, margin := 10.0) -> Vector2:
 
 # ---------------------------------------------------------------- Pot-Lid Crab: shielded from the front
 func init_area_crab(e: Enemy) -> void:
-	var face := 1.0 if e.world.player.global_position.x >= e.global_position.x else -1.0
+	var face := 1.0 if Moves.target_of(e, e.world.player).x >= e.global_position.x else -1.0
 	e.mem["face"] = face
 	e.mem["turn"] = 0.0
 	e.spr.flip_h = face < 0.0
@@ -468,7 +468,7 @@ func area_stockpot(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
 		"arcs":
 			if e.t <= 0.0:
 				var n := 2 + e.phase
-				var p: Vector2 = e.world.player.global_position
+				var p: Vector2 = Moves.target_of(e, e.world.player)
 				for i in n:
 					var tgt := p
 					if i > 0:
@@ -598,7 +598,7 @@ func area_librarian(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				Audio.play("enemy_shoot", -2.0, 0.05, 0.9)
 				if e.phase >= 2:
 					e.later(0.35, func():
-						var a: float = (e.world.player.global_position - e.global_position).angle()
+						var a: float = (Moves.target_of(e, e.world.player) - e.global_position).angle()
 						BossAI._fan(e, hand, a, 3, 0.3, 84.0, "bolt_page"))
 				e.state = "rest"
 				e.t = 0.6
@@ -608,9 +608,9 @@ func area_librarian(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				HouseAI._tip(e, "hush", "Her hush stops your flame shooting: stand in a gap of the ring")
 				if e.phase >= 3:
 					e.later(0.9, func():
-						AreaGimmicks.hush_ring(e.world, e.global_position + Vector2(0, -2), _hush_gaps(e, e.world.player.global_position - e.global_position), 74.0))
+						AreaGimmicks.hush_ring(e.world, e.global_position + Vector2(0, -2), _hush_gaps(e, Moves.target_of(e, e.world.player) - e.global_position), 74.0))
 				e.later(0.55, func():
-					var a: float = (e.world.player.global_position - e.global_position).angle()
+					var a: float = (Moves.target_of(e, e.world.player) - e.global_position).angle()
 					BossAI._fan(e, hand, a, 3 + e.phase, 0.22, 74.0, "bolt_page"))
 				e.state = "rest"
 				e.t = 1.0
@@ -618,7 +618,7 @@ func area_librarian(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 			if e.t <= 0.0:
 				_book_wall(e, to_p)
 				if e.phase >= 3:
-					e.later(0.75, func(): _book_wall(e, e.world.player.global_position - e.global_position))
+					e.later(0.75, func(): _book_wall(e, Moves.target_of(e, e.world.player) - e.global_position))
 				e.state = "rest"
 				e.t = 0.8
 		"spiral":
@@ -708,7 +708,7 @@ func area_form(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				Audio.play("enemy_shoot", -2.0, 0.05, 1.3)
 				if e.phase >= 2:
 					e.later(0.3, func():
-						var a: float = (e.world.player.global_position - e.global_position).angle()
+						var a: float = (Moves.target_of(e, e.world.player) - e.global_position).angle()
 						BossAI._fan(e, chest, a, 4, 0.2, 92.0, "bolt_pin"))
 				e.state = "rest"
 				e.t = 0.6
@@ -737,7 +737,7 @@ func area_form(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 					e.world.burst(chest, 8, 64.0, "bolt_pin", randf() * TAU)
 				e.mem["dashes"] = int(e.mem.get("dashes", 0)) + 1
 				if e.phase >= 3 and int(e.mem["dashes"]) % 2 == 1:
-					_dash_tell(e, e.world.player.global_position - e.global_position)
+					_dash_tell(e, Moves.target_of(e, e.world.player) - e.global_position)
 				else:
 					e.state = "rest"
 					e.t = 0.8
