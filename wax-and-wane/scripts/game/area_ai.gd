@@ -371,6 +371,15 @@ static func _trunk_crouch(e: Enemy) -> void:
 
 # ================================================================= GUARDIANS
 
+## The phase gate: no burst skips a phase. Damage past the next threshold waits (Enemy._damage's hp_floor, as the
+## Keeper's) until the guardian has turned to that phase; a hair under the line, so the phase always changes.
+static func _phase_gate(e: Enemy) -> void:
+	var thr := 0.66 if e.phase <= 1 else (0.33 if e.phase == 2 else -1.0)
+	if thr > 0.0:
+		e.mem["hp_floor"] = e.max_hp * (thr - 0.002)
+	else:
+		e.mem.erase("hp_floor")
+
 # A ball of broth lobbed in an arc: its landing spot is ringed while it flies; it splashes and (later) scalds.
 class Glob extends Node2D:
 	var world: Node
@@ -420,6 +429,7 @@ static func _lob(e: Enemy, from: Vector2, to: Vector2, dur: float, puddle: bool)
 
 # ---------------------------------------------------------------- THE STOCKPOT (the Kitchen)
 func area_stockpot(e: Enemy, ddt: float, to_p: Vector2, _dist: float) -> void:
+	_phase_gate(e)
 	if e.state == "idle" and BossAI._phase_check(e):
 		return
 	if BossAI._roar(e):
@@ -538,6 +548,7 @@ func _spill(e: Enemy) -> void:
 
 # ---------------------------------------------------------------- THE HEAD LIBRARIAN (the Library)
 func area_librarian(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
+	_phase_gate(e)
 	if e.state == "idle" and BossAI._phase_check(e):
 		return
 	if BossAI._roar(e):
@@ -657,6 +668,7 @@ func _book_wall(e: Enemy, to_p: Vector2) -> void:
 
 # ---------------------------------------------------------------- THE DRESSMAKER'S FORM (the Attic)
 func area_form(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
+	_phase_gate(e)
 	if e.state == "idle" and BossAI._phase_check(e):
 		return
 	if BossAI._roar(e):
