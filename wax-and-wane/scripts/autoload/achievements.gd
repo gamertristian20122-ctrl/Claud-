@@ -77,6 +77,13 @@ const LIST := [
 	{"id": "win_level4", "name": "Dead of Night", "desc": "Win a night on level 4 (Two O'Clock)."},
 	# the Long Night (v2.2 night stream): a night of seven floors or more, won
 	{"id": "small_hours", "name": "The Small Hours", "desc": "Win a night of seven floors or more."},
+	# the diary and its endings (v2.5 story stream, scripts/game/diary.gd unlocks them)
+	{"id": "diary_first", "name": "Dear Diary", "desc": "Find a page of the housekeeper's diary."},
+	{"id": "diary_half", "name": "Half the Story", "desc": "Find 12 diary pages."},
+	{"id": "diary_all", "name": "Every Last Page", "desc": "Find all 24 diary pages."},
+	{"id": "end_housekeeper", "name": "The Housekeeper", "desc": "Win a night with 12 diary pages found."},
+	{"id": "end_windows", "name": "A Candle in Every Window", "desc": "See the ending of a seven-floor night.", "hidden": true},
+	{"id": "end_story", "name": "The Whole Story", "desc": "Still the Keeper of Hours with every diary page found.", "hidden": true},
 ]
 ## Guardians and floors by area (a longer night puts them on other floor numbers).
 const BOSS_IDS := {"cellar": "boss_cellar", "crypt": "boss_crypt", "chapel": "boss_chapel"}
