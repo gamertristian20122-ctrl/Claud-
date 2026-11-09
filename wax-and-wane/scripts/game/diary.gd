@@ -316,7 +316,7 @@ func _free(id: String) -> String:
 
 
 func _drop(id: String, pos: Vector2, pop := Vector2.ZERO, src := "") -> Pickup:
-	var p: Pickup = world.add_pickup("page", pos, id, 0, pop)
+	var p: Pickup = world.add_pickup("page", world.free_spot_near(pos, 5.0), id, 0, pop)   # never inside an urn or a wall
 	if src != "":
 		p.record["src"] = src
 	_out[id] = true

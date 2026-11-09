@@ -106,7 +106,7 @@ the candidates), so the diary reads like a life even when it is found piecemeal.
 1. **My first night**: Martha at fourteen; the house gets up at twelve; Cook hands her a broom.
 2. **The Book of Rounds**: every chore written down; the first line in the clockmaker's hand.
 3. **The house's one rule**: anything done every night for long enough starts to do itself.
-4. **Under the cellar stairs**: Old Rot, the Wax Mother. *(the Cellar)*
+4. **Under the stairs**: Old Rot, the Wax Mother. *(the Cellar)*
 5. **Cook's one law**: the stockpot never goes off the boil. *(the Kitchen)*
 6. **Down in the crypt**: the Gaoler, the Sexton, the Ossuary. *(the Crypt)*
 7. **The merchant**: the Tallow Merchant, whose name is extra.

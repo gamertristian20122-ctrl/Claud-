@@ -66,7 +66,8 @@ hints, the chalk drawings in the first room and the button labels to match.
 | Candle Rites | 6 set bonuses for holding 3 relics of one Rite: Hearth, Clock, Moth, Many Wicks, Household, Seance. Tallow's look changes with each |
 | Candle Box | 6 playable candles with their own clocks and special moves: Tallow (Flare Up); Tea Light (reach the Crypt; Skip); Party Candle (x8 Kindling; Sparkler); Altar Pillar (snuff the Chapel's guardian; Slam); Black Taper (win a run: a short light, but foes out in the dark take 50% more damage, and they flash violet; Snuff); **Moonwick** (still the Keeper of Hours: pale wax, a silver dish, sparks that pierce; Blink) |
 | Run twists | **Kindling**: quick kills chain into a streak that pours minutes back in. **Spilled Wax**: a hit splashes wax out to grab back; once a floor a killing blow leaves you **Guttering** at 1 minute. **Omens** (floors 2-4): Cold Draught, Tallow Moon, Long Night, Smoky Halls. **Hollows**: one secret room a floor behind a cracked, wax-seeping wall. **Smoke Altar** after some guardians (buy strong relics with max minutes) or a free **Vigil** gift when you are struggling. The Tallow Merchant's shop, chests, mimics, bell tolls at 1:00, 1:30 and 1:45 |
-| Journal | From the title and the pause menu, six tabs: Relics (64 + keepsakes + Vigil gifts), Lodgers, Guardians, Rooms (special rooms and champions), Candles, Records (totals, best finishes, Tonight's Candle history, the last 20 runs). Unseen entries are silhouettes; new ones carry a gold dot |
+| Journal | From the title and the pause menu, seven tabs: Relics (64 + keepsakes + Vigil gifts), Lodgers, Guardians, Rooms (special rooms and champions), Candles, Records (totals, best finishes, Tonight's Candle history, the last 20 runs), Diary (Martha's 24 pages in story order). Unseen entries are silhouettes; new ones carry a gold dot |
+| Story | Martha Fenn's diary: 24 torn pages in hollows, on marked foes and champions, in the Study, from guardians' first falls, in the Kitchen, Library and Attic and in the Clock Tower; a reading card when the room is calm; endings The Housekeeper, A Candle in Every Window and The Whole Story beside the true ending (`docs/design/STORY.md`, `docs/streams/v25_story.md`) |
 | Unlocks and achievements | 18 of the new relics and 2 keepsakes move into the house as you earn achievements. 60 achievements (13 hidden; each save slot earns its own), shown as toasts and listed in Settings; Steam (when GodotSteam is present) gets every slot's achievements |
 | Results | A death note (what snuffed you, with its portrait), the run's relics, anything that moved in, and the run's seed to share |
 | Tonight's Candle and seeds | **Tonight's Candle**: one seeded house a night, the same for everyone, scored on your first try. **Seed**: type in a friend's seed on the title keypad. Both use the full relic pool, so a seed is the same run for everyone |
@@ -164,6 +165,10 @@ python3 tools/extract_strings.py [--check | --report | --strict FILES]   # lang/
 godot --headless --path . -- --autotest --nightdump --speed=4 [--floors=N] [--dump=/abs/file.txt]
                           # every floor of 4 seeded nights, a plain one and Tonight's Candle: layouts, guardians, loot,
                           # lodgers, the floor numbers. At 4 floors it must equal docs/streams/v22_night_baseline.txt
+godot --headless --path . -- --autotest --diarycheck                  # v2.5 story: every diary page's sources proven,
+                                                                      #   no repeats, no reading card in a fight (exit 1 on a FAIL)
+godot --headless --path . -- --autotest --ending=<id> [--speed=4] [--shots=/abs/dir]   # stage an ending: true,
+                                                                      #   housekeeper, windows, whole_story
 
 # screenshot tours (look at the pictures!). 1600x720 = a 480x216 phone screen
 xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 \
@@ -181,6 +186,8 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
                               Keys and Controls pages, the Candle Box and the Journal's move line
     ... --tour --night        the Night length picker (Slots, seed keypad), a 7-floor run's HUD next to a 4-floor one,
                               the Kitchen / Library / Attic banners, long-night results and Journal
+    ... --tour --diary        a diary page in a room, its reading card (and the card waiting out a fight), the Diary
+                              tab, every ending's cards, the results line (docs/streams/v25_story.md)
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
     ... --tour --slots        the save slots, the level picker, a level 3 run, Level / Delete / Continue (on a copied 2.0
                               profile it checks the move into Slot 1 record by record)
