@@ -185,6 +185,11 @@ godot --headless --path . -- --autotest --ending=<id> [--speed=4] [--shots=/abs/
 godot --headless --path . -- --autotest --talkcheck                   # v2.7 dialogue: every guardian's scenes, never with
                                                                       #   a live foe, Story scenes, Tonight's Candle, the bot,
                                                                       #   saves, the opening, the endings' beats (exit 1 on a FAIL)
+XDG_DATA_HOME=/tmp/x godot --headless --path . -- --autotest --primercheck [--device=touch|keyboard|gamepad] [--skiponly]
+                          # v2.7 onboarding: a new player's first 3 minutes per device (Light the wick -> first kill,
+                          # every teaching text and its repeats), the controls primer with simulated touch / keys /
+                          # pad input, Skip, returning slots / Tonight's Candle / seeds, the bot (exit 1 on a FAIL)
+    --primer              a --playtest or --tour run gets the controls primer (the bot plays it through)
 
 # screenshot tours (look at the pictures!). 1600x720 = a 480x216 phone screen
 xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 \
@@ -210,6 +215,8 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
                               (--talk=all: every guardian's first two lines and every candle's portrait; --talk=candles: just those)
     ... --tour --feel         v2.6: the pickup magnet mid-sweep, a hit's mark, Aim: Auto, the full map, the pause menu,
                               Restart, the Aim and Pickup magnet rows (docs/streams/v26_feel.md)
+    ... --tour --primer       v2.7: the controls primer's five steps on touch, keys and pad, Swap sticks, Reduce motion,
+                              How to play (pause menu, every reel step, the Journal) (docs/streams/v27_onboarding.md)
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
     ... --tour --slots        the save slots, the level picker, a level 3 run, Level / Delete / Continue (on a copied 2.0
                               profile it checks the move into Slot 1 record by record)

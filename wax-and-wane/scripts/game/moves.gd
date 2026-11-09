@@ -395,10 +395,11 @@ func _physics_process(dt: float) -> void:
 			_end_snuff(true)
 	_watch_black()
 	if not _tipped and float(w.run_time) > 6.0 and w.count_enemies() > 0:
-		# the first fight of a run: a candle's first two runs (per slot) name its move and its key
+		# the first fight of a candle's first run (per slot) names its move and its key; v2.7: once, and never for
+		# the move the controls primer already showed (it spends this tip)
 		_tipped = true
 		var tid := move_id()
-		if tid != "" and enabled and Game.tip("move_" + tid, 2):
+		if tid != "" and enabled and Game.tip("move_" + tid):
 			w.hud.show_hint(Controls.special_hint(tid), 6.0)
 	if p.world and p.world.hud and move_id() == "flare" and ready and p.wax >= FLARE_MIN and w.count_enemies() > 0:
 		w.hud.preview_cost(FLARE_COST)   # the price, marching on the wax bar while Flare Up is ready

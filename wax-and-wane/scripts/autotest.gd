@@ -86,6 +86,8 @@ func _ready() -> void:
 		mode = "tour"   # v2.7 QA: one probe per bug the QA pass fixed (scripts/qa_check.gd)
 	if args.has("talkcheck"):
 		mode = "tour"   # v2.7 dialogue: the talking scenes' judges (scripts/game/talk_tour.gd)
+	if args.has("primercheck"):
+		mode = "tour"   # v2.7 onboarding: a new player's first three minutes (scripts/primer_check.gd)
 	runs_left = int(args.get("runs", "1"))
 	# save slots (v2.1): --slot=N plays in that slot, --difficulty=N (1-4) sets its level first
 	if args.has("slot"):
@@ -135,6 +137,10 @@ func _ready() -> void:
 		await TalkTour.check(self)
 		Audio.stop_all()
 		get_tree().quit(1 if TalkTour.fails > 0 else 0)
+	elif args.has("primercheck"):   # v2.7 onboarding judge: time to the first kill, teaching texts, the primer
+		await PrimerCheck.check(self)
+		Audio.stop_all()
+		get_tree().quit(1 if PrimerCheck.fails > 0 else 0)
 	elif args.has("ending"):   # v2.5 story: --ending=<id> stages that ending (cards, credits, results)
 		await DiaryTour.stage_ending(self, str(args["ending"]))
 		Audio.stop_all()
@@ -357,6 +363,9 @@ func drive(w: Node) -> Array:
 		return td
 	if (mode == "tour" or mode == "audiotest" or mode == "designcheck" or mode == "movescheck" or mode == "feelcheck") and not args.has("drive"):
 		return []
+	var pd := Primer.bot_drive(w)   # v2.7: a run with the controls primer (--primer): the bot plays it through
+	if not pd.is_empty():
+		return pd
 	if args.has("herosheet"):
 		return [Vector2.ZERO, Vector2.ZERO]   # the in-game hero shot: stand still
 	var p: Player = w.player
@@ -785,6 +794,12 @@ func _tour() -> void:
 	if args.has("gallery") or args.has("bosses"):
 		await _wait(1.0)
 		await BestiaryGallery.tour(self)
+		get_tree().quit()
+		return
+	if args.has("primer"):   # v2.7: the controls primer, each step on touch / keys / pad (scripts/primer_check.gd)
+		await _wait(0.5)
+		await PrimerCheck.tour(self)
+		Audio.stop_all()
 		get_tree().quit()
 		return
 	if args.has("gui"):   # v2.6: every screen the UI kit dresses (scripts/ui/gui_tour.gd)

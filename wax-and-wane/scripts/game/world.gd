@@ -156,6 +156,7 @@ func setup(params: Dictionary) -> void:
 	rng.seed = run_seed
 	# a typed-in seed: fixed relic pool and guardians (Unlocks.fixed). A continued run says what it was.
 	set_meta("seeded", bool(params["seeded"]) if params.has("seeded") else (params.has("seed") and not daily))
+	set_meta("opened", bool(params.get("opened", false)))   # v2.7: this run follows the story's opening (opening.gd)
 	# Tonight's Candle belongs to the night it was lit, even if it ends after midnight (QA-15)
 	daily_date = str(params.get("date", "")) if daily else ""
 	if daily and daily_date == "":
@@ -210,8 +211,14 @@ func _ready() -> void:
 	Game.light_slot()   # an empty save slot gets its file with the first candle lit in it
 	Game.save()
 	_start_floor(RunSave.begin(self))   # floor 1, or the saved floor when continuing
+	Primer.maybe_start(self)   # v2.7: a slot's first run is shown the controls first (scripts/ui/primer.gd)
 	if not Game.records["seen_intro"] and main.autotest == null:
-		_intro()
+		if bool(get_meta("opened", false)) and Primer.active(self):
+			# v2.7: the opening just told the story and the primer shows the rules: the 12:00 AM card would say it twice
+			Game.records["seen_intro"] = true
+			Game.save()
+		else:
+			_intro()
 
 
 func _on_unlock(key: String) -> void:
@@ -236,15 +243,13 @@ func _intro() -> void:
 	_intro_root = root
 	root.process_mode = Node.PROCESS_MODE_ALWAYS
 	var v: VBoxContainer = m[1]
+	# v2.7: with the controls primer on (scripts/ui/primer.gd) the card is the story alone: the primer shows the rules
+	var rules := [] if Primer.active(self) else ["", "Your wax is your life - and your time.",
+			"Every hit melts you. Wax drippings mend you.", "", Controls.intro_line()]
 	for line in ["The old house wakes when the clock strikes twelve.",
 			"You are Tallow, the last candle in the cellar.",
 			"Burn down through %s floors to the belfry" % Records.number_word(night_floors),
-			"and still the clock %s." % Records.night_end_phrase(night_floors),
-			"",
-			"Your wax is your life - and your time.",
-			"Every hit melts you. Wax drippings mend you.",
-			"",
-			Controls.intro_line()]:
+			"and still the clock %s." % Records.night_end_phrase(night_floors)] + rules:
 		v.add_child(UI.label(line, 8, UI.CREAM if line != "" else UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	v.add_child(UI.button("Begin", func():   # UX-07: not the title button's name, and it waits 0.8 s
 		Game.records["seen_intro"] = true
@@ -252,7 +257,8 @@ func _intro() -> void:
 		root.queue_free()
 		paused = false
 		get_tree().paused = false
-		hud.show_hint(Controls.controls_hint(false), 8.0), 120))
+		if not Primer.active(self) and Game.tip("controls"):   # v2.7: the controls line once per slot (the primer shows them)
+			hud.show_hint(Controls.controls_hint(false), 8.0), 120))
 	UI.hold_presses(v.get_child(v.get_child_count() - 1), 0.8)
 
 
@@ -429,11 +435,12 @@ func _start_floor(n: int) -> void:
 	hud.show_banner(fdef(n)["name"].to_upper(), "Floor %d of %d   -   %s%s" % [n, last_floor(), Game.clock_text(clock_minutes()), omen_txt], 2.6)
 	if steady > 0.0 and Game.tip("steady", 1):
 		hud.show_hint("A new floor steadies a low wick: +%d min" % int(steady), 4.0)
-	elif omen != "":
+	elif omen != "" and Game.tip("omen_" + omen):   # v2.7: each omen explained once per slot (the banner names it)
 		hud.show_hint("%s: %s" % [OMENS[omen]["name"], OMENS[omen]["desc"]], 5.0)
 	elif n >= 2 and n <= last_floor() and floor_k(FLOOR_DRAIN) > 1.0 and Game.tip("night_speeds", 1):   # say it once (FLOOR_DRAIN)
 		hud.show_hint("The night speeds up: up here your wick burns faster", 4.0)
-	if n == 1 and (Game.records["seen_intro"] or main.autotest != null) and int(Game.records["runs"]) <= 3:   # later: the chalk on the floor
+	if n == 1 and (Game.records["seen_intro"] or main.autotest != null) and int(Game.records["runs"]) <= 3 \
+			and not Primer.would_run(self) and Game.tip("controls"):   # v2.7: once per slot, never over the primer
 		hud.show_hint(Controls.controls_hint(), 7.0)
 	Tower.on_floor_start(self)   # the Clock Tower's own banner on the floor above the last
 	Diary.on_floor_start(self)   # v2.5: where this floor keeps its diary pages (scripts/game/diary.gd)
@@ -499,7 +506,8 @@ func _on_enter_room() -> void:
 					b = add_pickup("relic", room.center() + Vector2(26, 2), _next_relic())
 				a.record["group"] = "treasure"
 				b.record["group"] = "treasure"
-				hud.show_hint("Choose one relic. The other will crumble.", 3.0)
+				if Game.tip("treasure"):   # v2.7: once per slot (it was every treasure room)
+					hud.show_hint("Choose one relic. The other will crumble.", 3.0)
 		"shop":
 			if not d.get("stocked", false):
 				d["stocked"] = true
@@ -1199,7 +1207,8 @@ func charge_keepsake(n: int) -> void:
 	player.charge = mini(player.charge + n, full)
 	if not was_full and player.charge >= full:
 		Audio.play("tick", 0.0, 0.0, 1.8)
-		hud.show_hint("%s is ready" % Items.display_name(player.keepsake), 1.6)
+		if Game.tip("keepsake_ready"):   # v2.7: once per slot; then the lit button and the tick say it
+			hud.show_hint("%s is ready" % Items.display_name(player.keepsake), 1.6)
 
 
 func on_keepsake_taken(id: String, pos: Vector2, rec: Dictionary) -> void:
