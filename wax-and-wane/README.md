@@ -20,7 +20,8 @@ hints, the chalk drawings in the first room and the button labels to match.
 | Move | left thumb (floating stick) | W A S D | left stick or d-pad |
 | Shoot | right thumb, in that direction (hold to keep firing) | arrow keys, or hold the left mouse button to fire at the cursor | right stick, or Y / A / X / B for up / down / left / right |
 | Bomb | bomb button (right edge) | E or Space, right mouse button | RB or RT |
-| Keepsake (when its pips are full) | keepsake button (above the bomb) | Q or Shift, middle mouse button | LB or LT |
+| Keepsake (when its pips are full) | keepsake button (above the bomb) | Q, middle mouse button | LB |
+| Special move (v2.3, every candle has its own) | the big round button (under the bomb) | Left Shift or F, a mouse thumb button | LT |
 | Pause | II (top right) or Android Back | Esc or P | Start or Back |
 | Menus | tap; swipe the Journal grid to turn pages | arrows / WASD, Enter or Space, Esc back, Q / E switch pages | d-pad / left stick, A, B back, LB / RB switch pages |
 | Fullscreen | | F11 or Alt+Enter | |
@@ -33,9 +34,17 @@ hints, the chalk drawings in the first room and the button labels to match.
   then pick a level. A used slot: *Continue* (its saved run), *Play*, *Level* (change it between runs; a
   saved run keeps its own level) and *Delete* (asks twice). Tonight's Candle always plays level 2.
   A 2.0 save becomes Slot 1 at level 2 (level 1 if Gentle burn was on); `save_2.0.cfg` keeps the old file.
-- **Settings** (title or pause menu, shared by all slots), two pages: *Game* (music, sound, screen shake, vibration,
-  effects, FPS counter, fullscreen on desktop) and *Controls* (touch sticks AUTO / ON / OFF, swap
-  sticks, aim assist, mouse aim on desktop, the key list). Vibration also rumbles a gamepad.
+- **Settings** (title or pause menu, shared by all slots), three pages: *Game* (music, sound, screen shake, vibration,
+  effects, FPS counter, fullscreen on desktop), *Controls* (touch sticks AUTO / ON / OFF, swap
+  sticks, aim assist, mouse aim on desktop, the key list) and *Keys* (move the special move, the bomb and the
+  keepsake to another key or pad button; Reset puts them back). Vibration also rumbles a gamepad.
+- **Special moves** (v2.3): each candle has one move on a cooldown. Tallow **Flare Up** (burn 2 minutes of wax
+  for 3 s of fire: x1.5 sparks that set foes alight, a ring of heat; refused below 5 minutes), Tea Light
+  **Skip** (a 48 px dash, untouchable for 0.3 s), Party Candle **Sparkler** (12 sparks all round that pop
+  enemy shots), Altar Pillar **Slam** (a wind-up, then a shockwave that stuns lodgers and slows guardians),
+  Moonwick **Blink** (56 px past pits, spikes, cobwebs, hearths and single tiles of rubble), Black Taper
+  **Snuff** (2 s dark: lodgers lose track; then a black flame, x3 and piercing). The HUD button shows the
+  recharge as a ring of 12 steps and flashes when the move is back.
 - **Save & Continue**: the run is saved at the start of every floor (and when the app is paused or the
   window closes). Pause > *Save & quit*, then *Continue* on the title (the slot played last, its floor and clock)
   or on its slot card.
@@ -55,10 +64,10 @@ hints, the chalk drawings in the first room and the button labels to match.
 | Tonics | 8 unlabelled flasks. Each run they hide 8 of 13 draughts (5 good, 2 bad, 1 odd); you learn one by drinking it. Big flasks are 1.8x stronger, for better or worse |
 | Keepsakes | 8, one held at a time, charged by clearing rooms: Hand Bell (freeze), Flare Match (ember ring), Winding Key (+10 min), Smoke Jar (untouchable), Censer (poison), Oil Jug (burning pool), Music Box (charm), Hand Mirror (shots turn back) |
 | Candle Rites | 6 set bonuses for holding 3 relics of one Rite: Hearth, Clock, Moth, Many Wicks, Household, Seance. Tallow's look changes with each |
-| Candle Box | 6 playable candles with their own clocks: Tallow; Tea Light (reach the Crypt); Party Candle (x8 Kindling); Altar Pillar (snuff the Chapel's guardian); Black Taper (win a run: a short light, but foes out in the dark take 50% more damage, and they flash violet); **Moonwick** (still the Keeper of Hours: pale wax, a silver dish, sparks that pierce) |
+| Candle Box | 6 playable candles with their own clocks and special moves: Tallow (Flare Up); Tea Light (reach the Crypt; Skip); Party Candle (x8 Kindling; Sparkler); Altar Pillar (snuff the Chapel's guardian; Slam); Black Taper (win a run: a short light, but foes out in the dark take 50% more damage, and they flash violet; Snuff); **Moonwick** (still the Keeper of Hours: pale wax, a silver dish, sparks that pierce; Blink) |
 | Run twists | **Kindling**: quick kills chain into a streak that pours minutes back in. **Spilled Wax**: a hit splashes wax out to grab back; once a floor a killing blow leaves you **Guttering** at 1 minute. **Omens** (floors 2-4): Cold Draught, Tallow Moon, Long Night, Smoky Halls. **Hollows**: one secret room a floor behind a cracked, wax-seeping wall. **Smoke Altar** after some guardians (buy strong relics with max minutes) or a free **Vigil** gift when you are struggling. The Tallow Merchant's shop, chests, mimics, bell tolls at 1:00, 1:30 and 1:45 |
 | Journal | From the title and the pause menu, six tabs: Relics (64 + keepsakes + Vigil gifts), Lodgers, Guardians, Rooms (special rooms and champions), Candles, Records (totals, best finishes, Tonight's Candle history, the last 20 runs). Unseen entries are silhouettes; new ones carry a gold dot |
-| Unlocks and achievements | 18 of the new relics and 2 keepsakes move into the house as you earn achievements. 54 achievements (13 hidden; each save slot earns its own), shown as toasts and listed in Settings; Steam (when GodotSteam is present) gets every slot's achievements |
+| Unlocks and achievements | 18 of the new relics and 2 keepsakes move into the house as you earn achievements. 60 achievements (13 hidden; each save slot earns its own), shown as toasts and listed in Settings; Steam (when GodotSteam is present) gets every slot's achievements |
 | Results | A death note (what snuffed you, with its portrait), the run's relics, anything that moved in, and the run's seed to share |
 | Tonight's Candle and seeds | **Tonight's Candle**: one seeded house a night, the same for everyone, scored on your first try. **Seed**: type in a friend's seed on the title keypad. Both use the full relic pool, so a seed is the same run for everyone |
 | True ending | After a first win, beat the Belfry's guardian by 1:00 AM (as the clock shows it), climb the ladder of light (+5 min), cross the Clock Tower and still the Keeper of Hours: four ending scenes, a credits roll and a results screen marked TRUE ENDING |
@@ -143,10 +152,14 @@ godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
     --area=kitchen|library|attic|chapel [--areadepth=N] [--areaboss2]   start on a Long Night area (floor 3, a kit); one [area] line per run
     --nospecials          no special rooms or champions (balance baseline)
     --nocard              skip the boss versus card
+    --nomoves             no special moves (v2.3 balance: the same candle with and without its move)
     --boss=<kind>         straight into one guardian's fight with its floor's fixed kit, a line per fight
                           (time to kill, hits; the v2.1 balance check against its floor-mates)
     --device=touch|keyboard|mouse|gamepad,  --touchmouse   input to show / emulate
 godot --headless --path . -- --autotest --bench [--secs=6] [--seed=N] [--ablate]   # CPU per frame, lights, leaks
+godot --headless --path . -- --autotest --movescheck                  # v2.3 special moves: every move's numbers, the
+                                                                      #   key / touch -> move frame timing, rebinding (exit 1 on a FAIL)
+python3 tools/extract_strings.py [--check | --report | --strict FILES]   # lang/en.json from L.t(...) + the data tables
 
 # screenshot tours (look at the pictures!). 1600x720 = a 480x216 phone screen
 xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 \
@@ -160,6 +173,8 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
     ... --tour --journal      every Journal tab, death note, seed keypad, credits, chalk start room
     ... --tour --tower        ladder, Clock Tower, the Keeper's phases, the four ending scenes, TRUE ENDING
     ... --tour --areas        the Long Night's new areas: rooms, gimmicks, lodgers, guardian cards and fights
+    ... --tour --moves        each candle's special move mid-action, the move button (touch, keys, pad, swapped), the
+                              Keys and Controls pages, the Candle Box and the Journal's move line
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
     ... --tour --slots        the save slots, the level picker, a level 3 run, Level / Delete / Continue (on a copied 2.0
                               profile it checks the move into Slot 1 record by record)

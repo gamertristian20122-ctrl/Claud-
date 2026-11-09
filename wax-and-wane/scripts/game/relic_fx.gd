@@ -737,6 +737,23 @@ func _hurt() -> bool:
 	return false
 
 
+## v2.3: the candle used its special move (Moves.use; `id` is a key of Moves.LIST). The hook for
+## move synergies. Two to start: the Jet Brooch charges two strong shots, and a Glass Chimney that
+## is regrowing comes back 4 s sooner.
+static func on_move(pl: Player, id: String) -> void:
+	var fx := _inst()
+	if fx == null or fx.p != pl:
+		return
+	fx._moved(id)
+
+
+func _moved(_id: String) -> void:
+	if has.has("jet_brooch"):
+		brooch = maxi(brooch, 2)
+	if has.has("glass_chimney") and not chimney_ready:
+		chimney_t = maxf(0.0, chimney_t - 4.0)
+
+
 func _tick_defence(dt: float) -> void:
 	if has.has("glass_chimney") and not chimney_ready:
 		chimney_t -= dt

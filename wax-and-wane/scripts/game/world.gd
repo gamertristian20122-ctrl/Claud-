@@ -947,6 +947,7 @@ func shoot_player(pos: Vector2, dir: Vector2, p: Player, dmg: float) -> void:
 	s.knock = p.knockback
 	s.radius = 3.0 * p.shot_scale
 	RelicFx.on_shot_made(s, p)
+	Moves.on_shot_made(s, p)   # v2.3: Flare Up's fire, the Black Taper's black flame
 	fx_layer.add_child(s)
 
 

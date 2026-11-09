@@ -11,13 +11,16 @@ achievements (local now, Steam later); Windows and Linux builds. Everything belo
 | move | WASD | | left stick, d-pad |
 | shoot | arrow keys | hold left button: fire at the cursor (Settings > Controls > Mouse aim) | right stick, or Y / A / X / B for up / down / left / right |
 | bomb | E, Space | right button | RB, RT |
-| keepsake | Q, Shift | middle button | LB, LT |
+| keepsake | Q | middle button | LB |
+| special (v2.3, the candle's move) | Left Shift, F | thumb buttons (XBUTTON1 / 2) | LT |
 | pause | Esc, P | the II button | Start, Back |
 | menus | arrows / WASD, Enter / Space, Esc back, Q / E switch pages | click | d-pad / left stick, A, B back, LB / RB switch pages |
 | fullscreen | F11, Alt+Enter | | |
 
-- Actions live in the InputMap (`move_*`, `shoot_*`, `bomb`, `keepsake`, `pause`, `ui_page_prev/next`,
-  plus extra events on the built-in `ui_*`). Movement uses physical keys, so AZERTY works.
+- Actions live in the InputMap (`move_*`, `shoot_*`, `bomb`, `keepsake`, `special`, `pause`, `ui_page_prev/next`,
+  plus extra events on the built-in `ui_*`). v2.3: `special`, `bomb` and `keepsake` can be rebound (Settings >
+  Keys; `Controls.rebind(action, event)`, `reset_binds()`, `bound_glyph(action, pad)`, saved in
+  `Game.settings["binds"]`; a key another action uses is refused). Movement uses physical keys, so AZERTY works.
 - Deadzones: move 0.22 (circular), aim 0.35 (the right stick fires in its direction once pushed past it).
 - **Input flow:** `Hud._physics_process` (runs before the world, `process_physics_priority = -10`) sets
   `hud.move_vec` / `hud.aim_vec`: touch sticks first, then `Controls.move_vector()` / `aim_vector()`,
@@ -143,6 +146,12 @@ Steamworks with **exactly these API names**:
 | candle_box | Full Candle Box | Unlock every candle. | |
 | win_level3 | Spellbound | Win a night on level 3 (Witching Hour) or higher. | |
 | win_level4 | Dead of Night | Win a night on level 4 (Two O'Clock). | |
+| move_skip | Close Shave | Skip right through an enemy shot. | |
+| move_sparkler | Party Popper | Pop 3 enemy shots with one Sparkler. | |
+| move_slam | Pillar Drop | Stun 3 lodgers with one Slam. | |
+| move_blink | Moon Hop | Blink over 3 pits in one room. | |
+| move_flare | Burning Bright | Snuff 3 creatures during one Flare Up. | |
+| move_snuff | Through and Through | Run one black flame through 3 foes. | |
 
 Bosses are matched by floor, not by boss kind, so a new boss line-up (bestiary stream) keeps working.
 The medal icons (`icon_medal.png` / `icon_medal_off.png`) are 9x9; Steam needs 64x64 JPG/PNG icons per

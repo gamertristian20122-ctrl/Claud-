@@ -103,8 +103,12 @@ func _setup_actions() -> void:
 	_add("shoot_down", [_key(KEY_DOWN), _axis(JOY_AXIS_RIGHT_Y, 1.0), _btn(JOY_BUTTON_A)], 0.3)
 	_add("bomb", [_key(KEY_E), _key(KEY_SPACE), _btn(JOY_BUTTON_RIGHT_SHOULDER),
 		_axis(JOY_AXIS_TRIGGER_RIGHT, 1.0), _mouse(MOUSE_BUTTON_RIGHT)], TRIGGER_PRESS)
-	_add("keepsake", [_key(KEY_Q), _key(KEY_SHIFT), _btn(JOY_BUTTON_LEFT_SHOULDER),
-		_axis(JOY_AXIS_TRIGGER_LEFT, 1.0), _mouse(MOUSE_BUTTON_MIDDLE)], TRIGGER_PRESS)
+	_add("keepsake", [_key(KEY_Q), _btn(JOY_BUTTON_LEFT_SHOULDER), _mouse(MOUSE_BUTTON_MIDDLE)], TRIGGER_PRESS)
+	# v2.3: the candle's special move (Moves): Left Shift or F, a mouse thumb button, LT
+	var lshift := _key(KEY_SHIFT)
+	lshift.location = KEY_LOCATION_LEFT
+	_add("special", [lshift, _key(KEY_F), _axis(JOY_AXIS_TRIGGER_LEFT, 1.0),
+		_mouse(MOUSE_BUTTON_XBUTTON1), _mouse(MOUSE_BUTTON_XBUTTON2)], TRIGGER_PRESS)
 	_add("pause", [_key(KEY_ESCAPE), _key(KEY_P), _btn(JOY_BUTTON_START), _btn(JOY_BUTTON_BACK)])
 	# menus: WASD and the d-pad navigate too (the left stick is read in _menu_stick, with a
 	# repeat delay, so one flick moves one step); B / Esc go back
@@ -116,6 +120,9 @@ func _setup_actions() -> void:
 	_add("ui_cancel", [_btn(JOY_BUTTON_B)])
 	_add("ui_page_prev", [_btn(JOY_BUTTON_LEFT_SHOULDER), _key(KEY_Q), _key(KEY_PAGEUP)])
 	_add("ui_page_next", [_btn(JOY_BUTTON_RIGHT_SHOULDER), _key(KEY_E), _key(KEY_PAGEDOWN)])
+	for a in BINDABLE:
+		_defaults[a] = InputMap.action_get_events(a).map(func(e): return e.duplicate())
+	apply_binds()
 
 
 ## WASD / left stick / d-pad, circular deadzone, length <= 1.
@@ -252,8 +259,9 @@ func touch_visible() -> bool:
 func glyph(action: String) -> String:
 	var pad := device == PAD
 	match action:
-		"bomb": return "RB" if pad else ("E" if device != TOUCH else "BOMB")
-		"keepsake": return "LB" if pad else "Q"
+		"bomb": return bound_glyph("bomb", pad) if pad or device != TOUCH else "BOMB"
+		"keepsake": return bound_glyph("keepsake", pad)
+		"special": return bound_glyph("special", pad) if pad or device != TOUCH else L.t("SPECIAL")
 		"pause": return "START" if pad else "ESC"
 		"move": return "Left stick" if pad else ("WASD" if device != TOUCH else thumb(false))
 		"aim":
@@ -280,9 +288,141 @@ func controls_hint(with_wax := true) -> String:
 	var t := ""
 	match device:
 		TOUCH: t = "%s: move   %s: aim + shoot   Bomb: %s button" % [thumb(false), thumb(true), button_side()]
-		PAD: t = "Left stick: move    Right stick: shoot    RB: bomb"
-		_: t = "WASD: move    %s: shoot    E: bomb" % glyph("aim")
+		PAD: t = "Left stick: move    Right stick: shoot    %s: bomb" % glyph("bomb")
+		_: t = "WASD: move    %s: shoot    %s: bomb" % [glyph("aim"), glyph("bomb")]
+	if device != TOUCH and not with_wax:   # v2.3: the long first-run line names the special move too
+		t += "    " + L.t("{key}: {move}", {"key": glyph("special"), "move": _move_word()})
 	return t + ("    Wax = health = time" if with_wax else "")
+
+
+## v2.3: one line on the candle's special move (the first rooms of a candle's first runs, Moves).
+func special_hint(move_id: String) -> String:
+	if not Moves.LIST.has(move_id):
+		return ""
+	# one line under 80 characters (the hint is one line across the bottom of the screen)
+	if device == TOUCH:
+		return L.t("Big round button: {move}. {line}", {"move": Moves.name_of(move_id), "line": Moves.line_of(move_id)})
+	return L.t("{key}: {move}. {line}", {"move": Moves.name_of(move_id), "key": glyph("special"), "line": Moves.line_of(move_id)})
+
+
+## The candle's move in the run on screen ("special" on the title and elsewhere).
+func _move_word() -> String:
+	var cur := _screen()
+	var p: Variant = cur.get("player") if cur else null
+	if p != null and is_instance_valid(p):
+		var id := Moves.for_candle(str(p.candle_id))
+		if id != "":
+			return Moves.name_of(id)
+	return L.t("special")
+
+
+# ---------------------------------------------------------------- rebinding (v2.3, Settings > Keys)
+
+## The button actions a player may move to another key or pad button (Settings > Keys). Their
+## defaults are kept; Game.settings["binds"] = {action: {"key": physical keycode, "loc": location,
+## "pad": "b<button>" | "a<axis>"}} replaces the keyboard keys / the pad input of that action.
+const BINDABLE := ["special", "bomb", "keepsake"]
+const PAD_NAMES := {JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y",
+	JOY_BUTTON_BACK: "BACK", JOY_BUTTON_START: "START", JOY_BUTTON_LEFT_STICK: "L3",
+	JOY_BUTTON_RIGHT_STICK: "R3", JOY_BUTTON_LEFT_SHOULDER: "LB", JOY_BUTTON_RIGHT_SHOULDER: "RB",
+	JOY_BUTTON_DPAD_UP: "UP", JOY_BUTTON_DPAD_DOWN: "DOWN", JOY_BUTTON_DPAD_LEFT: "LEFT",
+	JOY_BUTTON_DPAD_RIGHT: "RIGHT"}
+var _defaults := {}
+
+
+## Put every bindable action back to its defaults, then lay the saved binds over them.
+func apply_binds() -> void:
+	var binds: Dictionary = Game.settings.get("binds", {})
+	for a in BINDABLE:
+		if not _defaults.has(a):
+			continue
+		InputMap.action_erase_events(a)
+		var b: Dictionary = binds.get(a, {})
+		for e in _defaults[a]:
+			if b.has("key") and e is InputEventKey:
+				continue
+			if b.has("pad") and (e is InputEventJoypadButton or e is InputEventJoypadMotion):
+				continue
+			InputMap.action_add_event(a, e)
+		if b.has("key"):
+			var k := _key(int(b["key"]) as Key)
+			k.location = int(b.get("loc", KEY_LOCATION_UNSPECIFIED)) as KeyLocation
+			InputMap.action_add_event(a, k)
+		if b.has("pad"):
+			var pv := str(b["pad"])
+			if pv.begins_with("a"):
+				InputMap.action_add_event(a, _axis(int(pv.substr(1)) as JoyAxis, 1.0))
+			else:
+				InputMap.action_add_event(a, _btn(int(pv.substr(1)) as JoyButton))
+
+
+## Bind `action` to the key / pad input in `event` (Settings > Keys). Returns "" when done, else
+## the action that already uses it (nothing changes then).
+func rebind(action: String, event: InputEvent) -> String:
+	var binds: Dictionary = (Game.settings.get("binds", {}) as Dictionary).duplicate(true)
+	var b: Dictionary = binds.get(action, {})
+	for other in InputMap.get_actions():
+		if other == action or str(other).begins_with("ui_"):
+			continue
+		for e in InputMap.action_get_events(other):
+			if _same_input(e, event):
+				return str(other)
+	if event is InputEventKey:
+		b["key"] = int((event as InputEventKey).physical_keycode)
+		b["loc"] = int((event as InputEventKey).location)
+	elif event is InputEventJoypadButton:
+		b["pad"] = "b%d" % int((event as InputEventJoypadButton).button_index)
+	elif event is InputEventJoypadMotion:
+		b["pad"] = "a%d" % int((event as InputEventJoypadMotion).axis)
+	else:
+		return action
+	binds[action] = b
+	Game.set_setting("binds", binds)
+	apply_binds()
+	return ""
+
+
+## The same key (by physical key; Left / Right only when both say), pad button or pad axis.
+## Modifier flags are ignored: pressing Shift reports itself as held, the map's Shift does not.
+static func _same_input(a: InputEvent, b: InputEvent) -> bool:
+	if a is InputEventKey and b is InputEventKey:
+		var ka := a as InputEventKey
+		var kb := b as InputEventKey
+		var ca := ka.physical_keycode if ka.physical_keycode != KEY_NONE else ka.keycode
+		var cb := kb.physical_keycode if kb.physical_keycode != KEY_NONE else kb.keycode
+		if ca != cb:
+			return false
+		return ka.location == KEY_LOCATION_UNSPECIFIED or kb.location == KEY_LOCATION_UNSPECIFIED or ka.location == kb.location
+	if a is InputEventJoypadButton and b is InputEventJoypadButton:
+		return (a as InputEventJoypadButton).button_index == (b as InputEventJoypadButton).button_index
+	if a is InputEventJoypadMotion and b is InputEventJoypadMotion:
+		return (a as InputEventJoypadMotion).axis == (b as InputEventJoypadMotion).axis \
+			and signf((a as InputEventJoypadMotion).axis_value) == signf((b as InputEventJoypadMotion).axis_value)
+	return false
+
+
+func reset_binds() -> void:
+	Game.set_setting("binds", {})
+	apply_binds()
+
+
+## The key (keyboard) or button (pad) bound to `action` now, as a short label: "SHIFT", "E", "LT".
+func bound_glyph(action: String, pad: bool) -> String:
+	for e in InputMap.action_get_events(action):
+		if pad and e is InputEventJoypadButton:
+			return PAD_NAMES.get((e as InputEventJoypadButton).button_index, "B%d" % (e as InputEventJoypadButton).button_index)
+		if pad and e is InputEventJoypadMotion:
+			match (e as InputEventJoypadMotion).axis:
+				JOY_AXIS_TRIGGER_LEFT: return "LT"
+				JOY_AXIS_TRIGGER_RIGHT: return "RT"
+			return "AXIS %d" % (e as InputEventJoypadMotion).axis
+		if not pad and e is InputEventKey:
+			var k := e as InputEventKey
+			var code := k.physical_keycode if k.physical_keycode != KEY_NONE else k.keycode
+			if not _headless and k.physical_keycode != KEY_NONE:
+				code = DisplayServer.keyboard_get_keycode_from_physical(k.physical_keycode)
+			return OS.get_keycode_string(code).to_upper()
+	return "-"
 
 
 func intro_line() -> String:

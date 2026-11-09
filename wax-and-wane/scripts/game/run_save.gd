@@ -20,7 +20,7 @@ extends Node
 const FORMAT := 1
 ## Player variables that are moment-to-moment state, not stats.
 const SKIP_PLAYER := ["world", "vel", "move_input", "aim_input", "facing", "fire_cd", "invuln", "dead",
-	"frozen", "face_state", "chill_t"]
+	"frozen", "face_state", "chill_t", "move_cd"]
 ## World variables a run carries from floor to floor.
 const WORLD_KEYS := ["kills", "rooms_cleared", "run_time", "best_streak", "hits_total", "boss_hits", "pact",
 	"declined_smoke", "altar_floor", "bomb_radius", "unlocked_this_run", "relic_pool", "_bells", "_bell_paid"]

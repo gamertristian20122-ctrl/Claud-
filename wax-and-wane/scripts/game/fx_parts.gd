@@ -21,6 +21,10 @@ const RAMPS := [
 	[Color("#cae6f5"), Color("#72d6ce"), Color("#5698cc"), Color("#5956bd")],
 	# 7 cold mote (dust in the light)
 	[Color("#fdf7ed"), Color("#d3bfa9"), Color("#aa8d7a")],
+	# 8 moon (Moonwick's Blink, scripts/game/moves.gd): cream -> pale blue -> grey-blue -> pewter
+	[Color("#fdf7ed"), Color("#cae6f5"), Color("#b6cbcf"), Color("#7b8994")],
+	# 9 void (the Black Taper's black flame): pale core -> violet -> plum -> ink
+	[Color("#cae6f5"), Color("#5956bd"), Color("#5f2d56"), Color("#2a2a3a")],
 ]
 const SPARK := 0
 const EMBER := 1
@@ -29,6 +33,8 @@ const SMOKE := 3
 const WAX := 4
 const GOLD := 5
 const BLUE := 6
+const MOON := 8
+const VOID := 9
 
 var cap := 200
 var pos := PackedVector2Array()

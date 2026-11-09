@@ -44,6 +44,13 @@ const LIST := [
 	{"id": "guttering", "name": "Clinging On", "desc": "Live through a Guttering."},
 	{"id": "two_oclock", "name": "Two O'Clock", "desc": "Melt all the way down to 2:00 AM.", "hidden": true},
 	{"id": "candle_box", "name": "Full Candle Box", "desc": "Unlock every candle."},
+	# special moves (v2.3, scripts/game/moves.gd unlocks them): one feat per candle's move
+	{"id": "move_skip", "name": "Close Shave", "desc": "Skip right through an enemy shot."},
+	{"id": "move_sparkler", "name": "Party Popper", "desc": "Pop 3 enemy shots with one Sparkler."},
+	{"id": "move_slam", "name": "Pillar Drop", "desc": "Stun 3 lodgers with one Slam."},
+	{"id": "move_blink", "name": "Moon Hop", "desc": "Blink over 3 pits in one room."},
+	{"id": "move_flare", "name": "Burning Bright", "desc": "Snuff 3 creatures during one Flare Up."},
+	{"id": "move_snuff", "name": "Through and Through", "desc": "Run one black flame through 3 foes."},
 	# special rooms and mini-bosses (specials stream)
 	{"id": "seance", "name": "Spirits Answered", "desc": "Ring the Seance bell and see it through."},
 	{"id": "mirror_deal", "name": "Looking Glass", "desc": "Strike a bargain with the Cracked Mirror."},

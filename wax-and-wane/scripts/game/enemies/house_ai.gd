@@ -120,7 +120,7 @@ func blinker(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 		"fade":
 			e.spr.modulate.a = clampf(e.t / 0.3, 0.0, 1.0)
 			if e.t <= 0:
-				e.global_position = e.free_spot(e.world.player.global_position, 56.0, 120.0)
+				e.global_position = e.free_spot(Moves.target_of(e, e.world.player), 56.0, 120.0)
 				e.state = "appear"
 				e.t = 0.3
 				Audio.play("teleport", -10.0, 0.1, 1.5)
@@ -281,7 +281,7 @@ func bouncer(e: Enemy, ddt: float, _to_p: Vector2, _dist: float) -> void:
 		Audio.play("tick", -10.0, 0.1, 1.5)
 		# every few rebounds it turns its head toward the light
 		if e._pattern % 4 == 0:
-			var to: Vector2 = e.world.player.global_position - gp
+			var to: Vector2 = Moves.target_of(e, e.world.player) - gp
 			e.dir = Vector2(signf(to.x) if absf(to.x) > 4 else e.dir.x, signf(to.y) if absf(to.y) > 4 else e.dir.y).normalized()
 		if e.room_stuck():
 			e.global_position = e.world.free_spot_near(gp, e.radius)

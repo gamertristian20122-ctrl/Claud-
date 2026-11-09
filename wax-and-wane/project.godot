@@ -23,6 +23,7 @@ buses/default_bus_layout="res://default_bus_layout.tres"
 
 [autoload]
 
+L="*res://scripts/autoload/i18n.gd"
 Game="*res://scripts/autoload/game.gd"
 Audio="*res://scripts/autoload/audio.gd"
 Art="*res://scripts/autoload/art.gd"

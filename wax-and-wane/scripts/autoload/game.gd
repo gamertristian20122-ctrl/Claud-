@@ -42,6 +42,7 @@ var settings := {
 	"touch_controls": "auto",   # auto (shown after a touch) / on / off
 	"effects": "full",          # full / lite (lite: no heat haze, shockwaves or low-wax vignette)
 	"shot_size": "large" if OS.has_feature("mobile") else "normal",   # enemy shots: normal (9 px) / large (11 px), shot.gd
+	"binds": {},                # v2.3: rebound buttons (Controls.rebind; Settings > Keys)
 }
 ## A fresh slot's records (each slot has its own copy in Game.records).
 const RECORDS := {

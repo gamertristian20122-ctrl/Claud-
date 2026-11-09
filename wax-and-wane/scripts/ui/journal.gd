@@ -711,7 +711,10 @@ func _d_candle(e: Dictionary) -> void:
 	art.id = c
 	art.sil = not known
 	art.custom_minimum_size = Vector2(28, 48)
-	_head(art, str(d["name"]) if known else "???", [["%d minutes of wax" % int(d["wax"]), UI.EMBER]] if known else [], UI.GOLD if known else UI.DIM)
+	var subs: Array = [["%d minutes of wax" % int(d["wax"]), UI.EMBER]] if known else []
+	if known and Moves.for_candle(c) != "":
+		subs.append(_move_row(c))   # v2.3: the candle's special move, beside the portrait (no extra height)
+	_head(art, str(d["name"]) if known else "???", subs, UI.GOLD if known else UI.DIM)
 	if not known:
 		_text("Locked: " + str(d["unlock_text"]), UI.EMBER)
 		return
@@ -745,6 +748,27 @@ func _d_candle(e: Dictionary) -> void:
 		_text("Best: done by %s%s" % [Game.clock_text(best), ("   Wins %d" % wins) if wins > 0 else ""], UI.WAX)
 	else:
 		_text("Not won with yet", UI.WAX)
+
+
+## v2.3: a candle's special move for its Candles page head: the icon, "Skip: a quick dash ...", and how
+## many times it was used in this slot (the short line on a 384-wide screen).
+func _move_row(c: String) -> Control:
+	var mv := Moves.for_candle(c)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	row.add_child(_pic(Art.tex(Moves.icon(mv))))
+	var used := int((Game.records.get("move_uses", {}) as Dictionary).get(mv, 0))
+	# a 384-wide screen keeps it to one line (the page must not push the Back row off the screen)
+	var narrow := get_viewport().get_visible_rect().size.x < 432.0
+	var txt := L.t("{move}: {line}", {"move": Moves.name_of(mv), "line": Moves.short_of(mv) if narrow else Moves.line_of(mv)})
+	if used > 0 and not narrow:
+		txt += " " + L.t("(used {n})", {"n": used})
+	var l := UI.label(txt, 8, UI.GOLD)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size = Vector2(90, 0)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(l)
+	return row
 
 
 ## The rules from the one-time intro (world._intro), for anyone who skipped it.

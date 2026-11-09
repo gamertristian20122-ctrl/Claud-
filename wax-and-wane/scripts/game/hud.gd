@@ -69,6 +69,10 @@ const STICK_R := 22.0
 const AIM_FLICK := 4.0   # px of thumb travel before the aim stick fires
 
 
+## v2.3: the special move's button (scripts/game/move_button.gd; it places itself in _layout).
+var move_btn: MoveButton
+
+
 func _init(w: Node) -> void:
 	world = w
 	layer = 10
@@ -165,6 +169,8 @@ func _ready() -> void:
 	keep_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	keep_btn.draw.connect(_draw_keep)
 	root.add_child(keep_btn)
+	move_btn = MoveButton.new(self)   # v2.3: the special move (under the bomb, the biggest of the three)
+	root.add_child(move_btn)
 	# --- boss bar
 	boss_box = Control.new()
 	boss_box.visible = false
@@ -299,6 +305,8 @@ func _layout() -> void:
 	hint_band.size = Vector2(300, 25)
 	_place_hints()
 	spare_label.position = bar.position + Vector2(146, 2)
+	if move_btn:
+		move_btn.place()   # v2.3: the move button joins the bomb / keepsake column
 
 
 ## Hints and item previews sit at the bottom edge; while the boss bar is up they move above it
@@ -741,6 +749,8 @@ func _physics_process(_dt: float) -> void:
 		_bump(bomb_btn)
 	if Input.is_action_just_pressed("keepsake"):
 		world.use_keepsake()
+	if (Input.is_action_just_pressed("special") or move_btn.take()) and p.use_move():   # v2.3 (Moves)
+		move_btn.bump()
 
 
 ## Mouse aim: hold the left button to fire from the candle toward the cursor.

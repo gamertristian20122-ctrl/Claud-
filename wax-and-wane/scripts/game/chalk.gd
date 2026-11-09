@@ -1,7 +1,8 @@
 class_name Chalk
 extends Node2D
 ## Someone chalked the controls on the floor of the very first room (floor 1's start room): how to
-## walk, how to fire, the bomb, the keepsake, and a candle = a clock ("wax = time"). The drawings
+## walk, how to fire, the bomb, the keepsake, the special move (v2.3) and a candle = a clock ("wax =
+## time"). The drawings
 ## follow the device in use (touch thumbs, keys, mouse, gamepad) and swap with a quick smudge when
 ## Controls.device changes. Art: tools/art_chalk.py -> assets/art/chalk/.
 ##
@@ -17,8 +18,9 @@ const SPOTS := {
 	"wax_time": Vector2(136, 52),
 	"move": Vector2(66, 104),
 	"aim": Vector2(206, 104),
-	"bomb": Vector2(110, 152),
-	"keep": Vector2(162, 152),
+	"bomb": Vector2(86, 152),
+	"keep": Vector2(136, 152),
+	"special": Vector2(188, 152),   # v2.3: the candle's special move (Shift / F, LT, the big round button)
 }
 
 var room: Node2D

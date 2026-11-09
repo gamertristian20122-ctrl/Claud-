@@ -137,6 +137,7 @@ var move_input := Vector2.ZERO
 var aim_input := Vector2.ZERO
 var facing := Vector2.RIGHT
 var fire_cd := 0.0
+var move_cd := 0.0         # v2.3: seconds until the special move is back (Moves, scripts/game/moves.gd)
 ## Design pass (docs/design/MDA.md): a fire press in the last FIRE_BUFFER s of the cooldown fires the
 ## moment the flame is ready; turning back from a run uses TURN_ACCEL so a dodge reads at once.
 const FIRE_BUFFER := 0.2
@@ -252,6 +253,7 @@ func _ready() -> void:
 	_pool.draw.connect(_draw_pool)
 	add_child(_pool)
 	add_child(Costumes.new())
+	add_child(Moves.new())   # v2.3 special moves: the candle's own move and its effects
 
 
 ## Call a world effect if this world has it (the title screen's stand-in world does not).
@@ -340,7 +342,8 @@ func _physics_process(dt: float) -> void:
 	if dead or frozen or _hold_t > 0.0 or Juice.holding(world):
 		vel = vel.move_toward(Vector2.ZERO, 600 * dt)
 		return
-	var target := move_input.limit_length(1.0) * speed
+	move_cd = maxf(0.0, move_cd - dt)   # the move recharges only in play (not held aloft, carded, melting or paused)
+	var target := move_input.limit_length(1.0) * speed * Moves.speed_k(self)
 	var accel := 900.0 if target.length() > 1 else 1100.0
 	if target.length() > 1 and vel.length() > 1 and vel.dot(target) < -0.2 * vel.length() * target.length():
 		accel = TURN_ACCEL   # a dodge: turning back bites at once (design pass: 7 -> 4 frames)
@@ -408,7 +411,7 @@ func _fire(dir: Vector2) -> void:
 	if RelicFx.before_fire(self, dir): return
 	dir = world.assist_aim(global_position, dir)
 	var n := shots
-	var dmg := damage
+	var dmg := damage * Moves.shot_mult(self)   # Flare Up x1.5, the black flame after Snuff x3
 	if witching and wax < 30.0:
 		dmg *= 1.6
 	# extra flames fire in near-parallel lanes so they all reach the same target
@@ -493,6 +496,17 @@ func hold_aloft(tex: Texture2D) -> void:
 	_happy_face = 1.4
 	_sq_v += 6.0
 	vel = Vector2.ZERO
+
+
+## v2.3 special moves (Moves): ready when recharged and the candle is free to act.
+func move_ready() -> bool:
+	var m := Moves.of(self)
+	return m != null and move_cd <= 0.0 and m.move_id() != "" and Moves.enabled and not m.busy()
+
+
+## Fire the candle's move (the `special` action, the HUD's move button, the bot). True if it fired.
+func use_move(dir := Vector2.ZERO) -> bool:
+	return Moves.use(self, world, dir)
 
 
 func heal(amount: float) -> void:

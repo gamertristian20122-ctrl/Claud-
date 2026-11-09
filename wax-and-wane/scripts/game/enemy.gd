@@ -482,10 +482,11 @@ func _physics_process(dt: float) -> void:
 		kvel = kvel.move_toward(Vector2.ZERO, 500 * dt)
 	var to_p := p.global_position - global_position
 	var dist := to_p.length()
+	var seen := Moves.target_of(self, p) - global_position   # v2.3 Snuff: lodgers seek a dark Black Taper where it was
 	if _ext:
-		_brain.call(self, ddt, to_p, dist)
+		_brain.call(self, ddt, seen, seen.length())
 	else:
-		_brain.call(ddt, to_p, dist)
+		_brain.call(ddt, seen, seen.length())
 	if not alive:
 		return
 	if not _queue.is_empty() and ddt > 0.0:
@@ -496,8 +497,8 @@ func _physics_process(dt: float) -> void:
 	elif def.get("face_dir", false):
 		if absf(dir.x) > 0.1:
 			spr.flip_h = dir.x < 0
-	elif absf(to_p.x) > 2 and state != "charge" and state != "still":
-		spr.flip_h = to_p.x < 0
+	elif absf(seen.x) > 2 and state != "charge" and state != "still":
+		spr.flip_h = seen.x < 0
 	# contact damage
 	var touch: float = def.get("touch", 8.0 if boss else float(TOUCH[clampi(world.floor_num, 1, 4) - 1]))
 	if touch > 0.0 and not buried and not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
@@ -697,7 +698,7 @@ func _ai_jumper(ddt: float, to_p: Vector2, _dist: float) -> void:
 				state = "air"
 				t = 0.55
 				scale = Vector2.ONE
-				target_pos = world.player.global_position
+				target_pos = Moves.target_of(self, world.player)
 				dir = global_position
 		"air":
 			var k := 1.0 - t / 0.55
@@ -764,7 +765,7 @@ func _ai_lobber(ddt: float, to_p: Vector2, dist: float) -> void:
 	if cd <= 0:
 		cd = randf_range(2.2, 2.8)
 		_telegraph(Color(0.6, 1.0, 0.6))
-		world.lob(global_position + Vector2(0, -12), world.player.global_position)
+		world.lob(global_position + Vector2(0, -12), Moves.target_of(self, world.player))
 
 
 # ---------------------------------------------------------------- bosses
