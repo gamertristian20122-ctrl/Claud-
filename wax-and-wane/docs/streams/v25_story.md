@@ -109,8 +109,13 @@ every ending's cards and scenes.
 - `--tour --diary --fit` at 1600x720 (480x216): 24 shots, no fit warnings; again at 1152x648 (384x216): the
   Diary tab, the cards and the results fit (the only warnings were a run's first hint sitting under a staged
   ending's cards, a tour artefact now hidden).
-- One `--playtest --speed=4 --runs=1 --god`: see the result below.
-- `--nightdump`: see below.
+- One `stdbuf -o0 godot --headless --path . -- --autotest --playtest --speed=4 --runs=1 --god` (fresh profile): WIN on
+  floor 4/4 at 12:40 AM, 0 script errors; 7 pages found on the way (page 1 from the Furnace's first fall, a marked
+  foe's, the Ogre's, the Study's, the Choir's, another marked foe's, and the Pendulum's gathered at the win), every
+  reading card opened in a cleared room (boss rooms after the fall, a normal room, the Study).
+- `--nightdump --speed=4`: equal to `docs/streams/v22_night_baseline.txt` (553 lines, no diff): pages never move a
+  seed's house, guardians or loot.
+- The page pickup and the kitchen looked at zoomed (x7 in game, x8 / x4 contact sheets from `tools/art_story.py --review`).
 
 ## Known issues / follow-ups
 - A page left lying when Tallow leaves the floor is gone for that run (it can turn up again later). Pages are not

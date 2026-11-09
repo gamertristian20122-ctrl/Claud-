@@ -214,7 +214,10 @@ static func mark_found(id: String) -> void:
 
 
 static func ending_seen(id: String) -> int:
-	return int(_rec("endings_seen").get(id, 0))
+	var n := int(_rec("endings_seen").get(id, 0))
+	if id == "true":   # true endings seen before the diary (2.0 - 2.4) count too
+		n = maxi(n, int(Game.records.get("true_endings", 0)))
+	return n
 
 
 ## The Journal: where a page can turn up, in a few words.
