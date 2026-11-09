@@ -716,6 +716,7 @@ func _d_candle(e: Dictionary) -> void:
 		_text("Locked: " + str(d["unlock_text"]), UI.EMBER)
 		return
 	_text(str(d["line"]), UI.CREAM)
+	_move_row(c)   # v2.3: the candle's special move
 	if d.has("blurb"):
 		_text(str(d["blurb"]), UI.DIM)
 	var bits: Array = []
@@ -745,6 +746,27 @@ func _d_candle(e: Dictionary) -> void:
 		_text("Best: done by %s%s" % [Game.clock_text(best), ("   Wins %d" % wins) if wins > 0 else ""], UI.WAX)
 	else:
 		_text("Not won with yet", UI.WAX)
+
+
+## v2.3: a candle's special move in its Candles page: the icon, "Skip: a quick dash ...", and how
+## many times it was used in this slot.
+func _move_row(c: String) -> void:
+	var mv := Moves.for_candle(c)
+	if mv == "":
+		return
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 4)
+	row.add_child(_pic(Art.tex(Moves.icon(mv))))
+	var used := int((Game.records.get("move_uses", {}) as Dictionary).get(mv, 0))
+	var txt := L.t("{move}: {line}", {"move": Moves.name_of(mv), "line": Moves.line_of(mv)})
+	if used > 0:
+		txt += " " + L.t("(used {n})", {"n": used})
+	var l := UI.label(txt, 8, UI.GOLD)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size = Vector2(130, 0)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(l)
+	_detail.add_child(row)
 
 
 ## The rules from the one-time intro (world._intro), for anyone who skipped it.

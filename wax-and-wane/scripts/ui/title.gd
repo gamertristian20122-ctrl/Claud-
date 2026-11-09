@@ -149,6 +149,7 @@ func _ready() -> void:
 	sel_name.custom_minimum_size = Vector2(62, 24)
 	sel_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(sel_name)
+	_add_move_caption()   # v2.3: the candle's special move (name under the candle's, its line above it)
 	box.add_child(UI.button(">", func(): _cycle(1), 24))
 	sel = str(Game.records.get("candle", "tallow"))   # each save slot remembers its own candle
 	if not Candles.is_unlocked(sel):
@@ -339,6 +340,39 @@ func _process(dt: float) -> void:
 		embers.emit(Vector2(-12 + randf_range(-1, 1), -88), Vector2(randf_range(-4, 4), randf_range(-14, -8)), randf_range(0.8, 1.4), FxParts.EMBER, -3.0, 0.5)
 
 
+## v2.3 special moves in the Candle Box: the candle's name gets a second line, its move ("Flare Up",
+## gold), and the move's line sits over the candle, as if chalked on the wall behind it. Both are
+## children of the name label, so they fade in with the menu.
+var move_name: Label
+var move_line: Label
+
+
+func _add_move_caption() -> void:
+	move_name = UI.label("", 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	move_name.size = Vector2(62, 10)
+	move_name.position = Vector2(0, 14)
+	move_name.set_meta("fit_group", "candle_box")
+	sel_name.add_child(move_name)
+	move_line = UI.label("", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	move_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	move_line.max_lines_visible = 2
+	move_line.size = Vector2(150, 20)
+	move_line.position = Vector2(31 - 75, -58)
+	move_line.set_meta("fit_group", "candle_box")
+	sel_name.add_child(move_line)
+	sel_name.set_meta("fit_group", "candle_box")
+
+
+func _show_move(unlocked: bool) -> void:
+	if move_name == null:
+		return
+	var mv := Moves.for_candle(sel)
+	var on := unlocked and mv != ""
+	sel_name.vertical_alignment = VERTICAL_ALIGNMENT_TOP if on else VERTICAL_ALIGNMENT_CENTER
+	move_name.text = Moves.name_of(mv) if on else ""
+	move_line.text = Moves.line_of(mv) if on else ""
+
+
 func _cycle(d: int) -> void:
 	var i := Candles.ORDER.find(sel)
 	sel = Candles.ORDER[(i + d + Candles.ORDER.size()) % Candles.ORDER.size()]
@@ -353,6 +387,7 @@ func _show_candle() -> void:
 		if Candles.is_unlocked(k):
 			n += 1
 	sel_name.text = def["name"] if unlocked else "? ? ?"
+	_show_move(unlocked)
 	sub.text = def["line"] if unlocked else "Locked: %s" % def["unlock_text"]
 	sub.add_theme_color_override("font_color", UI.DIM if unlocked else UI.RED)
 	# rebuild the preview candle with this candle's look

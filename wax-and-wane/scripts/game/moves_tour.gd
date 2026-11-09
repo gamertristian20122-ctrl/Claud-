@@ -467,4 +467,51 @@ static func tour(at: Node) -> void:
 	SettingsPanel.open(w2.hud.pause_layer, 1)
 	await at._wait(0.4)
 	await at._shot("settings_controls")
+	for n in w2.hud.pause_layer.get_children():
+		if n.has_meta("modal"):
+			n.queue_free()
+	w2.toggle_pause()
+	# thumb reach on a touch screen: centre distances from where the right thumb rests (the ghost
+	# aim stick, Hud._draw_ghosts) to each right-hand button, and from button to button
+	Controls.set_device(Controls.TOUCH)
+	w2.player.keepsake = "flare_match"
+	await at._wait(0.3)
+	reach(w2)
+	await at._shot("hud_touch_all_three")
+	# the Candle Box on the title and the Journal's Candles tab show each candle's move
+	Game.records["unlocked"] = Candles.ORDER.duplicate()
+	at.main.goto("title")
+	await at._wait(3.4)
+	var title: Node = at.main.current
+	for c in ["tallow", "black_taper"]:
+		title.sel = c
+		title._show_candle()
+		await at._wait(0.3)
+		await at._shot("candle_box_%s" % c)
+	var j := Journal.open(title.root)
+	await at._wait(0.4)
+	j._set_tab(Journal.TABS.find("candles"), false)
+	for c in ["tallow", "party"]:
+		j._select(Candles.ORDER.find(c))
+		await at._wait(0.3)
+		await at._shot("journal_candle_%s" % c)
 	Audio.stop_all()
+
+
+## Prints the right-hand buttons' centre distances (the thumb-reach measure, ROADMAP_V2 section 1).
+static func reach(w: Node) -> void:
+	var hud: Hud = w.hud
+	var vs: Vector2 = hud.view_size()
+	var thumb := Vector2(vs.x - 64, vs.y - 52)   # where the ghost aim stick sits (the thumb's rest)
+	var mb: MoveButton = hud.move_btn
+	var c_move := mb.position + mb.size / 2.0
+	var c_bomb := hud.bomb_btn.position + hud.bomb_btn.size / 2.0
+	var c_keep := hud.keep_btn.position + Vector2(15, 13)   # the keepsake's circle centre (_draw_keep)
+	var mm := 150.0 / vs.x   # a 6.5" phone held sideways shows the 480 px width over about 150 mm
+	print("[moves] reach %dx%d: thumb rest %s -> move %.0f px (%.0f mm), bomb %.0f px (%.0f mm), keepsake %.0f px (%.0f mm); move-bomb %.0f px, bomb-keepsake %.0f px; move hit area %s, bomb %s" % [
+		vs.x, vs.y, thumb, thumb.distance_to(c_move), thumb.distance_to(c_move) * mm, thumb.distance_to(c_bomb),
+		thumb.distance_to(c_bomb) * mm, thumb.distance_to(c_keep), thumb.distance_to(c_keep) * mm,
+		c_move.distance_to(c_bomb), c_bomb.distance_to(c_keep), mb.hit_rect().size, Rect2(hud.bomb_btn.position, hud.bomb_btn.size).grow(4).size])
+	var safe := Rect2(Vector2(hud.safe_insets().x, 0), vs - Vector2(hud.safe_insets().x + hud.safe_insets().y, 0))
+	print("[moves] reach %dx%d: all three inside the safe area: %s" % [vs.x, vs.y,
+		safe.encloses(Rect2(mb.position, mb.size)) and safe.encloses(Rect2(hud.bomb_btn.position, hud.bomb_btn.size)) and safe.encloses(Rect2(hud.keep_btn.position, hud.keep_btn.size))])

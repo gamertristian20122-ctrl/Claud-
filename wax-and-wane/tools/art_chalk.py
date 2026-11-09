@@ -11,6 +11,8 @@ Somebody chalked the controls on the cellar floor for you. One set per device, s
                                                        mouse: arrow keys or the mouse, pad: right stick)
   chalk_bomb_<dev>   below: the bomb                  (touch: the bomb button, keys: E / SPACE, pad: RB)
   chalk_keep_<dev>   below: the keepsake              (touch: its button, keys: Q, pad: LB)
+  chalk_special_<dev> below: the candle's special move (v2.3; touch: the big round button with a star,
+                                                       keys: SHIFT / F, pad: LT)
   chalk_wax_time     above: a candle = a clock ("wax = time")
 
 <dev> is touch / keys / mouse / pad (mouse only has its own `aim`; it shares the rest with keys).
@@ -194,6 +196,18 @@ class Chalk:
         self.dot(cx + 3, cy - 1, c)
         self.dot(cx, cy + 1, COOL)
 
+    def star(self, cx, cy, c=WARM, big=False):
+        """A spark of light (the special move): four long rays, four short ones, a cool heart."""
+        n = 4 if big else 3
+        for k in range(1, n + 1):
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                self.dot(cx + dx * k, cy + dy * k, c)
+        for dx, dy in ((1, 1), (-1, 1), (1, -1), (-1, -1)):
+            self.dot(cx + dx, cy + dy, c)
+            if big:
+                self.dot(cx + dx * 2, cy + dy * 2, c)
+        self.dot(cx, cy, COOL)
+
     def keycap(self, x, y, label, w=None, c=WARM):
         w = w or 11
         self.rrect(x, y, w, 11, c)
@@ -316,6 +330,8 @@ def icon_word(cv, cx, y, icon, word):
     x = cx - w // 2
     if icon == "bomb":
         cv.bomb(x + 4, y + 3)
+    elif icon == "star":
+        cv.star(x + 4, y + 2)
     else:
         cv.bell(x + 4, y + 4)
     cv.text(x + 12, y, word)
@@ -334,6 +350,32 @@ def keep_keys():
     cv = Chalk(46, 34, 25)
     cv.keycap(17, 2, "Q")
     icon_word(cv, 23, 24, "bell", "KEEPSAKE")
+    return cv
+
+
+def special_touch():
+    # the biggest of the three right-hand buttons: a ring with a star of light in it
+    cv = Chalk(40, 36, 15)
+    cv.circle(19, 13, 12, WARM, gap=(40, 54))
+    cv.circle(19, 13, 9, COOL, grain=True, gap=(220, 260))
+    cv.star(19, 13, WARM, big=True)
+    cv.text_c(20, 30, "SPECIAL")
+    return cv
+
+
+def special_keys():
+    cv = Chalk(54, 34, 26)
+    cv.keycap(2, 2, "SHIFT", w=27)
+    cv.text(33, 5, "/")
+    cv.keycap(39, 2, "F")
+    icon_word(cv, 27, 24, "star", "SPECIAL")
+    return cv
+
+
+def special_pad():
+    cv = Chalk(46, 34, 35)
+    bumper(cv, 14, 3, "LT")
+    icon_word(cv, 23, 24, "star", "SPECIAL")
     return cv
 
 
@@ -420,7 +462,8 @@ def wax_time():
 
 DRAW = {
     "chalk_move_touch": move_touch, "chalk_aim_touch": aim_touch, "chalk_bomb_touch": bomb_touch,
-    "chalk_keep_touch": keep_touch,
+    "chalk_keep_touch": keep_touch, "chalk_special_touch": special_touch,
+    "chalk_special_keys": special_keys, "chalk_special_pad": special_pad,
     "chalk_move_keys": move_keys, "chalk_aim_keys": aim_keys, "chalk_aim_mouse": aim_mouse,
     "chalk_bomb_keys": bomb_keys, "chalk_keep_keys": keep_keys,
     "chalk_move_pad": move_pad, "chalk_aim_pad": aim_pad, "chalk_bomb_pad": bomb_pad, "chalk_keep_pad": keep_pad,
@@ -471,8 +514,9 @@ def main():
             put("chalk_wax_time", 120, 22)
             put("chalk_move_" + d2, 52, 72)
             put("chalk_aim_" + dev, 188, 72)
-            put("chalk_bomb_" + d2, 96, 120)
-            put("chalk_keep_" + d2, 146, 120)
+            put("chalk_bomb_" + d2, 70, 120)
+            put("chalk_keep_" + d2, 122, 120)
+            put("chalk_special_" + d2, 174, 120)
             bg.resize((960, 576), Image.NEAREST).save(os.path.join(review, "chalk_%s.png" % dev))
         print("chalk: review sheets in", review)
 
