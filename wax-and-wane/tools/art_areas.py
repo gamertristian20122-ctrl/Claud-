@@ -1965,8 +1965,8 @@ def build_attic_props():
 def build_bolts():
     """The Dressmaker's pins: a diamond pin head (UX-02: dark rim all round, a white-hot core, the darkest tones
     of steel blue), turning between two frames."""
-    shapes = [["...K...", "..KsK..", ".KBwBK.", "KsBwwsK", ".KBwBK.", "..KsK..", "...K..."],
-              ["...K...", "..KBK..", ".KswsK.", "KBwwwBK", ".KswsK.", "..KBK..", "...K..."]]
+    shapes = [["...K...", "..KjK..", ".K4w4K.", "Kj4ww4K", ".K4w4K.", "..KjK..", "...K..."],
+              ["...K...", "..K4K..", ".KjwjK.", "K4www4K", ".KjwjK.", "..K4K..", "...K..."]]
     for f, rows in enumerate(shapes):
         cv = Canvas(7, 7)
         cv.blit(rows)
