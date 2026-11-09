@@ -102,9 +102,10 @@ func _draw() -> void:
 		Specials.draw_map_mark(self, world, d, pos + Vector2(floorf((_cw - 9.0) / 2.0), floorf((_ch - 6.0) / 2.0)))
 		if d["visited"] and c != world.cur_cell and _drops_left(d):
 			draw_rect(Rect2(pos + Vector2(_cw - 4.0, _ch - 4.0), Vector2(2, 2)), DROPS)
-	# Tallow: a little flame in the room it stands in
+	# Tallow: a little flame in the room it stands in (a marked room keeps its mark)
 	var me := _at(world.cur_cell) + Vector2(floorf(_cw / 2.0), floorf(_ch / 2.0))
-	if not MARKS.has(str(cells[world.cur_cell]["type"])):
+	var here := str(cells[world.cur_cell]["type"])
+	if not MARKS.has(here) and not here in Specials.TYPES:
 		draw_rect(Rect2(me + Vector2(-1, -2), Vector2(2, 4)), Color("#ee8e2e"))
 		draw_rect(Rect2(me + Vector2(-1, -1), Vector2(2, 2)), Color("#facb3e"))
 

@@ -198,6 +198,7 @@ static func check(at: Node) -> void:
 		res["auto_front"] = au[0]
 		res["auto_override"] = au[1]
 		res["auto_rate"] = au[2]
+	res["brush"] = await _brush(tree, w, p)
 	if w.has_method("open_map"):
 		res["map"] = await _map(tree, w)
 	if w.has_method("quick_restart"):
@@ -209,9 +210,29 @@ static func check(at: Node) -> void:
 	ok = ok and float(res["magnet"]) < 3.0 and bool(res["magnet_full"]) and bool(res["magnet_shop"])
 	ok = ok and res.has("auto_front") and bool(res["auto_front"]) and bool(res["auto_override"])
 	ok = ok and res.has("auto_rate") and absi(int(res["auto_rate"][0]) - int(res["auto_rate"][1])) <= 1
+	ok = ok and str(res["brush"]) == "1 swept in, 1 left behind (the priced relic)"
 	ok = ok and res.has("map") and str(res["map"]) == "opened paused, M closed and resumed"
 	ok = ok and res.has("restart") and str(res["restart"]).begins_with("lit")
 	print("[feel] check %s" % ("PASS" if ok else "FAIL"))
+
+
+## Sweep's Brush (v2.6): a clear brings the loose drops left in the floor's other cleared rooms; goods stay.
+static func _brush(tree: SceneTree, w: Node, p: Player) -> String:
+	Items.apply("sweep_brush", p, w)
+	var other := Vector2i(-99, -99)
+	for c in w.layout["cells"]:
+		if c != w.cur_cell:
+			other = c
+			break
+	var cell: Dictionary = w.layout["cells"][other]
+	cell["visited"] = true
+	cell["cleared"] = true
+	cell["pickups"].append({"kind": "coin", "pos": Vector2.ZERO, "item": "", "price": 0})
+	cell["pickups"].append({"kind": "relic", "pos": Vector2.ZERO, "item": "lamp_oil", "price": 12})
+	var n0: int = w.room.data["pickups"].size()
+	RelicFx.on_clear(w)
+	await tree.physics_frame
+	return "%d swept in, %d left behind (the priced relic)" % [w.room.data["pickups"].size() - n0, cell["pickups"].size()]
 
 
 ## The full map: a tap on the minimap opens it over a paused game; M closes it and play goes on.
