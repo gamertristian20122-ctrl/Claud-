@@ -18,6 +18,7 @@ extends Node
 ##   -- --autotest --trailer=<scene>                               staged trailer footage (scripts/trailer.gd, tools/make_trailer.sh)
 ##   -- --autotest --playtest --boss=<kind> [--runs=N] [--speed=4]  one guardian's fight with its floor's kit, a line per fight
 ##   -- --autotest --tour --boss=<kind> --shots=/abs/dir           its versus card + two shots per phase (GuardiansV21.tour)
+##   -- --autotest --tour --night --shots=/abs/dir [--fit]       the night length picker, a 7-floor run's HUD, banners, results
 ##   -- --autotest --nightdump --speed=4 [--floors=N] [--dump=/abs/file]  every floor of a few seeded nights: layouts,
 ##        guardians, loot, lodgers and the floor numbers (scripts/night_check.gd; the 4-floor baseline must not change)
 
@@ -718,6 +719,11 @@ func _tour() -> void:
 	if args.has("tower"):   # the ladder of light, the Clock Tower, the Keeper's phases, the ending
 		await _wait(1.0)
 		await Tower.tour(self)
+		get_tree().quit()
+		return
+	if args.has("night"):   # the Long Night: the night length picker, a 7-floor run's HUD and banners, results, Journal
+		await _wait(0.5)
+		await load("res://scripts/night_check.gd").tour(self)
 		get_tree().quit()
 		return
 	if args.has("areas"):   # the Long Night's new areas: rooms, gimmicks, lodgers, guardians (areas.gd)

@@ -4,9 +4,11 @@ extends Control
 ## difficulty level (1-4), records, Journal, unlocks, achievements and saved run (Game, RunSave).
 ##   empty slot:  New candle -> pick a level (pick_level) -> the run starts
 ##   used slot:   its level, runs / wins, best finish, Journal progress, the last candle and, when a
-##                run is saved, Continue (Floor N - 12:41 AM). Play lights a new run (asks first if that
-##                would put a saved run out), Level changes the level between runs (asks first), Delete
-##                asks twice.
+##                run is saved, Continue (Floor N - 12:41 AM). Play (its second line: the slot's night length)
+##                asks first if that would put a saved run out, then opens the Night length picker (pick_night:
+##                4 to Areas.max_floors() floors, remembered in the slot's records) and lights the run;
+##                Level changes the level between runs (asks first), Delete asks twice.
+##   New candle:  pick a level, then the night's length (4 floors to begin with), then the run starts.
 ## The slot used last is remembered (Game.slot) and has the focus. Fits 384x216, 384x240 and the
 ## phone's 480x216; touch, keys and gamepad (Back / B / Esc returns to the title).
 
@@ -114,7 +116,13 @@ func _card(n: int, cw: int) -> Control:
 	_line(v, Records.level_text(lvl), UI.EMBER)
 	_line(v, "Runs %d   Wins %d" % [int(rec.get("runs", 0)), int(rec.get("wins", 0))], UI.CREAM)
 	var best := best_finish(rec)
-	_line(v, "Best: done by %s" % Game.clock_text(best) if best > 0.0 else "Not won yet", UI.WAX if best > 0.0 else UI.DIM)
+	var long := best_long(rec)   # no 4-floor win yet: the best longer night says how long it was
+	if best > 0.0:
+		_line(v, "Best: done by %s" % Game.clock_text(best), UI.WAX)
+	elif not long.is_empty():
+		_line(v, "Best: %s, %d floors" % [Game.clock_text(float(long[1])), int(long[0])], UI.WAX)
+	else:
+		_line(v, "Not won yet", UI.DIM)
 	var j := journal_counts(rec)
 	_line(v, "Relics seen %d/%d" % [j[0], j[1]], UI.DIM)
 	_line(v, "Lodgers met %d/%d" % [j[2], j[3]], UI.DIM)
@@ -137,7 +145,7 @@ func _card(n: int, cw: int) -> Control:
 		main_btn = cont
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", GAP)
-	var play := UI.button("Play", _play.bind(n), 0)
+	var play := two_line_button("Play", "%d floors" % slot_night(rec), _play.bind(n))   # the slot's night length
 	play.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(play)
 	row.add_child(UI.button("Level", _change_level.bind(n), 0))
@@ -195,7 +203,8 @@ static func two_line_button(top_text: String, sub_text: String, cb: Callable, w 
 	return b
 
 
-## The earliest finish over every candle (best_finish = Tallow's, best_finish_<candle> the others').
+## The earliest finish over every candle on a 4-floor night (best_finish = Tallow's, best_finish_<candle> the
+## others'; longer nights keep their own: best_long).
 static func best_finish(rec: Dictionary) -> float:
 	var best := 0.0
 	for k in rec:
@@ -204,6 +213,20 @@ static func best_finish(rec: Dictionary) -> float:
 			if t > 0.0 and (best == 0.0 or t < best):
 				best = t
 	return best
+
+
+## [floors, minute] of the shortest longer night won (the earliest finish on it), or [] if none.
+static func best_long(rec: Dictionary) -> Array:
+	for n in range(Areas.MIN_FLOORS + 1, Areas.MAX_FLOORS + 1):
+		var t := Records.best_of_night(n, rec)
+		if t > 0.0:
+			return [n, t]
+	return []
+
+
+## A slot's night length (its records; 4 until it picks another).
+static func slot_night(rec: Dictionary) -> int:
+	return clampi(int(rec.get("night_floors", Areas.MIN_FLOORS)), Areas.MIN_FLOORS, Areas.max_floors())
 
 
 ## [relics seen, relics in the house, lodgers met, lodgers] for a slot's records (the Journal's
@@ -227,10 +250,14 @@ static func journal_counts(rec: Dictionary) -> Array:
 # ---------------------------------------------------------------- actions
 
 func _play(n: int) -> void:
+	var d := Game.slot_data(n)
+	var cur := slot_night(d.get("records", {}))
 	abandon_check(get_parent(), n, func():
-		Game.use_slot(n)
-		Audio.play("ui_open")
-		main.goto("game", {}))   # the slot's own candle (Game.records.candle) at its level
+		pick_night(get_parent(), "SLOT %d: HOW LONG A NIGHT?" % n, cur, func(floors: int):
+			Game.use_slot(n)
+			Records.set_night_floors(floors)   # remembered by the slot
+			Audio.play("ui_open")
+			main.goto("game", {"floors": floors})))   # the slot's own candle (Game.records.candle) at its level
 
 
 func _continue(n: int) -> void:
@@ -240,9 +267,11 @@ func _continue(n: int) -> void:
 
 func _new(n: int) -> void:
 	pick_level(get_parent(), "SLOT %d: PICK A DIFFICULTY" % n, 0, func(lvl: int):
-		Game.start_slot(n, lvl)
-		Audio.play("ui_open")
-		main.goto("game", {"candle": "tallow"}))
+		pick_night(get_parent(), "SLOT %d: HOW LONG A NIGHT?" % n, Areas.MIN_FLOORS, func(floors: int):
+			Game.start_slot(n, lvl)
+			Records.set_night_floors(floors)
+			Audio.play("ui_open")
+			main.goto("game", {"candle": "tallow", "floors": floors})))
 
 
 func _change_level(n: int) -> void:
@@ -385,3 +414,180 @@ static func pick_level(parent: Control, title: String, current: int, cb: Callabl
 	var back := UI.button("Back", func(): r.queue_free(), 70)
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	v.add_child(back)
+
+
+## The Night length picker (the Long Night, docs/design/LONG_NIGHT.md): how many floors the slot's next night
+## has, from 4 (the house as it was made) up to Areas.max_floors() (areas not built yet are not offered), with
+## the hour the night ends and the house it builds (the new areas in gold). cb(floors) lights the candle:
+## "Light it", or A / Enter on the slider. Touch: the arrows or the track; keys and gamepad: left / right.
+static func pick_night(parent: Control, title: String, current: int, cb: Callable) -> void:
+	var m := UI.modal(parent, title)
+	var r: Control = m[0]
+	var v: VBoxContainer = m[1]
+	v.add_theme_constant_override("separation", 3)
+	var big := UI.label("", 16, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	v.add_child(big)
+	var s := NightSlider.new()
+	s.lo = Areas.MIN_FLOORS
+	s.hi = Areas.max_floors()
+	s.value = clampi(current, s.lo, s.hi)
+	s.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	s.set_meta("default_focus", true)
+	v.add_child(s)
+	var line := UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+	v.add_child(line)
+	var house := HBoxContainer.new()
+	house.alignment = BoxContainer.ALIGNMENT_CENTER
+	house.add_theme_constant_override("separation", 0)
+	v.add_child(house)
+	var gap := Control.new()
+	gap.custom_minimum_size.y = 2
+	v.add_child(gap)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	var go := func():
+		if not is_instance_valid(r) or r.is_queued_for_deletion():
+			return
+		r.queue_free()
+		cb.call(s.value)
+	row.add_child(UI.button("Light it", go, 100))
+	row.add_child(UI.button("Back", func(): r.queue_free(), 70))
+	v.add_child(row)
+	var show := func(n: int):
+		big.text = "%d FLOORS" % n
+		line.text = "Until %s. %s" % [Game.clock_text(Game.night_minutes(n), false),
+			"The night as it was made." if n <= Areas.MIN_FLOORS else "Each floor past four adds half an hour."]
+		night_house(house, n)
+	s.changed.connect(show)
+	s.accepted.connect(go)
+	show.call(s.value)
+
+
+## The areas of a night of `n` floors as one line of names ("Cellar - Crypt - Kitchen ..."), the areas of the
+## Long Night in gold, into `box` (an HBoxContainer; its old names go).
+static func night_house(box: HBoxContainer, n: int) -> void:
+	for c in box.get_children():
+		box.remove_child(c)
+		c.queue_free()
+	var seq := Areas.sequence(n)
+	for i in seq.size():
+		var id: String = seq[i]
+		if i > 0:
+			box.add_child(UI.label(" - ", 8, UI.DIM))
+		var nm := str(Areas.def(id).get("name", id))
+		box.add_child(UI.label(nm.substr(4) if nm.begins_with("The ") else nm, 8, UI.GOLD if id in Areas.NEW else UI.WAX))
+
+
+## The Night length slider: a pixel track with a tick per night length (4 .. hi), the knob on the chosen one and
+## an arrow at each end. One focus stop: left / right (keys, d-pad, stick) step it (at an end they move the focus
+## on), Enter / A lights the candle (`accepted`); touch taps an arrow or a tick, or drags along the track.
+class NightSlider extends Button:
+	signal changed(v: int)
+	signal accepted
+	const ARROW := 18.0
+	var value := 4
+	var lo := 4
+	var hi := 7
+	var _drag := false
+
+	func _init() -> void:
+		flat = true
+		focus_mode = Control.FOCUS_ALL
+		custom_minimum_size = Vector2(200, 26)
+		var empty := StyleBoxEmpty.new()
+		for st in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
+			add_theme_stylebox_override(st, empty)
+		focus_entered.connect(queue_redraw)
+		focus_exited.connect(queue_redraw)
+
+	func set_value(v: int) -> void:
+		v = clampi(v, lo, hi)
+		if v == value:
+			return
+		value = v
+		Audio.play("ui_move")
+		queue_redraw()
+		changed.emit(v)
+
+	func _gui_input(e: InputEvent) -> void:
+		if e.is_action_pressed("ui_left", true) and value > lo:
+			set_value(value - 1)
+			accept_event()
+		elif e.is_action_pressed("ui_right", true) and value < hi:
+			set_value(value + 1)
+			accept_event()
+		elif e.is_action_pressed("ui_accept") and not (e is InputEventMouseButton):
+			accept_event()
+			accepted.emit()
+		elif e is InputEventMouseButton and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			var mb := e as InputEventMouseButton
+			_drag = mb.pressed
+			if mb.pressed:
+				_pick(mb.position.x, true)
+			accept_event()
+		elif e is InputEventMouseMotion and _drag:
+			_pick((e as InputEventMouseMotion).position.x, false)
+			accept_event()
+		elif e is InputEventScreenTouch and (e as InputEventScreenTouch).pressed:   # touch not turned into a mouse
+			_pick((e as InputEventScreenTouch).position.x, true)
+			accept_event()
+
+	func _x0() -> float:
+		return ARROW + 6.0
+
+	func _x1() -> float:
+		return size.x - ARROW - 6.0
+
+	func _x_of(v: int) -> float:
+		return roundf(_x0() + (_x1() - _x0()) * float(v - lo) / float(maxi(1, hi - lo)))
+
+	func _pick(x: float, tap: bool) -> void:
+		if tap and x < ARROW:
+			set_value(value - 1)
+		elif tap and x > size.x - ARROW:
+			set_value(value + 1)
+		else:
+			var best := value
+			var bd := INF
+			for v in range(lo, hi + 1):
+				var d := absf(_x_of(v) - x)
+				if d < bd:
+					bd = d
+					best = v
+			set_value(best)
+
+	func _draw() -> void:
+		var f: Font = Art.font_small
+		var ty := 9.0
+		# the arrows: a pixel triangle at each end (dim when the night cannot go further that way)
+		for side in [-1, 1]:
+			var col := UI.CREAM if (side < 0 and value > lo) or (side > 0 and value < hi) else Color(UI.DIM, 0.5)
+			var cx := 9.0 if side < 0 else size.x - 10.0
+			for i in 5:
+				var hgt := 1 + 2 * i
+				var x: float = cx + 2.0 * side - float(i) * side
+				draw_rect(Rect2(x + 1, ty + 2 - i, 1, hgt), UI.INK)
+				draw_rect(Rect2(x, ty + 1 - i, 1, hgt), col)
+		# the track: lit up to the knob
+		var x0 := _x0()
+		var x1 := _x1()
+		var kx := _x_of(value)
+		draw_rect(Rect2(x0, ty, x1 - x0 + 1, 3), UI.INK)
+		draw_rect(Rect2(x0, ty, x1 - x0, 2), Color("#483b3a"))
+		draw_rect(Rect2(x0, ty, kx - x0, 2), UI.EMBER)
+		for v in range(lo, hi + 1):
+			var x := _x_of(v)
+			draw_rect(Rect2(x, ty - 2, 1, 6), UI.GOLD if v <= value else Color("#775c55"))
+			var t := str(v)
+			var tw := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
+			var p := Vector2(roundf(x - tw / 2.0 + 0.5), 24)
+			draw_string(f, p + Vector2(1, 1), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, UI.INK)
+			draw_string(f, p, t, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, UI.GOLD if v == value else UI.DIM)
+		# the knob: a little candle flame on the chosen night
+		draw_rect(Rect2(kx - 3, ty - 5, 7, 9), UI.INK)
+		draw_rect(Rect2(kx - 2, ty - 4, 5, 7), UI.GOLD)
+		draw_rect(Rect2(kx - 1, ty - 3, 2, 3), UI.CREAM)
+		draw_rect(Rect2(kx - 2, ty + 2, 5, 1), UI.EMBER)
+		if has_focus() and Controls.uses_buttons():   # the focus ring shows for keys and gamepads only
+			draw_style_box(UI.focus_box(), Rect2(Vector2.ZERO, size))

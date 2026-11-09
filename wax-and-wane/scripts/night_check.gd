@@ -60,6 +60,165 @@ static func _night(bot: Node, params: Dictionary, label: String, lines: Array) -
 			break
 
 
+# ================================================================ --tour --night
+
+## --autotest --tour --night --shots=DIR [--fit]: the Night length picker (a slot's Play, at 4 and 7 floors and
+## with a gamepad's focus; the Slots screen; the seed keypad), a 7-floor run next to a 4-floor one (the HUD at
+## 100% and 25% wax: the same candle and bar at the same fraction), the floor banners of the Kitchen, the Library
+## and the Attic, the pause menu, the results of long nights (a win, a clock death, a lodger) and the Journal (a
+## 7-floor run record, the Ledger). Staged on a copy of the records (Game.no_save), put back at the end.
+static func tour(bot: Node) -> void:
+	var main: Node = bot.main
+	var saved: Dictionary = Game.records.duplicate(true)
+	Game.no_save = true
+	_stage()
+	Controls.set_device(Controls.TOUCH)
+	main.goto("title")
+	await bot._wait(3.4)
+	var title: Node = main.current
+	var sl := Slots.open(title.root, main)
+	await bot._wait(0.6)
+	await bot._shot("night_slots")
+	Slots.pick_night(title.root, "SLOT 1: HOW LONG A NIGHT?", 7, func(_f: int): pass)
+	await bot._wait(0.5)
+	await bot._shot("night_picker_7")
+	var s: Variant = _find_slider(title.root)
+	if s:
+		s.set_value(4)
+		await bot._wait(0.3)
+		await bot._shot("night_picker_4")
+		s.set_value(5)
+		await bot._wait(0.3)
+		await bot._shot("night_picker_5")
+		# a gamepad: the focus ring on the slider, right steps the night longer
+		Controls.set_device(Controls.PAD)
+		s.grab_focus()
+		for k in 2:
+			var ev := InputEventAction.new()
+			ev.action = "ui_right"
+			ev.pressed = true
+			Input.parse_input_event(ev)
+			await bot._wait(0.15)
+			var up := InputEventAction.new()
+			up.action = "ui_right"
+			up.pressed = false
+			Input.parse_input_event(up)
+			await bot._wait(0.15)
+		await bot._wait(0.3)
+		await bot._shot("night_picker_pad")
+		print("[night] the gamepad stepped the slider to %d floors (5 + 2 presses)" % int(s.value))
+		Controls.set_device(Controls.TOUCH)
+	_close_top(title.root)
+	sl.queue_free()
+	await bot._wait(0.3)
+	title.open_seed_pad()
+	await bot._wait(0.5)
+	await bot._shot("night_seedpad")
+	_close_top(title.root)
+	await bot._wait(0.3)
+	# ---- a 4-floor and a 7-floor run at the same fractions of the night
+	for floors in [4, 7]:
+		main.goto("game", {"seed": 31, "floors": floors})
+		await bot._wait(3.4)
+		var w: Node = main.current
+		w.player.position = w.room.center() + Vector2(0, 8)
+		for frac in [1.0, 0.25]:
+			w.player.wax = w.night_minutes() * frac
+			w.freeze_t = 999.0
+			await bot._wait(1.4)
+			print("[night] %d floors at %d%%: wax %.0f of %.0f, clock %s, body rows %d" % [floors, roundi(frac * 100.0), float(w.player.wax),
+				float(w.player.wax_max), Game.clock_text(w.clock_minutes()), int(w.player.body_height())])
+			await bot._shot("night%d_hud_%d" % [floors, roundi(frac * 100.0)])
+		if floors == 7:
+			# the floor banners of the new areas, the clock where a run might be by then
+			for n in [3, 4, 6]:
+				w.player.wax = w.night_minutes() - 25.0 * n
+				w._start_floor(n)
+				await bot._wait(0.7)
+				await bot._shot("night7_banner_%d_%s" % [n, str(w.fdef()["area"])])
+				await bot._wait(2.4)
+			w.toggle_pause()
+			await bot._wait(0.5)
+			await bot._shot("night7_pause")
+			w.toggle_pause()
+			await bot._wait(0.3)
+	# ---- the results of long nights
+	var rel := ["sharp_wick", "bellows", "beeswax", "lamp_oil", "thimble", "split_wick", "hourglass", "wax_coat"]
+	var base := {"kills": 241, "rooms": 52, "relics": rel, "time": 1520.0, "streak": 12, "hits": 31, "candle": "tallow",
+		"daily": false, "seed": 31, "seeded": false, "level": 2, "coins": 12}
+	var cases := [
+		{"won": true, "floor": 7, "floors": 7, "area": "belfry", "clock": 171.0, "killer": ""},
+		{"won": false, "floor": 6, "floors": 7, "area": "attic", "clock": 210.0, "killer": "clock"},
+		{"won": false, "floor": 3, "floors": 5, "area": "kitchen", "clock": 150.0, "killer": "e:lid_crab"},
+	]
+	for c in cases:
+		var p: Dictionary = base.duplicate(true)
+		p.merge(c, true)
+		main.goto("results", p)
+		await bot._wait(1.4)
+		print("[night] share: " + Share.text(p).replace("\n", " | "))
+		await bot._shot("night_results_%s_%s" % ["win" if p["won"] else "death", str(p["area"])])
+	# ---- the Journal: a 7-floor run record and the Ledger
+	main.goto("title")
+	await bot._wait(3.4)
+	title = main.current
+	var j := Journal.open(title.root, 5)
+	await bot._wait(0.5)
+	j._select(1)   # the Ledger
+	await bot._wait(0.3)
+	await bot._shot("night_journal_ledger")
+	j._select(3)   # the last run: a 7-floor night
+	await bot._wait(0.3)
+	await bot._shot("night_journal_run7")
+	j._select(0)   # How to play: the slot's night
+	await bot._wait(0.3)
+	await bot._shot("night_journal_howto")
+	j.queue_free()
+	Game.records = saved
+	Game.no_save = false
+	Audio.stop_all()
+
+
+static func _stage() -> void:
+	var r := Game.records
+	r["runs"] = 31
+	r["wins"] = 6
+	r["seen_intro"] = true
+	r["night_floors"] = 7
+	r["best_finish"] = 63.0
+	r["best_area"] = "attic"
+	r["best_nights"] = {"5": {"tallow": 101.0}, "7": {"tallow": 171.0}}
+	var hist: Array = []
+	var rows := [
+		{"won": true, "floor": 7, "floors": 7, "area": "belfry", "clock": 171.0, "killer": ""},
+		{"won": false, "floor": 6, "floors": 7, "area": "attic", "clock": 210.0, "killer": "clock"},
+		{"won": false, "floor": 3, "floors": 5, "area": "kitchen", "clock": 96.0, "killer": "e:lid_crab"},
+		{"won": true, "floor": 4, "floors": 4, "area": "belfry", "clock": 63.0, "killer": ""},
+	]
+	for i in rows.size():
+		var h: Dictionary = rows[i].duplicate()
+		h.merge({"candle": "tallow", "relics": ["sharp_wick", "bellows", "beeswax"], "time": 900.0 + i * 200.0, "kills": 120 + i * 30,
+			"streak": 6 + i, "seed": 31 + i, "daily": false, "date": "2026-11-09", "n": 31 - i, "level": 2})
+		hist.append(h)
+	r["run_history"] = hist
+
+
+static func _find_slider(n: Node) -> Variant:
+	for c in n.get_children():
+		if c is Slots.NightSlider:
+			return c
+		var deep: Variant = _find_slider(c)
+		if deep != null:
+			return deep
+	return null
+
+
+static func _close_top(root: Control) -> void:
+	var top: Node = root.get_child(root.get_child_count() - 1)
+	if top.get_meta("modal", false):
+		top.queue_free()
+
+
 static func _floor(bot: Node, w: Node, n: int, lines: Array) -> void:
 	var fd: Dictionary = w.fdef(n)
 	var lay: Dictionary = w.layout

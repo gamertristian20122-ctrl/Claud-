@@ -468,7 +468,8 @@ func _menu_btn(text: String, cb: Callable, w: int) -> Button:
 # ---------------------------------------------------------------- a seeded run (the keypad)
 
 ## Light a house from a number a friend read out (results screen / Journal: "Seed 4821 7730").
-## Seeded runs use the house's default relic pool, so the same seed is the same run for everyone.
+## Seeded runs use the house's default relic pool, so the same seed is the same run for everyone; the night's
+## length sits next to the keypad (the slot's, as the Share text names it: "seed 4821 7730, 7 floors").
 func open_seed_pad() -> void:
 	var m := UI.modal(root, "LIGHT A SEED")
 	var mr: Control = m[0]
@@ -487,13 +488,18 @@ func open_seed_pad() -> void:
 	grid.add_theme_constant_override("v_separation", GAP)
 	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var go := UI.button("Light", func(): pass, 30)
+	var night := Slots.NightSlider.new()   # the night's length: the same seed and floors are the same house
+	night.lo = Areas.MIN_FLOORS
+	night.hi = Areas.max_floors()
+	night.value = Records.night_floors()
+	night.custom_minimum_size = Vector2(150, 26)
 	var refresh := func():
 		var d: String = st["digits"]
 		shown.text = (Records.seed_text(int(d)) if d != "" else "") + ("_" if d.length() < 10 else "")
 		if d != "":
-			hint.text = "Same seed, same house, for anyone"
+			hint.text = "Same seed, same floors: the same house, for anyone"
 		elif not last.is_empty():
-			hint.text = "Your last run: " + Records.seed_text(int(last[0].get("seed", 0)))
+			hint.text = "Your last run: %s, %d floors" % [Records.seed_text(int(last[0].get("seed", 0))), Records.night_of(last[0])]
 		else:
 			hint.text = "Type the number a friend gave you"
 		go.disabled = d == ""
@@ -510,10 +516,12 @@ func open_seed_pad() -> void:
 		if st["digits"] == "":
 			return
 		var seed_n := int(st["digits"])
+		var floors: int = night.value
 		mr.queue_free()
 		_abandon_check(func():
+			Records.set_night_floors(floors)   # the slot remembers the night's length
 			Audio.play("ui_open")
-			main.goto("game", {"seed": seed_n, "candle": sel if Candles.is_unlocked(sel) else "tallow"}))
+			main.goto("game", {"seed": seed_n, "candle": sel if Candles.is_unlocked(sel) else "tallow", "floors": floors}))
 	go.pressed.connect(light)
 	for k in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "<", "0"]:
 		var b := UI.button(k if k != "<" else "Del", press.bind(k), 34)
@@ -523,7 +531,27 @@ func open_seed_pad() -> void:
 		grid.add_child(b)
 	go.custom_minimum_size = Vector2(34, MENU_H)
 	grid.add_child(go)
-	v.add_child(grid)
+	# the keypad, and the night's length beside it
+	var mid := HBoxContainer.new()
+	mid.alignment = BoxContainer.ALIGNMENT_CENTER
+	mid.add_theme_constant_override("separation", 10)
+	mid.add_child(grid)
+	var col := VBoxContainer.new()
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", 2)
+	var big := UI.label("", 16, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	col.add_child(big)
+	col.add_child(night)
+	var until := UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+	col.add_child(until)
+	mid.add_child(col)
+	var show_night := func(n: int):
+		big.text = "%d FLOORS" % n
+		until.text = "Until %s" % Game.clock_text(Game.night_minutes(n), false)
+	night.changed.connect(show_night)
+	night.accepted.connect(light)
+	show_night.call(night.value)
+	v.add_child(mid)
 	var back := UI.button("Back", func(): mr.queue_free(), 70)
 	back.custom_minimum_size.y = MENU_H
 	back.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
