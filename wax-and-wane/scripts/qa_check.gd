@@ -25,6 +25,7 @@ static func run(at: Node) -> int:
 	await _back_matrix(at)
 	await _stove_embers(at)
 	await _pause_in_hitstop(at)
+	await _restart_kinds(at)
 	print("[qa] %d failed -> %s" % [fails, "PASS" if fails == 0 else "FAIL"])
 	return fails
 
@@ -248,3 +249,49 @@ static func _pause_in_hitstop(at: Node) -> void:
 	var quit_s := (Time.get_ticks_msec() - t0) / 1000.0
 	_say("a pause during a hit's freeze: menus at full speed", is_equal_approx(paused_ts, Game.base_time_scale) and quit_s < 2.0,
 		"time x%.2f while paused, Save & quit's fade %.1f s" % [paused_ts, quit_s])
+
+
+## Quick restart (pause menu > Restart) from Tonight's Candle and from a 7-floor night in a level-3 slot: the
+## night is scored / recorded once, the next one is the same kind of night (the same house tonight, level 2,
+## 4 floors; a new 7-floor house at the slot's level), the slot keeps one saved run (the new one).
+static func _restart_kinds(at: Node) -> void:
+	var tree: SceneTree = at.get_tree()
+	var lv0: int = Game.level
+	Game.set_level(Game.slot, 3)
+	var date := Time.get_date_string_from_system()
+	var w: Node = await _new_run(at, {"seed": hash("wax&wane" + date), "daily": true, "candle": "tallow"})
+	var seed0: int = w.run_seed
+	w.toggle_pause()
+	w.quick_restart()
+	var n: Node = await _next_world(at, w)
+	var nights: Array = Game.records.get("daily_history", [])
+	var ok_daily: bool = n != null and n.daily and n.run_seed == seed0 and int(n.level) == 2 and int(n.night_floors) == 4 \
+		and str(Game.records.get("daily_date", "")) == date and not nights.is_empty() and str(nights[0].get("date", "")) == date
+	_say("Quick restart in Tonight's Candle", ok_daily, "daily %s, same house %s, level %s, floors %s, scored %s" % [
+		n.daily if n else "-", n.run_seed == seed0 if n else "-", n.level if n else "-", n.night_floors if n else "-",
+		Game.records.get("daily_date", "")])
+	var w7: Node = await _new_run(at, {"floors": 7})
+	var seed7: int = w7.run_seed
+	w7.toggle_pause()
+	w7.quick_restart()
+	var n7: Node = await _next_world(at, w7)
+	await _frames(tree, 4)
+	var snap: Dictionary = RunSave.snap.get("run", {})
+	var ok7: bool = n7 != null and int(n7.night_floors) == 7 and int(n7.level) == 3 and n7.run_seed != seed7 \
+		and int(snap.get("floors", 0)) == 7 and int(snap.get("run_seed", 0)) == int(n7.run_seed)
+	_say("Quick restart in a 7-floor night (level 3)", ok7, "floors %s, level %s, new house %s, saved run floors %s of the new house %s" % [
+		n7.night_floors if n7 else "-", n7.level if n7 else "-", n7.run_seed != seed7 if n7 else "-", snap.get("floors", "-"),
+		int(snap.get("run_seed", 0)) == int(n7.run_seed) if n7 else "-"])
+	Game.set_level(Game.slot, lv0)
+
+
+## The world that replaces `old` (Quick restart), once it can be played.
+static func _next_world(at: Node, old: Node) -> Node:
+	var tree: SceneTree = at.get_tree()
+	var waited := 0
+	while waited < 1200 and not (at.main.current != old and at.main.current and at.main.current.name == "Game" \
+			and at.main.current.get("player") != null and not at.main._busy):
+		await tree.process_frame
+		waited += 1
+	var n: Node = at.main.current
+	return n if n != old and n and n.name == "Game" else null
