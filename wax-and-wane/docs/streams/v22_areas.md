@@ -94,5 +94,43 @@ Edited (one or two lines each unless noted):
   the light budget, nothing on a door slot; the areas' own pass: 657 rooms (3 themes x 73 layouts x 3 seeds),
   every lantern lit still within the budget (6), no gimmick on a door slot, no stove or rail in a door lane, every
   sliding-shelf combination keeps the room whole, the same seed gives the same gimmicks.
-- `--autotest --tour --areas --shots=DIR` (1600x720): 31 shots, no script errors.
+- `--autotest --tour --areas --shots=DIR` (1600x720): TOUR_PLACEHOLDER
+- Bullet judge (`tools/design_bullets.py`'s maths on the new `fx/bolt_pin`): worst dE76 to the player's shots 30.6
+  (target 30; normal / protan / deutan), floor contrast 6.04 (target 3), dark rim 100 % (player shots 0 %).
+
+### Forced bot runs (`--autotest --playtest --speed=4 --runs=3 --area=<id>`)
+Each run starts on floor 3 (the Chapel's place in today's night) at 12:24 AM with 96 wax, 5 relics (Sharp Wick,
+Bellows, Beeswax, Lamp Oil, Thimble), +0.3 damage, 2 bombs, 10 coins, and the area's own guardian; the report line is
+printed when the floor's guardian falls (then the run ends) or when Tallow does. Times are game seconds.
 RESULTS_PLACEHOLDER
+
+## Art
+`python3 tools/art_areas.py [--review=DIR]` draws every image in code (226 files): the rooms reuse
+`tools/art_rooms.py`'s builder (walls, caps, door joints, vignette) with three themes added at run time and their own
+floor painters and wall faces; creatures and props use `tools/art_monsters.py`'s character canvas and outline pass and
+`tools/art_tower.py`'s round helpers. Everything is checked against the 66 colours of the 0x72 sheet and for opaque
+pixels. Reviewed zoomed (x3 rooms, x4-x6 sheets) and fixed: a too-busy scullery checker (calmer browns), a checker
+runner (a lattice that stops before the walls), noisy attic dust and straw (flat drifts, tufts), a coat that read as
+a dark blob (a straw hat and scarf), a lumpy chair sheet, hanging pans that read as oranges (flat copper bottoms), a
+flour ghost that read as a skull (a tied sack with a printed band and a ragged hem), the Head Librarian's head (a
+smaller face, an iron-grey bun), a boxy dress form (sloping shoulders, a nipped waist), dark stove burners (raised rings).
+The only smooth image is `areas/attic/light/moon_round.png` (a light texture).
+
+## Known issues / not done
+- The night stream still has to wire the areas in (above); until then they are reachable only with `--area`.
+- Specials (Seance waves, the music box's lodger, the house champions) still draw from `world.POOLS[n]` by floor
+  number, so on an area floor they bring that depth's old lodgers.
+- The Hollow behind a top wall of the Library is a shelf-door; Hollows behind side or bottom walls keep the cracked
+  wall. Lanterns hang on the top wall only.
+- Older guardians used as an area's second option keep their own health (see Hooks 3).
+- The Attic is made for the second-to-last floor of a seven-floor night (its pool has heavier lodgers); at the test
+  depth (3) it is harder than the Chapel by design.
+- `bolt_pin` sits close to `bullet_water` in colour (dE 11) but is a diamond, not an orb; friend-or-foe passes.
+- Every bot batch (the Chapel baseline too) logs one engine warning per run from `creature_glow.gd:46`
+  (`custom_samplers ... tex_builtin`); it is older than this branch.
+- `RunSave` keeps no area: a Continue during an `--area` test rebuilds floor 3 as the Chapel.
+
+## Credits
+No new third-party art. Music: three more tracks of the already credited Ninja Adventure pack (CC0): "14 - Curse"
+(Kitchen), "30 - Ruins" (Library), "16 - Melancholia" (Attic) - `assets/licenses/CREDITS_music.txt`, `README.md`,
+the credits roll (`scripts/ui/ending.gd`) and the credits pages ("all 13 music tracks").
