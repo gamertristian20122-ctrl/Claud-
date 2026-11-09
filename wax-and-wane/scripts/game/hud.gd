@@ -744,6 +744,8 @@ func _physics_process(_dt: float) -> void:
 	if mv == Vector2.ZERO:
 		mv = Controls.move_vector()
 	var aim := _touch_aim
+	if aim == Vector2.ZERO and _r_idx >= 0 and Game.settings.get("aim", "assist") == "auto":
+		aim = world.auto_aim(p)   # v2.6 Aim: Auto - the right thumb is down, not steering: fire at a foe
 	if aim == Vector2.ZERO:
 		aim = Controls.aim_vector()
 	if aim == Vector2.ZERO:

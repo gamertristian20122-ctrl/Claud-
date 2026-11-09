@@ -1124,6 +1124,39 @@ func assist_aim(pos: Vector2, dir: Vector2) -> Vector2:
 	return best
 
 
+## v2.6 Aim: Auto (touch, Settings > Controls > Aim): where the right thumb fires while it rests on the screen -
+## the nearest foe (in the embers' reach first), the one in front of Tallow first, one in the open before one behind cover; it keeps
+## its target unless another is clearly better (no flicking between two). No foe: straight ahead. Only the
+## direction changes: the fire rate and the damage are the player's own.
+var _auto_tgt: Enemy
+func auto_aim(p: Player) -> Vector2:
+	var from := p.global_position + Vector2(0, -6)
+	var front := p.vel.normalized() if p.vel.length() > 20.0 else p.facing
+	var best: Enemy = null
+	var best_s := INF
+	for e in enemies:
+		if not is_instance_valid(e) or not e.alive or not e.active or e.intro or not e.visible:
+			continue
+		var to: Vector2 = e.global_position + Vector2(0, -e.half_h - e._jump_h) - from
+		var d := to.length()
+		if d < 0.5:
+			continue
+		var s := d * (1.35 - 0.35 * front.dot(to / d))   # in front x1.0, beside x1.35, behind x1.7
+		if not room._clear_line(from, e.global_position):
+			s *= 1.5
+		if d > p.shot_range * 1.3:
+			s *= 2.0   # out of the embers' reach: only when nothing nearer is up
+		if e == _auto_tgt:
+			s *= 0.75
+		if s < best_s:
+			best_s = s
+			best = e
+	_auto_tgt = best
+	if best == null:
+		return p.facing
+	return (best.global_position + Vector2(0, -best.half_h - best._jump_h) - from).normalized()
+
+
 func enemy_dmg_mult() -> float:
 	# by depth (the Clock Tower hits as hard as the Belfry); the level scales every blow a foe lands
 	return (1.0 + 0.12 * (minf(depth(), float(LAST_FLOOR)) - 1.0)) * float(difficulty()["dmg"])

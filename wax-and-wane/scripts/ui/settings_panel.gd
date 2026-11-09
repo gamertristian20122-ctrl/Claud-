@@ -112,7 +112,12 @@ static func _controls_page(body: VBoxContainer) -> void:
 	grid.add_child(UI.cycle("Touch", ["auto", "on", "off"], ["AUTO", "ON", "OFF"], Game.settings.get("touch_controls", "auto"),
 		func(x): Game.set_setting("touch_controls", x)))
 	grid.add_child(UI.toggle("Swap sticks", Game.settings["swap_sticks"], func(b): Game.set_setting("swap_sticks", b)))
-	grid.add_child(UI.toggle("Aim assist", Game.settings["aim_assist"], func(b): Game.set_setting("aim_assist", b)))
+	# v2.6: Assist (bends a shot onto a foe near the line), Auto (touch: hold the right thumb to fire at the nearest
+	# foe, the one in front first; drag it to aim yourself), Off. aim_assist stays the switch world.assist_aim reads.
+	grid.add_child(UI.cycle(L.t("Aim"), ["assist", "auto", "off"], [L.t("Assist"), L.t("Auto"), L.t("Off")],
+		Game.settings.get("aim", "assist"), func(v):
+			Game.settings["aim_assist"] = v != "off"
+			Game.set_setting("aim", v)))
 	if OS.has_feature("pc"):
 		grid.add_child(UI.toggle("Mouse aim", Game.settings.get("mouse_aim", true), func(b): Game.set_setting("mouse_aim", b)))
 	grid.add_child(UI.cycle("Enemy shots", ["normal", "large"], ["Normal", "Large"], Game.settings.get("shot_size", "normal"),
