@@ -16,6 +16,7 @@ var sub: Label
 var sel_name: Label
 var play_btn: Button
 var journal_btn: Button
+var cont_btn: Button   # Continue (the saved run of the slot played last), or null
 ## UX-05: menu buttons are 24 px tall with 4 px gaps (thumb-sized on a phone). The two big actions
 ## (and Continue) stand in the column on the right; Journal / Seed / Settings / Credits (and Quit on
 ## desktop) are a row along the bottom edge.
@@ -134,9 +135,9 @@ func _ready() -> void:
 	bar.offset_top = -4 - MENU_H
 	bar.offset_bottom = -4
 	root.add_child(bar)
-	var cont := RunSave.add_continue_button(menu, main)   # "Continue / Floor N - 12:41 AM" when a run is saved
-	if cont:
-		cont.custom_minimum_size.x = MENU_W
+	cont_btn = RunSave.add_continue_button(menu, main)   # "Continue / Slot N: Floor N - 12:41 AM" when a run is saved
+	if cont_btn:
+		cont_btn.custom_minimum_size.x = MENU_W
 	# --- the Candle Box: pick which candle to light
 	box = HBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
@@ -154,15 +155,7 @@ func _ready() -> void:
 		sel = "tallow"
 	_show_candle()
 	Controls.set_page_handler(root, _cycle)   # LB / RB (Q / E) pick a candle
-	var rec := Game.records
-	var line := "Runs %d   Wins %d" % [rec["runs"], rec["wins"]]
-	if Game.slot_live:   # the slot played last (the Slots screen switches slots)
-		line = "Slot %d, level %d   %s" % [Game.slot, Game.level, line]
-	if rec.get("daily_date", "") == Time.get_date_string_from_system():
-		line += "   Tonight: %d" % int(rec.get("daily_first", 0))
-	if float(rec["best_finish"]) != 0.0:
-		line += "   Best: done by %s" % Game.clock_text(float(rec["best_finish"]))
-	stats = UI.label(line, 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	stats = UI.label(_stats_text(), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	stats.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	stats.size = Vector2(300, 10)
 	stats.position = Vector2(-150, 81)   # under the candle's line (the bottom edge holds the button row)
@@ -171,7 +164,43 @@ func _ready() -> void:
 	ver.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	ver.position = Vector2(-28, -12)
 	root.add_child(ver)
+	Game.slot_changed.connect(refresh_slot)   # the Slots screen deleted the slot in use or changed its level
 	_intro_begin()
+
+
+## "Slot 1, level 2   Runs 23   Wins 4   Tonight: 4120   Best: done by 12:58 AM"
+func _stats_text() -> String:
+	var rec := Game.records
+	var line := "Runs %d   Wins %d" % [rec["runs"], rec["wins"]]
+	if Game.slot_live:   # the slot played last (the Slots screen switches slots)
+		line = "Slot %d, level %d   %s" % [Game.slot, Game.level, line]
+	if rec.get("daily_date", "") == Time.get_date_string_from_system():
+		line += "   Tonight: %d" % int(rec.get("daily_first", 0))
+	if float(rec["best_finish"]) != 0.0:
+		line += "   Best: done by %s" % Game.clock_text(float(rec["best_finish"]))
+	return line
+
+
+## The slot in use changed under the title (deleted, or a new level): its line, Continue and the
+## Candle Box follow at once.
+func refresh_slot() -> void:
+	if not is_inside_tree() or stats == null:
+		return
+	stats.text = _stats_text()
+	var sep := float(menu.get_theme_constant("separation"))
+	if is_instance_valid(cont_btn) and not RunSave.has_snapshot():
+		var dy := cont_btn.custom_minimum_size.y + sep
+		menu.remove_child(cont_btn)
+		cont_btn.queue_free()
+		cont_btn = null
+		menu.position.y += dy
+		if _home.has(menu):
+			_home[menu] = menu.position if not _intro else _home[menu] + Vector2(0, dy)
+	sel = str(Game.records.get("candle", "tallow"))
+	if not Candles.is_unlocked(sel):
+		sel = "tallow"
+	_show_candle()
+	journal_btn.queue_redraw()
 
 
 # ---------------------------------------------------------------- opening

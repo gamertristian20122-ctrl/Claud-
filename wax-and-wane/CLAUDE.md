@@ -87,7 +87,12 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   as shown on the clock); `Tower.ARRIVAL_WAX` (+5 min), `Enemy.FLOOR_HP[4]`,
   `DEFS["keeper"]["hp"]` (380), `Keeper.HAND_HIT` (9), `Keeper.MIN_PHASE`, `Keeper.MAX_SENTRIES` (3), the
   per-phase cooldowns in `Keeper.tower_keeper` and `chime_t`. Test with `--tower [--keeper --keeperwax=N]`.
-- Candles: `Candles.LIST` (`wax`, `drain`, `speed`, `damage`, `hit`...). Black Taper is the hard mode.
+- Candles: `Candles.LIST` (`wax`, `drain`, `speed`, `damage`, `hit`, `light`, `dark_hit`...): sidegrades, never
+  a hard mode (the Black Taper: Tallow's wax and melt, a short light, x1.5 damage to foes beyond it).
+- Difficulty (v2.1): `world.LEVELS`, one level per save slot (1 Gentle, 2 Midnight = every number above,
+  3 Witching Hour, 4 Two O'Clock); `world.difficulty()` feeds the melt, foe damage, foe health, marked foes and
+  drip wax. Tonight's Candle is always 2. Judge a level on a fresh profile with `--difficulty=N`
+  (`docs/streams/v21_slots.md`).
 
 ## Installed skills (repo-level, `/.claude/skills`; sources pinned in `/skills-lock.json`)
 - Game: godot-export, godot-animation, godot-nodes-scenes, godot-ui-control, game-feel, game-audio,

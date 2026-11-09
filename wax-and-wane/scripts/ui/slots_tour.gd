@@ -202,6 +202,8 @@ static func tour(at: Node) -> void:
 	await at._wait(0.4)
 	_ok(not FileAccess.file_exists(Game.slot_path(empty)) and not FileAccess.file_exists(Game.run_path(empty)) and Game.slot_data(empty).is_empty(),
 		"slot %d deleted (its file and saved run gone)" % empty)
+	_ok(not ("Slot %d" % empty) in str(title.stats.text) and (title.cont_btn != null) == RunSave.has_snapshot(),
+		"the title behind follows the slot in use: '%s', Continue %s" % [title.stats.text, "shown" if title.cont_btn else "none"])
 	await at._shot("slots_deleted_" + tag)
 	# ---- 7. Play over a saved run asks first; Continue keeps the run's own level
 	if not RunSave.peek(other).is_empty():

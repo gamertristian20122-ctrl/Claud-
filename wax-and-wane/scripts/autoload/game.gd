@@ -220,6 +220,7 @@ func set_level(n: int, lvl: int) -> void:
 	if n == slot:
 		level = lvl
 		save()
+		slot_changed.emit()
 		return
 	var cf := ConfigFile.new()
 	if cf.load(slot_path(n)) == OK:
