@@ -73,16 +73,19 @@ Target (fresh profile, no unlocks, the `--playtest --speed=4` bot, 12 runs per s
 ignores most telegraphs, so people do better): about half the runs win, most losses come in the Crypt, and only
 strong runs beat the Belfry by 1:00 AM and climb to the Clock Tower. Single batches swing by +-15%. The special
 rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospecials`). Knobs:
-- `world.DRAIN_PER_SEC`: the base melt (a full 120-wax candle lasts 8 minutes unhurt).
+- `world.DRAIN_PER_SEC`: the base melt (a full 120-wax candle lasts 8 minutes unhurt on floor 1), times
+  `world.FLOOR_DRAIN` per floor `[1.0, 1.1, 1.3, 1.45, 1.2]`. Wax income per floor: `KINDLE_CAP`, `QUICK_WAX`,
+  `WAX_ODDS`; a low wick gets up to `STEADY_ADD` (15) minutes on reaching floors 3-4 (`STEADY_BELOW` 40).
 - `Enemy.TOUCH` = `[5, 6, 7, 7, 7]`: contact damage per floor. The early floors are the strongest knob on
-  the win rate. `Enemy.FLOOR_HP` = `[1.0, 1.35, 1.85, 2.4, 2.5]`: creature health per floor (floor 5 = tower).
+  the win rate. `Enemy.FLOOR_HP` = `[1.0, 1.35, 1.85, 2.4, 3.0]`: creature health per floor (floor 5 = tower).
   Guardian health: `hp` in `Enemy.DEFS`. Marked foes: `world.champ_chance()`. Drops: `world._plain_drop`.
 - Relic odds: `RelicFx._weight` (tier weights `[10, 8, 5.5, 3, 1.4]`, per pool). Locked items: `Unlocks.TABLE`.
 - Special rooms: `Specials.INFO[t]["chance"]` (Seance 0.4, Mirror 0.45, Music Box 0.4, Study 0.35, Font 0.3),
   `MINI_CHANCE` 0.5, `MINI_HP` 6, `MINI_TOUCH` 9, `SEANCE_TIER` 2, `WAVE_SIZE` / `WAVE_SIZE_CELLAR`,
   `MIRROR_COST` 15, `FONT_ODDS`, `TUNES`, and the champion's relic chance (25%, `Specials._cleared`).
-- Clock Tower: `Tower.UNLOCK_CLOCK` (60 = 1:00 AM), `Tower.ARRIVAL_WAX` (+12 min), `Enemy.FLOOR_HP[4]`,
-  `DEFS["keeper"]["hp"]` (280), `Keeper.HAND_HIT` (6), `Keeper.MIN_PHASE`, `Keeper.MAX_SENTRIES` (2), the
+- Clock Tower: opens only after a first normal win, if the Belfry falls by `Tower.UNLOCK_CLOCK` (60 = 1:00 AM,
+  as shown on the clock); `Tower.ARRIVAL_WAX` (+5 min), `Enemy.FLOOR_HP[4]`,
+  `DEFS["keeper"]["hp"]` (380), `Keeper.HAND_HIT` (9), `Keeper.MIN_PHASE`, `Keeper.MAX_SENTRIES` (3), the
   per-phase cooldowns in `Keeper.tower_keeper` and `chime_t`. Test with `--tower [--keeper --keeperwax=N]`.
 - Candles: `Candles.LIST` (`wax`, `drain`, `speed`, `damage`, `hit`...). Black Taper is the hard mode.
 
@@ -95,18 +98,18 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
 - Other: memory-management, find-skills. (`/.agents/skills` holds the same set minus game-audio,
   godot-export, pixel-art-sprites and roguelike.)
 
-## Where things stand (handoff, 2026-11-08)
-- Latest build: **1.9.2** (versionCode 7), sent to the owner. Everything in it is merged on `ccr-37a74654-pp10xa`.
-- 2.0 content is done: 5 floors (secret Clock Tower), 35 lodgers, 9 guardians, 64 relics, 5 special rooms,
-  6 mini-bosses, Journal + unlocks, Save & Continue, keyboard/mouse/gamepad, achievements, pixel-art
-  banded light + waning world, Share button. Bot win rate on the 8-minute candle: about 7 of 12.
-- Store kit: `docs/marketing/` (store copy, launch plan, `store_assets/` images; key art is a bit dark).
-- Trailer, 3 vertical shorts and a store loop: `./tools/make_trailer.sh all` re-makes them from the current build
-  into `build/videos/` (git-ignored; `COPY_TO=<dir>` copies them out). AI narrator (Kokoro TTS, Apache-2.0) in
-  `docs/marketing/voice/` (the owner's own recordings go in `voice/owner/`); posting guide and AI-disclosure
-  steps: `docs/marketing/videos.md`. Never let Godot import `build/` (it holds ~10k footage PNGs): the script
-  writes `build/.gdignore`. Next: version 2.0.0, APK + AAB + desktop zips, send them.
-- The owner is connecting SpriteCook (sprite generation), Creative Claw (voice clone for meme videos) and
-  Kobiton (real-phone testing) in claude.ai connectors; they need a new session to load. Use Kobiton to
-  measure Effects Full vs Lite on real phones and decide the phone default.
-- Usage limits stopped parallel agent teams twice: run at most 2-3 agents at once and commit after every step.
+## Where things stand (handoff, 2026-11-09)
+- Latest build: **2.0.0** (versionCode 9), the release candidate: APK, Play AAB (PLAY-READY), Windows and Linux
+  zips, sent to the owner. Everything is merged on `ccr-37a74654-pp10xa`.
+- A four-reviewer studio review (critic, QA, mobile UX, release manager; all findings in
+  `docs/streams/fix_*.md`) scored 1.9.3 at 6.5/10; its blockers and majors are fixed in 2.0.0.
+- Balance on 2.0.0 (12 fresh-seed bot runs): 7 wins, normal wins finish around 1:08 AM, 2 of 7 wins reach the
+  Clock Tower, losses in the Crypt/Chapel; forced `--tower --keeper` runs lose to the Keeper in phase 3.
+- Posting: `docs/marketing/POST_IT.md` (store by store), `facts.md` (`tools/make_facts.py`), store art
+  (`tools/store_art.py`, judge PASS), trailer + shorts (`./tools/make_trailer.sh all`; `CTA=play|steam` cuts),
+  press kit (`./tools/press_kit.sh`), privacy policy `PRIVACY.md`, `LICENSE` (all rights reserved).
+- Not done / owner-only: developer name, contact email, prices, store accounts and fees; one real run of the
+  Windows zip on the ROG Ally; real-phone performance of Effects Full vs Lite (Kobiton, once connected);
+  Steamworks achievements/cloud (no GodotSteam yet; the store copy does not promise them).
+- Usage limits stopped parallel agent teams several times: run at most 2-3 agents at once and commit after
+  every step.
