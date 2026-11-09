@@ -246,8 +246,14 @@ static func _guardian(bot: Node, w: Node, n: int) -> Array:
 	if intro and intro.has_method("skip"):
 		intro.skip()
 		await bot._wait(0.1)
+	# off the spot where the trapdoor opens (center + 0, 36): standing there, Tallow falls through to the next floor
+	# a moment after it opens, and with --speed=N that came before a fixed wait ended (the page was a floor behind)
+	w.player.position = w.free_spot_near(w.room.center() + Vector2(-64, 8), 6.0)
 	_kill(w.boss)
-	await bot._wait(1.6)
+	for i in 60:   # the fall plays in game time: wait for the room to clear (rewards, trapdoor), at any --speed
+		await bot._wait(0.1)
+		if w.room.data["cleared"]:
+			break
 	return await _collect_all(bot, w)
 
 

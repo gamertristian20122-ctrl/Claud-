@@ -88,7 +88,7 @@ text is unchanged; it now goes through `L.t`.
 
 ## Test flags
 ```
-godot --headless --path . -- --autotest --diarycheck                 # 42 checks, exit 1 on a FAIL
+godot --headless --path . -- --autotest --diarycheck [--speed=4]    # 42 checks, exit 1 on a FAIL (any speed)
 godot --headless --path . -- --autotest --ending=<id> [--speed=4] [--shots=/abs/dir]   # true / housekeeper / windows / whole_story
 xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 \
     -- --autotest --tour --diary --fit --shots=/abs/dir                # 24 shots
