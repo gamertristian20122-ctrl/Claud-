@@ -296,6 +296,21 @@ static func tour(bot: Node) -> void:
 		await bot._shot("area_%s_guardian_card" % id)
 		await bot._wait(4.5)
 		await bot._shot("area_%s_guardian_fight_1" % id)
+		# its signature move, caught in the act
+		var b: Enemy = w.boss
+		if b and is_instance_valid(b) and b.alive:
+			var to_p: Vector2 = w.player.global_position - b.global_position
+			match id:
+				"kitchen":
+					AreaAI.ai()._spill_tell(b, to_p)
+					await bot._wait(0.5)
+				"library":
+					AreaGimmicks.hush_ring(w, b.global_position + Vector2(0, -2), [to_p.angle() + 1.2], 66.0)
+					await bot._wait(1.1)
+				"attic":
+					AreaGimmicks.spin_sheets(b, 3, 3.2)
+					await bot._wait(1.4)
+			await bot._shot("area_%s_guardian_signature" % id)
 		if w.boss and is_instance_valid(w.boss):
 			w.boss.hp = w.boss.max_hp * 0.3   # straight to its last phase
 			w.on_boss_hp(w.boss)

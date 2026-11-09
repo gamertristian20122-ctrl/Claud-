@@ -153,7 +153,7 @@ const DEFS := {
 		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
 	# the Long Night's guardians (scripts/game/area_ai.gd); each area's second option is an older guardian (Areas.LIST)
-	"stockpot": {"hp": 150.0, "speed": 16.0, "ai": "area_stockpot", "r": 13.0, "boss": true, "heavy": true, "sprite": "areas/kitchen/stockpot",
+	"stockpot": {"hp": 175.0, "speed": 16.0, "ai": "area_stockpot", "r": 13.0, "boss": true, "heavy": true, "sprite": "areas/kitchen/stockpot",
 		"name": "THE STOCKPOT", "title": "It has simmered since the house was built", "glow_px": ["#facb3e"],
 		"phase_lines": ["", "It boils over...", "The broth is SCALDING!"],
 		"lore": "Every soup the house ever made went into it. Something in there is still cooking.", "stain": Color("#c56025")},
