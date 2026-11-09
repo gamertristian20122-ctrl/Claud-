@@ -109,7 +109,13 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
 - **Queue after v2.1 + Long Night batch 1:** `docs/design/ROADMAP_V2.md` (special moves -> Challenge Nights ->
   diary pages -> translations -> Boss Rush; Long Night batch 2 as a side track). Design of the long night:
   `docs/design/LONG_NIGHT.md`.
-- Latest build: **2.3.0** (versionCode 11), APK only, sent to the owner. It holds v2.1 (three save slots with
+- Latest build: **2.5.0** (versionCode 12), APK only, sent to the owner. On top of 2.3.0 it adds v2.4 boss intro
+  animations (every guardian makes a 1.4-2.0 s entrance, any tap skips; `scripts/game/boss_intro.gd`,
+  `docs/streams/v24_boss_intros.md`) and v2.5 the story (`docs/design/STORY.md`: Martha Fenn, the housekeeper, made
+  Tallow so the house could rest; 24 diary pages, the Diary tab, three new endings, `--diarycheck`, `--ending=<id>`;
+  `docs/streams/v25_story.md`). The owner chose to KEEP the AI-drawn art (a swap of the guardians for free
+  Ninja Adventure bosses was started and cancelled) and to label it honestly in the store forms.
+- 2.3.0 held v2.1 (three save slots with
   difficulty 1-4, a 2.0 save moves into Slot 1; the Black Taper as a sidegrade; four new guardians; bigger self-lit
   enemy shots, Normal / Large), v2.2 (the night-length slider, 4 to 7 floors, with the Kitchen, Library and Attic;
   `docs/streams/v22_night.md`, `v22_areas.md`) and v2.3 (a special move per candle + the ability button + the Keys
@@ -119,7 +125,7 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   god run, the relevant tour), small batches when a number really moved. Long nights after the merge: 7 floors
   2 of 5, 5 floors 2 of 3. Per-candle win rates with the moves were not measured (only Tallow: 3 of 8 with or
   without Flare Up).
-- Next in `ROADMAP_V2.md`: step 2 Challenge Nights (v2.4), with Long Night batch 2 (Conservatory, Ballroom,
+- Next in `ROADMAP_V2.md`: step 2 Challenge Nights (now v2.6; steps 3 diary + intros are done), with Long Night batch 2 (Conservatory, Ballroom,
   Gallery; the slider to 10) as the side track. Small follow-ups: the hot stove tops could glow more on a phone;
   with Swap sticks on a 384-wide screen a banner subtitle can run off the right edge (`hud._place_banner`); the
   chalk drawings show default keys after a rebind.
