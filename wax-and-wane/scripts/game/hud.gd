@@ -391,7 +391,9 @@ func _place_banner() -> void:
 	var sub_y := top + (18.0 if _narrow else 17.0)
 	var mid := floorf(vs.x / 2.0)
 	var left := 72.0 + ins.x   # the clock, coins and bombs column
-	var right := minimap.position.x - 4.0 if sub_y < minimap.position.y + minimap.size.y else keep_btn.position.x - 4.0
+	var right := minimap.position.x - 4.0
+	if sub_y >= minimap.position.y + minimap.size.y:   # v2.7: with Swap sticks the keepsake is on the left: the screen's edge
+		right = keep_btn.position.x - 4.0 if keep_btn.position.x > mid else vs.x - ins.y - 4.0
 	var sub_max := 2.0 * minf(mid - left, right - mid)
 	var sw := Art.font_small.get_string_size(banner_sub.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
 	var lines := 1 if sw <= sub_max else 2
@@ -464,8 +466,9 @@ func preview_item(title: String, sub: String) -> void:
 
 
 func show_hint(text: String, dur := 6.0) -> void:
-	# UX-04: a first-time tip (Game.tip) that lands while a guardian fights waits for the fight to end
-	if boss_box.visible and int(Game.get_meta("tip_frame", -1)) == Engine.get_process_frames():
+	# UX-04: a first-time tip (Game.tip) that lands while a guardian fights waits for the fight to end; v2.7: so does
+	# any hint during the controls primer (its own line sits there), shown when it ends (Primer._finish)
+	if (boss_box.visible and int(Game.get_meta("tip_frame", -1)) == Engine.get_process_frames()) or Primer.active(world):
 		if _held_tips.size() < 3 and not _held_tips.any(func(h): return h[0] == text):
 			_held_tips.append([text, dur])
 		return
@@ -1169,10 +1172,11 @@ func open_pause() -> void:
 	var resume := UI.primary("Resume", func(): world.toggle_pause())   # v2.6: the brass button
 	resume.set_meta("default_focus", true)
 	v.add_child(resume)
-	var row1 := HBoxContainer.new()   # Journal | Map | Settings: thirds, like the row below
+	var row1 := HBoxContainer.new()   # Journal | Map | Settings | How to play (v2.7: the controls primer's reel)
 	row1.add_theme_constant_override("separation", 6)
 	for b in [UI.button("Journal", func(): Journal.open(root), 72), UI.button(L.t("Map"), open_map, 72),
-			UI.button("Settings", func(): SettingsPanel.open(root), 72)]:
+			UI.button("Settings", func(): SettingsPanel.open(root), 72),
+			UI.button(L.t("How to play"), func(): PrimerReel.open(root, str(world.get("candle_id"))), 72)]:
 		(b as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row1.add_child(b)
 	v.add_child(row1)

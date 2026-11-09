@@ -812,8 +812,11 @@ func _d_howto() -> void:
 	var nf := Records.night_floors()   # this slot's night length
 	_head(_pic(Art.tex("hero/hero_preview"), 2), "How to play", [["Midnight to %s" % Records.hour_words(Game.night_minutes(nf)), UI.EMBER]])
 	_text("Burn down %s floors and snuff the Belfry's guardian %s." % [Records.number_word(nf), Records.night_end_phrase(nf, "the clock")])
-	_text("Your wax is your life and your time: hits melt it, drippings mend it.", UI.WAX)
-	_text(Controls.intro_line(), UI.DIM)
+	# v2.7: the controls and wax = time as the primer showed them, animated (PrimerReel), not as more lines of text;
+	# it opens over the Journal's parent so Back closes it first
+	var show := UI.button(L.t("Show me"), func(): PrimerReel.open(get_parent()), 96)
+	show.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_detail.add_child(show)
 
 
 func _d_totals() -> void:

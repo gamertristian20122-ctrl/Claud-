@@ -549,6 +549,8 @@ func _finish(skip_it: bool) -> void:
 		_spend("move_" + _move_id)
 	if skip_it and not ("move" in taught_now and "aim" in taught_now) and Game.tip("controls", 1):
 		hud.show_hint(Controls.controls_hint(), 7.0)   # skipped before the sticks: the one-line reminder, once
+	if not (hud.get("_held_tips") as Array).is_empty():
+		hud._flush_tips()   # a hint that came up during the lesson (a practice bomb opened a hollow...) shows now
 	Game.save()
 	_plate.visible = false
 	_skip.visible = false

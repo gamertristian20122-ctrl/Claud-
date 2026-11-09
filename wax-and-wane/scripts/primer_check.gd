@@ -717,3 +717,56 @@ static func tour(at: Node) -> void:
 	await at._shot("primer_calm_wax_" + tag)
 	Game.settings["reduce_motion"] = false
 	at.args.erase("primer")
+	await _reel_tour(at, tag)
+
+
+static func _find_reel(n: Node) -> PrimerReel:
+	for c in n.find_children("*", "Control", true, false):   # (a script class: find_children's type sees Control)
+		if c is PrimerReel:
+			return c as PrimerReel
+	return null
+
+
+## How to play: the pause menu's button, the reel on every step (touch) and on keys / pad, the Journal's entry.
+static func _reel_tour(at: Node, tag: String) -> void:
+	_fresh(Controls.TOUCH)
+	Game.records["runs"] = 4   # a returning player: no primer
+	at.main.goto("game", {"candle": "tallow", "floors": 4, "seed": SEED, "seeded": false})
+	await at._wait(2.0)
+	var w: Node = at.main.current
+	w.toggle_pause()
+	await at._wait(0.4)
+	await at._shot("howto_pause_menu_" + tag)
+	_press_text(w.hud.pause_layer, L.t("How to play"))
+	await at._wait(0.4)
+	var reel := _find_reel(w.hud.root)
+	if reel == null:
+		print("[primer] tour: no reel")
+		return
+	for dev in [Controls.TOUCH, Controls.KEYS, Controls.PAD]:
+		Controls.set_device(dev)
+		var short: String = {Controls.TOUCH: "touch", Controls.KEYS: "keys", Controls.PAD: "pad"}[dev]
+		var steps: Array = range(Primer.STEPS.size()) if dev == Controls.TOUCH else [0, 1, 3, 4]
+		for i in steps:
+			reel.step = i
+			reel._texts()
+			reel.t = [0.3, 0.42, 1.0, 0.9, 0.75][i]
+			reel.set_process(false)   # hold the moment for the picture
+			reel.queue_redraw()
+			await at._wait(0.1)
+			await at._shot("howto_reel_%s_%d_%s_%s" % [short, i + 1, Primer.STEPS[i], tag])
+		reel.set_process(true)
+	Controls.set_device(Controls.TOUCH)
+	var top: Node = w.hud.root.get_child(w.hud.root.get_child_count() - 1)
+	if top.get_meta("modal", false):
+		top.queue_free()
+	await at._wait(0.3)
+	# the Journal's Records page: How to play (Show me opens the same reel)
+	var j := Journal.open(w.hud.root, Journal.TABS.find("records"))
+	await at._wait(0.5)
+	j._select(0, false)
+	await at._wait(0.3)
+	await at._shot("howto_journal_" + tag)
+	_press_text(j, L.t("Show me"))
+	await at._wait(0.5)
+	await at._shot("howto_journal_reel_" + tag)
