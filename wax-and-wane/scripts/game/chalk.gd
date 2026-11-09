@@ -13,6 +13,10 @@ extends Node2D
 ## candle's light (median contrast to the floor about 2.8:1 before).
 const ALPHA := 0.8
 const INK := Color("#21141b")
+## v2.7: the controls primer (scripts/ui/primer.gd) shows the controls now; the floor keeps one small reminder, the
+## wax = time doodle, and only for a player who skipped the primer before its wax lesson (Primer.chalk_wanted).
+## The other drawings stay in the art (and SPOTS) for the Journal's tours and older notes.
+const PARTS := ["wax_time"]
 ## Where each drawing sits, room-local (the floor is (16, 32) .. (256, 176); Tallow starts at (136, 112)).
 const SPOTS := {
 	"wax_time": Vector2(136, 52),
@@ -35,7 +39,7 @@ static func attach(r: Node2D) -> void:
 	if w == null or str(r.data.get("type", "")) != "start" or not Art.has("chalk/chalk_wax_time"):
 		return
 	var fl: Variant = w.get("floor_num")
-	if fl == null or int(fl) != 1:
+	if fl == null or int(fl) != 1 or not Primer.chalk_wanted(w):
 		return
 	var c := Chalk.new()
 	c.room = r
@@ -46,7 +50,7 @@ func _ready() -> void:
 	name = "Chalk"
 	z_index = -17
 	modulate.a = ALPHA
-	for k in SPOTS:
+	for k in PARTS:
 		var ink := Sprite2D.new()   # the under-stroke: the same drawing, 1 px lower, in ink
 		ink.centered = false
 		ink.modulate = INK
@@ -134,7 +138,7 @@ func _clear_decals() -> void:
 	if not (items is Array):
 		return
 	var rects: Array[Rect2] = []
-	for k in SPOTS:
+	for k in PARTS:
 		rects.append(Rect2(SPOTS[k] - Vector2(28, 24), Vector2(56, 48)))
 	var keep: Array = []
 	for it in items:

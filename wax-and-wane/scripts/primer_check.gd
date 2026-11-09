@@ -31,6 +31,8 @@ static func _ok(cond: bool, what: String) -> void:
 static func lessons(text: String) -> Array:
 	var t := text.strip_edges()
 	var out: Array = []
+	if t.begins_with("Keep firing"):
+		return ["relic: keep firing to charge"]   # a relic's own lesson (Stove Door, Blowlamp), not aiming
 	var rules := [
 		["move", "(?i)(left thumb|wasd|left stick|^move\\b|walk a few)"],
 		["aim", "(?i)(right thumb|arrow|right stick|\\baim|fire at)"],
@@ -284,6 +286,10 @@ static func check(at: Node) -> void:
 	var seed_n := int(at.args.get("seed", str(SEED)))
 	if Game.slot_exists(1) or Game.slot_exists(2) or Game.slot_exists(3):
 		print("[primer] note: this profile has save slots; the judge plays in memory only (Game.no_save)")
+	if at.args.has("skiponly"):   # --skiponly: just Skip on the three devices (quick)
+		await _skip_checks(at, seed_n)
+		print("[primer] DONE fails=%d" % fails)
+		return
 	for dev in devs:
 		await _scenario(at, dev, seed_n)
 	if not at.args.has("device"):
@@ -416,10 +422,17 @@ static func _skip_checks(at: Node, seed_n: int) -> void:
 			Controls.PAD:
 				button(JOY_BUTTON_BACK, true)
 				button(JOY_BUTTON_BACK, false)
-		await at.get_tree().process_frame
-		await at.get_tree().process_frame
+		var gone := false
+		for i in 12:   # a skipped primer frees itself at once: read it while it is there (or the slot's record after)
+			if not is_instance_valid(pr):
+				gone = str(Game.records.get("primer", "")) == "skipped"
+				break
+			if pr.ended:
+				gone = pr.skipped
+				break
+			await at.get_tree().process_frame
 		var frames := Engine.get_process_frames() - f0
-		_ok(pr.ended and pr.skipped and w.room.is_open and str(Game.records.get("primer", "")) == "skipped" and not is_instance_valid(pr._dummy),
+		_ok(gone and w.room.is_open and str(Game.records.get("primer", "")) == "skipped",
 			"%s: Skip (%s) ends it within %d frames, the doors open, the slot remembers it" % [dev,
 			{Controls.TOUCH: "a tap", Controls.KEYS: "Enter", Controls.PAD: "Back"}[dev], frames])
 		if dev == Controls.TOUCH:

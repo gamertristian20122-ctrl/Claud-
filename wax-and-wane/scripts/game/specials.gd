@@ -368,7 +368,7 @@ func _entered() -> bool:
 		d["greeted"] = true
 		_log("enter " + t)
 		world.hud.show_banner(INFO[t]["name"], INFO[t]["sub"], 1.8)
-		if Game.tip("special_" + t, 2):
+		if Game.tip("special_" + t):   # v2.7: once per slot
 			world.hud.show_hint(INFO[t]["hint"], 4.0)
 	if not d.get("stocked", false):
 		d["stocked"] = true

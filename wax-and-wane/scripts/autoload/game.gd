@@ -314,8 +314,9 @@ func _set_bus(bus: String, v: float) -> void:
 	AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(v, 0.001)))
 
 
-## True the first few times a tip is requested (tips teach new mechanics once, then stay quiet).
-func tip(key: String, times := 2) -> bool:
+## True the first time a tip is requested in this slot (v2.7: every hint shows once per slot; it was twice). The
+## controls primer marks the tips it taught as shown (Primer._spend), so they never repeat it.
+func tip(key: String, times := 1) -> bool:
 	var t: Dictionary = records.get("tips", {})
 	var n: int = t.get(key, 0)
 	if n >= times:

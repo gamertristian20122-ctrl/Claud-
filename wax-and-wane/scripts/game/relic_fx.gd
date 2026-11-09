@@ -217,8 +217,8 @@ func on_relic(id: String) -> void:
 		"cuckoo_clock":
 			cuckoo_max = int(world.clock_minutes() / 15.0)
 		"stove_door", "blowlamp":
-			if Game.tip(id):
-				world.hud.show_hint("Hold the right thumb to stoke it" if id == "stove_door" else "Hold the right thumb: a jet of flame", 3.0)
+			if Game.tip(id):   # v2.7: in the words of the device in use (keys and pads have no right thumb)
+				world.hud.show_hint(L.t("Keep firing to stoke it") if id == "stove_door" else L.t("Keep firing: a jet of flame"), 3.0)
 	if has.has("magpie_nest"):
 		var f := 1.0 + 0.04 * p.relics.size()
 		p.damage = p.damage / magpie_f * f

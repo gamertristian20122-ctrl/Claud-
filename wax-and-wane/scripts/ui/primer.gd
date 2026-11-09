@@ -71,24 +71,40 @@ var _skip_key: Label
 
 # ================================================================ when
 
-## A save slot's first run, a real player, the start room of floor 1: the primer runs (it has not been done or
-## skipped in this slot). Tests: only with --primer.
-static func should_run(world: Node) -> bool:
-	if world == null or not is_instance_valid(world) or world.get("player") == null or world.get("hud") == null:
+## A save slot's first run, a real player, floor 1, not Tonight's Candle nor a typed-in seed, and the primer has not
+## been done or skipped in this slot: it will run. Tests: only with --primer. (No room needed: _start_floor asks.)
+static func would_run(world: Node) -> bool:
+	if world == null or not is_instance_valid(world):
 		return false
 	var m: Node = world.get("main")
 	var test: bool = m != null and m.get("autotest") != null
 	if test and not (m.autotest.get("args") as Dictionary).has("primer"):
 		return false
-	if bool(world.get("daily")) or bool(world.get_meta("seeded", false)):
-		return false
-	var r: Node = world.get("room")
-	if int(world.get("floor_num")) != 1 or r == null or str(r.get("data").get("type", "")) != "start":
+	if world.get("daily") == true or world.get_meta("seeded", false) == true or world.get("floor_num") != 1:
+		return false   # (stand-in worlds of the room checks have none of these: no primer there either)
+	if m == null:
 		return false
 	if test:
 		return true
 	var st := str(Game.records.get("primer", ""))
 	return st != "done" and st != "skipped" and int(Game.records.get("runs", 0)) <= 1
+
+
+## would_run, and the run stands in floor 1's start room with its candle and HUD: start it now.
+static func should_run(world: Node) -> bool:
+	if not would_run(world) or world.get("player") == null or world.get("hud") == null:
+		return false
+	var r: Node = world.get("room")
+	return r != null and str(r.get("data").get("type", "")) == "start"
+
+
+## The start room's one chalk reminder (WAX = TIME, chalk.gd) is for a player the primer did not teach it: it is
+## drawn under a primer (which keeps it hidden, and shows it only if Skip came before the wax lesson) and stays for
+## the rest of that run. Never otherwise: the story card (no primer) or the primer said it already.
+static func chalk_wanted(world: Node) -> bool:
+	if would_run(world):
+		return true
+	return str(Game.records.get("primer", "")) == "skipped" and not taught("wax") and int(Game.records.get("runs", 0)) <= 1
 
 
 ## world._ready: start it if this run should have it. Safe to call again (a story scene that ends may call it).
@@ -264,30 +280,24 @@ func _go(i: int) -> void:
 ## The step's words: the plate names it (by the picture), the ribbon says what to do.
 func _texts() -> void:
 	var id: String = STEPS[step]
-	var head := ""
-	var line := ""
-	match id:
-		"move":
-			head = L.t("MOVE")
-			line = L.t("Walk a few steps.")
-		"aim":
-			head = L.t("AIM + FIRE")
-			line = L.t("Fire at the wax dummy.")
-		"wax":
-			head = L.t("WAX = TIME")
-			line = L.t("A hit melts minutes. Grab the drips back.")
-		"bomb":
-			head = L.t("BOMB")
-			line = L.t("Drop a bomb, then step back.")
-		"special":
-			head = Moves.name_of(_move_id).to_upper()
-			line = Moves.line_of(_move_id)
-	_plate_lbl.text = head
-	_line_lbl.text = line
-	message = "%s: %s" % [head, line]
+	var tx := Primer.texts(id, _move_id)
+	_plate_lbl.text = tx[0]
+	_line_lbl.text = tx[1]
+	message = "%s: %s" % tx
 	lessons = {"move": ["move"], "aim": ["aim"], "wax": ["wax", "spill"], "bomb": ["bomb"], "special": ["special"]}[id]
 	_plate.reset_size()
 	_line.reset_size()
+
+
+## A step's name (the plate) and what to do (the ribbon); the replay (PrimerReel) shows the same words.
+static func texts(id: String, move_id := "") -> Array:
+	match id:
+		"move": return [L.t("MOVE"), L.t("Walk a few steps.")]
+		"aim": return [L.t("AIM + FIRE"), L.t("Fire at the wax dummy.")]
+		"wax": return [L.t("WAX = TIME"), L.t("A hit melts minutes. Grab the drips back.")]
+		"bomb": return [L.t("BOMB"), L.t("Drop a bomb, then step back.")]
+		"special": return [Moves.name_of(move_id).to_upper(), Moves.line_of(move_id)]
+	return ["", ""]
 
 
 ## A step is done: a soft chime, the pip lights, and the next one comes after `delay` (shorter with Reduce motion).
@@ -380,7 +390,6 @@ func _step_wax(dt: float) -> void:
 			s.global_position = s.global_position.move_toward(p.global_position, 45.0 * dt)
 		s.modulate = Color("#facb3e") if (calm or fmod(float(d["t"]), 0.6) < 0.3) else Color("#ee8e2e")
 	if left == 0:
-		_reveal_chalk()
 		_complete(0.8)
 
 
@@ -415,7 +424,7 @@ func _staged_hit() -> void:
 		(hm as CanvasItem).queue_redraw()   # the chevron on the side the blow came from
 	hud.on_hurt()
 	w.shake(3.0)
-	w.fx_text(p.global_position + Vector2(0, -26), "-%d min" % int(HIT_MIN), UI.RED)
+	w.fx_text(p.global_position + Vector2(0, -26), L.t("-{n} min", {"n": int(HIT_MIN)}), UI.RED)
 	var r: Room = w.room
 	var inner := r.inner_rect().grow(-12.0)
 	var outs := [Vector2(-26, -8), Vector2(24, 10)] if _ember_dir.x > 0.0 else [Vector2(26, -8), Vector2(-24, 10)]
@@ -446,7 +455,7 @@ func _take_drop(d: Dictionary) -> void:
 	var s: Sprite2D = d["s"]
 	_cut = maxf(0.0, _cut - HIT_MIN / 2.0)
 	Audio.play("wax_pickup")
-	w.fx_text(s.global_position + Vector2(0, -14), "+%d min" % int(HIT_MIN / 2.0), UI.WAX)
+	w.fx_text(s.global_position + Vector2(0, -14), L.t("+{n} min", {"n": int(HIT_MIN / 2.0)}), UI.WAX)
 	s.queue_free()
 
 
@@ -522,8 +531,10 @@ func _finish(skip_it: bool) -> void:
 	p.move_cd = 0.0
 	w.run_time = maxf(0.0, float(w.run_time) - _elapsed)   # the night starts now
 	hud.ghost_sticks = _ghosts
-	if not _chalk_on:
-		_reveal_chalk()
+	if skip_it and not _done.has("wax"):
+		_reveal_chalk()   # skipped before the wax lesson: the floor keeps its one reminder, WAX = TIME
+	elif _chalk and is_instance_valid(_chalk):
+		_chalk.visible = false   # taught: the floor stays clean
 	w.room.set_open(true)
 	Audio.play("bell_toll", -3.0)   # the clock strikes twelve
 	var taught_now: Array = _done.keys()
