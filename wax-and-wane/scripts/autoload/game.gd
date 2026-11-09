@@ -14,7 +14,7 @@ signal settings_changed
 signal unlocked_now(key: String)
 signal slot_changed
 
-const VERSION := "2.0.0"
+const VERSION := "2.1.0"
 const SAVE_PATH := "user://save.cfg"
 const SLOTS := 3
 const MAX_LEVEL := 4          # world.LEVELS (difficulty 1-4)

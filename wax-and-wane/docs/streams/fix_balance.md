@@ -11,7 +11,8 @@ godot --headless --path . --script res://tools/balance_probe.gd -- --check=keepe
 python3 tools/balance_judge.py bot.log          # Belfry wins, finish clocks, tower share, per-floor wax flow
 ```
 
-BALANCE_PLACEHOLDER
+Result on 2.0.0 (12 fresh-seed bot runs, fresh profile): 7 wins, normal wins finish around 1:08 AM, 2 of the 7
+wins reach the Clock Tower, losses in the Crypt and Chapel. (v2.1 levels: `docs/streams/v21_slots.md`.)
 
 ## Run rules (probe numbers: before -> after)
 | ID | What was wrong | Fix | Check (`tools/balance_probe.gd`) |
@@ -26,7 +27,7 @@ BALANCE_PLACEHOLDER
 | QA-10 | Two Hooded Mourners in a locked Seance room could summon forever | `Enemy.SUMMON_BUDGET` = 6 Shamblers per Mourner for life; a spent Mourner stops teleporting and backs away a little slower | two Mourners, Shamblers killed as they come, 120 game s: 116 Shamblers -> 12 |
 | QA-03 | Burst damage could still the Keeper straight past its phase gate (phase 3 lasted 0-4 s) | the gate moved into `Enemy._damage`: every hit is clamped to `mem.hp_floor` (`Keeper.hp_floor`), so no burst between two AI ticks skips a phase, and a clamped hit never heals. Phase 3 now has a minimum too (`MIN_PHASE[3]` = 10 s): its floor runs in a straight line from the threshold to zero | 8 hits x 40 in one frame, ten times a second: stilled in phase 1 at once -> phases 6.0 / 8.2 / 10.0 s |
 
-Settings page after the change (480x216): SETTINGS_SHOT_PLACEHOLDER
+(Gentle burn was replaced in v2.1 by difficulty level 1, one level per save slot: `docs/streams/v21_slots.md`.)
 
 ## For other streams (one-line follow-ups outside my files)
 - `journal.gd` ~669: the locked-guardian hint now points the wrong way. It says "Some say the Hour Fiend has a
