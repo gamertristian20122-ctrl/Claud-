@@ -80,6 +80,8 @@ func _ready() -> void:
 		mode = "tour"   # the Long Night's determinism dump (scripts/night_check.gd): Tallow is never driven
 	if args.has("diarycheck") or args.has("ending"):
 		mode = "tour"   # v2.5 story: the diary's judges, a staged ending (scripts/game/diary_tour.gd)
+	if args.has("qacheck"):
+		mode = "tour"   # v2.7 QA: one probe per bug the QA pass fixed (scripts/qa_check.gd)
 	runs_left = int(args.get("runs", "1"))
 	# save slots (v2.1): --slot=N plays in that slot, --difficulty=N (1-4) sets its level first
 	if args.has("slot"):
@@ -115,6 +117,10 @@ func _ready() -> void:
 		await DiaryTour.check(self)
 		Audio.stop_all()
 		get_tree().quit(1 if DiaryTour.fails > 0 else 0)
+	elif args.has("qacheck"):   # v2.7 QA: every fixed bug's probe (scripts/qa_check.gd; exit 1 on a FAIL)
+		var failed: int = await load("res://scripts/qa_check.gd").run(self)
+		Audio.stop_all()
+		get_tree().quit(1 if failed > 0 else 0)
 	elif args.has("ending"):   # v2.5 story: --ending=<id> stages that ending (cards, credits, results)
 		await DiaryTour.stage_ending(self, str(args["ending"]))
 		Audio.stop_all()

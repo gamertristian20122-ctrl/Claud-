@@ -391,7 +391,13 @@ func _place_banner() -> void:
 	var sub_y := top + (18.0 if _narrow else 17.0)
 	var mid := floorf(vs.x / 2.0)
 	var left := 72.0 + ins.x   # the clock, coins and bombs column
-	var right := minimap.position.x - 4.0 if sub_y < minimap.position.y + minimap.size.y else keep_btn.position.x - 4.0
+	# the right edge: the minimap beside the title, else the keepsake button's column; Swap sticks moves that
+	# button to the left edge, and then only the screen's edge is on the right at this height
+	var right := vs.x - ins.y - 4.0
+	if sub_y < minimap.position.y + minimap.size.y:
+		right = minimap.position.x - 4.0
+	elif keep_btn.position.x > mid:
+		right = keep_btn.position.x - 4.0
 	var sub_max := 2.0 * minf(mid - left, right - mid)
 	var sw := Art.font_small.get_string_size(banner_sub.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
 	var lines := 1 if sw <= sub_max else 2
