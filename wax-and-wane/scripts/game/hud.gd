@@ -68,6 +68,8 @@ var _l_origin := Vector2.ZERO
 var _r_origin := Vector2.ZERO
 const STICK_R := 22.0
 const AIM_FLICK := 4.0   # px of thumb travel before the aim stick fires
+const MOVE_DEAD := 0.15  # the move stick: no walk under 15% of its reach (3 px)
+const MOVE_FULL := 0.6   # v2.6: full speed from 60% of its reach (13 px)
 
 
 ## v2.3: the special move's button (scripts/game/move_button.gd; it places itself in _layout).
@@ -918,9 +920,10 @@ func _input(event: InputEvent) -> void:
 				_l_origin = pos - d.normalized() * STICK_R
 				stick_l.position = _l_origin
 				d = pos - _l_origin
-			_touch_move = d / STICK_R
-			if _touch_move.length() < 0.15:
-				_touch_move = Vector2.ZERO
+			# v2.6 (feel): full speed at MOVE_FULL of the stick (13 px of thumb travel; it took all 22 px), a
+			# smooth ramp up from the dead zone so a small push still walks
+			var tilt := d.length() / STICK_R
+			_touch_move = Vector2.ZERO if tilt < MOVE_DEAD else d.normalized() * clampf((tilt - MOVE_DEAD) / (MOVE_FULL - MOVE_DEAD), 0.0, 1.0)
 			stick_l.set_meta("knob", d)
 		elif event.index == _r_idx:
 			var d := pos - _r_origin

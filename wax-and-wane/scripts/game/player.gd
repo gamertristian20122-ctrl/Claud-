@@ -162,6 +162,9 @@ var _sq_v := 0.0
 var _was_moving := false
 var _breath := 0.0
 var _white := 0.0         # hurt flash
+var _hit_t := 0.0         # v2.6: the hit mark on the side a blow came from (seconds left)
+var _hit_dir := Vector2.ZERO
+var _hitmark: Node2D
 var _recoil_off := Vector2.ZERO
 var _drips: Array = []    # [side -1/1, progress 0..1, speed]
 var _drip_spawn := 0.8
@@ -255,6 +258,11 @@ func _ready() -> void:
 	add_child(_pool)
 	add_child(Costumes.new())
 	add_child(Moves.new())   # v2.3 special moves: the candle's own move and its effects
+	_hitmark = Node2D.new()   # v2.6: where a blow came from (self-lit, drawn over the candle)
+	_hitmark.z_index = 3
+	_hitmark.material = Art.unshaded
+	_hitmark.draw.connect(_draw_hitmark)
+	add_child(_hitmark)
 
 
 ## Call a world effect if this world has it (the title screen's stand-in world does not).
@@ -368,8 +376,12 @@ func _physics_process(dt: float) -> void:
 	move_cd = maxf(0.0, move_cd - dt)   # the move recharges only in play (not held aloft, carded, melting or paused)
 	var target := move_input.limit_length(1.0) * speed * Moves.speed_k(self)
 	var accel := 900.0 if target.length() > 1 else 1100.0
-	if target.length() > 1 and vel.length() > 1 and vel.dot(target) < -0.2 * vel.length() * target.length():
-		accel = TURN_ACCEL   # a dodge: turning back bites at once (design pass: 7 -> 4 frames)
+	if target.length() > 1 and vel.length() > 1:
+		var turn := vel.dot(target) / (vel.length() * target.length())   # cosine of the swing
+		if turn < -0.2:
+			accel = TURN_ACCEL   # a dodge: turning back bites at once (design pass: 7 -> 4 frames)
+		elif turn < 0.7:
+			accel = lerpf(900.0, TURN_ACCEL, (0.7 - turn) / 0.9)   # v2.6: a sharp side-step bites too (90 deg: 7 -> 4 frames)
 	vel = vel.move_toward(target, accel * dt)
 	_move(vel * dt)
 	if vel.length() > 8:
@@ -479,11 +491,37 @@ func hurt(amount: float, from_dir: Vector2) -> void:
 	_hurt_face = 0.6
 	_hurt_fx()
 	vel += from_dir.normalized() * 140.0
+	if from_dir.length() > 0.01:
+		# v2.6 (feel): show where it came from - a hot chevron on that side and sparks flying back at it
+		_hit_dir = from_dir.normalized()
+		_hit_t = HIT_MARK
+		_hitmark.queue_redraw()
+		_fx("fx_sparks", [global_position + Vector2(0, -8) - _hit_dir * 6.0, -_hit_dir, 5, false])
 	Audio.play("player_hurt")
 	Game.vibrate(60)
 	world.on_player_hurt(amount)
 	if wax <= 0:
 		die()
+
+
+const HIT_MARK := 0.3
+
+
+## A pixel chevron 11 px out on the side the blow came from, pointing at the candle: tip cream, arms red;
+## for its last 0.12 s only the tip is left (stepped, no alpha fade).
+func _draw_hitmark() -> void:
+	if _hit_t <= 0.0 or dead:
+		return
+	var f := _hit_dir
+	var side := Vector2(-f.y, f.x)
+	var m := Vector2(0, -8) - f * 11.0
+	var tip := (m + f * 2.0).round()
+	_hitmark.draw_rect(Rect2(tip - Vector2(1, 1), Vector2(2, 2)), WAX_HI)
+	if _hit_t > 0.12:
+		for k in [-1.0, 1.0]:
+			for step in [1.5, 3.0]:
+				var q: Vector2 = (m - f * (step - 1.0) + side * k * step).round()
+				_hitmark.draw_rect(Rect2(q - Vector2(1, 1), Vector2(2, 2)), Color("#da4e38"))
 
 
 func _hurt_fx() -> void:
@@ -556,6 +594,11 @@ func _process(dt: float) -> void:
 	_blink -= dt
 	_hurt_face -= dt
 	_happy_face -= dt
+	if _hit_t > 0.0:
+		var was := _hit_t
+		_hit_t = maxf(0.0, _hit_t - dt)
+		if (was > 0.12) != (_hit_t > 0.12) or _hit_t == 0.0:
+			_hitmark.queue_redraw()
 	# self-lit while the flame burns; unlit (title intro) and melted down, the room's light shows him
 	var want: Material = Art.unshaded if not unlit and not dead and light_k >= 0.5 else null
 	if material != want:
