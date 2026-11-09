@@ -31,6 +31,7 @@ var _pending := false         # pressed since the last physics step
 var _bump := 0.0
 var _rings := {}              # radius -> segment -> Array[Vector2i] (cached pixel rings)
 var _t := 0.0
+var _icons := {}              # move id -> icon texture
 
 
 func _init(h: Node) -> void:
@@ -230,9 +231,10 @@ func _draw() -> void:
 			for px in seg:
 				draw_rect(Rect2(c + Vector2(px), Vector2.ONE), CREAM)
 	# the icon
-	var icon_path := Moves.icon(id)
-	if Art.has(icon_path):
-		var tex := Art.tex(icon_path)
+	if not _icons.has(id):
+		_icons[id] = Art.tex(Moves.icon(id)) if Art.has(Moves.icon(id)) else null
+	var tex: Texture2D = _icons[id]
+	if tex:
 		var a := 1.0 if ready and not refused else 0.45
 		if ready and not refused:
 			a = 0.85 + 0.15 * sin(_t * 6.0)

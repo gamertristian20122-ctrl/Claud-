@@ -59,6 +59,7 @@ const SNUFF_DMG := 3.0
 const SNUFF_PIERCE := 3
 
 const SOLID_HARD := ["R", "Q", "U", "C", "B", "Z", "O", "X", "K"]   # Blink hops one tile of these
+const BUFFER := 0.15           # s: a press this close to the end of the cooldown fires when it is back
 const SPARK_COLS := [Color("#fdf7ed"), Color("#facb3e"), Color("#ee8e2e"), Color("#da4e38"), Color("#8f4029")]
 const MOON_COLS := [Color("#fdf7ed"), Color("#cae6f5"), Color("#b6cbcf"), Color("#7b8994")]
 const RING_COLS := [Color("#facb3e"), Color("#fdf7ed")]
@@ -81,6 +82,9 @@ var ready_flash := 0.0      # s: the move just came back (the HUD button flashes
 var denied := 0.0           # s: a press was turned away (the button shakes)
 var _live := false
 var _was_ready := true
+var _buf_t := 0.0
+var _buf_dir := Vector2.ZERO
+static var _heat_frames: Array[Texture2D] = []
 var _cell := Vector2i(-99, -99)
 var _tipped := false         # the move's one-line tip was considered this run
 # Skip
@@ -277,6 +281,10 @@ func _use(dir: Vector2) -> bool:
 	if id == "" or not enabled or not _can_act() or busy():
 		return false
 	if p.move_cd > 0.0:
+		if p.move_cd <= BUFFER:   # a press just before it is back is kept, not eaten (like the fire buffer)
+			_buf_t = BUFFER
+			_buf_dir = dir
+			return false
 		denied = 0.25
 		Audio.play("tick", -14.0, 0.0, 0.7)
 		return false
@@ -343,10 +351,15 @@ func _physics_process(dt: float) -> void:
 	var ready := p.move_cd <= 0.0
 	if ready and not _was_ready and move_id() != "":
 		ready_flash = 0.4
-		Audio.play("tick", -9.0, 0.0, 1.8)
+		Audio.play("tick", -12.0, 0.0, 1.8)
 	_was_ready = ready
 	ready_flash = maxf(0.0, ready_flash - dt)
 	denied = maxf(0.0, denied - dt)
+	if _buf_t > 0.0:
+		_buf_t -= dt
+		if p.move_cd <= 0.0:
+			_buf_t = 0.0
+			_use(_buf_dir)
 	if _dash_left > 0.0:
 		_dash_step(dt)
 	if _skip_t > 0.0:
@@ -747,7 +760,9 @@ func _draw() -> void:
 func _draw_heat(back: bool) -> void:
 	if _flare_t <= 0.0:
 		return
-	var frames: Array[Texture2D] = Art.seq("hero/flame_small")
+	if _heat_frames.is_empty():
+		_heat_frames = Art.seq("hero/flame_small")
+	var frames := _heat_frames
 	if frames.is_empty():
 		return
 	var target: CanvasItem = _back if back else self

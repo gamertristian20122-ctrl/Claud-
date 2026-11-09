@@ -14,6 +14,7 @@ var _anims: Array = []       # [pos, frames, t, fps, reverse, floor]
 var _lights: Array = []      # [PointLight2D, t, dur, energy]
 var _floor: Node2D           # under the creatures (the Slam's ring lies on the floor)
 var _pop_frame := -1
+static var _spark_frames: Array[Texture2D] = []
 
 
 static func of(world: Node) -> MoveFx:
@@ -160,7 +161,9 @@ func _process(dt: float) -> void:
 
 
 func _draw() -> void:
-	var spark_frames: Array[Texture2D] = Art.seq("moves/spark")
+	if _spark_frames.is_empty():
+		_spark_frames = Art.seq("moves/spark")
+	var spark_frames := _spark_frames
 	for s in _sparks:
 		var pos: Vector2 = (s[0] as Vector2).round()
 		var k := clampf(float(s[5]) / Moves.SPARK_R, 0.0, 0.999)
