@@ -13,7 +13,8 @@ achievements (local now, Steam later); Windows and Linux builds. Everything belo
 | bomb | E, Space | right button | RB, RT |
 | keepsake | Q | middle button | LB |
 | special (v2.3, the candle's move) | Left Shift, F | thumb buttons (XBUTTON1 / 2) | LT |
-| pause | Esc, P | the II button | Start, Back |
+| pause | Esc, P | the II button | Start |
+| map (v2.6, the full map over the pause menu) | M, Tab | click the minimap (touch: tap it) | Back |
 | menus | arrows / WASD, Enter / Space, Esc back, Q / E switch pages | click | d-pad / left stick, A, B back, LB / RB switch pages |
 | fullscreen | F11, Alt+Enter | | |
 
@@ -63,7 +64,8 @@ achievements (local now, Steam later); Windows and Linux builds. Everything belo
 ## Settings (`settings_panel.gd`)
 
 Two pages so it fits 384x216: **Game** (Music, Sound, Screen shake, Vibration, Effects, FPS
-counter, Fullscreen on desktop) and **Controls** (Touch AUTO/ON/OFF, Swap sticks, Aim assist, Mouse
+counter, Pickup magnet (v2.6), Fullscreen on desktop) and **Controls** (Touch AUTO/ON/OFF, Swap sticks,
+Aim: Assist / Auto / Off (v2.6; it was the Aim assist switch), Mouse
 aim on desktop, a key list). Achievements button + Back at the bottom. New `Game.settings`:
 `fullscreen` (false), `mouse_aim` (true), `touch_controls` ("auto"). Vibration also rumbles gamepads.
 Window: 1536x864 by default, resizable, minimum 768x432; a window that would not fit the screen

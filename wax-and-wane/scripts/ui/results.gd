@@ -143,7 +143,10 @@ func _ready() -> void:
 	_buttons = HBoxContainer.new()
 	_buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	_buttons.add_theme_constant_override("separation", 6)
-	var again := UI.button("Light another", func(): main.goto("game"))
+	# v2.6 Quick restart: one press lights the next candle in this slot - the same candle and night length
+	# (after Tonight's Candle: the slot's own candle, as before)
+	var next := {} if params.get("daily", false) else {"candle": str(params.get("candle", "tallow")), "floors": int(params.get("floors", 4))}
+	var again := UI.button("Light another", func(): main.goto("game", next))
 	again.set_meta("default_focus", true)
 	_buttons.add_child(again)
 	_buttons.add_child(UI.button("Share", _share, 64))

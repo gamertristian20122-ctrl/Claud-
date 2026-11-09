@@ -67,7 +67,7 @@ const RELICS := {
 	"lodestone": {"name": "Lodestone", "desc": "Coins and drippings fly to you", "q": 0, "pools": ["shop", "treasure"]},
 	"pantry_key": {"name": "Pantry Key", "desc": "More chests, and fuller ones", "q": 1, "pools": ["shop", "hollow"]},
 	"collection_plate": {"name": "Collection Plate", "desc": "Each cleared room drops coins", "q": 1, "pools": ["shop", "treasure"]},
-	"sweep_brush": {"name": "Sweep's Brush", "desc": "Clearing a room sweeps every drop to you", "q": 0, "pools": ["shop"]},
+	"sweep_brush": {"name": "Sweep's Brush", "desc": "Clearing a room sweeps every drop on the floor to you", "q": 0, "pools": ["shop"]},
 	# ---- v2.0: the clock
 	"pendulum": {"name": "Pendulum", "desc": "Burn low and the house slows down", "q": 2, "pools": ["treasure", "boss"]},
 	"bell_rope": {"name": "Bell Rope", "desc": "Each guardian you fell rings back 5 minutes", "q": 2, "pools": ["boss", "treasure"]},

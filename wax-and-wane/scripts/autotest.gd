@@ -46,6 +46,7 @@ var _room_t := 0.0
 var _room_t_total := 0.0
 var _last_cell := Vector2i(-99, -99)
 var trailer: Node = null   # scripts/trailer.gd while it stages a scene (it may steer Tallow in drive())
+var _intent := ""          # v2.6 feel probe: what the bot did last frame (fight / pickup / walk / special / idle)
 
 
 func _ready() -> void:
@@ -67,6 +68,8 @@ func _ready() -> void:
 		mode = "designcheck"
 	if args.has("movescheck"):    # v2.3 special moves: every move's numbers and input timing (MovesTour.check)
 		mode = "movescheck"
+	if args.has("feelcheck"):     # v2.6 feel pass: turns, the touch stick, pans, buffers, the magnet, Aim: Auto (FeelProbe)
+		mode = "feelcheck"
 	if args.has("bench"):
 		mode = "bench"
 	if args.has("shots-store") or args.has("keyart") or args.has("trailer"):
@@ -128,6 +131,10 @@ func _ready() -> void:
 		add_child(load("res://scripts/audio_check.gd").new())
 	elif mode == "designcheck":
 		await DesignCheck.run(self)
+		get_tree().quit()
+	elif mode == "feelcheck":
+		await FeelProbe.check(self)
+		Audio.stop_all()
 		get_tree().quit()
 	elif mode == "movescheck":
 		await MovesTour.check(self)
@@ -293,6 +300,8 @@ func _process(dt: float) -> void:
 				_diag_dark[0], _diag_dark[1], _diag_dark[2], _diag_dark[3] / _diag_dark[0]])
 		_diag_dark = [0, 0, 0, 0.0]
 		print("[diag]    floor-1 rooms fought: ", _diag_rooms)
+		print(FeelProbe.report())   # v2.6 feel pass: fight / pickup / walk / walk-back / transitions
+		FeelProbe.reset()
 		_diag_rooms = []
 		_diag_cell = Vector2i(-99, -99)
 		_diag_src = {}
@@ -318,7 +327,7 @@ func drive(w: Node) -> Array:
 	var td: Array = trailer.drive(w) if trailer != null else []
 	if not td.is_empty():
 		return td
-	if (mode == "tour" or mode == "audiotest" or mode == "designcheck" or mode == "movescheck") and not args.has("drive"):
+	if (mode == "tour" or mode == "audiotest" or mode == "designcheck" or mode == "movescheck" or mode == "feelcheck") and not args.has("drive"):
 		return []
 	if args.has("herosheet"):
 		return [Vector2.ZERO, Vector2.ZERO]   # the in-game hero shot: stand still
@@ -326,6 +335,9 @@ func drive(w: Node) -> Array:
 	if args.has("god") and p:
 		p.wax = maxf(p.wax, 80.0)
 	_diag_tick(w, p)
+	if mode == "playtest":
+		FeelProbe.tick(w, _intent, w.get_physics_process_delta_time())   # v2.6: where the run's time goes
+	_intent = "idle"
 	if p == null or p.dead or w.transitioning:
 		return [Vector2.ZERO, Vector2.ZERO]
 	var dt := w.get_physics_process_delta_time()
@@ -356,6 +368,7 @@ func drive(w: Node) -> Array:
 	if _wander_t > 0:
 		_wander_t -= dt
 		var tgt0: Enemy = w.nearest_enemy(pos)
+		_intent = "stuck"
 		return [_wander, (tgt0.global_position - pos).normalized() if tgt0 else Vector2.ZERO]
 	var tgt: Enemy = w.nearest_enemy(pos) if _room_t_total < 25.0 else _toughest(w)   # summoners first when a room drags on
 	if tgt:
@@ -401,6 +414,7 @@ func drive(w: Node) -> Array:
 			_bomb_cd = 3.0
 			w.place_bomb()
 		MovesBot.think(w, mv, tgt)   # v2.3: dash / blink from shots, slam / sparkler a crowd, flare / snuff a guardian
+		_intent = "fight"
 		return [mv.normalized(), to.normalized()]
 	# room is clear: pick up what is worth picking up
 	var pick := _best_pickup(w, p) if _room_t < 9.0 else null
@@ -409,10 +423,12 @@ func drive(w: Node) -> Array:
 			if o is Pickup and o.kind == "trapdoor":
 				pick = o
 	if pick:
+		_intent = "pickup" if pick.kind != "trapdoor" else "walk"
 		return [((pick.global_position - pos).normalized() + AreaGimmicks.bot_push(w, pos)).normalized(), Vector2.ZERO]
 	# special rooms: ring the Seance bell, wind the music box, feed the font (sensibly, then move on)
 	var sp: Variant = Specials.bot_target(w)
 	if sp != null:
+		_intent = "special"
 		return [((sp as Vector2) - pos).normalized(), Vector2.ZERO]
 	# break urns/crates near the path occasionally is skipped; head to the next room
 	var dir := _next_dir(w)
@@ -435,6 +451,7 @@ func drive(w: Node) -> Array:
 			exit_pt = w.room.position + Vector2(268, 106)
 	var room: Room = w.room
 	var my_cell := room.cell_of(pos - room.position)
+	_intent = "walk"
 	if _room_t_total > 20.0 and Engine.get_physics_frames() % 120 == 0:
 		print("   [nav] cell=%s dir=%s my=%s door=%s next=%s grid=%s" % [w.cur_cell, dir, my_cell, door_cell, _path_next(room, my_cell, door_cell), room.data["grid"]])
 	if my_cell == door_cell or my_cell.x < 0 or my_cell.y < 0 or my_cell.x >= Room.COLS or my_cell.y >= Room.ROWS:
@@ -767,6 +784,12 @@ func _tour() -> void:
 	if args.has("moves"):   # v2.3: each candle's special move mid-action, the HUD button, the Keys page
 		await _wait(0.5)
 		await MovesTour.tour(self)
+		get_tree().quit()
+		return
+	if args.has("feel"):   # v2.6: the pickup magnet mid-sweep, a hit's mark, the full map, Aim / Pickup magnet rows, Restart
+		await _wait(0.5)
+		await FeelProbe.tour(self)
+		Audio.stop_all()
 		get_tree().quit()
 		return
 	if args.has("night"):   # the Long Night: the night length picker, a 7-floor run's HUD and banners, results, Journal

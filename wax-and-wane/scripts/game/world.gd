@@ -107,6 +107,9 @@ var _fade: ColorRect
 var _kb_bomb_held := false
 var room_hits := 0
 var room_t0 := 0.0
+var calm_t := 0.0       # v2.6: seconds this room has been clear and quiet (the pickup magnet waits for it, pickup.gd)
+var swept := 0          # v2.6: drops the magnet lifted this run (the feel probe reads it)
+var _sweep_snd := -9.0
 # Kindling: quick kills chain and pour minutes back into the candle
 var streak := 0
 var streak_t := 0.0
@@ -478,6 +481,7 @@ func _on_enter_room() -> void:
 	player.coat_ready = true
 	RelicFx.on_enter_room(self)
 	room_spawned = false
+	calm_t = 0.0
 	room_hits = 0
 	room_streak_wax = 0.0
 	if Specials.on_enter_room(self):   # a mini-boss room handles its own entry
@@ -582,6 +586,12 @@ func _start_boss() -> void:
 		BossIntro.play(self, boss))   # its entrance (1.4-2.0 s, any tap skips); it shakes on its own beats
 
 
+## v2.6 (feel): how long a room change and a trapdoor take without control (were 0.34 s and 0.45 + 0.5 s fades).
+const PAN_TIME := 0.27
+const DROP_OUT := 0.32
+const DROP_IN := 0.4
+
+
 func go_through(dir: Vector2i) -> void:
 	if transitioning:
 		return
@@ -598,7 +608,7 @@ func go_through(dir: Vector2i) -> void:
 	player.position = nr.entry_point(-dir)
 	player.vel = Vector2.ZERO
 	var tw := create_tween()
-	tw.tween_property(cam, "position", _cam_target(nr), 0.34).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(cam, "position", _cam_target(nr), PAN_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_callback(func():
 		old.dispose()
 		transitioning = false
@@ -616,14 +626,14 @@ func descend() -> void:
 	Audio.play("trapdoor")
 	Juice.of(self).descended()
 	var tw := create_tween()
-	tw.tween_property(player, "scale", Vector2(0.2, 0.2), 0.35)
-	tw.parallel().tween_property(_fade, "color:a", 1.0, 0.45)
+	tw.tween_property(player, "scale", Vector2(0.2, 0.2), DROP_OUT - 0.04)
+	tw.parallel().tween_property(_fade, "color:a", 1.0, DROP_OUT)
 	tw.tween_callback(func():
 		player.scale = Vector2.ONE
 		_start_floor(floor_num + 1)
 		player.frozen = false
 		transitioning = false)
-	tw.tween_property(_fade, "color:a", 0.0, 0.5)
+	tw.tween_property(_fade, "color:a", 0.0, DROP_IN)
 
 
 func _clear_room() -> void:
@@ -761,6 +771,14 @@ func add_loose(kind: String, pos: Vector2, value: float, pop_vel: Vector2) -> Pi
 	room.objects.add_child(p)
 	p.pop(pop_vel)
 	return p
+
+
+## v2.6: the pickup magnet lifted a drop (pickup.gd): one soft whoosh for a room's sweep, not one per coin.
+func on_sweep() -> void:
+	swept += 1
+	if run_time - _sweep_snd > 1.2:
+		_sweep_snd = run_time
+		Audio.play("dodge", -6.0, 0.05, 1.35)
 
 
 func forget_pickup(rec: Dictionary) -> void:
@@ -1112,6 +1130,39 @@ func assist_aim(pos: Vector2, dir: Vector2) -> Vector2:
 	return best
 
 
+## v2.6 Aim: Auto (touch, Settings > Controls > Aim): where the right thumb fires while it rests on the screen -
+## the nearest foe (in the embers' reach first), the one in front of Tallow first, one in the open before one behind cover; it keeps
+## its target unless another is clearly better (no flicking between two). No foe: straight ahead. Only the
+## direction changes: the fire rate and the damage are the player's own.
+var _auto_tgt: Enemy
+func auto_aim(p: Player) -> Vector2:
+	var from := p.global_position + Vector2(0, -6)
+	var front := p.vel.normalized() if p.vel.length() > 20.0 else p.facing
+	var best: Enemy = null
+	var best_s := INF
+	for e in enemies:
+		if not is_instance_valid(e) or not e.alive or not e.active or e.intro or not e.visible:
+			continue
+		var to: Vector2 = e.global_position + Vector2(0, -e.half_h - e._jump_h) - from
+		var d := to.length()
+		if d < 0.5:
+			continue
+		var s := d * (1.35 - 0.35 * front.dot(to / d))   # in front x1.0, beside x1.35, behind x1.7
+		if not room._clear_line(from, e.global_position):
+			s *= 1.5
+		if d > p.shot_range * 1.3:
+			s *= 2.0   # out of the embers' reach: only when nothing nearer is up
+		if e == _auto_tgt:
+			s *= 0.75
+		if s < best_s:
+			best_s = s
+			best = e
+	_auto_tgt = best
+	if best == null:
+		return p.facing
+	return (best.global_position + Vector2(0, -best.half_h - best._jump_h) - from).normalized()
+
+
 func enemy_dmg_mult() -> float:
 	# by depth (the Clock Tower hits as hard as the Belfry); the level scales every blow a foe lands
 	return (1.0 + 0.12 * (minf(depth(), float(LAST_FLOOR)) - 1.0)) * float(difficulty()["dmg"])
@@ -1339,16 +1390,20 @@ func _victory() -> void:
 	tw.tween_callback(func(): Diary.win_ending(self, func(): _end_run(true)))   # an ending's cards first, if the night earned one
 
 
-func _end_run(won: bool) -> void:
+func _end_run(won: bool, again := {}) -> void:
 	Game.records["kills"] += kills
 	Game.records["best_floor"] = maxi(int(Game.records["best_floor"]), floor_num)
 	if won:
 		Game.records["wins"] += 1
 		Records.note_finish(candle_id, night_floors, clock_minutes())   # kept per night length (a 7-floor finish is its own record)
 	Game.save()
-	main.goto("results", Records.end_run(self, won, {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
+	var res := Records.end_run(self, won, {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
 		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins,
-		"level": level, "floors": night_floors}))
+		"level": level, "floors": night_floors})
+	if not again.is_empty():
+		main.goto("game", again)   # v2.6 Quick restart: the run is recorded, the next candle is lit at once
+		return
+	main.goto("results", res)
 
 
 func give_up() -> void:
@@ -1357,6 +1412,43 @@ func give_up() -> void:
 	toggle_pause()
 	player.dead = true
 	on_player_died()
+
+
+## v2.6 Quick restart (the pause menu's Restart): the night is recorded as given up and the next is lit at once.
+func quick_restart() -> void:
+	if finished:
+		return
+	var again := restart_params()
+	if paused:
+		toggle_pause()
+	finished = true
+	player.dead = true
+	Records.on_died(self)   # "gave_up": blown out with wax to spare
+	hud.release_sticks()
+	_clear_shots()
+	Audio.play("snuff_out")
+	_end_run(false, again)
+
+
+## The same kind of night again: this candle and night length in this slot; a typed-in seed or Tonight's Candle
+## replays that same house, any other run lights a new one.
+func restart_params() -> Dictionary:
+	if daily:
+		return {"seed": run_seed, "daily": true, "candle": candle_id, "date": daily_date}
+	var p := {"candle": candle_id, "floors": night_floors}
+	if get_meta("seeded", false):
+		p["seed"] = run_seed
+		p["seeded"] = true
+	return p
+
+
+## v2.6: the full map of this floor over the pause menu (FullMap): the minimap tapped or clicked, M / Tab / Back.
+func open_map() -> void:
+	if finished or transitioning or player.dead or Juice.holding(self) or is_instance_valid(_intro_root):
+		return
+	if not paused:
+		toggle_pause()
+	hud.open_map()
 
 
 ## Minutes in tonight's night: 120 (2:00 AM) for 4 floors, 30 more per floor past four (Game.night_minutes).
@@ -1409,6 +1501,7 @@ func _physics_process(dt: float) -> void:
 			go_through(exit)
 	if room_spawned and not room.data["cleared"] and count_enemies() == 0 and not transitioning and room.data["type"] != "boss":
 		_clear_room()
+	calm_t = calm_t + dt if room.data["cleared"] and not transitioning and count_enemies() == 0 else 0.0
 	# prune in place: no new array every physics frame
 	var i := enemies.size() - 1
 	while i >= 0:

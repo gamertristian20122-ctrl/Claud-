@@ -47,6 +47,8 @@ var settings := {
 	"effects": "full",          # full / lite (lite: no heat haze, shockwaves or low-wax vignette)
 	"shot_size": "large" if OS.has_feature("mobile") else "normal",   # enemy shots: normal (9 px) / large (11 px), shot.gd
 	"binds": {},                # v2.3: rebound buttons (Controls.rebind; Settings > Keys)
+	"magnet": true,             # v2.6: a cleared room's loose drops drift to Tallow (pickup.gd _sweep_wants)
+	"aim": "assist",            # v2.6: assist / auto (touch: the right thumb just fires, world.auto_aim) / off
 }
 ## A fresh slot's records (each slot has its own copy in Game.records).
 const RECORDS := {
@@ -98,6 +100,8 @@ func load_save() -> void:
 	if have:
 		for k in settings.keys():
 			settings[k] = cf.get_value("settings", k, settings[k])
+		if not cf.has_section_key("settings", "aim"):   # v2.6: the old Aim assist switch becomes Aim: Assist / Off
+			settings["aim"] = "assist" if settings["aim_assist"] else "off"
 	var last := clampi(int(cf.get_value("game", "slot", 1)), 1, SLOTS) if have else 1
 	if have and cf.has_section("records") and not _any_slot():
 		last = _migrate(cf)
