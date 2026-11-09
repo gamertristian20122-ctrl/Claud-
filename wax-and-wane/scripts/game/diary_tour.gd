@@ -54,6 +54,7 @@ static func _world(bot: Node) -> Node:
 	await bot._wait(0.4)
 	var w: Node = main.current
 	w.player.invuln = 9999.0   # nothing in the house may end a test run
+	Game.settings["magnet"] = false   # v2.6: the check finds and picks up the pages itself
 	return w
 
 

@@ -57,6 +57,8 @@ static func tick(w: Node, intent: String, dt: float) -> void:
 	if p == null or p.dead or w.finished or w.room == null:
 		return
 	_clock += dt
+	if w.get("swept") != null:
+		swept = int(w.swept)
 	if w.cur_cell != _cell or w.floor_num != _floor:
 		if _clear_at >= 0.0 and w.floor_num == _floor:
 			clear_exit.append(_clock - _clear_at)

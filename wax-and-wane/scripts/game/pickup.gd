@@ -20,6 +20,13 @@ var _last_coins := -1
 var value := 0.0          # wax_warm: minutes it gives back
 var life := 0.0           # wax_warm: seconds before it cools and vanishes
 var _wait_leave := false  # after a keepsake swap, wait until the player steps away
+var _sweep_v := 0.0       # v2.6: the pickup magnet's speed (0 = resting)
+
+## v2.6 (feel): once a room is clear, its loose drops drift to Tallow on their own (Settings > Game > Pickup
+## magnet). They land first (SWEEP_SETTLE), hop, then speed up toward the candle.
+const SWEEP_SETTLE := 0.45
+const SWEEP_ACCEL := 520.0
+const SWEEP_MAX := 230.0
 
 
 func setup(w: Node, k: String, pos: Vector2, it := "", pr := 0) -> void:
@@ -195,10 +202,32 @@ func _physics_process(dt: float) -> void:
 	var wants := kind in ["coin", "bomb"] or (kind in ["wax_small", "wax_big"] and p.wax < p.wax_max - 0.5)
 	if d < reach and _t > 0.35:
 		_collect(p)
+	elif _t > SWEEP_SETTLE and float(world.calm_t) > SWEEP_SETTLE and Game.settings.get("magnet", true) and _sweep_wants(p):
+		if _sweep_v == 0.0:
+			_vz = 55.0   # a little hop as it lifts off the floor
+			world.on_sweep()
+		_sweep_v = minf(_sweep_v + SWEEP_ACCEL * dt, SWEEP_MAX)
+		global_position = global_position.move_toward(p.global_position, _sweep_v * dt)
 	elif wants and price == 0 and d < pull.x and _t > 0.5:
 		global_position = global_position.move_toward(p.global_position, pull.y * dt)
 	elif kind == "wax_warm" and d < 12.0 and _t > 0.3:
 		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
+
+
+## The pickup magnet takes loose drops Tallow can use now: coins, bombs, diary pages, wax below a full candle,
+## a match for a keepsake that is not full. Prices, pedestals (relics, tonics, keepsakes), chests, the trapdoor
+## and a pact's goods stay where they are.
+func _sweep_wants(p: Player) -> bool:
+	if price > 0 or (record and (int(record.get("cost_wax", 0)) > 0 or str(record.get("group", "")) != "")):
+		return false
+	match kind:
+		"coin", "bomb", "page":
+			return true
+		"wax_small", "wax_big", "wax_warm":
+			return p.wax < p.wax_max - 0.5
+		"match":
+			return p.keepsake != "" and p.charge < int(Items.KEEPSAKES[p.keepsake]["pips"])
+	return false
 
 
 ## Wax a Smoke Altar / Cracked Mirror relic takes right now (as _collect does it: half the price,

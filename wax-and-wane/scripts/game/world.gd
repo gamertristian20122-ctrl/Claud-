@@ -107,6 +107,9 @@ var _fade: ColorRect
 var _kb_bomb_held := false
 var room_hits := 0
 var room_t0 := 0.0
+var calm_t := 0.0       # v2.6: seconds this room has been clear and quiet (the pickup magnet waits for it, pickup.gd)
+var swept := 0          # v2.6: drops the magnet lifted this run (the feel probe reads it)
+var _sweep_snd := -9.0
 # Kindling: quick kills chain and pour minutes back into the candle
 var streak := 0
 var streak_t := 0.0
@@ -478,6 +481,7 @@ func _on_enter_room() -> void:
 	player.coat_ready = true
 	RelicFx.on_enter_room(self)
 	room_spawned = false
+	calm_t = 0.0
 	room_hits = 0
 	room_streak_wax = 0.0
 	if Specials.on_enter_room(self):   # a mini-boss room handles its own entry
@@ -761,6 +765,14 @@ func add_loose(kind: String, pos: Vector2, value: float, pop_vel: Vector2) -> Pi
 	room.objects.add_child(p)
 	p.pop(pop_vel)
 	return p
+
+
+## v2.6: the pickup magnet lifted a drop (pickup.gd): one soft whoosh for a room's sweep, not one per coin.
+func on_sweep() -> void:
+	swept += 1
+	if run_time - _sweep_snd > 1.2:
+		_sweep_snd = run_time
+		Audio.play("dodge", -6.0, 0.05, 1.35)
 
 
 func forget_pickup(rec: Dictionary) -> void:
@@ -1409,6 +1421,7 @@ func _physics_process(dt: float) -> void:
 			go_through(exit)
 	if room_spawned and not room.data["cleared"] and count_enemies() == 0 and not transitioning and room.data["type"] != "boss":
 		_clear_room()
+	calm_t = calm_t + dt if room.data["cleared"] and not transitioning and count_enemies() == 0 else 0.0
 	# prune in place: no new array every physics frame
 	var i := enemies.size() - 1
 	while i >= 0:

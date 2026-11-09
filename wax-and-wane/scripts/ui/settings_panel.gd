@@ -99,6 +99,8 @@ static func _game_page(body: VBoxContainer, _parent: Control) -> void:
 		func(v): Game.set_setting("effects", v)))
 	grid.add_child(_hint("Lite: no heat haze or shockwaves"))
 	grid.add_child(UI.toggle("FPS counter", Game.settings["show_fps"], func(b): Game.set_setting("show_fps", b)))
+	# v2.6: a cleared room's coins, bombs and wax drift to Tallow (pickup.gd)
+	grid.add_child(UI.toggle(L.t("Pickup magnet"), Game.settings.get("magnet", true), func(b): Game.set_setting("magnet", b)))
 	if OS.has_feature("pc"):   # F11 / Alt+Enter also switch it
 		var fs := UI.toggle("Fullscreen (F11)", Game.settings.get("fullscreen", false), func(b): Game.set_setting("fullscreen", b))
 		grid.add_child(fs)

@@ -818,6 +818,30 @@ func _cleared() -> void:
 	if has.has("sweep_brush"):
 		sweep_delay = 0.6
 		sweep_t = 2.6
+		_sweep_floor()   # v2.6: the pickup magnet clears this room; the brush brings what other rooms still hold
+
+
+## Sweep's Brush (v2.6): coins, bombs, matches and wax left lying in rooms Tallow already cleared on this floor
+## come in through the doors (and drift to the candle like the room's own drops). No dice: the same every time.
+func _sweep_floor() -> void:
+	var cells: Dictionary = world.layout["cells"]
+	var n := 0
+	for c in cells.keys():
+		if c == world.cur_cell or not cells[c].get("visited", false) or not cells[c].get("cleared", false):
+			continue
+		var keep: Array = []
+		for rec in cells[c]["pickups"]:
+			var loose: bool = str(rec.get("kind", "")) in ["coin", "bomb", "match", "wax_small", "wax_big"]
+			if loose and int(rec.get("price", 0)) == 0 and int(rec.get("cost_wax", 0)) == 0 and str(rec.get("group", "")) == "":
+				var dir := Vector2(c - world.cur_cell).normalized()
+				var at: Vector2 = world.free_spot_near(world.room.center() + dir * 70.0, 4.0)
+				world.add_pickup(str(rec["kind"]), at, str(rec.get("item", "")), 0, -dir * 50.0)
+				n += 1
+			else:
+				keep.append(rec)
+		cells[c]["pickups"] = keep
+	if n > 0:
+		world.fx_text(world.player.global_position + Vector2(0, -34), L.t("SWEPT IN  +{n}", {"n": n}), UI.GOLD)
 
 
 static func on_kill(w: Node, e: Enemy) -> void:
