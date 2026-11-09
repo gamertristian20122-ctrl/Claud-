@@ -150,6 +150,19 @@ func _physics_process(dt: float) -> void:
 			queue_redraw()
 
 
+## The current drawing's first frame as an Image (cached per texture): where the trail may start.
+static var _masks := {}
+
+
+## Null where the image is not readable (headless runs, a compressed texture): the trail then starts at `_half`.
+func _mask() -> Image:
+	var tex := spr.sprite_frames.get_frame_texture("default", 0)
+	if not _masks.has(tex):
+		var img: Image = tex.get_image() if tex else null
+		_masks[tex] = img if img != null and not img.is_empty() and not img.is_compressed() else null
+	return _masks[tex]
+
+
 ## Normal (9 px) or Large (11 px, when this shot has a Large drawing), keeping the pulse in step.
 func _apply_size() -> void:
 	if not _has_large.has(_kind):
@@ -174,8 +187,24 @@ func _draw() -> void:
 	if not friendly:
 		if _tr_dir != Vector2.ZERO:
 			var ec: Array = ENEMY_TRAIL.get(_kind, ENEMY_TRAIL_PALE)
-			for i in 3:
-				draw_rect(Rect2((-_tr_dir * (_half + 1.0 + i)).round(), Vector2.ONE), ec[0] if i < 2 else ec[1])
+			# walk out from the middle: the trail starts at the first pixel the drawing leaves empty, so it
+			# always touches the outline (a 1 px line out of a round shot would leave a gap at some angles)
+			var img := _mask()
+			var last := Vector2(INF, INF)
+			var n := 0
+			var t := 0.0 if img else _half + 0.5
+			while n < 3 and t < _half + 6.0:
+				var p := (-_tr_dir * t).round()
+				t += 0.5
+				if p == last:
+					continue
+				last = p
+				if n == 0 and img:
+					var q := Vector2i(p) + Vector2i(img.get_width() / 2, img.get_height() / 2)
+					if Rect2i(Vector2i.ZERO, img.get_size()).has_point(q) and img.get_pixelv(q).a > 0.5:
+						continue
+				draw_rect(Rect2(p, Vector2.ONE), ec[0] if n < 2 else ec[1])
+				n += 1
 		return
 	if vel.length_squared() < 100.0:
 		return
