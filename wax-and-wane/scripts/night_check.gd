@@ -73,9 +73,11 @@ static func tour(bot: Node) -> void:
 	Game.no_save = true
 	_stage()
 	Controls.set_device(Controls.TOUCH)
+	await _runs(bot)   # leaves a 7-floor run saved on floor 6 (the Slots card's Continue)
 	main.goto("title")
 	await bot._wait(3.4)
 	var title: Node = main.current
+	await bot._shot("night_title_continue")
 	var sl := Slots.open(title.root, main)
 	await bot._wait(0.6)
 	await bot._shot("night_slots")
@@ -116,7 +118,16 @@ static func tour(bot: Node) -> void:
 	await bot._shot("night_seedpad")
 	_close_top(title.root)
 	await bot._wait(0.3)
-	# ---- a 4-floor and a 7-floor run at the same fractions of the night
+	await _results(bot)
+	await _journal(bot)
+	Game.records = saved
+	Game.no_save = false
+	Audio.stop_all()
+
+
+## A 4-floor and a 7-floor run at the same fractions of the night, the new areas' banners, the pause menu.
+static func _runs(bot: Node) -> void:
+	var main: Node = bot.main
 	for floors in [4, 7]:
 		main.goto("game", {"seed": 31, "floors": floors})
 		await bot._wait(3.4)
@@ -142,7 +153,11 @@ static func tour(bot: Node) -> void:
 			await bot._shot("night7_pause")
 			w.toggle_pause()
 			await bot._wait(0.3)
-	# ---- the results of long nights
+
+
+## The results of long nights: a 7-floor win, a 7-floor clock death in the Attic, a 5-floor death in the Kitchen.
+static func _results(bot: Node) -> void:
+	var main: Node = bot.main
 	var rel := ["sharp_wick", "bellows", "beeswax", "lamp_oil", "thimble", "split_wick", "hourglass", "wax_coat"]
 	var base := {"kills": 241, "rooms": 52, "relics": rel, "time": 1520.0, "streak": 12, "hits": 31, "candle": "tallow",
 		"daily": false, "seed": 31, "seeded": false, "level": 2, "coins": 12}
@@ -158,10 +173,14 @@ static func tour(bot: Node) -> void:
 		await bot._wait(1.4)
 		print("[night] share: " + Share.text(p).replace("\n", " | "))
 		await bot._shot("night_results_%s_%s" % ["win" if p["won"] else "death", str(p["area"])])
-	# ---- the Journal: a 7-floor run record and the Ledger
+
+
+## The Journal: the Ledger (deepest area, best times by night length), a 7-floor run record, How to play.
+static func _journal(bot: Node) -> void:
+	var main: Node = bot.main
 	main.goto("title")
 	await bot._wait(3.4)
-	title = main.current
+	var title: Node = main.current
 	var j := Journal.open(title.root, 5)
 	await bot._wait(0.5)
 	j._select(1)   # the Ledger
@@ -174,9 +193,6 @@ static func tour(bot: Node) -> void:
 	await bot._wait(0.3)
 	await bot._shot("night_journal_howto")
 	j.queue_free()
-	Game.records = saved
-	Game.no_save = false
-	Audio.stop_all()
 
 
 static func _stage() -> void:

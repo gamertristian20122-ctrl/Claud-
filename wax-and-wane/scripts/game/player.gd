@@ -327,7 +327,8 @@ func wax_frac() -> float:
 ## night left, so a full 7-floor candle looks like a full 4-floor one (no giant candles). Danger cues (the
 ## sputter, the HUD's low-wax warnings) stay in real minutes.
 func shown_wax() -> float:
-	return wax * Game.END_MINUTES / night()
+	var n := night()
+	return wax if n == Game.END_MINUTES else wax * Game.END_MINUTES / n   # a 4-floor night: exactly as it was
 
 
 ## Wax rows at this much wax: one row melts every 18 minutes. Full Tallow (120 wax) = 12 rows, 72 = 9
