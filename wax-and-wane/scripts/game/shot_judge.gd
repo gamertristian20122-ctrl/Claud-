@@ -229,4 +229,13 @@ static func _hit(bot: Node, w: Node) -> void:
 				await bot._wait(0.1)
 		print("[shotjudge] hit %s %s" % [size, " ".join(line)])
 	if Game.settings.has("shot_size"):
+		# the setting applies live: a shot already in the air changes its drawing (through the settings signal)
 		Game.settings["shot_size"] = "normal"
+		w.freeze_t = 9999.0
+		var s2 := _shot(w, "bullet_purple", w.player.global_position + Vector2(0, -60), Vector2(0, 60))
+		var sizes2: Array = [s2.spr.sprite_frames.get_frame_texture("default", 0).get_width()]
+		for v in ["large", "normal"]:
+			Game.set_setting("shot_size", v)
+			sizes2.append(s2.spr.sprite_frames.get_frame_texture("default", 0).get_width())
+		print("[shotjudge] live: a shot in the air normal %d px -> large %d px -> normal %d px" % sizes2)
+		s2.queue_free()

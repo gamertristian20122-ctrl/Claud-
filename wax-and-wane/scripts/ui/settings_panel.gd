@@ -92,8 +92,6 @@ static func _game_page(body: VBoxContainer, _parent: Control) -> void:
 	grid.add_child(UI.cycle("Effects", ["full", "lite"], ["Full", "Lite"], Game.settings.get("effects", "full"),
 		func(v): Game.set_setting("effects", v)))
 	grid.add_child(_hint("Lite: no heat haze or shockwaves"))
-	grid.add_child(UI.cycle("Enemy shots", ["normal", "large"], ["Normal", "Large"], Game.settings.get("shot_size", "normal"),
-		func(v): Game.set_setting("shot_size", v)))   # v2.1: Large = bigger, bolder enemy shots (shot.gd), same hitboxes
 	grid.add_child(UI.toggle("FPS counter", Game.settings["show_fps"], func(b): Game.set_setting("show_fps", b)))
 	if OS.has_feature("pc"):   # F11 / Alt+Enter also switch it
 		var fs := UI.toggle("Fullscreen (F11)", Game.settings.get("fullscreen", false), func(b): Game.set_setting("fullscreen", b))
@@ -109,6 +107,8 @@ static func _controls_page(body: VBoxContainer) -> void:
 	grid.add_child(UI.toggle("Aim assist", Game.settings["aim_assist"], func(b): Game.set_setting("aim_assist", b)))
 	if OS.has_feature("pc"):
 		grid.add_child(UI.toggle("Mouse aim", Game.settings.get("mouse_aim", true), func(b): Game.set_setting("mouse_aim", b)))
+	grid.add_child(UI.cycle("Enemy shots", ["normal", "large"], ["Normal", "Large"], Game.settings.get("shot_size", "normal"),
+		func(v): Game.set_setting("shot_size", v)))   # v2.1: bigger, bolder enemy shots (shot.gd)
 	body.add_child(grid)
 	var lines := [
 		["Keys", "WASD move   Arrows shoot   E bomb   Q keepsake   Esc pause"],
