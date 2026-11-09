@@ -50,7 +50,7 @@ Reasons to light another candle
 • 5 more candles to unlock: the Tea Light, the Party Candle, the Altar Pillar, the Black Taper with its short, dark light and the secret Moonwick
 • Tonight's Candle: one seeded house each night, the same for every player, scored on your first try
 • A secret Hollow on every floor, behind a cracked wall that seeps wax
-• The Journal of everything you've met, and 54 achievements
+• The Journal of everything you've met, and 67 achievements
 
 One price buys the whole game. There are no ads and nothing else to buy.
 

@@ -66,7 +66,7 @@ reasons to come back.
 - **6 candles**: Tallow, Tea Light, Party Candle, Altar Pillar, the Black Taper (a short light, but foes in the dark take more damage) and the secret Moonwick.
 - **3 save slots, 4 difficulty levels**: every slot keeps its own level (1 Gentle, 2 Midnight, 3 Witching Hour, 4 Two O'Clock), Journal and unlocks.
 - **Tonight's Candle**: one seeded house a night, the same for every player. Typed-in seeds too.
-- **The Journal** and **54 achievements** (in the game).
+- **The Journal** and **67 achievements** (in the game).
 - **Save and continue**, keyboard and mouse, gamepad and touch.
 
 ---

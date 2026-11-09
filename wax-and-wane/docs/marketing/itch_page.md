@@ -100,7 +100,7 @@ on people's phones.
 > - 6 Candle Rites for collecting sets, 8 keepsakes you charge by clearing rooms, and the Smoke Altar, where power costs minutes off your candle for the rest of the night
 > - 35 kinds of lodger, 13 guardians with versus cards and 6 house champions
 > - 5 special rooms: the Seance, the Cracked Mirror, the Music Box, the Study and the Wax Font
-> - 5 more candles to unlock, a secret Hollow on every floor, Tonight's Candle (one seeded house a night, the same for everyone), the Journal and 54 achievements
+> - 5 more candles to unlock, a secret Hollow on every floor, Tonight's Candle (one seeded house a night, the same for everyone), the Journal and 67 achievements
 > - 3 save slots, each with its own difficulty level from 1 (Gentle, for learning) to 4 (Two O'Clock, brutal)
 >
 > **Which file do I want?**
@@ -153,7 +153,7 @@ Post it the day the page goes live (Dashboard > Devlog > New post). Add `loop_fi
 > - 64 relics, 6 Candle Rites and 8 keepsakes
 > - 35 kinds of lodger, 13 guardians and 6 house champions
 > - 5 special rooms, and a secret fifth floor with its own ending
-> - 6 candles to play, Tonight's Candle, the Journal and 54 achievements
+> - 6 candles to play, Tonight's Candle, the Journal and 67 achievements
 > - 3 save slots and 4 difficulty levels, from Gentle to Two O'Clock
 > - Keyboard and mouse, gamepad and touch; save and continue; Windows, Linux and Android builds
 >

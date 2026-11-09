@@ -3,7 +3,7 @@
 The one list every store text, the press kit and the trailer cards are checked against. The first part
 is written by `python3 tools/make_facts.py` from the game's own code (do not edit it by hand: re-run the
 script after any content change; `--check` tells you if it is out of date). Game version in the code:
-**2.3.0** (the store release is 2.0.0).
+**2.5.0** (the store release is 2.0.0).
 
 ## From the code
 
@@ -29,7 +29,7 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Night length | **4 to 7 floors**, picked before a run and kept per save slot (Tonight's Candle is always 4). Each floor past four adds half an hour: a 7-floor night ends at 3:30 AM | `Areas`, `Game.night_minutes` |
 | Special rooms | **5**: The Seance, The Cracked Mirror, The Music Box, The Study, The Wax Font | `Specials.INFO` |
 | Omens (floor twists) | **4**: Cold Draught, Tallow Moon, Long Night, Smoky Halls | `world.OMENS` |
-| Achievements | **61** (13 hidden), shown in the game | `Achievements.LIST` |
+| Achievements | **67** (15 hidden), shown in the game | `Achievements.LIST` |
 | Save slots | **3**, each with its own difficulty level, records, Journal, unlocks, achievements and saved run; settings are shared | `Game.SLOTS` |
 | Difficulty levels | **4**: 1 Gentle (melt x0.75, foe damage x0.5, foe health x0.85, drip wax x1.25); 2 Midnight (the game as it was made); 3 Witching Hour (melt x1.1, foe damage x1.2, foe health x1.15, marked foes x1.5); 4 Two O'Clock (melt x1.15, foe damage x1.35, foe health x1.3, marked foes x2, drip wax x0.85). Tonight's Candle always plays level 2 | `world.LEVELS` |
 | Music | 13 tracks + 2 original jingles | `assets/licenses/CREDITS_music.txt` |
@@ -86,7 +86,7 @@ title: 22 - Dream, floor_1: 40 - Crypt, floor_2: 21 - Dungeon, floor_3: 12 - Tem
 | Data collected | None. No ads, analytics, accounts or network access | `PRIVACY.md`; the Android build's only permission is listed above |
 | Blood | Cartoon only: creatures burst into small chunks that fade and leave flat coloured splats on the floor; some splats are red (`#9f294e`, `#62232f`, `#da4e38`) | `scripts/game/fx_gibs.gd`, `stains.gd`, `Enemy.DEFS` stain colours |
 | Random rewards | Chests, the Music Box (3 in-game coins a crank) and the Wax Font use in-game coins or wax only. No real money anywhere | `scripts/game/specials.gd` |
-| Steam features at launch | No Steam achievements or Steam overlay calls yet (GodotSteam is not in the build); the 61 achievements are in-game. Steam Cloud works without code (Auto-Cloud) | `scripts/autoload/achievements.gd` (Steam bridge waits for GodotSteam) |
+| Steam features at launch | No Steam achievements or Steam overlay calls yet (GodotSteam is not in the build); the 67 achievements are in-game. Steam Cloud works without code (Auto-Cloud) | `scripts/autoload/achievements.gd` (Steam bridge waits for GodotSteam) |
 | Demo | None. There is no demo build; do not promise one | |
 | Languages | English only | |
 

@@ -77,7 +77,7 @@ Five special rooms can turn up on a floor. Ring the Seance bell and the lodgers 
 [*][b]Tonight's Candle.[/b] One seeded house a night: the same house for every player, scored on your first try. Or type in a friend's seed.
 [*][b]Hollows.[/b] Every floor hides a secret room behind a cracked wall. Bring a bomb.
 [*][b]The Journal.[/b] Every relic, lodger, guardian and room you have met, your records and your last 20 runs. Unseen pages stay as silhouettes.
-[*][b]54 achievements[/b], tracked in the game. Eighteen relics and two keepsakes move into the house as you earn them.
+[*][b]67 achievements[/b], tracked in the game. Eighteen relics and two keepsakes move into the house as you earn them.
 [/list]
 
 [h2]Keyboard, mouse or gamepad[/h2]
@@ -95,7 +95,7 @@ Notes on choices:
 - Real item names (Twin Wick, Hand Bell, Old Rot) do the selling. Generic lines like "tons of items" could sit on any roguelite page.
 - The mechanic gets the longest section because it's the one thing other roguelites don't have.
 - No review quotes, awards or player counts until they exist.
-- Steam achievements are not promised: the 54 achievements live in the game (see section 5).
+- Steam achievements are not promised: the 67 achievements live in the game (see section 5).
 
 ---
 
@@ -153,7 +153,7 @@ tags from Steam's own list in the tag picker; if one is missing there, skip it.
 
 **Do not tick at launch:**
 - **Steam Achievements.** The build has no Steamworks connection yet (the GodotSteam plugin is not in it), so
-  the 54 achievements are shown in the game only. Tick it after an update adds GodotSteam, the 54 achievements
+  the 67 achievements are shown in the game only. Tick it after an update adds GodotSteam, the 67 achievements
   are created in Steamworks with the same API names, and each has its 64x64 earned and unearned icons.
   In the page text, achievements are described as in-game.
 - Steam Leaderboards, Trading Cards, Remote Play: later, if you add them.
