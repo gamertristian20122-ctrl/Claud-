@@ -692,13 +692,12 @@ def build_wall_pieces():
     for (x, r, top) in ((6, 4.5, 4), (16, 5.5, 3), (26, 3.5, 5)):
         vline(cv, x, 3, top + 2, "H")                    # hook
         rect(cv, x, top + 2, 1, 3, "J")                 # handle
-        disc(cv, x + 0.5, top + 5 + r, r, "c")
-        disc(cv, x + 0.5 - 0.6, top + 5 + r - 0.6, r - 1.6, "o")
-        disc(cv, x + 0.5 - 1.2, top + 5 + r - 1.2, max(0.8, r - 3.4), "e")
-        for yy in range(16):
-            for xx in range(32):
-                if cv.get(xx, yy) == "c" and (xx - x) + (yy - (top + 5 + r)) > r * 0.9:
-                    cv.c[yy][xx] = "R"
+        cy = top + 5 + r                                 # the flat copper bottom of a hanging pan:
+        disc(cv, x + 0.5, cy, r, "c")                    # a lit rim, a pressed ring, one glint
+        ring_lit(cv, x + 0.5, cy, r - 1.0, r, "c", "o", "R")
+        if r > 4:
+            ring_lit(cv, x + 0.5, cy, r * 0.45, r * 0.45 + 1.0, "R", "R", "o")
+        cv.put(int(x - r * 0.4), int(cy - r * 0.45), "e")
     put("decor/wall_kitchen_pans", render(cv))
     cv = Canvas(32, 16)                      # a plate rack, blue-and-white plates on edge
     rect(cv, 1, 12, 30, 2, "F")
