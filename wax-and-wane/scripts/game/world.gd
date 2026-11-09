@@ -57,7 +57,7 @@ const STEADY_ADD := 15.0
 ## Names and lines are shown with the number (Records.level_text); Game.MAX_LEVEL must match.
 const LEVELS := {
 	1: {"name": "Gentle", "line": "For learning: you melt slower and foes hit softer.",
-		"melt": 0.8, "dmg": 0.6, "hp": 0.85, "champ": 1.0, "wax": 1.25},
+		"melt": 0.75, "dmg": 0.5, "hp": 0.85, "champ": 1.0, "wax": 1.25},
 	2: {"name": "Midnight", "line": "The night as it was made: a fair fight.",
 		"melt": 1.0, "dmg": 1.0, "hp": 1.0, "champ": 1.0, "wax": 1.0},
 	3: {"name": "Witching Hour", "line": "Harder: a faster melt, harder hits, more marked foes.",

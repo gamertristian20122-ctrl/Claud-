@@ -56,7 +56,7 @@ func _ready() -> void:
 	_cards = HBoxContainer.new()
 	_cards.add_theme_constant_override("separation", GAP)
 	v.add_child(_cards)
-	var hint := UI.label("Every slot keeps its own level, Journal, unlocks and achievements.", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	var hint := UI.label("Every slot keeps its own difficulty level, Journal, unlocks and achievements.", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	hint.set_meta("fit_group", "slots_hint")
 	v.add_child(hint)
 	_focus_slot = Game.slot
@@ -239,7 +239,7 @@ func _continue(n: int) -> void:
 
 
 func _new(n: int) -> void:
-	pick_level(get_parent(), "SLOT %d: PICK A LEVEL" % n, 0, func(lvl: int):
+	pick_level(get_parent(), "SLOT %d: PICK A DIFFICULTY" % n, 0, func(lvl: int):
 		Game.start_slot(n, lvl)
 		Audio.play("ui_open")
 		main.goto("game", {"candle": "tallow"}))
@@ -250,7 +250,7 @@ func _change_level(n: int) -> void:
 	if d.is_empty():
 		return
 	var cur := int(d["level"])
-	pick_level(get_parent(), "SLOT %d: LEVEL" % n, cur, func(lvl: int):
+	pick_level(get_parent(), "SLOT %d: DIFFICULTY" % n, cur, func(lvl: int):
 		if lvl == cur:
 			return
 		var m := UI.modal(get_parent(), "LEVEL %d: %s?" % [lvl, str(Records.level_def(lvl)["name"]).to_upper()])
