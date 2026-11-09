@@ -86,26 +86,32 @@ def measure(a, t, x, y):
 
 
 def tele_marks(t, b):
-    """Telegraph pixels (T vs B): contrast per connected mark and the share of mark pixels >= 3:1."""
+    """Telegraph dots (T vs B). Every coloured mark pixel (luminance >= 0.05: not the dark outline) is a dot; it
+    reads by the better of its own contrast with the floor (in the dark) and that of the darkest mark pixel next
+    to it (its dark outline, on a light floor). Floor = B's median in a 9 x 9 window round the dot, mark pixels
+    left out.
+    Returns the min / median dot contrast and the share of dots >= 3:1."""
     m = np.abs(t - b).sum(-1) > 0
     if not m.any():
         return None
-    from scipy import ndimage
-    lab, n = ndimage.label(m, structure=np.ones((3, 3)))
+    Lt, Lb = lum(t), lum(b)
+    h, w = m.shape
     cs = []
-    good = 0
-    tot = 0
-    for i in range(1, n + 1):
-        mk = lab == i
-        band = dilate(mk, 3) & ~dilate(mk, 1) & ~m
-        if not band.any():
+    for y, x in zip(*np.nonzero(m & (Lt >= 0.05))):
+        y0, y1, x0, x1 = max(0, y - 4), min(h, y + 5), max(0, x - 4), min(w, x + 5)
+        floor = ~m[y0:y1, x0:x1]
+        if not floor.any():
             continue
-        bg = float(np.median(lum(b[band])))
-        L = lum(t[mk])
-        cs.append(max(float(ratio(np.percentile(L, 90), bg)), float(ratio(np.percentile(L, 10), bg))))
-        good += int((ratio(L, bg) >= 3.0).sum())
-        tot += int(mk.sum())
-    return {"marks": n, "px": tot, "min": min(cs), "median": float(np.median(cs)), "share3": good / max(1, tot)}
+        bg = float(np.median(Lb[y0:y1, x0:x1][floor]))
+        c = float(ratio(Lt[y, x], bg))
+        near = m[max(0, y - 1):y + 2, max(0, x - 1):x + 2]
+        dark = Lt[max(0, y - 1):y + 2, max(0, x - 1):x + 2][near].min()
+        if dark < bg:
+            c = max(c, float(ratio(dark, bg)))
+        cs.append(c)
+    cs = np.array(cs)
+    return {"marks": len(cs), "px": int(m.sum()), "min": float(cs.min()), "median": float(np.median(cs)),
+            "share3": float((cs >= 3.0).mean())}
 
 
 def judge(d):

@@ -604,9 +604,9 @@ KXXXXXXXK
 .........
 .........
 KKKKKKKKK
-KXXXXXXXK
+KXwwwwwXK
 KwaaawaaK
-KXXXXXXXK
+KXwwwwwXK
 KKKKKKKKK
 .........
 .........
@@ -686,8 +686,8 @@ BIG_BASE = {"K": "#21141b", "w": "#fdf7ed", "A": "#d3bfa9", "X": "#e2b694", "a":
 # shape and colours per shot. The rim colours were picked with design_bullets.py --judge: every pair with
 # the player's embers stays >= 30 apart for normal sight, protanopia and deuteranopia.
 BIG_TONES = {
-    "bullet_purple": ("orb", {"C": "#dc4a7b", "E": "#9b1a0a", "M": "#5f2d56", "D": "#9b1a0a"}),  # pink rim, plum and blood
-    "bullet_green": ("orb", {"C": "#4ba747", "E": "#3d734f", "M": "#3e5442", "D": "#2a2a3a"}),   # moss
+    "bullet_purple": ("orb", {"C": "#f78697", "E": "#9b1a0a", "M": "#5f2d56", "D": "#9b1a0a"}),  # pink rim, plum and blood
+    "bullet_green": ("orb", {"C": "#51c43f", "E": "#3d734f", "M": "#3e5442", "D": "#2a2a3a"}),   # moss
     "bullet_water": ("orb", {"C": "#72d6ce", "E": "#1f1833", "M": "#302c2b", "D": "#302c2b"}),   # black water, a lit rim
     "bolt_wax": ("wax", {"C": "#f78697", "E": "#9b1a0a", "M": "#62232f", "D": "#9b1a0a"}),       # rose wax
     "bolt_bone": ("bone", {}),
