@@ -390,7 +390,7 @@ class CoalBed extends Node2D:
 			queue_redraw()
 		if age < life - 0.25:
 			var d: Vector2 = e.world.player.global_position - global_position
-			if absf(d.x) < 7.0 and absf(d.y) < 5.0:
+			if absf(d.x) < 8.0 and absf(d.y) < 5.5:
 				GuardiansV21._hit(e, 6.0, global_position)
 
 	func _draw() -> void:
@@ -399,18 +399,27 @@ class CoalBed extends Node2D:
 			return
 		var hot := Color("#facb3e") if not cooling else Color("#8f4029")
 		var warm := Color("#e46e33") if not cooling else Color("#62232f")
-		# a faint heat ring so the burning patch reads on any floor
+		# a hot ring round the burning patch (red and gold dots on a dark under-dot), so it reads on any floor
 		if not cooling:
-			for i in 14:
-				if (i + _f) % 2 == 0:
-					var ang := TAU * i / 14.0
-					draw_rect(Rect2(Vector2(cos(ang) * 8.0, sin(ang) * 4.8).round(), Vector2.ONE), Color("#da4e38"))
-		draw_rect(Rect2(-4, -2, 8, 4), Color("#21141b"))
-		draw_rect(Rect2(-3, -3, 5, 1), Color("#21141b"))
-		draw_rect(Rect2(-3, -2, 6, 3), Color("#2a2a3a"))
-		draw_rect(Rect2(-2, -1, 2, 1), warm)
-		draw_rect(Rect2(1, -1, 1, 1), hot if _f % 3 != 0 else warm)
+			for i in 18:
+				var ang := TAU * i / 18.0
+				var q := Vector2(cos(ang) * 10.0, sin(ang) * 6.0).round()
+				draw_rect(Rect2(q + Vector2(0, 1), Vector2.ONE), Color("#21141b"))
+				draw_rect(Rect2(q, Vector2.ONE), Color("#da4e38") if (i + _f) % 2 == 0 else Color("#facb3e"))
+		# the lump: a dark coal with glowing cracks
+		draw_rect(Rect2(-5, -3, 10, 5), Color("#21141b"))
+		draw_rect(Rect2(-4, -4, 8, 1), Color("#21141b"))
+		draw_rect(Rect2(-4, -3, 8, 4), Color("#2a2a3a"))
+		draw_rect(Rect2(-3, -3, 3, 1), Color("#483b3a"))
+		draw_rect(Rect2(-2, -1, 3, 1), warm)
+		draw_rect(Rect2(1, -2, 1, 2), hot if _f % 3 != 0 else warm)
 		draw_rect(Rect2(-1, 0, 1, 1), hot)
+		draw_rect(Rect2(2, 0, 1, 1), warm)
+		if not cooling:
+			# and a small flame licking up off it
+			var fx := -1 + (_f % 3)
+			draw_rect(Rect2(fx, -7, 1, 3), Color("#ee8e2e"))
+			draw_rect(Rect2(fx, -5, 1, 1), Color("#facb3e"))
 
 
 # ================================================================= THE OSSUARY (Crypt)
@@ -1241,8 +1250,18 @@ class Trial extends Node:
 					w._end_run(true))
 
 
-## --autotest --tour --boss=<kind> --shots=DIR: the guardian's versus card, then two shots in each phase
-## (the bot fights, unkillable; health is set to 60% and 30% to move the phases on).
+## --autotest --tour --boss=<kind> --shots=DIR: the guardian's versus card, then two shots in each phase,
+## each taken a moment into one of its patterns (TOUR: [state, delay] per shot). The bot fights, unkillable
+## and harmless (its sparks do no damage), and the tour moves the phases on (health to 60% and 30%).
+## Works for the older guardians too (it then shoots at fixed times).
+const TOUR := {
+	"furnace": [[["jet", 0.2], ["vent", 0.7]], [["jet", 0.25], ["coal_tell", 1.6]], [["jet", 0.3], ["vent", 2.2]]],
+	"ossuary": [[["skulls_tell", 0.95], ["fan_tell", 0.65]], [["out", 0.35], ["back", 0.3]], [["split", 0.4], ["skulls_tell", 1.0]]],
+	"organist": [[["playing", 1.0], ["ring_tell", 1.4]], [["playing", 1.2], ["ring_tell", 1.6]], [["playing", 1.4], ["ring_tell", 2.0]]],
+	"weathercock": [[["gust_tell", 0.5], ["spinning", 0.9]], [["gusting", 0.9], ["spinning", 1.0]], [["gusting", 1.0], ["hop", 0.3]]],
+}
+
+
 static func tour(bot: Node, kind: String) -> void:
 	bot.args["god"] = true
 	bot.args["drive"] = true
@@ -1256,13 +1275,33 @@ static func tour(bot: Node, kind: String) -> void:
 	bot._jump(w, w.layout["boss"])
 	await bot._wait(0.55)
 	await bot._shot("g21_%s_card" % kind)
+	var waited := 0.0
+	while waited < 8.0 and not (w.boss != null and is_instance_valid(w.boss) and w.boss.active):
+		await bot._wait(0.1)
+		waited += 0.1
+	w.player.damage = 0.0
+	w.player.shot_range = 2.0   # and its sparks fizzle at once, so the shots show the guardian unflashed
+	var plan: Array = TOUR.get(kind, [[["", 3.0], ["", 1.7]], [["", 3.4], ["", 1.7]], [["", 3.4], ["", 1.7]]])
 	for ph in [1, 2, 3]:
-		if ph > 1 and w.boss and is_instance_valid(w.boss):
-			w.boss.mem.erase("hp_floor")
-			w.boss.hp = w.boss.max_hp * (0.6 if ph == 2 else 0.3)
-			w.boss._damage(0.01, false)
-		await bot._wait(3.4 if ph > 1 else 3.0)
-		await bot._shot("g21_%s_p%d_a" % [kind, ph])
-		await bot._wait(1.7)
-		await bot._shot("g21_%s_p%d_b" % [kind, ph])
+		var b: Enemy = w.boss
+		if b == null or not is_instance_valid(b):
+			break
+		if ph > 1:
+			b.mem.erase("hp_floor")
+			b.hp = b.max_hp * (0.6 if ph == 2 else 0.3)
+			b._damage(0.01, false)
+			await _until(bot, b, func(): return b.phase >= ph and b.state != "roar", 8.0)
+		for k in 2:
+			var want: Array = plan[ph - 1][k]
+			if str(want[0]) != "":
+				await _until(bot, b, func(): return b.state == str(want[0]), 12.0)
+			await bot._wait(float(want[1]))
+			await bot._shot("g21_%s_p%d_%s" % [kind, ph, "ab"[k]])
 	bot.get_tree().quit()
+
+
+static func _until(bot: Node, b: Enemy, cond: Callable, limit: float) -> void:
+	var waited := 0.0
+	while waited < limit and is_instance_valid(b) and b.alive and not cond.call():
+		await bot._wait(0.05)
+		waited += 0.05
