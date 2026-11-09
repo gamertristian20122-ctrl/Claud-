@@ -850,29 +850,31 @@ const BOSS := [
 ]
 
 
-static func weight_of(t: Dictionary, floor_num: int, dist: int) -> float:
-	if int(t.get("min_floor", 1)) > floor_num:
+## `night` (FloorGen.generate, world.gen_night): a longer night's floor gates the hard layouts by its depth and
+## takes its area's likes (Areas.def(id)["likes"]); empty = floor_num of the 4-floor house.
+static func weight_of(t: Dictionary, floor_num: int, dist: int, night := {}) -> float:
+	if float(t.get("min_floor", 1)) > float(night.get("depth", floor_num)):
 		return 0.0
 	var tags: Array = t.get("tags", [])
 	if "hard" in tags and dist < 2:
 		return 0.0
 	var w: float = float(t.get("w", 1.0))
-	var likes: Dictionary = FLOOR_LIKES.get(floor_num, {})
+	var likes: Dictionary = night.get("likes", FLOOR_LIKES.get(floor_num, {}))
 	for tag in tags:
 		w *= float(likes.get(tag, 1.0))
 	return w
 
 
 ## Weighted, seeded pick for a normal room (randomly mirrored, with small per-floor touches).
-static func pick_normal(rng: RandomNumberGenerator, floor_num := 1, dist := 99) -> Array:
+static func pick_normal(rng: RandomNumberGenerator, floor_num := 1, dist := 99, night := {}) -> Array:
 	var total := 0.0
 	for t in NORMAL:
-		total += weight_of(t, floor_num, dist)
+		total += weight_of(t, floor_num, dist, night)
 	var roll := rng.randf() * total
 	var chosen: Dictionary = NORMAL[0]
 	for t in NORMAL:
-		roll -= weight_of(t, floor_num, dist)
-		if roll <= 0.0 and weight_of(t, floor_num, dist) > 0.0:
+		roll -= weight_of(t, floor_num, dist, night)
+		if roll <= 0.0 and weight_of(t, floor_num, dist, night) > 0.0:
 			chosen = t
 			break
 	var rows: Array = (chosen["rows"] as Array).duplicate()
@@ -893,7 +895,7 @@ static func pick_normal(rng: RandomNumberGenerator, floor_num := 1, dist := 99) 
 		var s: String = rows[c.y]
 		rows[c.y] = s.substr(0, c.x) + "Q" + s.substr(c.x + 1)
 	# the crypt keeps its dead: some urns are skull piles
-	if floor_num == 2:
+	if str(night.get("area", "crypt" if floor_num == 2 else "")) == "crypt":
 		for y in rows.size():
 			var s2: String = rows[y]
 			for x in s2.length():

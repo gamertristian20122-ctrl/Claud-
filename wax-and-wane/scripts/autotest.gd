@@ -127,6 +127,8 @@ func _next_run() -> void:
 			(Game.records["unlocked"] as Array).append(params["candle"])
 	if args.has("seed"):
 		params["seed"] = int(args["seed"]) + results.size()
+	if args.has("floors"):   # --floors=N: the night's length (4 .. Areas.max_floors())
+		params["floors"] = int(args["floors"])
 	_cycled = -1
 	main.goto("game", params)
 	if args.has("relics") or args.has("keepsake"):
@@ -224,8 +226,9 @@ func _process(dt: float) -> void:
 		cur.set_meta("logged", true)
 		var p: Dictionary = cur.params
 		results.append(p)
-		print("[playtest] run %d: %s floor=%d clock=%s kills=%d rooms=%d time=%.0fs relics=%s" % [
-			results.size(), "WIN" if p["won"] else "LOSS", p["floor"], Game.clock_text(p["clock"]), p["kills"], p["rooms"], p["time"], p["relics"]])
+		print("[playtest] run %d: %s floor=%d/%d (%s) clock=%s kills=%d rooms=%d time=%.0fs relics=%s" % [
+			results.size(), "WIN" if p["won"] else "LOSS", p["floor"], int(p.get("floors", 4)), str(p.get("area", "")), Game.clock_text(p["clock"]),
+			p["kills"], p["rooms"], p["time"], p["relics"]])
 		print("[playtest]    best streak x%d, hits %d" % [p.get("streak", 0), p.get("hits", 0)])
 		print("[playtest]    level %d, candle %s, seed %d, slot %d" % [int(p.get("level", 2)), p.get("candle", "?"), int(p.get("seed", 0)), Game.slot])
 		if Candles.blows > 0:   # a dark_hit candle (the Black Taper): how many blows landed out in the dark

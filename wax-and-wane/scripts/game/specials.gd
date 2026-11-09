@@ -548,8 +548,8 @@ func _spawn_wave(d: Dictionary) -> void:
 	var wave: int = int(d.get("wave", 0)) + 1
 	d["wave"] = wave
 	var n: int = world.floor_num
-	var here: Dictionary = world.POOLS.get(n, world.POOLS[1])
-	var next: Dictionary = world.POOLS.get(n + 1, here)
+	var here: Dictionary = world.fpool(n)   # the area's lodgers (a longer night's Kitchen calls kitchen pests)
+	var next: Dictionary = world.fpool(n + 1) if world.floor_areas.has(n + 1) else here
 	# from the Crypt up: five a wave. Wave 1 this floor with a heavy; wave 2 half from below, a flyer
 	# and a heavy; wave 3 all from below with two heavies, the last one marked. The Cellar's seance is
 	# gentler (3 / 4 / 4, only half of the last wave from below, one heavy) so a new candle can win it.
@@ -673,7 +673,7 @@ func _tune(d: Dictionary) -> void:
 			world.fx_text(at, "Something climbs out!", UI.RED)
 			world.shake(3.0)
 			var n: int = world.floor_num
-			var lst: Array = world.POOLS.get(n, world.POOLS[1])["e"]
+			var lst: Array = world.fpool(n)["e"]
 			d["cleared"] = false
 			world.room.set_open(false)
 			for i in (1 if n < 3 else 2):

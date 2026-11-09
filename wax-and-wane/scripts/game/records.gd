@@ -449,6 +449,17 @@ static func floor_count() -> int:
 	return int(preload("res://scripts/game/world.gd").LAST_FLOOR)
 
 
+## The save slot's night length (the Night length picker on the Slots screen): 4 .. Areas.max_floors(), 4 until
+## the slot picks another. world.setup reads it for every run but Tonight's Candle (always 4).
+static func night_floors() -> int:
+	return clampi(int(Game.records.get("night_floors", Areas.MIN_FLOORS)), Areas.MIN_FLOORS, Areas.max_floors())
+
+
+static func set_night_floors(n: int) -> void:
+	Game.records["night_floors"] = clampi(n, Areas.MIN_FLOORS, Areas.max_floors())
+	Game.save()
+
+
 ## Save & Continue (world.save_extra / load_extra): the run-long bits the Journal needs.
 static func to_dict(w: Node) -> Dictionary:
 	return {"seeded": bool(w.get_meta("seeded", false))}

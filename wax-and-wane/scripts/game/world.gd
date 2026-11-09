@@ -25,6 +25,8 @@ const POOLS := {
 	5: {"e": ["cog_sentry", "deathwatch", "chort", "wogol", "cog_sentry", "sootling", "skelet"],
 		"h": ["gutterspout", "orc_warrior", "waxwork", "snuffer", "cog_sentry", "necromancer"], "f": ["minute_wraith", "minute_wraith", "clapper_bat", "angel"]},
 }
+## The last floor of the night as it was made (4 floors). A night of N floors ends on floor N (last_floor(), the
+## Belfry); the Clock Tower is the floor above it. Tables indexed "per floor" are read by depth (depth()).
 const LAST_FLOOR := 4
 ## Omens of the Hour: floor twists that always pay you back.
 const OMENS := {
@@ -127,6 +129,9 @@ var daily := false
 var daily_date := ""   # Tonight's Candle: the date it was lit ("" for other runs)
 var unlocked_this_run: Array = []
 var level := DEFAULT_LEVEL   # this run's difficulty (LEVELS): the save slot's, 2 for Tonight's Candle
+## How many floors tonight (the Long Night, docs/design/LONG_NIGHT.md): 4 (the house as it was made) up to
+## Areas.max_floors(); the save slot's choice (Records.night_floors), 4 for Tonight's Candle.
+var night_floors := LAST_FLOOR
 
 
 func setup(params: Dictionary) -> void:
@@ -136,6 +141,9 @@ func setup(params: Dictionary) -> void:
 	daily = params.get("daily", false)
 	# the slot's level (a continued run keeps the level it was lit at); Tonight's Candle is the same for all
 	level = DEFAULT_LEVEL if daily else clampi(int(params.get("level", Game.level)), 1, LEVELS.size())
+	# the night's length: the slot's (a continued run keeps its own); Tonight's Candle is the same for all
+	night_floors = LAST_FLOOR if daily else clampi(int(params.get("floors", Records.night_floors())), Areas.MIN_FLOORS, Areas.max_floors())
+	floor_areas = night_areas(night_floors)
 	if params.has("seed"):
 		run_seed = int(params["seed"])
 	else:
@@ -242,24 +250,68 @@ func _intro() -> void:
 
 # ---------------------------------------------------------------- floors & rooms
 
-## The area each floor is built from (scripts/game/areas.gd): floor number -> area id. Empty = the house as it is
-## (FLOORS / POOLS); only `--area=<id>` fills it for now. The night stream fills it from Areas.sequence().
+## The area each floor is built from (scripts/game/areas.gd): floor number -> area id, filled from
+## Areas.sequence(night_floors) at setup (the Clock Tower on the floor above the last). `--area=<id>` puts an
+## area on one floor for a test run.
 var floor_areas := {}
 
 
-## This floor's entry (name, theme, dark, music, boss, bosses): its area's, or FLOORS[n].
+## Floor number -> area id for a night of `n` floors: Areas.sequence(n), then the Clock Tower above the Belfry.
+static func night_areas(n: int) -> Dictionary:
+	var out := {}
+	var seq := Areas.sequence(n)
+	for i in seq.size():
+		out[i + 1] = seq[i]
+	out[seq.size() + 1] = "tower"
+	return out
+
+
+## This floor's entry (name, theme, dark, music, boss, bosses, space, area): its area's, or FLOORS[n].
 func fdef(n := floor_num) -> Dictionary:
-	return Areas.floor_def(floor_areas[n]) if floor_areas.has(n) else FLOORS[n]
+	return Areas.floor_def(floor_areas[n]) if floor_areas.has(n) else FLOORS[clampi(n, 1, FLOORS.size())]
 
 
 ## Who lives on this floor: its area's lodgers, or POOLS[n].
 func fpool(n := floor_num) -> Dictionary:
-	return Areas.pool(floor_areas[n]) if floor_areas.has(n) else POOLS[n]
+	return Areas.pool(floor_areas[n]) if floor_areas.has(n) else POOLS[clampi(n, 1, POOLS.size())]
+
+
+## The night's last floor (the Belfry): its guardian ends the night.
+func last_floor() -> int:
+	return night_floors
+
+
+## The secret floor above the bells (the Clock Tower): the one above the night's last floor.
+func is_tower(n := floor_num) -> bool:
+	return n > night_floors
+
+
+## The floor's place in the night on the 4-floor scale: floor 1 = 1.0, the last floor (the Belfry) = 4.0, the
+## Clock Tower = 5.0, the floors between stretched evenly (a 7-floor night: 1, 1.5, 2 ... 4). On a 4-floor
+## night it is the floor number, so every per-floor table reads exactly as it was made.
+func depth(n := floor_num) -> float:
+	if n > night_floors:
+		return float(LAST_FLOOR + 1)
+	if night_floors <= LAST_FLOOR:
+		return float(n)
+	return 1.0 + float(n - 1) * float(LAST_FLOOR - 1) / float(night_floors - 1)
+
+
+## What FloorGen needs to build floor n of this night: its depth (floor size, the hard layouts' gate), its
+## area (the tower, the crypt's skull piles) and the room layouts that area likes, which floor of the 4-floor
+## house it stands in for (`key`: special rooms, house champions) and the area's own champions.
+func gen_night(n: int) -> Dictionary:
+	var id := str(floor_areas.get(n, ""))
+	var d := depth(n)
+	var key := LAST_FLOOR + 1 if is_tower(n) else (1 if n == 1 else (LAST_FLOOR if n == night_floors else clampi(roundi(d), 2, LAST_FLOOR)))
+	var ad := Areas.def(id)
+	return {"depth": d, "area": id, "likes": ad.get("likes", RoomTemplates.FLOOR_LIKES.get(key, {})), "key": key,
+		"minis": ad.get("minis", [])}
 
 
 func floor_title() -> String:
-	var t := "%s  -  %d/%d" % [fdef()["name"], floor_num, LAST_FLOOR]
-	if floor_num > LAST_FLOOR:
+	var t := "%s  -  %d/%d" % [fdef()["name"], floor_num, last_floor()]
+	if is_tower():
 		t = "%s  -  above the bells" % fdef()["name"]
 	if omen != "":
 		t += "\n" + OMENS[omen]["name"]
@@ -297,16 +349,16 @@ func _start_floor(n: int) -> void:
 	rng.seed = hash("%d:loot:%d" % [run_seed, n])
 	var last := omen
 	omen = ""
-	if n >= 2 and n <= LAST_FLOOR and frng.randf() < 0.4:   # no omens above the bells
+	if n >= 2 and n <= last_floor() and frng.randf() < 0.4:   # no omens above the bells
 		var keys: Array = OMENS.keys().filter(func(k): return k != last)
 		omen = keys[frng.randi() % keys.size()]
 	if omen == "long_night":
-		layout = FloorGen.generate(n, frng, 3, 2)
+		layout = FloorGen.generate(n, frng, 3, 2, gen_night(n))
 		player.heal(8.0)
 	else:
-		layout = FloorGen.generate(n, frng)
+		layout = FloorGen.generate(n, frng, 0, 1, gen_night(n))
 	recompute_discount()
-	boss_kind = Enemy.pick_boss(fdef(n)["bosses"], n, run_seed, Unlocks.fixed(self))   # seeded / daily: the seed alone
+	boss_kind = Enemy.pick_boss(fdef(n)["bosses"], n, run_seed, Unlocks.fixed(self), last_floor())   # seeded / daily: the seed alone
 	dark.color = fdef(n)["dark"]
 	for c in layout["cells"].keys():
 		layout["cells"][c]["seen"] = false
@@ -332,16 +384,16 @@ func _start_floor(n: int) -> void:
 		player.heal(steady)
 		fx_text(player.global_position + Vector2(0, -30), "YOUR WICK STEADIES  +%d min" % int(steady), UI.GOLD)
 	var omen_txt := ("   -   Omen: %s" % OMENS[omen]["name"]) if omen != "" else ""
-	hud.show_banner(fdef(n)["name"].to_upper(), "Floor %d of %d   -   %s%s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes()), omen_txt], 2.6)
+	hud.show_banner(fdef(n)["name"].to_upper(), "Floor %d of %d   -   %s%s" % [n, last_floor(), Game.clock_text(clock_minutes()), omen_txt], 2.6)
 	if steady > 0.0 and Game.tip("steady", 1):
 		hud.show_hint("A new floor steadies a low wick: +%d min" % int(steady), 4.0)
 	elif omen != "":
 		hud.show_hint("%s: %s" % [OMENS[omen]["name"], OMENS[omen]["desc"]], 5.0)
-	elif n in [2, 3, 4] and floor_k(FLOOR_DRAIN) > 1.0 and Game.tip("night_speeds", 1):   # say it once (FLOOR_DRAIN)
+	elif n >= 2 and n <= last_floor() and floor_k(FLOOR_DRAIN) > 1.0 and Game.tip("night_speeds", 1):   # say it once (FLOOR_DRAIN)
 		hud.show_hint("The night speeds up: up here your wick burns faster", 4.0)
 	if n == 1 and (Game.records["seen_intro"] or main.autotest != null) and int(Game.records["runs"]) <= 3:   # later: the chalk on the floor
 		hud.show_hint(Controls.controls_hint(), 7.0)
-	Tower.on_floor_start(self)   # the Clock Tower's own banner on floor 5
+	Tower.on_floor_start(self)   # the Clock Tower's own banner on the floor above the last
 	RunSave.on_floor_start(self)   # Save & Continue: snapshot the start of this floor
 
 
@@ -474,7 +526,7 @@ func _start_boss() -> void:
 	player.frozen = true
 	var kind: String = boss_kind if boss_kind != "" else fdef()["boss"]
 	var name: String = Enemy.DEFS[kind]["name"]
-	Audio.music("final_boss" if floor_num >= LAST_FLOOR else "boss")
+	Audio.music("final_boss" if floor_num >= last_floor() else "boss")
 	Audio.play("boss_roar")
 	Juice.of(self).boss_card(kind, name)
 	var tw := create_tween()
@@ -901,14 +953,14 @@ func _boss_down(e: Enemy) -> void:
 	var pos := e.global_position
 	boss_hits = room_hits
 	charge_keepsake(99)
-	if floor_num >= LAST_FLOOR:
+	if floor_num >= last_floor():
 		player.frozen = true
 	var tw := create_tween()
 	tw.tween_property(e, "modulate", Color(3, 2, 1.5, 0.0), 1.2)
 	tw.tween_callback(e.queue_free)
 	tw.tween_callback(func():
 		hud.set_boss("", false)
-		if floor_num >= LAST_FLOOR:
+		if floor_num >= last_floor():
 			if Tower.on_last_boss_down(self):   # a ladder of light (before 1:00 AM) or the true ending
 				return
 			_victory()
@@ -921,7 +973,7 @@ func _boss_down(e: Enemy) -> void:
 			add_pickup("coin", room.center() + Vector2(0, 14), "", 0, Vector2.from_angle(rng.randf() * TAU) * 50.0)
 		player.damage += 0.15
 		fx_text(room.center() + Vector2(0, -30), "Your flame grows", UI.GOLD)
-		if floor_num == 3:
+		if str(fdef().get("area", "")) == "chapel":   # the Altar Pillar: snuff the Chapel's guardian
 			Game.unlock("pillar")
 		_offer_altar()
 		Audio.music(fdef()["music"]))
@@ -1252,7 +1304,7 @@ func _end_run(won: bool) -> void:
 	Game.save()
 	main.goto("results", Records.end_run(self, won, {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
 		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins,
-		"level": level}))
+		"level": level, "floors": night_floors}))
 
 
 func give_up() -> void:

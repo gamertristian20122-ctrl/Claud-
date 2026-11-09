@@ -10,6 +10,8 @@ extends Node
 ## world._boss_down -> on_last_boss_down, world.save_extra/load_extra -> "tower", FloorGen.generate ->
 ## layout, RoomDecor.setup -> dress, results.gd -> on_results, autotest -> test_start / tour.
 
+## The Clock Tower's entry in the 4-floor tables (its layout, FLOOR_LIKES[5], Enemy.FLOOR_HP[4] ...). It is the
+## floor above the night's last floor: floor 5 of a 4-floor night, floor 8 of a 7-floor one (floor_of).
 const FLOOR := 5
 ## The Belfry's guardian must fall at or before this clock minute (1:00 AM, as the clock shows it) for the
 ## ladder to appear, and only once the player has won a night before (ladder_open).
@@ -68,9 +70,14 @@ static func _shopless(res: Dictionary, rng: RandomNumberGenerator) -> void:
 			d["grid"] = RoomTemplates.to_grid(RoomTemplates.pick_normal(rng, FLOOR, int(d["dist"])))
 
 
+## The tower's floor number tonight: the one above the night's last floor (5 on a 4-floor night).
+static func floor_of(w: Node) -> int:
+	return int(w.night_floors) + 1 if w.get("night_floors") != null else FLOOR
+
+
 ## world._start_floor hook (after the floor banner).
 static func on_floor_start(w: Node) -> void:
-	if int(w.floor_num) != FLOOR:
+	if int(w.floor_num) != floor_of(w):
 		return
 	# the ladder's light runs down the wick: a reward for being done by one (saved in the floor snapshot)
 	w.player.heal(ARRIVAL_WAX)
@@ -86,7 +93,7 @@ static func on_build(w: Node, r: Room) -> void:
 	for o in r.objects.get_children():
 		if o is Pickup and o.record and o.record.get("ladder", false):
 			_dress_ladder(o)
-	if int(w.floor_num) != FLOOR:
+	if int(w.floor_num) != floor_of(w):
 		return
 	if r.data["type"] == "boss" and Art.has("tower/room_keeper"):
 		for ch in r.get_children():
@@ -206,10 +213,10 @@ static func dress(d: RoomDecor, free_top: Array, budget: int) -> int:
 
 ## world._boss_down hook, last floor(s): true when the tower handles it (ladder or true ending).
 static func on_last_boss_down(w: Node) -> bool:
-	if int(w.floor_num) == FLOOR:
+	if int(w.floor_num) == floor_of(w):
 		of(w).true_end()
 		return true
-	if int(w.floor_num) == FLOOR - 1 and ladder_open(w):
+	if int(w.floor_num) == floor_of(w) - 1 and ladder_open(w):
 		of(w).open_ladder()
 		return true
 	return false
@@ -254,7 +261,7 @@ func open_ladder() -> void:
 
 ## world.descend hook: the ladder of light is climbed, not fallen down (true = handled here).
 static func on_descend(w: Node) -> bool:
-	if int(w.floor_num) != FLOOR - 1 or of(w).belfry_clock < 0.0 or w.room == null or w.room.data["type"] != "boss":
+	if int(w.floor_num) != floor_of(w) - 1 or of(w).belfry_clock < 0.0 or w.room == null or w.room.data["type"] != "boss":
 		return false
 	if w.altar_floor == w.floor_num and w.pact != "smoke":
 		w.declined_smoke = true
@@ -271,7 +278,7 @@ static func on_descend(w: Node) -> bool:
 	tw.parallel().tween_property(fade, "color:a", 1.0, 0.8)
 	tw.tween_callback(func():
 		w.player.modulate.a = 1.0
-		w._start_floor(FLOOR)
+		w._start_floor(floor_of(w))
 		w.player.frozen = false
 		w.transitioning = false)
 	tw.tween_property(fade, "color:a", 0.0, 0.9)
@@ -353,14 +360,15 @@ static func on_results(res: Control, v: Container, params: Dictionary) -> void:
 	var won: bool = params.get("won", false)
 	var labels: Array = []
 	_labels(v, labels)
-	if f == FLOOR:
+	var top := int(params.get("floors", 4)) + 1   # the tower: the floor above the night's last
+	if f == top:
 		for ch in res.get_children():
 			if ch is TextureRect and ch.texture and str(ch.texture.resource_path).contains("rooms/room_"):
 				ch.texture = Art.tex("rooms/room_tower")
 				break
 		for l in labels:
 			l.text = l.text.replace("The Belfry", "The Clock Tower")
-	if won and f == FLOOR:
+	if won and f == top:
 		for l in labels:
 			if l.text.begins_with("DONE BY"):
 				var at := v.get_children().find(l)
@@ -370,7 +378,7 @@ static func on_results(res: Control, v: Container, params: Dictionary) -> void:
 				v.move_child(done, at + 1)
 			elif l.text.begins_with("The house is quiet"):
 				l.text = "The bells are done with you. Sleep well."
-	elif not won and f == FLOOR:
+	elif not won and f == top:
 		for l in labels:
 			if l.text.begins_with("Your flame went out") or l.text.begins_with("The clock struck"):
 				l.text += "  The Keeper kept you."
@@ -417,7 +425,7 @@ static func test_start(w: Node) -> void:
 	w.player.bombs = 3
 	w.player.coins = 12
 	of(w).belfry_clock = 48.0
-	w._start_floor(FLOOR)
+	w._start_floor(floor_of(w))
 	print("[tower] test start: floor %d, %s, relics %s" % [w.floor_num, Game.clock_text(w.clock_minutes()), w.player.relics])
 	if "--keeper" in OS.get_cmdline_user_args():   # --tower --keeper: straight to the Keeper (boss balance)
 		var wax := 60.0
