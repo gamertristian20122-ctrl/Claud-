@@ -509,8 +509,8 @@ func g21_ossuary(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 			if e.t <= 0:
 				# the skulls roll out down their lanes
 				for s in e.mem["skulls"]:
-					var sk: RollSkull = s
-					if is_instance_valid(sk):
+					if is_instance_valid(s):   # check before the typed assignment: a freed skull errors there
+						var sk: RollSkull = s
 						sk.go(sk.get_meta("goal"), 120.0)
 				Audio.play("crate_break", -4.0, 0.05, 0.8)
 				e.state = "out"
