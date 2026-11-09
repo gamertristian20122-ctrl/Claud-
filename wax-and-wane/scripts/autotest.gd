@@ -331,7 +331,7 @@ func drive(w: Node) -> Array:
 			if o is Pickup and o.kind == "trapdoor":
 				pick = o
 	if pick:
-		return [(pick.global_position - pos).normalized(), Vector2.ZERO]
+		return [((pick.global_position - pos).normalized() + AreaGimmicks.bot_push(w, pos)).normalized(), Vector2.ZERO]
 	# special rooms: ring the Seance bell, wind the music box, feed the font (sensibly, then move on)
 	var sp: Variant = Specials.bot_target(w)
 	if sp != null:
@@ -360,10 +360,10 @@ func drive(w: Node) -> Array:
 	if _room_t_total > 20.0 and Engine.get_physics_frames() % 120 == 0:
 		print("   [nav] cell=%s dir=%s my=%s door=%s next=%s grid=%s" % [w.cur_cell, dir, my_cell, door_cell, _path_next(room, my_cell, door_cell), room.data["grid"]])
 	if my_cell == door_cell or my_cell.x < 0 or my_cell.y < 0 or my_cell.x >= Room.COLS or my_cell.y >= Room.ROWS:
-		return [(exit_pt - pos).normalized(), Vector2.ZERO]
+		return [((exit_pt - pos).normalized() + AreaGimmicks.bot_push(w, pos)).normalized(), Vector2.ZERO]
 	var wp := _path_next(room, my_cell, door_cell)
 	var goal: Vector2 = room.cell_center(wp) + Vector2(0, 2)
-	return [(goal - pos).normalized(), Vector2.ZERO]
+	return [((goal - pos).normalized() + AreaGimmicks.bot_push(w, pos)).normalized(), Vector2.ZERO]   # round hot stove tops too
 
 
 ## Per floor: seconds, hits, wax lost to hits and wax gained back (printed with each result).
