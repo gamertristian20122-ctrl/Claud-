@@ -185,7 +185,7 @@ static func dress(d: RoomDecor, free_top: Array, budget: int) -> int:
 					gl.modulate = Color(0.85, 0.85, 0.9)
 					r.add_child(gl)
 					var pool := Art.tex("areas/attic/light/moon_round") if Art.has("areas/attic/light/moon_round") else null
-					var l := d._light(pos + Vector2(11, 56), MOON, 0.95, 0.95, 0.02, pool)
+					var l := d._light(pos + Vector2(11, 56), MOON, 0.7, 0.9, 0.02, pool)
 					if pool == null:
 						l.texture_scale = 0.4
 					free_top.erase(t3)

@@ -210,9 +210,9 @@ def kitchen_checker(floor, rng):
         for c in range(15):
             x0, y0 = FX0 + 16 * c, FY0 + 16 * r
             if (r + c) % 2 == 0:
-                tile_box(px, x0, y0, 16, 16, "#8f4029", "#c56025", "#23151d", "#62232f", rng)
+                tile_box(px, x0, y0, 16, 16, "#8a503e", "#b58057", "#23151d", "#62232f", rng)
             else:
-                tile_box(px, x0, y0, 16, 16, "#3b3332", "#483b3a", "#23151d", "#302c2b", rng)
+                tile_box(px, x0, y0, 16, 16, "#483b3a", "#775c55", "#23151d", "#3b3332", rng)
     return vignette_maps(floor)
 
 
@@ -1839,13 +1839,11 @@ def build_kitchen_props():
 def build_library_props():
     for k in ("l", "m", "r"):                                        # the rails a sliding shelf runs on
         cv = Canvas(16, 16)
+        for x in range(1, 16, 5):                                    # sleepers under the rails
+            vline(cv, x, 9, 15, "j")
         for y in (11, 14):
-            hline(cv, 0, 15, y, "I")
-            hline(cv, 0, 15, y - 1, "L")
-        for x in range(1, 16, 5):
-            vline(cv, x, 10, 14, "u")
-            cv.put(x, 11, "I")
-            cv.put(x, 14, "I")
+            hline(cv, 0, 15, y, "i")
+            hline(cv, 0, 15, y - 1, "S")
         if k in ("l", "r"):
             x0 = 0 if k == "l" else 13
             rect(cv, x0, 8, 3, 7, "3")

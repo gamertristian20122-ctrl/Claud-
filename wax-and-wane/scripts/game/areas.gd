@@ -181,3 +181,188 @@ static func test_start(w: Node, id: String, depth := TEST_DEPTH, second := false
 		w.boss_kind = bosses[mini(1 if second else 0, bosses.size() - 1)]
 	print("[area] test start: %s on floor %d, %s, relics %s, guardian %s" % [id, depth, Game.clock_text(w.clock_minutes()),
 		w.player.relics, w.boss_kind])
+
+
+## The bot's per-run report for `--area` (called from autotest._process): one line when the area's floor is done,
+## then the run ends there (the floors above are not what is being tested).
+static func test_watch(bot: Node, cur: Node) -> void:
+	if cur == null or cur.name != "Game" or cur.get("player") == null or cur.finished or cur.floor_areas.is_empty():
+		return
+	var depth: int = cur.floor_areas.keys()[0]
+	var id: String = cur.floor_areas[depth]
+	var st: Dictionary = bot.get_meta("area_run", {})
+	if cur.floor_num == depth:
+		if not st.has("boss_t") and cur.boss != null and is_instance_valid(cur.boss):
+			st["boss_t"] = float(cur.run_time)
+			st["boss"] = cur.boss.kind
+			st["boss_wax"] = float(cur.player.wax)
+		if st.has("boss_t") and not st.has("boss_end") and (cur.boss == null or not is_instance_valid(cur.boss) or not cur.boss.alive):
+			st["boss_end"] = float(cur.run_time)
+		bot.set_meta("area_run", st)
+	elif cur.floor_num > depth and not st.get("done", false):
+		st["done"] = true
+		bot.set_meta("area_run", st)
+		var d: Array = bot._diag.get(depth, [0.0, 0, 0.0, 0.0])
+		var fight: float = float(st.get("boss_end", cur.run_time)) - float(st.get("boss_t", cur.run_time))
+		print("[area] %s CLEARED floor %d in %.0f s (guardian %s %.0f s, met it with %.0f wax), hits %d, wax lost %.0f, gained %.0f, rooms %d, kills %d" % [
+			id, depth, float(d[0]), st.get("boss", "?"), fight, float(st.get("boss_wax", 0.0)), int(d[1]), float(d[2]), float(d[3]),
+			int(cur.rooms_cleared), int(cur.kills)])
+		cur._end_run(true)
+
+
+## Results of an `--area` run that ended on the area's floor (Tallow fell there).
+static func test_result(bot: Node, params: Dictionary) -> void:
+	var st: Dictionary = bot.get_meta("area_run", {})
+	if not st.get("done", false):
+		var d: Array = bot._diag.get(int(params.get("floor", 0)), [0.0, 0, 0.0, 0.0])
+		print("[area] %s DIED on floor %d after %.0f s (%s), hits %d, wax lost %.0f, gained %.0f" % [str(bot.args.get("area", "?")),
+			int(params.get("floor", 0)), float(d[0]), "at the guardian" if st.has("boss_t") else "before the guardian", int(d[1]),
+			float(d[2]), float(d[3])])
+	bot.set_meta("area_run", {})
+
+
+# ---------------------------------------------------------------- --tour --areas
+
+## Each new area: three dressed rooms, its gimmick at work, its two new lodgers, the guardian's versus card and two
+## shots of the fight (the bot plays, unkillable).
+static func tour(bot: Node) -> void:
+	bot.main.goto("game", {"seed": 21})
+	await bot._wait(1.6)
+	var w: Node = bot.main.current
+	for id in NEW:
+		w.hud.set_boss("", false)
+		w.boss = null
+		w.floor_areas = {TEST_DEPTH: id}
+		w._start_floor(TEST_DEPTH)
+		await bot._wait(2.9)
+		var cells: Array = bot._normal_cells(w)
+		for i in 3:
+			var c: Vector2i = cells[(i * 2) % cells.size()]
+			w.layout["cells"][c]["cleared"] = true
+			bot._jump(w, c)
+			w.player.position = w.room.center() + Vector2(0, 12)
+			w.player.wax = 100.0
+			await bot._wait(1.0)
+			await bot._shot("area_%s_room_%d" % [id, i + 1])
+		await _tour_gimmick(bot, w, id, cells)
+		await _tour_lodgers(bot, w, id, cells)
+		# the guardian: its card and two moments of the fight
+		bot.args["god"] = true
+		bot.args["drive"] = true
+		w.boss_kind = def(id)["bosses"][0]
+		var bc: Vector2i = w.layout["boss"]
+		w.player.wax = 100.0
+		bot._jump(w, bc)
+		await bot._wait(0.55)
+		await bot._shot("area_%s_guardian_card" % id)
+		await bot._wait(4.5)
+		await bot._shot("area_%s_guardian_fight_1" % id)
+		if w.boss and is_instance_valid(w.boss):
+			w.boss.hp = w.boss.max_hp * 0.3   # straight to its last phase
+			w.on_boss_hp(w.boss)
+		await bot._wait(5.0)
+		await bot._shot("area_%s_guardian_fight_2" % id)
+		bot.args.erase("drive")
+		bot.args.erase("god")
+		for e in w.enemies:
+			if is_instance_valid(e):
+				e.queue_free()
+		w.enemies.clear()
+		w._clear_shots()
+	Audio.stop_all()
+	await bot._wait(0.3)
+	bot.get_tree().quit()
+
+
+static func _tour_room_with(bot: Node, w: Node, cells: Array, test: Callable) -> bool:
+	for c in cells:
+		w.layout["cells"][c]["cleared"] = true
+		bot._jump(w, c)
+		if test.call(AreaGimmicks.of(w.room)):
+			w.player.position = w.room.center() + Vector2(0, 12)
+			w.player.wax = 100.0
+			return true
+	return false
+
+
+static func _tour_gimmick(bot: Node, w: Node, id: String, cells: Array) -> void:
+	match id:
+		"kitchen":
+			if _tour_room_with(bot, w, cells, func(g): return g != null and not g.stoves.is_empty()):
+				var g: AreaGimmicks = AreaGimmicks.of(w.room)
+				g._t = 8.0   # the first group of stoves is hot, the other one cold
+				await bot._wait(0.6)
+				await bot._shot("area_kitchen_stoves_hot")
+				var pot: Vector2i = g.steam.keys()[0]
+				w.room.damage_obstacle(pot, 1.0)
+				w.room.damage_obstacle(pot, 1.0)
+				await bot._wait(0.5)
+				await bot._shot("area_kitchen_pot_spilt")
+			var e: Enemy = w.spawn_enemy("flour_ghost", w.room.center() + Vector2(-40, -10))
+			await bot._wait(1.2)
+			if e and is_instance_valid(e):
+				AreaGimmicks.flour_cloud(w, e.global_position + Vector2(0, -6))
+				for k in 5:
+					w.shoot_player(w.player.global_position + Vector2(0, -8), (e.global_position - w.player.global_position).normalized(), w.player, 1.0)
+					await bot._wait(0.08)
+				await bot._wait(0.1)
+				await bot._shot("area_kitchen_flour_cloud")
+		"library":
+			if _tour_room_with(bot, w, cells, func(g): return g != null and not g.shelves.is_empty()):
+				var g: AreaGimmicks = AreaGimmicks.of(w.room)
+				await bot._wait(0.4)
+				await bot._shot("area_library_shelf_before")
+				for s in g.shelves:
+					s["t"] = 0.05
+				await bot._wait(0.75)
+				await bot._shot("area_library_shelf_slid")
+			if _tour_room_with(bot, w, cells, func(g): return g != null and not g.nook.is_empty() and not g.nook["hollow"]):
+				var g2: AreaGimmicks = AreaGimmicks.of(w.room)
+				w.player.position = w.room.position + g2.nook["pos"] + Vector2(16, 60)
+				await bot._wait(0.6)
+				await bot._shot("area_library_shelfdoor")
+				for k in AreaGimmicks.NOOK_HITS:
+					g2._nook_shot(g2.nook["pos"] + Vector2(16, 26))
+				await bot._wait(0.8)
+				await bot._shot("area_library_shelfdoor_open")
+		"attic":
+			if _tour_room_with(bot, w, cells, func(g): return g != null and g.lanterns.size() >= 2):
+				var g: AreaGimmicks = AreaGimmicks.of(w.room)
+				await bot._wait(0.4)
+				await bot._shot("area_attic_dark")
+				g._set_lantern(g.lanterns[0], true)
+				for c in w.room.obstacle_nodes.keys():
+					if w.room.char_at(c) == "B":
+						g._sheet_shot(w.room.cell_pos(c) + Vector2(8, 10))
+						break
+				await bot._wait(0.7)
+				await bot._shot("area_attic_lantern_sheet")
+
+
+static func _tour_lodgers(bot: Node, w: Node, id: String, cells: Array) -> void:
+	var c: Vector2i = cells[1 % cells.size()]
+	w.layout["cells"][c]["cleared"] = true
+	bot._jump(w, c)
+	w.player.position = w.room.center() + Vector2(0, 30)
+	w.player.wax = 100.0
+	var kinds: Array = {"kitchen": ["lid_crab", "flour_ghost"], "library": ["bookworm", "inkblot"], "attic": ["mannequin", "trunk"]}[id]
+	var spots := [Vector2(-60, -24), Vector2(-24, -30), Vector2(24, -30), Vector2(60, -24)]
+	for i in 4:
+		var e: Enemy = w.spawn_enemy(kinds[i % 2], w.room.center() + spots[i])
+		if e:
+			e.set_meta("swarm_child", true)
+	w.freeze_t = 999.0
+	await bot._wait(1.0)
+	await bot._shot("area_%s_lodgers" % id)
+	w.freeze_t = 0.0
+	bot.args["god"] = true
+	bot.args["drive"] = true
+	await bot._wait(2.2)
+	await bot._shot("area_%s_lodgers_live" % id)
+	bot.args.erase("drive")
+	bot.args.erase("god")
+	for e in w.enemies:
+		if is_instance_valid(e):
+			e.queue_free()
+	w.enemies.clear()
+	w._clear_shots()
