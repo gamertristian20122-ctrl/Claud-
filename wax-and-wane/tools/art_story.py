@@ -309,22 +309,22 @@ def build_end_kitchen():
         rect(cv, x, 63, 3, 13, "F")
         rect(cv, x, 63, 1, 13, "D")
     rect(cv, 85, 69, 28, 1, "F")
-    rect(cv, 89, 59, 21, 1, "w")
-    rect(cv, 88, 60, 23, 4, "A")
-    for x in range(88, 111, 3):
+    rect(cv, 87, 59, 27, 1, "w")                # the cloth (Tallow stands on it at x 96: ending.gd TABLE)
+    rect(cv, 86, 60, 29, 4, "A")
+    for x in range(86, 115, 3):
         cv.put(x, 64, "a")
-    rect(cv, 99, 57, 13, 2, "w")                # the diary: open pages, its red cover, the spine
-    rect(cv, 99, 56, 5, 1, "w")
-    rect(cv, 106, 56, 6, 1, "w")
-    rect(cv, 105, 56, 1, 3, "A")
-    rect(cv, 98, 59, 15, 1, "p")
-    for (x, y, w) in ((100, 57, 4), (107, 57, 4), (100, 58, 3), (107, 58, 2)):
+    rect(cv, 105, 57, 13, 2, "w")               # the diary: open pages, its red cover, the spine
+    rect(cv, 105, 56, 5, 1, "w")
+    rect(cv, 112, 56, 6, 1, "w")
+    rect(cv, 111, 56, 1, 3, "A")
+    rect(cv, 104, 59, 15, 1, "p")
+    for (x, y, w) in ((106, 57, 4), (113, 57, 4), (106, 58, 3), (113, 58, 2)):
         rect(cv, x, y, w, 1, "a")
-    rect(cv, 83, 58, 7, 1, "S")                 # the saucer and the cup
-    rect(cv, 84, 54, 5, 4, "h")
-    rect(cv, 84, 54, 5, 1, "S")
-    rect(cv, 84, 56, 5, 1, "b")
-    rect(cv, 89, 55, 1, 2, "S")
+    rect(cv, 80, 58, 7, 1, "S")                 # the saucer and the cup
+    rect(cv, 81, 54, 5, 4, "h")
+    rect(cv, 81, 54, 5, 1, "S")
+    rect(cv, 81, 56, 5, 1, "b")
+    rect(cv, 86, 55, 1, 2, "S")
     # ---- a rag rug under the chair, and the fire's glow on the flags
     for x in range(124, 172):
         for y in range(76, 80):
