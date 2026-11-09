@@ -88,14 +88,14 @@ static func _game_page(body: VBoxContainer, _parent: Control) -> void:
 		if b:
 			Game.vibrate(60)))
 	grid.add_child(UI.toggle("Gentle burn", Game.settings.get("gentle", false), func(b): Game.set_setting("gentle", b)))
-	grid.add_child(UI.toggle("FPS counter", Game.settings["show_fps"], func(b): Game.set_setting("show_fps", b)))
+	grid.add_child(_hint("Melts 25% slower, right away\nNot in Tonight's Candle"))
 	grid.add_child(UI.cycle("Effects", ["full", "lite"], ["Full", "Lite"], Game.settings.get("effects", "full"),
 		func(v): Game.set_setting("effects", v)))
 	grid.add_child(_hint("Lite: no heat haze or shockwaves"))
-	if OS.has_feature("pc"):
-		var fs := UI.toggle("Fullscreen", Game.settings.get("fullscreen", false), func(b): Game.set_setting("fullscreen", b))
+	grid.add_child(UI.toggle("FPS counter", Game.settings["show_fps"], func(b): Game.set_setting("show_fps", b)))
+	if OS.has_feature("pc"):   # F11 / Alt+Enter also switch it
+		var fs := UI.toggle("Fullscreen (F11)", Game.settings.get("fullscreen", false), func(b): Game.set_setting("fullscreen", b))
 		grid.add_child(fs)
-		grid.add_child(_hint("F11 or Alt+Enter"))
 	body.add_child(grid)
 
 

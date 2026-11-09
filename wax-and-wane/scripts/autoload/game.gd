@@ -177,6 +177,12 @@ static func clock_text(minutes: float, spare := true) -> String:
 	return t
 
 
+## The whole minute the clock shows for `minutes` (clock_text floors): rules that promise a time
+## ("done by 1:00 AM", "before 1:00 AM") compare this, so they agree with what the player saw.
+static func shown_minute(minutes: float) -> int:
+	return int(floor(minutes))
+
+
 ## Whole minutes of wax beyond a full night (0 when the clock is at or past midnight).
 static func spare_minutes(minutes: float) -> int:
 	return maxi(0, int(floor(-minutes)))

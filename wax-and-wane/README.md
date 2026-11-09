@@ -8,8 +8,8 @@ You are **Tallow**, a small living candle. At midnight the old house wakes up. Y
 candle runs from **12:00 AM** to **2:00 AM** (one minute of wax = one minute on the clock; a full,
 unhurt candle lasts about 8 real minutes). Burn down through four floors and snuff the Belfry's
 guardian before the clock strikes two. The lower your wax, the shorter you get and the smaller your
-circle of light. Be done by **1:00 AM** and a ladder of light opens to a secret fifth floor, the
-**Clock Tower**, and the true ending.
+circle of light. Once you have won a night, be done by **1:00 AM** and a ladder of light opens to a
+secret fifth floor, the **Clock Tower**, and the true ending.
 
 ## How to play
 The game picks up whatever you touch last (screen, keys, mouse or pad) and changes the on-screen
@@ -42,7 +42,7 @@ hints, the chalk drawings in the first room and the button labels to match.
 | Rooms | 69 hand-made 15x9 layouts, randomly mirrored and weighted by floor (the Cellar likes webs and barrels, the Crypt pits and bones, the Chapel pews and hearths, the Belfry spikes and hard rooms), plus start, treasure, shop, boss, Hollow and special rooms. Furniture (barrels, coffins, pews, beams, long-case clocks), hearths that burn, oil jars that explode and chain, cobwebs that slow walkers, soot rocks that always drop a bomb, skull piles, spikes, pits, urns, crates and hidden chests. Every room is dressed from its seed: wall lights, banners, shelves, stained glass, floor decals. `--checkrooms` checks every layout |
 | Special rooms | **The Seance** (floors 1-4, 40%): ring the bell for 3 waves and a boss-pool relic. **The Cracked Mirror** (2-4, 45%): a strong relic for 15 max minutes, for good. **The Music Box** (1-4, 40%): 3 coins a crank, it plays what it likes. **The Study** (2-4, 35%): a keepsake, two tonics or the floor's map. **The Wax Font** (1-4, 30%): feed it 4 minutes at a time; the sixth offering always pays a relic. Each has its own door and minimap mark |
 | Lodgers | 35 creatures, each with a name, a line of lore and its own stain colour: 20 from the 0x72 set (Coal-Bin Shambler, Larder Thief, Bone Lodger, Hearth Devil, Hungry Chest...) and 15 of the house's own (Rose Melt, Lamp Moth swarms, Iron Snuffer, Grave Light, Sootling, Waxwork Bride, Cinder Rat, Restless Psalter, Clapper Bat, Deathwatch Beetle, Grave Hand, Gutterspout; Cog Sentry and Minute-Hand Wraith in the tower). Attacks are telegraphed (lanes, rings, flashes). Marked foes (ember / gilded / sooty / chilled) are tougher and pay out wax, coins or bombs |
-| Guardians | 8, two per floor, picked by the run seed: Old Rot or The Wax Mother (Cellar), The Gaoler or The Sexton (Crypt), The Hollow Warden or The Melted Choir (Chapel), The Hour Fiend or The Great Pendulum (Belfry; always the Hour Fiend until your first win). The four 2.0 guardians have 3 phases each. Every guardian gets a versus card. Secret: **The Keeper of Hours** (Clock Tower: sweeping clock hands, stopped time, chimes) |
+| Guardians | 8, two per floor, picked by the run seed: Old Rot or The Wax Mother (Cellar), The Gaoler or The Sexton (Crypt), The Hollow Warden or The Melted Choir (Chapel), The Great Pendulum or The Hour Fiend (Belfry; always the Great Pendulum until your first win, except in seeded runs and Tonight's Candle, where the seed alone picks). The four 2.0 guardians have 3 phases each. Every guardian gets a versus card. Secret: **The Keeper of Hours** (Clock Tower: sweeping clock hands, stopped time, chimes) |
 | Mini-bosses | 6 house champions, a lodger grown to twice the size with 6x health and one extra attack (floors 2-4, 50% a floor): The Great Sootling, The Bone Landlord, The Kitchen Devil, The Rafter King, The Deathwatch Queen, The Icebox Giant |
 | Relics | 64 (24 from 1.x and 40 new: shot changers like Split Wick, Tin Sconce, Old Pipe, Stove Door; showpieces Blowlamp, Pale Taper, Tinderbox; curses Cold Wax, Shadow Puppet, Love Letter, Nightshade; helpers Matchling, Paper Lantern, Dust Bunny, Clockwork Mouse; clock relics Pendulum, Bell Rope, Cuckoo Clock, Minute Hand...). Five quality tiers; each room type (treasure, shop, boss, Smoke Altar, Hollow) draws from its own pool. Many show on Tallow as costume pieces |
 | Tonics | 8 unlabelled flasks. Each run they hide 8 of 13 draughts (5 good, 2 bad, 1 odd); you learn one by drinking it. Big flasks are 1.8x stronger, for better or worse |
@@ -54,7 +54,7 @@ hints, the chalk drawings in the first room and the button labels to match.
 | Unlocks and achievements | 18 of the new relics and 2 keepsakes move into the house as you earn achievements. 52 achievements (13 hidden), shown as toasts and listed in Settings; sent to Steam when GodotSteam is present |
 | Results | A death note (what snuffed you, with its portrait), the run's relics, anything that moved in, and the run's seed to share |
 | Tonight's Candle and seeds | **Tonight's Candle**: one seeded house a night, the same for everyone, scored on your first try. **Seed**: type in a friend's seed on the title keypad. Both use the full relic pool, so a seed is the same run for everyone |
-| True ending | Beat the Belfry's guardian by 1:00 AM, climb the ladder of light (+12 min), cross the Clock Tower and still the Keeper of Hours: four ending scenes, a credits roll and a results screen marked TRUE ENDING |
+| True ending | After a first win, beat the Belfry's guardian by 1:00 AM (as the clock shows it), climb the ladder of light (+5 min), cross the Clock Tower and still the Keeper of Hours: four ending scenes, a credits roll and a results screen marked TRUE ENDING |
 
 ## Project layout
 ```

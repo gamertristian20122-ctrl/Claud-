@@ -133,18 +133,21 @@ const DEFS := {
 		"title": "The Hour Fiend's heart swings", "phase_lines": ["", "Tick... tock... TICK!", "It is nearly two!"],
 		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
-	"keeper": {"hp": 280.0, "speed": 0.0, "ai": "tower_keeper", "r": 14.0, "boss": true, "heavy": true, "name": "THE KEEPER OF HOURS",
+	"keeper": {"hp": 380.0, "speed": 0.0, "ai": "tower_keeper", "r": 14.0, "boss": true, "heavy": true, "name": "THE KEEPER OF HOURS",
 		"title": "It winds the house, every night", "phase_lines": ["", "Time stands still...", "It chimes for you!"],
 		"victory": "THE KEEPER OF HOURS IS STILLED", "no_flip": true, "secret": true,
 		"lore": "It has wound the house clock every night for three hundred years. Tonight it wants to wind you.", "stain": Color("#5f2d56")},
 }
 
 ## Health of ordinary creatures by floor: a gentle cellar, real pressure from the chapel up.
-const FLOOR_HP := [1.0, 1.35, 1.85, 2.4, 2.5]
+const FLOOR_HP := [1.0, 1.35, 1.85, 2.4, 3.0]
 ## Contact damage per floor for creatures without their own "touch" (bosses: 8). Balance: polish.md.
 const TOUCH := [5, 6, 7, 7, 7]
 ## Extra animations our own monster art may provide (assets/art/monsters/<name>_<anim>_fN.png).
 const MONSTER_ANIMS := ["idle", "run", "atk", "rise", "grab", "mound", "sing"]
+## A Hooded Mourner calls at most this many Shamblers in its life; then it is spent: no more
+## teleports, it only backs away. (Two of them in a locked Seance room used to summon forever.)
+const SUMMON_BUDGET := 6
 
 var world: Node
 var kind := ""
@@ -217,13 +220,14 @@ static func _blob(w: int, h: int) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
-## The floor's guardian out of `opts` (world FLOORS[n]["bosses"]), picked from the run seed so
-## Tonight's Candle is the same for everyone. Until a player has won once, a normal run always ends
-## with the first finale (the Hour Fiend).
-static func pick_boss(opts: Array, floor_num: int, run_seed: int, daily := false) -> String:
+## The floor's guardian out of `opts` (world FLOORS[n]["bosses"]), picked from the run seed. A `fixed`
+## run (Tonight's Candle, a typed-in seed: Unlocks.fixed) always takes the seed's pick, so the same seed is
+## the same house for everyone, guardians included. Otherwise, until a player has won once, the Belfry is
+## always guarded by opts[0] (The Great Pendulum, the house's own clock); the Hour Fiend joins after that.
+static func pick_boss(opts: Array, floor_num: int, run_seed: int, fixed := false) -> String:
 	if opts.is_empty():
 		return "big_zombie"
-	if floor_num >= 4 and not daily and int(Game.records.get("wins", 0)) <= 0:
+	if floor_num >= 4 and not fixed and int(Game.records.get("wins", 0)) <= 0:
 		return opts[0]
 	return opts[absi(hash("%d:boss:%d" % [run_seed, floor_num])) % opts.size()]
 
@@ -676,18 +680,20 @@ func _ai_caster(ddt: float, to_p: Vector2, _dist: float) -> void:
 
 
 func _ai_summoner(ddt: float, to_p: Vector2, dist: float) -> void:
-	_walk(ddt, -to_p if dist < 70 else to_p.orthogonal(), speed)
-	if dist < 36 and state != "tp":
+	var left: int = int(mem.get("summon_left", SUMMON_BUDGET))
+	_walk(ddt, -to_p if dist < 70 else to_p.orthogonal(), speed * (1.0 if left > 0 else 0.8))
+	if dist < 36 and state != "tp" and left > 0:
 		_teleport()
 	minions = minions.filter(func(m): return is_instance_valid(m) and m.alive)
 	if cd <= 0:
 		cd = 4.2
-		if minions.size() < 3:
+		if minions.size() < 3 and left > 0:
 			_telegraph(Color(0.5, 1.0, 0.6))
-			for i in 2:
+			for i in mini(2, left):
 				var m: Enemy = world.spawn_enemy("tiny_zombie", global_position + Vector2.from_angle(randf() * TAU) * 14.0)
 				if m:
 					minions.append(m)
+			mem["summon_left"] = left - mini(2, left)
 			Audio.play("teleport", -4.0, 0.1, 0.7)
 
 
@@ -935,7 +941,12 @@ func take_hit(dmg: float, knock: Vector2, burn := 0.0) -> void:
 
 
 func _damage(dmg: float, sound: bool) -> void:
+	var before := hp
 	hp -= dmg
+	if mem.has("hp_floor") and hp < float(mem["hp_floor"]):
+		# a gated guardian (the Keeper, Keeper.hp_floor): no burst skips a phase (and a hit never heals)
+		hp = minf(before, float(mem["hp_floor"]))
+		mem["held"] = true
 	if sound:
 		Audio.play("hit_enemy", 0.0, 0.1)
 	if boss:

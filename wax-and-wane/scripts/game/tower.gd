@@ -11,12 +11,14 @@ extends Node
 ## layout, RoomDecor.setup -> dress, results.gd -> on_results, autotest -> test_start / tour.
 
 const FLOOR := 5
-## The Belfry's guardian must fall at or before this clock minute (1:00 AM) for the ladder to appear.
+## The Belfry's guardian must fall at or before this clock minute (1:00 AM, as the clock shows it) for the
+## ladder to appear, and only once the player has won a night before (ladder_open).
 const UNLOCK_CLOCK := 60.0
-const HINT := "Something ticks above the belfry... be done by one."
+const HINT := "Something ticks above the belfry... next night, be done by one."
 const MOON := Color(0.55, 0.68, 1.0)
 ## Minutes the ladder of light gives back on arrival (the tower is long and the wax keeps burning).
-const ARRIVAL_WAX := 12.0
+## 12 made the tower the easiest floor of the night (C2): now a small gift, the climb has to be earned.
+const ARRIVAL_WAX := 5.0
 ## A sensible kit for a run that starts on floor 5 (--tower): what a good run carries by then.
 const TEST_KIT := ["sharp_wick", "bellows", "lamp_oil", "beeswax", "split_wick", "thimble", "wax_coat", "hourglass"]
 
@@ -207,10 +209,17 @@ static func on_last_boss_down(w: Node) -> bool:
 	if int(w.floor_num) == FLOOR:
 		of(w).true_end()
 		return true
-	if int(w.floor_num) == FLOOR - 1 and w.clock_minutes() <= UNLOCK_CLOCK + 0.001:
+	if int(w.floor_num) == FLOOR - 1 and ladder_open(w):
 		of(w).open_ladder()
 		return true
 	return false
+
+
+## The ladder rises for a Belfry win done by 1:00 AM as the clock shows it ("1:00 AM" counts: QA-14),
+## and only for a player who has already won a night: the first win always ends with the normal
+## victory, so the credits never roll on a first night (C2).
+static func ladder_open(w: Node) -> bool:
+	return int(Game.records.get("wins", 0)) >= 1 and Game.shown_minute(w.clock_minutes()) <= int(UNLOCK_CLOCK)
 
 
 ## The Belfry fell before one: the bells are not done with you.
@@ -218,6 +227,8 @@ func open_ladder() -> void:
 	var w := world
 	belfry_clock = w.clock_minutes()
 	last_belfry = belfry_clock
+	if w.main and w.main.autotest:   # the play-test log: when the Belfry fell (the balance judge reads it)
+		print("[tower] ladder of light at %s (wax %.1f)" % [Game.clock_text(belfry_clock), float(w.player.wax)])
 	_count_belfry_win()
 	w.player.frozen = false
 	w._clear_room()
@@ -286,7 +297,7 @@ func _count_belfry_win() -> void:
 	Achievements.unlock("win")
 	if w.candle_id != "tallow":
 		Achievements.unlock("win_" + str(w.candle_id))
-	if t < 60.0:
+	if Game.shown_minute(t) < 60:   # "Win before 1:00 AM": a clock showing 12:59 AM or earlier
 		Achievements.unlock("win_early")
 	if w.daily:
 		Achievements.unlock("tonight_win")

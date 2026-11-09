@@ -18,11 +18,8 @@ var autotest: Node
 
 func _ready() -> void:
 	get_tree().set_auto_accept_quit(false)
-	# match physics to the display (90/120 Hz phones) so motion is smooth
-	var hz := roundi(DisplayServer.screen_get_refresh_rate())
-	if hz <= 0:
-		hz = 60
-	Engine.physics_ticks_per_second = clampi(hz, 60, 120)
+	# physics ticks at a steady 60 Hz on every screen (project.godot [physics]); following a 90/120 Hz
+	# display used to double its CPU cost on fast phones for no gameplay gain (QA-17)
 	get_tree().set_quit_on_go_back(false)
 	var top := CanvasLayer.new()
 	top.layer = 100
