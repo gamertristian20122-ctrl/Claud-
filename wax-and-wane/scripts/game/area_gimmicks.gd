@@ -17,9 +17,9 @@ extends Node2D
 const THEMES := ["kitchen", "library", "attic"]
 const ATTIC_LIGHT := 0.78          # Tallow's light up in the attic
 const STOVE_PERIOD := 6.0          # a stove top: cold, then 1 s of dull-red warning, then 2.2 s hot
-const STOVE_HOT := 2.2
+const STOVE_HOT := 1.8
 const STOVE_WARN := 1.0
-const STOVE_HIT := 4.0
+const STOVE_HIT := 3.0
 const SCALD_HIT := 3.0
 const SHELF_PERIOD := 3.6          # a sliding bookcase moves one cell every 3.6 s (0.6 s shudder first)
 const SHELF_SLIDE := 0.5
@@ -847,8 +847,8 @@ static func _puddle(w: Node, wp: Vector2, kind: String, life: float, radius: flo
 ## A Flour Ghost's cloud: it swallows every shot that flies into it (Tallow's and the lodgers').
 class FlourCloud extends Node2D:
 	var world: Node
-	var life := 3.4
-	var radius := 15.0
+	var life := 2.8
+	var radius := 13.0
 	var _spr: AnimatedSprite2D
 
 	func _ready() -> void:
@@ -1044,8 +1044,8 @@ static func bot_push(w: Node, pos: Vector2) -> Vector2:
 			if g.stove_state(s) != "cold":
 				var c: Vector2 = r.cell_center(s["c"])
 				var d := pos - c
-				if d.length() < 18.0:
-					out += d.normalized() * (18.0 - d.length()) / 18.0 * 2.5
+				if d.length() < 20.0:
+					out += d.normalized() * (20.0 - d.length()) / 20.0 * 4.0
 	if r and is_instance_valid(r.floor_layer):
 		for p in r.floor_layer.get_children():
 			if p is Puddle:

@@ -110,7 +110,7 @@ const DEFS := {
 	"lid_crab": {"hp": 6.0, "speed": 30.0, "ai": "area_crab", "r": 6.0, "cd": 1.8, "no_flip": true, "sprite": "areas/kitchen/lid_crab",
 		"name": "Pot-Lid Crab", "lore": "Found a copper lid under the dresser and never let it go. Hit it where the lid isn't.",
 		"stain": Color("#da4e38")},
-	"flour_ghost": {"hp": 7.0, "speed": 34.0, "ai": "area_flour", "r": 5.0, "fly": true, "cd": 3.4, "sprite": "areas/kitchen/flour_ghost",
+	"flour_ghost": {"hp": 7.0, "speed": 34.0, "ai": "area_flour", "r": 5.0, "fly": true, "cd": 4.0, "sprite": "areas/kitchen/flour_ghost",
 		"name": "Flour Ghost", "lore": "The mice emptied the miller's sack, and the sack got up. Its clouds swallow every shot.",
 		"stain": Color("#d3bfa9")},
 	"bookworm": {"hp": 7.0, "speed": 30.0, "ai": "area_worm", "r": 5.0, "cd": 1.6, "face_dir": true, "sprite": "areas/library/bookworm",

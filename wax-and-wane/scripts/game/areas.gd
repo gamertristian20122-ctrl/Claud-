@@ -308,6 +308,24 @@ static func tour(bot: Node) -> void:
 				e.queue_free()
 		w.enemies.clear()
 		w._clear_shots()
+	# the Journal: the new lodgers and guardians, met, with where they live
+	Game.no_save = true
+	for k in ["lid_crab", "flour_ghost", "bookworm", "inkblot", "ink_drop", "mannequin", "trunk", "stockpot", "librarian",
+			"dress_form", "wax_mother", "chort"]:
+		Records._meet("e:" + k)
+	bot.main.goto("title")
+	await bot._wait(3.4)
+	var j := Journal.open(bot.main.current.root, 1)
+	await bot._wait(0.5)
+	for k in ["lid_crab", "mannequin", "chort"]:
+		j._select(BestiaryGallery.regulars().find(k))
+		await bot._wait(0.3)
+		await bot._shot("journal_lodger_%s" % k)
+	j._set_tab(2, false)
+	for k in ["stockpot", "librarian", "dress_form", "wax_mother"]:
+		j._select(BestiaryGallery.boss_kinds().find(k))
+		await bot._wait(0.3)
+		await bot._shot("journal_guardian_%s" % k)
 	Audio.stop_all()
 	await bot._wait(0.3)
 	bot.get_tree().quit()
