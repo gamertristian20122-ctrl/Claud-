@@ -51,6 +51,9 @@ Kitchen, the Library and the Attic (`v22_areas.md`); this stream wires them into
   ending); Crypt-anchored stretch: 4/4 (1:50-2:03 AM); steep curve 0.4: 2/2 (1:52-2:00 AM). The long candle shields the
   weak early floors and ~30 relics make the late floors free, so the wild-area rule and NIGHT_CURVE 0.5 were added
   last; **they have not been measured** (the owner stopped the balance judging). 5-floor nights were not measured.
+- Measured after the merge (2.3.0, with the special moves in; small batches, level 2, fresh profiles): 7 floors
+  2 of 5 (wins 1:56 and 2:25 AM, losses in the Crypt, Kitchen and Library), 5 floors 2 of 3 (wins 12:56 and 1:28 AM,
+  the loss in the Kitchen). In the 30-60 % band; neither a wall nor free. A god run at 7 floors: WIN 7/7 at 1:55 AM.
 
 ## Checks
 - Determinism: `--autotest --nightdump --speed=4 --dump=FILE` (4 seeded nights, a plain one, Tonight's Candle; every
@@ -68,10 +71,10 @@ Kitchen, the Library and the Attic (`v22_areas.md`); this stream wires them into
 - The tower: `Tower.floor_of(w)`, `Tower.unlock_clock(w)`. Keep `--nightdump` equal to the baseline.
 
 ## Known issues / not done
-- Balance of 5- and 7-floor nights after the wild-area rule is unmeasured (last measured: 7 floors far easier than 4).
-- The screenshot tour (`--tour --night --fit`) was written but not run (stopped by the owner), so the picker, the
-  long-night HUD, banners, results and Journal have not been looked at on screen.
-- `--savecycle --floors=7` was not run (the house signature check is in place).
-- The omen "Long Night" (a bigger floor) shares its name with the feature.
+- Balance of 5- and 7-floor nights: only the small post-merge batches above.
+- Checked at the merge: `--tour --night --fit` (21 shots, 0 fit flags, 0 script errors; picker, 7-floor HUD at 100 %
+  and 25 %, area banners, results, Journal looked at) and `--savecycle --floors=7` (the Crypt of a 7-floor night came
+  back the SAME after Save & quit + Continue). The achievement was renamed The Small Hours (`small_hours`): the omen
+  "Long Night" (a bigger floor) already had the name.
 - Edited outside the stream's own files (one or two lines each): relic_fx (rare weights by depth), room (oil damage),
   house_ai / area_ai (light fraction), boss_card, ending, candles (Pillar text), platform.md (Steam id).

@@ -302,8 +302,8 @@ const FLAME_GROWTH := 0.15
 
 
 ## The floor's place in the night on the 4-floor scale: floor 1 = 1.0, floor 2 (the Crypt) = 2.0, the last floor
-## (the Belfry) = 4.0, the Clock Tower = 5.0, the floors between stretched (NIGHT_CURVE; a 7-floor night: 1, 2,
-## 2.4, 2.8, 3.2, 3.6, 4). On a 4-floor night it is the floor number, so every per-floor table reads exactly as it
+## (the Belfry) = 4.0, the Clock Tower = 5.0, the floors between stretched (NIGHT_CURVE 0.5; a 7-floor night: 1, 2,
+## 2.89, 3.26, 3.55, 3.79, 4). On a 4-floor night it is the floor number, so every per-floor table reads exactly as it
 ## was made.
 func depth(n := floor_num) -> float:
 	if n > night_floors:

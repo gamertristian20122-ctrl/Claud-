@@ -109,14 +109,20 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
 - **Queue after v2.1 + Long Night batch 1:** `docs/design/ROADMAP_V2.md` (special moves -> Challenge Nights ->
   diary pages -> translations -> Boss Rush; Long Night batch 2 as a side track). Design of the long night:
   `docs/design/LONG_NIGHT.md`.
-- Latest build: **2.1.0** (versionCode 10), APK only, sent to the owner: three save slots with difficulty 1-4
-  (a 2.0 save moves into Slot 1), the Black Taper as a sidegrade, four new guardians (Coal Furnace, Ossuary,
-  Organist, Weathercock), bigger self-lit enemy shots (Enemy shots: Normal / Large, Large on phones). The
-  Kitchen, Library and Attic are in the code but only reachable with `--area` until the night stream lands.
-  The store files (AAB, desktop zips, press kit) are still **2.0.0**: rebuild them all for the next store release.
-- Running (worktrees under `.claude/worktrees/agent-*`): `v22/night` (the night-length slider, 4-7 floors,
-  `LONG_NIGHT.md`) and `v23/moves` (special moves + ability button + the `L` strings autoload, ROADMAP step 1).
-  Merge night first, then moves; then build 2.2/2.3.
+- Latest build: **2.3.0** (versionCode 11), APK only, sent to the owner. It holds v2.1 (three save slots with
+  difficulty 1-4, a 2.0 save moves into Slot 1; the Black Taper as a sidegrade; four new guardians; bigger self-lit
+  enemy shots, Normal / Large), v2.2 (the night-length slider, 4 to 7 floors, with the Kitchen, Library and Attic;
+  `docs/streams/v22_night.md`, `v22_areas.md`) and v2.3 (a special move per candle + the ability button + the Keys
+  page + the `L` strings autoload; `docs/streams/v23_moves.md`). The store files (AAB, desktop zips, press kit)
+  are still **2.0.0**: rebuild them all for the next store release.
+- The owner asked to keep bot balance judging light (credits): quick checks only (checkscripts, checkrooms, one
+  god run, the relevant tour), small batches when a number really moved. Long nights after the merge: 7 floors
+  2 of 5, 5 floors 2 of 3. Per-candle win rates with the moves were not measured (only Tallow: 3 of 8 with or
+  without Flare Up).
+- Next in `ROADMAP_V2.md`: step 2 Challenge Nights (v2.4), with Long Night batch 2 (Conservatory, Ballroom,
+  Gallery; the slider to 10) as the side track. Small follow-ups: the hot stove tops could glow more on a phone;
+  with Swap sticks on a 384-wide screen a banner subtitle can run off the right edge (`hud._place_banner`); the
+  chalk drawings show default keys after a rebind.
 - A four-reviewer studio review (critic, QA, mobile UX, release manager; all findings in
   `docs/streams/fix_*.md`) scored 1.9.3 at 6.5/10; its blockers and majors are fixed in 2.0.0.
 - Balance on 2.0.0 (12 fresh-seed bot runs): 7 wins, normal wins finish around 1:08 AM, 2 of 7 wins reach the
