@@ -242,6 +242,10 @@ static func _guardian(bot: Node, w: Node, n: int) -> Array:
 		print("[diarycheck]   (no guardian came on floor %d)" % n)
 		return []
 	print("[diarycheck]   floor %d (%s): %s falls" % [n, Diary.area_of(w), w.boss.kind])
+	var intro: Node = w.find_child("BossIntro", true, false)   # v2.4: no blow lands during the entrance
+	if intro and intro.has_method("skip"):
+		intro.skip()
+		await bot._wait(0.1)
 	_kill(w.boss)
 	await bot._wait(1.6)
 	return await _collect_all(bot, w)
