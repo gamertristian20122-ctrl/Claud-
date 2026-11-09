@@ -123,8 +123,9 @@ def facts():
     f["tower_by"] = float(re.search(r"const UNLOCK_CLOCK := ([\d.]+)", tw).group(1))
     f["tower_wax"] = float(re.search(r"const ARRIVAL_WAX := ([\d.]+)", tw).group(1))
     gen = read("scripts/game/floor_gen.gd")
-    m = re.search(r"var target := (\d+) \+ floor_num \* (\d+)", gen)
-    f["rooms_per_floor"] = [int(m.group(1)) + n * int(m.group(2)) for n in range(1, f["last_floor"] + 1)]
+    # rooms per floor on a 4-floor night (there a floor's depth is its number; longer nights stretch the depths)
+    m = re.search(r'var target := (\d+) \+ roundi\(([\d.]+) \* float\(night\["depth"\]\)\)', gen)
+    f["rooms_per_floor"] = [int(m.group(1)) + round(float(m.group(2)) * n) for n in range(1, f["last_floor"] + 1)]
     f["layouts"] = len(re.findall(r'"id": "', block(read("scripts/game/room_templates.gd"), "NORMAL")))
 
     pools, cur = {}, None
@@ -169,7 +170,12 @@ def facts():
         wax, drain = field(t, "wax"), field(t, "drain")
         mins = wax / (f["drain"] * drain) / 60.0
         f["candles"].append({"id": k, "name": field(t, "name"), "line": field(t, "line"), "wax": wax,
-                             "minutes": mins, "unlock": field(t, "unlock_text") or "from the start"})
+                             "minutes": mins, "unlock": field(t, "unlock_text") or "from the start",
+                             "move": field(t, "move", "")})
+    # v2.3 special moves (moves.gd) and v2.2 night length (areas.gd: every built floor of the house, the tower aside)
+    f["moves"] = {k: field(t, "name") for k, t, _ in entries(block(read("scripts/game/moves.gd"), "LIST"))}
+    ar = entries(block(read("scripts/game/areas.gd"), "LIST"))
+    f["max_floors"] = sum(1 for _k, t, _ in ar if field(t, "built", False) and not field(t, "secret", False))
 
     ach = block(read("scripts/autoload/achievements.gd"), "LIST")
     f["achievements"] = len(re.findall(r'\{"id": "', ach))
@@ -264,6 +270,10 @@ def md(f):
         len(f["keepsakes"]), ", ".join(n for n, _ in f["keepsakes"]), f["unlock_keepsakes"]))
     a("| Tonics | %d unlabelled flasks | `Items.TONICS` |" % f["tonics"])
     a("| Candles (playable) | **%d** (%d to unlock) | `Candles.LIST` |" % (len(f["candles"]), len(f["candles"]) - 1))
+    a("| Special moves | **%d**, one per candle (its own button): %s | `Moves.LIST`, `Candles.LIST` |" % (
+        len(f["moves"]), ", ".join("%s (%s)" % (f["moves"].get(c["move"], "?"), c["name"]) for c in f["candles"] if c["move"])))
+    a("| Night length | **4 to %d floors**, picked before a run and kept per save slot (Tonight's Candle is always 4). Each floor past four adds half an hour: a %d-floor night ends at %s | `Areas`, `Game.night_minutes` |" % (
+        f["max_floors"], f["max_floors"], "%d:%02d AM" % divmod(120 + 30 * (f["max_floors"] - 4), 60)))
     a("| Special rooms | **%d**: %s | `Specials.INFO` |" % (len(f["specials"]), ", ".join(n for n, _ in f["specials"])))
     a("| Omens (floor twists) | **%d**: %s | `world.OMENS` |" % (len(f["omens"]), ", ".join(f["omens"])))
     a("| Achievements | **%d** (%d hidden), shown in the game | `Achievements.LIST` |" % (f["achievements"], f["achievements_hidden"]))
