@@ -50,7 +50,8 @@ re-recording (`tools/trailer_edit.py`, `CTAS`):
    (or GET IT ON GOOGLE PLAY / WISHLIST ON STEAM in the other cuts, see above).
 
 Steam starts trailers muted, so the short text cards ("YOUR WAX IS YOUR CLOCK", "64 RELICS THAT STACK",
-"9 GUARDIANS"...) tell the story without sound.
+"13 GUARDIANS"...) tell the story without sound. (Videos rendered before v2.1 still say "9 GUARDIANS": re-run
+`./tools/make_trailer.sh all` to update them.)
 
 ## Where to post each one
 

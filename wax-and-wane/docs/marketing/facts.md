@@ -18,7 +18,7 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Rooms per floor | 8 / 10 / 12 / 14 (with the start, shop, treasure and boss rooms), plus a hidden Hollow and any special rooms | `floor_gen.gd` |
 | Hand-made room layouts | **69** | `RoomTemplates.NORMAL` |
 | Lodgers (creatures) | **35**: 20 from 0x72's DungeonTileset II, 15 made for this game (2 of them only in the Clock Tower) | `Enemy.DEFS` |
-| Guardians (bosses) | **9**: 8 on the four floors (two per floor, picked by the run seed) + a secret one, The Keeper of Hours. 3 use 0x72 sprites, 6 were made for this game | `Enemy.DEFS`, `world.FLOORS` |
+| Guardians (bosses) | **13**: 12 on the four floors (three per floor, picked by the run seed) + a secret one, The Keeper of Hours. 3 use 0x72 sprites, 10 were made for this game | `Enemy.DEFS`, `world.FLOORS` |
 | House champions (mini-bosses) | **6**: The Great Sootling, The Bone Landlord, The Kitchen Devil, The Rafter King, The Deathwatch Queen, The Icebox Giant | `Specials.MINIS` |
 | Relics | **64** in 5 quality tiers; 18 of them move into the house as you earn achievements | `Items.RELICS`, `Unlocks.TABLE` |
 | Candle Rites (set bonuses) | **6**: Hearth, Clock, Moth, Many Wicks, Household, Seance | `Items.RITES` |
@@ -51,10 +51,10 @@ script after any content change; `--check` tells you if it is out of date). Game
 
 | Floor | Guardians |
 |---|---|
-| The Cellar | Old Rot (0x72 sprite) or The Wax Mother |
-| The Crypt | The Gaoler (0x72 sprite) or The Sexton |
-| The Chapel | The Hollow Warden or The Melted Choir |
-| The Belfry | The Great Pendulum or The Hour Fiend (0x72 sprite) |
+| The Cellar | Old Rot (0x72 sprite), The Wax Mother or The Coal Furnace |
+| The Crypt | The Gaoler (0x72 sprite), The Sexton or The Ossuary |
+| The Chapel | The Hollow Warden, The Melted Choir or The Organist |
+| The Belfry | The Great Pendulum, The Hour Fiend (0x72 sprite) or The Weathercock |
 | The Clock Tower | The Keeper of Hours |
 
 ### The lodgers

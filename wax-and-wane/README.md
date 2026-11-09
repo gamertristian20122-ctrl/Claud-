@@ -49,7 +49,7 @@ hints, the chalk drawings in the first room and the button labels to match.
 | Rooms | 69 hand-made 15x9 layouts, randomly mirrored and weighted by floor (the Cellar likes webs and barrels, the Crypt pits and bones, the Chapel pews and hearths, the Belfry spikes and hard rooms), plus start, treasure, shop, boss, Hollow and special rooms. Furniture (barrels, coffins, pews, beams, long-case clocks), hearths that burn, oil jars that explode and chain, cobwebs that slow walkers, soot rocks that always drop a bomb, skull piles, spikes, pits, urns, crates and hidden chests. Every room is dressed from its seed: wall lights, banners, shelves, stained glass, floor decals. `--checkrooms` checks every layout |
 | Special rooms | **The Seance** (floors 1-4, 40%): ring the bell for 3 waves and a boss-pool relic. **The Cracked Mirror** (2-4, 45%): a strong relic for 15 max minutes, for good. **The Music Box** (1-4, 40%): 3 coins a crank, it plays what it likes. **The Study** (2-4, 35%): a keepsake, two tonics or the floor's map. **The Wax Font** (1-4, 30%): feed it 4 minutes at a time; the sixth offering always pays a relic. Each has its own door and minimap mark |
 | Lodgers | 35 creatures, each with a name, a line of lore and its own stain colour: 20 from the 0x72 set (Coal-Bin Shambler, Larder Thief, Bone Lodger, Hearth Devil, Hungry Chest...) and 15 of the house's own (Rose Melt, Lamp Moth swarms, Iron Snuffer, Grave Light, Sootling, Waxwork Bride, Cinder Rat, Restless Psalter, Clapper Bat, Deathwatch Beetle, Grave Hand, Gutterspout; Cog Sentry and Minute-Hand Wraith in the tower). Attacks are telegraphed (lanes, rings, flashes). Marked foes (ember / gilded / sooty / chilled) are tougher and pay out wax, coins or bombs |
-| Guardians | 8, two per floor, picked by the run seed: Old Rot or The Wax Mother (Cellar), The Gaoler or The Sexton (Crypt), The Hollow Warden or The Melted Choir (Chapel), The Great Pendulum or The Hour Fiend (Belfry; always the Great Pendulum until your first win, except in seeded runs and Tonight's Candle, where the seed alone picks). The four 2.0 guardians have 3 phases each. Every guardian gets a versus card. Secret: **The Keeper of Hours** (Clock Tower: sweeping clock hands, stopped time, chimes) |
+| Guardians | 12, three per floor, picked by the run seed: Old Rot, The Wax Mother or The Coal Furnace (Cellar), The Gaoler, The Sexton or The Ossuary (Crypt), The Hollow Warden, The Melted Choir or The Organist (Chapel), The Great Pendulum, The Hour Fiend or The Weathercock (Belfry; always the Great Pendulum until your first win, except in seeded runs and Tonight's Candle, where the seed alone picks). The 2.0 and 2.1 guardians have 3 phases each (2.1: fire jets and smouldering coal, a heap of bones that falls apart into rolling skulls, an organ whose pipes play their lanes in turn, a weathervane rooster that blows gales across the room). Every guardian gets a versus card. Secret: **The Keeper of Hours** (Clock Tower: sweeping clock hands, stopped time, chimes) |
 | Mini-bosses | 6 house champions, a lodger grown to twice the size with 6x health and one extra attack (floors 2-4, 50% a floor): The Great Sootling, The Bone Landlord, The Kitchen Devil, The Rafter King, The Deathwatch Queen, The Icebox Giant |
 | Relics | 64 (24 from 1.x and 40 new: shot changers like Split Wick, Tin Sconce, Old Pipe, Stove Door; showpieces Blowlamp, Pale Taper, Tinderbox; curses Cold Wax, Shadow Puppet, Love Letter, Nightshade; helpers Matchling, Paper Lantern, Dust Bunny, Clockwork Mouse; clock relics Pendulum, Bell Rope, Cuckoo Clock, Minute Hand...). Five quality tiers; each room type (treasure, shop, boss, Smoke Altar, Hollow) draws from its own pool. Many show on Tallow as costume pieces |
 | Tonics | 8 unlabelled flasks. Each run they hide 8 of 13 draughts (5 good, 2 bad, 1 odd); you learn one by drinking it. Big flasks are 1.8x stronger, for better or worse |
@@ -139,6 +139,8 @@ godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
     --tower [--keeper [--keeperwax=N]]   start in the Clock Tower with a test kit (or at the Keeper)
     --nospecials          no special rooms or champions (balance baseline)
     --nocard              skip the boss versus card
+    --boss=<kind>         straight into one guardian's fight with its floor's fixed kit, a line per fight
+                          (time to kill, hits; the v2.1 balance check against its floor-mates)
     --device=touch|keyboard|mouse|gamepad,  --touchmouse   input to show / emulate
 godot --headless --path . -- --autotest --bench [--secs=6] [--seed=N] [--ablate]   # CPU per frame, lights, leaks
 
@@ -148,6 +150,7 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
     ... --tour --rooms        4 hand-picked layouts per floor
     ... --tour --gallery      every creature and guardian labelled, then each floor's lodgers in a room
     ... --tour --bosses [--only=kind]   each guardian mid-fight
+    ... --tour --boss=<kind>  one guardian: its versus card, then two shots in each phase, mid-pattern
     ... --tour --relictour    costumes, curses, helpers, Blowlamp, pause, shop, treasure, results
     ... --tour --specials     every special room, Seance waves, the champions, the minimap marks
     ... --tour --journal      every Journal tab, death note, seed keypad, credits, chalk start room
@@ -223,7 +226,8 @@ AI narrator, which is not in the game.
   Apache-2.0), https://huggingface.co/hexgrad/Kokoro-82M - `docs/marketing/voice/Kokoro_TTS_Apache-2.0.txt`
   (kept out of the game builds). Only the videos use it, not the game. The lines and how to swap in a real voice: `docs/marketing/voice/`.
 - **Original work**: design, code, the in-game text, Tallow and the other candles, the house's own 15
-  lodgers and 5 guardians (the Wax Mother, the Sexton, the Melted Choir, the Great Pendulum and the Keeper),
+  lodgers and 10 guardians (the Wax Mother, the Sexton, the Hollow Warden, the Melted Choir, the Great Pendulum,
+  the Coal Furnace, the Ossuary, the Organist, the Weathercock and the Keeper),
   relic and keepsake icons, costumes, effects, rooms, decor, special rooms, the Clock Tower, chalk
   drawings, UI, logo, app and store icons, and the jingles were made for this game by one developer with
   **Claude** (an AI assistant): the pixel art is drawn by scripts Claude wrote (`tools/art_*.py`,

@@ -63,7 +63,7 @@ Snuff the Belfry's guardian by 1:00 AM and a ladder of light opens to a secret f
 [list]
 [*][b]35 kinds of lodger[/b]: hoppers that splash water on your flame, archers, chargers, ring-casters, summoners, flask-throwers, a waxwork bride who only moves when no one looks, and a treasure chest that bites.
 [*][b]Marked foes[/b] glow ember, gilded, sooty or chilled. They take more killing and pay out wax, coins or bombs.
-[*][b]9 guardians and 6 house champions.[/b] Two guardians wait on each floor and the run's seed picks one, each announced with its own versus card: Old Rot or the Wax Mother in the Cellar, up to the Hour Fiend's sweeping clock hands or the Great Pendulum in the Belfry.
+[*][b]13 guardians and 6 house champions.[/b] Three guardians wait on each floor and the run's seed picks one, each announced with its own versus card: Old Rot, the Wax Mother or the Coal Furnace in the Cellar, up to the Hour Fiend's sweeping clock hands, the Great Pendulum or the Weathercock's gales in the Belfry.
 [*][b]Omens[/b] twist a floor and always pay you back. Cold Draught melts you faster, but drippings are richer. Smoky Halls shortens your light, but every room gives twice.
 [/list]
 
@@ -242,7 +242,7 @@ Reasons:
 3. Rough take-home per full-price sale is about $3.50: $5.99, minus sales tax/VAT (built into prices in many countries), minus some refunds, minus Valve's 30%. At the launch discount, about $2.90. These are estimates; Steamworks shows the real numbers after launch.
 4. Valve pays the $100 Steam Direct fee back once the game earns $1,000 on Steam.
 
-2.0.0 ships with 9 guardians, 64 relics, 6 candles, 5 special rooms and a secret floor, so **$6.99** is also
+The game has 13 guardians, 64 relics, 6 candles, 5 special rooms and a secret floor, so **$6.99** is also
 fair if playtesters keep doing "one more run". Don't go above $7.99 for a first game.
 
 **Regional prices:** accept Steam's recommended regional pricing. Hand-tuning countries isn't worth your time.

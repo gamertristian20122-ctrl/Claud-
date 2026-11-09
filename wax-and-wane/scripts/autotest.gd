@@ -16,6 +16,8 @@ extends Node
 ##   -- --autotest --keyart --shots=/abs/dir                       the key-art scene, no HUD (tools/store_art.py)
 ##   -- --autotest --lightjudge --shots=/abs/dir                   light pass judge images (tools/light_judge.py)
 ##   -- --autotest --trailer=<scene>                               staged trailer footage (scripts/trailer.gd, tools/make_trailer.sh)
+##   -- --autotest --playtest --boss=<kind> [--runs=N] [--speed=4]  one guardian's fight with its floor's kit, a line per fight
+##   -- --autotest --tour --boss=<kind> --shots=/abs/dir           its versus card + two shots per phase (GuardiansV21.tour)
 
 var main: Node
 var args := {}
@@ -88,6 +90,8 @@ func _ready() -> void:
 		get_tree().quit()
 	elif args.has("artjudge"): await ArtJudge.run(self)   # fix/art: scripts/game/art_judge.gd, tools/art_judge.py
 	elif args.has("shotjudge"): await ShotJudge.run(self)   # v2.1 shots: scripts/game/shot_judge.gd, tools/shot_judge.py
+	elif mode == "tour" and args.has("boss"):
+		GuardiansV21.tour(self, str(args["boss"]))
 	elif mode == "tour" and args.has("relictour"):
 		_relic_tour()
 	elif mode == "tour":
@@ -128,6 +132,9 @@ func _next_run() -> void:
 	if args.has("tower") and mode == "playtest":   # --tower: start on the Clock Tower (floor 5) with a kit
 		await get_tree().create_timer(0.5).timeout
 		Tower.test_start(main.current)
+	if args.has("boss") and mode == "playtest":   # --boss=<kind>: one guardian's fight with its floor's kit
+		await get_tree().create_timer(0.5).timeout
+		GuardiansV21.trial(main.current, str(args["boss"]))
 
 
 ## --relics=a,b,c gives those relics at the start; --keepsake=id hands over a full keepsake.
