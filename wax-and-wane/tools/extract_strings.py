@@ -45,6 +45,8 @@ TABLES = [
     ("scripts/game/talk_lines.gd", "MEET", ["text"]),          # v2.7: the talking scenes (Talk)
     ("scripts/game/talk_lines.gd", "FALL", ["text"]),
     ("scripts/game/talk_lines.gd", "AGAIN", ["text"]),
+    ("scripts/game/talk_lines.gd", "OPENING", ["text"]),       # v2.7: the story's opening (Opening)
+    ("scripts/game/talk_lines.gd", "ENDINGS", ["text"]),       # v2.7: the endings' closing beats
 ]
 # call sites whose string arguments land on screen
 VISIBLE_CALLS = re.compile(

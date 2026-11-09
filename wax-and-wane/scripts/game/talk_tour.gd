@@ -105,6 +105,8 @@ static func tour(bot: Node) -> void:
 	_fresh()
 	Talk.force = true
 	bot.args["nocard"] = true
+	if str(bot.args.get("talk", "")) != "all":
+		await _opening_shots(bot)
 	var w: Node = await _world(bot)
 	if str(bot.args.get("talk", "")) == "all":   # --tour --talk=all: every guardian's first two lines (portraits, crops)
 		for item in BossIntro.TOUR:
@@ -179,9 +181,82 @@ static func tour(bot: Node) -> void:
 	SettingsPanel.open(w.hud.root, 0)
 	await bot._wait(0.5)
 	await bot._shot("settings_story_scenes")
+	# ---- the Journal's Diary tab: Watch the beginning (an older slot that never saw it: the gold dot)
+	Talk.talks().erase("opening")
+	var j := Journal.open(w.hud.root, Journal.TABS.find("diary"))
+	await bot._wait(0.6)
+	await bot._shot("journal_watch_the_beginning")
+	j._watch.pressed.emit()
+	await bot._wait(2.2)
+	await bot._shot("journal_opening_replay")
+	if true:   # the replay ends (Skip)
+		for n in j.get_children():
+			if n is Opening:
+				n.skip()
+	await bot._wait(0.5)
+	# ---- an ending's closing beat: the true ending, the candle and Martha's memory on the sill before dawn
+	for c in w.hud.root.get_children():
+		if c.get_meta("modal", false):
+			c.queue_free()
+	w.hud.pause_layer = null
+	await bot._wait(0.3)
+	var e := await _stage_ending(bot, w, "true")
+	var waited := 0.0
+	while waited < 20.0 and Talk.live == null and is_instance_valid(e):
+		await bot._wait(0.1)
+		waited += 0.1
+	await _typed(bot)
+	await bot._shot("ending_true_beat")
+	await _press(bot)
+	await bot._wait(0.3)
+	await _typed(bot)
+	await bot._shot("ending_true_beat_martha")
+	while Talk.live != null:
+		await _press(bot)
+		await _typed(bot)
+	await bot._wait(1.2)
+	await bot._shot("ending_true_after_beat")
+	e.queue_free()
 	Talk.force = false
 	bot.args.erase("nocard")
 	print("[talk] tour done")
+
+
+## A fresh slot's first run: main.goto("game") plays the opening first; a shot at each panel's moment.
+static func _opening_shots(bot: Node) -> void:
+	Game.records["runs"] = 0
+	Talk.talks().erase("opening")
+	var main: Node = bot.main
+	while main._busy:
+		await bot._wait(0.05)
+	main.goto("game", {"seed": 31})
+	var waited := 0.0
+	while waited < 6.0 and not (main.current and main.current.name == "Opening"):
+		await bot._wait(0.05)
+		waited += 0.05
+	var o: Opening = main.current as Opening
+	if o == null:
+		print("[talk] tour: NO OPENING on a fresh slot's first run")
+		return
+	print("[talk] opening: a fresh slot's first run starts with it")
+	var t0 := Time.get_ticks_msec()
+	# [panel, line in the panel, seconds into the line, shot]
+	for want in [["house", 1, 1.6, "opening_1_house"], ["dial", 0, 3.0, "opening_2_clock_strikes"],
+			["kitchen", 0, 1.8, "opening_3_kitchen"], ["kitchen", 2, 0.9, "opening_4_match"],
+			["kitchen", 2, 1.7, "opening_5_lit"], ["cellar", 0, 2.6, "opening_6_cellar_lit"],
+			["cellar", 1, 1.6, "opening_7_martha"], ["cellar", 2, 1.1, "opening_8_goes_up"]]:
+		var w2 := 0.0
+		while is_instance_valid(o) and w2 < 40.0 and not (o._panel == want[0] and o._state == "line" and o._i - o._first == want[1] and o._lt >= want[2]):
+			await bot._wait(0.02)
+			w2 += 0.02
+		if not is_instance_valid(o):
+			break
+		await bot._shot(str(want[3]))
+	while is_instance_valid(o) and main.current == o:
+		await bot._wait(0.1)
+	print("[talk] opening: %.1f s, then the run" % ((Time.get_ticks_msec() - t0) / 1000.0))
+	await bot._wait(1.0)
+	Game.records["runs"] = 3
 
 
 # ================================================================ --talkcheck
@@ -192,8 +267,7 @@ static func check(bot: Node) -> void:
 	_fresh()
 	_static_checks()
 	bot.args["nocard"] = true
-	Talk.force = true
-	var w: Node = await _world(bot)
+	var w: Node = await _opening_checks(bot)
 	# ---- Story scenes: First time (the default)
 	_ok(Talk.mode() == "first" and Game.RECORDS.has("talks") and str(Game.settings.get("talk")) == "first",
 		"the setting defaults to First time; slots keep a \"talks\" record")
@@ -309,9 +383,130 @@ static func check(bot: Node) -> void:
 	var got: Dictionary = back.get_value("records", "talks", {})
 	_ok(int(got.get("meet:organist", 0)) == 1, "a save slot's file keeps the talks record %s" % str(got))
 	BossIntro._tour_clear(w)
+	await _ending_checks(bot, w)
 	Talk.force = false
 	bot.args.erase("nocard")
 	print("[talkcheck] %d checks, %d failed -> %s" % [checks, fails, "PASS" if fails == 0 else "FAIL"])
+
+
+## The opening: when it plays (a fresh slot's first run only, never under a test), that it is skippable and leads
+## into the same run, its length, its lines. Returns the run it led into.
+static func _opening_checks(bot: Node) -> Node:
+	var main: Node = bot.main
+	var bad: Array = []
+	var font: Font = Art.font_small
+	for ln in TalkLines.OPENING:
+		if not Opening.ART.has(str(ln.get("panel", ""))):
+			bad.append("panel " + str(ln.get("panel", "")))
+		var who := str(ln.get("who", ""))
+		if who != "" and who != "me" and who != "martha":
+			bad.append("speaker " + who)
+		if font.get_multiline_string_size(str(ln["text"]), HORIZONTAL_ALIGNMENT_CENTER, 340.0, 8).y > font.get_height(8) * 2.0 + 0.5:
+			bad.append("over two lines: " + str(ln["text"]).substr(0, 24))
+	for p in Opening.ART:
+		if not Art.has(str(Opening.ART[p])):
+			bad.append("art " + str(Opening.ART[p]))
+	for k in ["stand", "match", "light"]:
+		if not Art.has("talk/martha_" + k):
+			bad.append("talk/martha_" + k)
+	var secs := Opening.length()
+	_ok(bad.is_empty() and secs >= 20.0 and secs <= 40.0, "the opening: %d lines over %d panels, %.1f s when nobody taps (20-40), its art %s" % [
+		TalkLines.OPENING.size(), Opening.ART.size(), secs, str(bad)])
+	# when it plays
+	Game.records["runs"] = 0
+	Talk.talks().erase("opening")
+	Talk.force = false
+	_ok(not Opening.wanted(main, {}), "under a test (the bot, the tours) the opening never plays")
+	Talk.force = true
+	_ok(Opening.wanted(main, {}) and not Opening.wanted(main, {"opened": true}), "a fresh slot's first run: the opening plays (once)")
+	Game.records["runs"] = 2
+	Records.clear_new("d:opening")
+	_ok(not Opening.wanted(main, {}) and Records.is_new("d:opening"),
+		"a slot with runs that never saw it: no opening, the Journal's Diary tab shows it waiting (gold dot)")
+	Game.records["runs"] = 0
+	# a fresh slot's Light the wick: the opening first, Skip, then the same run
+	while main._busy:
+		await bot._wait(0.05)
+	main.goto("game", {"seed": 31})
+	var waited := 0.0
+	while waited < 6.0 and not (main.current and main.current.name == "Opening" and not main._busy):
+		await bot._wait(0.05)
+		waited += 0.05
+	var o: Node = main.current
+	_ok(o != null and o.name == "Opening", "main.goto(\"game\") on a fresh slot opens with the story")
+	await bot._wait(Opening.TAP_HOLD + 0.2)
+	await _press(bot, KEY_ESCAPE)
+	waited = 0.0
+	while waited < 6.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null and not main._busy):
+		await bot._wait(0.1)
+		waited += 0.1
+	var w: Node = main.current
+	_ok(w != null and w.name == "Game" and int(w.run_seed) == 31 and Talk.seen("opening") and not Records.is_new("d:opening"),
+		"Esc skips it into the same run (seed 31), and the slot remembers it saw the opening")
+	_ok(not Opening.wanted(main, {}), "it never plays again by itself (the Journal's Diary tab replays it)")
+	await bot._wait(0.4)
+	w.player.invuln = 9999.0
+	Game.records["runs"] = 3
+	# the Journal's replay: over the Journal, then back
+	var back := [false]
+	var r := Opening.watch(w.hud.root, func(): back[0] = true)
+	await bot._wait(1.0)
+	r.skip()
+	await bot._wait(0.6)
+	_ok(back[0] and not is_instance_valid(r), "Watch the beginning plays over the Journal and gives it back")
+	return w
+
+
+## The endings' closing beat: on its card, before the last one; the setting applies; Tallow's own beat only for him.
+static func _ending_checks(bot: Node, w: Node) -> void:
+	var bad: Array = []
+	for id in Diary.ENDINGS:
+		var lines: Array = TalkLines.ENDINGS.get(id, [])
+		var card := int(TalkLines.ENDING_CARD.get(id, -1))
+		if lines.is_empty() or card < 0 or card > 3:
+			bad.append(id)
+		for l in lines:
+			var who := str(l.get("who", ""))
+			if not who in ["me", "martha"] or (who == "me" and not TalkPortrait.FACES.has(str(l.get("face", "open")))):
+				bad.append("%s: %s" % [id, who])
+	_ok(bad.is_empty(), "all %d endings close with a beat (the candle and Martha's memory) on a card before the last %s" % [Diary.ENDINGS.size(), str(bad)])
+	Game.settings["talk"] = "first"
+	Talk.talks().erase("end:true")
+	var e := await _stage_ending(bot, w, "true")
+	var waited := 0.0
+	while waited < 20.0 and Talk.live == null and is_instance_valid(e):
+		await bot._wait(0.1)
+		waited += 0.1
+	_ok(Talk.live != null and is_instance_valid(e) and e._card == int(TalkLines.ENDING_CARD["true"]),
+		"the true ending: the beat opens on its card %d" % int(TalkLines.ENDING_CARD["true"]))
+	while Talk.live != null:
+		await _press(bot)
+		await _typed(bot)
+	waited = 0.0
+	while waited < 4.0 and is_instance_valid(e) and e._card <= int(TalkLines.ENDING_CARD["true"]):
+		await bot._wait(0.1)
+		waited += 0.1
+	_ok(is_instance_valid(e) and e._card == int(TalkLines.ENDING_CARD["true"]) + 1, "after the beat the ending goes on to its last card")
+	e.queue_free()
+	await bot._wait(0.2)
+	_ok(Talk.ending_lines(w, "true", int(TalkLines.ENDING_CARD["true"]), "tallow").is_empty(), "First time: the same ending in the same slot has no beat again")
+	Game.settings["talk"] = "always"
+	_ok(not Talk.ending_lines(w, "whole_story", int(TalkLines.ENDING_CARD["whole_story"]), "tallow").is_empty()
+		and Talk.ending_lines(w, "housekeeper", int(TalkLines.ENDING_CARD["housekeeper"]), "tea_light").is_empty(),
+		"Always: every time; the Housekeeper's beat is Tallow's own (not for another candle)")
+	Game.settings["talk"] = "off"
+	_ok(Talk.ending_lines(w, "windows", int(TalkLines.ENDING_CARD["windows"]), "tallow").is_empty(), "Off: no beat")
+	Game.settings["talk"] = "first"
+
+
+## An ending's cards over the world, the way Diary.win_ending starts one (its end does nothing here).
+static func _stage_ending(bot: Node, w: Node, id: String) -> Ending:
+	var e := Ending.new()
+	e.ending = id
+	e.setup(float(w.clock_minutes()), "tallow", func(): pass)
+	w.add_child(e)
+	await bot._wait(0.2)
+	return e
 
 
 ## The guardian is held while its meeting plays: harmless, untouchable, its AI waiting, the house paused, no foe up.

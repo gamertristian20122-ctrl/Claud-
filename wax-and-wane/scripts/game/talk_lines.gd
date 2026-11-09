@@ -241,6 +241,54 @@ const AGAIN := {
 }
 
 
+## The story's opening (scripts/ui/opening.gd): a slot's first run starts here. Each line belongs to a panel (the house
+## at midnight, the great clock, Martha's kitchen, the cellar); narration has no "who"; Martha and Tallow speak a line
+## each. It agrees with STORY.md: the house wakes when the Keeper winds the clock at twelve, Martha made Tallow so the
+## house could rest, lit him every night for a year until the house learned the habit, and now it lights him itself.
+const OPENING := [
+	{"panel": "house", "text": "There is an old house that runs on a great clock."},
+	{"panel": "house", "text": "Every night at twelve, the Keeper of Hours winds it, and the house gets up to do its chores."},
+	{"panel": "dial", "text": "Anything done every night for long enough starts to do itself."},
+	{"panel": "dial", "text": "The pot stirs itself. The organ plays itself. Nobody is left to tell them to stop."},
+	{"panel": "kitchen", "text": "Martha Fenn kept this house for sixty-one years. She wanted it to rest."},
+	{"panel": "kitchen", "text": "So she made a candle. A candle is the one thing that knows how to end."},
+	{"panel": "kitchen", "who": "martha", "face": "smile", "text": "Good evening, Tallow."},
+	{"panel": "kitchen", "text": "She lit him every night for a year, until the house learned to do it for her."},
+	{"panel": "cellar", "text": "Now, at twelve, the match strikes itself, and Tallow wakes alone."},
+	{"panel": "cellar", "who": "me", "face": "worried", "text": "...Martha?"},
+	{"panel": "cellar", "text": "He's scared of the dark. He goes up anyway."},
+]
+
+
+## The endings' closing beat (scripts/ui/ending.gd): a few words between the candle and Martha's memory on one card
+## (ENDING_CARD: the card they are said over), before the last card. The Housekeeper's is Tallow's own memory (she lit
+## him), so only Tallow says it; the others suit any candle of the house.
+const ENDINGS := {
+	"true": [
+		{"who": "me", "face": "tired", "text": "It's so quiet. Is everyone asleep?"},
+		{"who": "martha", "face": "smile", "text": "Every last one, love. You can stop now too."},
+		{"who": "me", "face": "happy", "text": "In a minute. I'd like to see the morning first."},
+	],
+	"housekeeper": [
+		{"who": "me", "text": "It was you. Every night at twelve, it was you."},
+		{"who": "martha", "face": "smile", "text": "Every night for a year. You cried wax at the match every single time."},
+		{"who": "me", "face": "teary", "text": "I still do, a bit."},
+	],
+	"windows": [
+		{"who": "me", "face": "happy", "text": "Every window's lit, Martha. Every room in the house."},
+		{"who": "martha", "face": "smile", "text": "Then nobody comes home to a dark house tonight. That's all I ever wanted for them."},
+		{"who": "me", "text": "There's one in the kitchen for you. There always was."},
+	],
+	"whole_story": [
+		{"who": "me", "face": "tired", "text": "Martha? The diary's whole. Every page came home."},
+		{"who": "martha", "face": "smile", "text": "Then the rounds are done, love. Sit down a minute. You've earned the good chair."},
+		{"who": "me", "face": "happy", "text": "Goodnight, Martha."},
+	],
+}
+const ENDING_CARD := {"true": 2, "housekeeper": 2, "windows": 3, "whole_story": 2}
+const TALLOW_ONLY := ["housekeeper"]
+
+
 ## The first meeting's lines for a guardian ([] if it has none).
 static func meet(kind: String) -> Array:
 	return _with_who(MEET.get(kind, []), kind)

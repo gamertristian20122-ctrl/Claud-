@@ -506,6 +506,39 @@ static func fall(w: Node, kind: String) -> void:
 	_open_in(w, scene, one, -12.0, func(): _release(w, null))
 
 
+## ending.gd: the closing beat said over this card of this ending ([] = none): the candle and Martha's memory. The
+## setting applies (First time: once per ending in a slot; Always; Off), and tests never see it unless forced.
+static func ending_lines(e: Node, ending: String, card: int, candle: String) -> Array:
+	if int(TalkLines.ENDING_CARD.get(ending, -1)) != card or not TalkLines.ENDINGS.has(ending):
+		return []
+	if ending in TalkLines.TALLOW_ONLY and candle != "tallow":
+		return []
+	var w: Node = e if e.get("main") != null else e.get_parent()   # the Ending's world (or the world itself)
+	if mode() == "off" or (w != null and _testing(w) and not force):
+		return []
+	if mode() == "first" and seen("end:" + ending):
+		return []
+	note("end:" + ending)
+	return TalkLines.ENDINGS[ending]
+
+
+## ending.gd: plays the beat over the card (its own two lines step aside under the box), then `then`.
+static func ending_beat(parent: Control, scene: Array, candle: String, card_lines: Array, then: Callable) -> void:
+	for l in card_lines:
+		if is_instance_valid(l):
+			l.create_tween().tween_property(l, "modulate:a", 0.0, 0.3)
+	# the world's HUD sits under the ending's screen: it steps aside too (the box's bar would land on its clock)
+	var e: Node = parent.get_parent()
+	var w: Node = e.get_parent() if e else null
+	var hud: Variant = w.get("hud") if w else null
+	if hud is CanvasLayer:
+		(hud as CanvasLayer).visible = false
+	open(parent, scene, {"candle": candle, "duck": -4.0, "done": func():
+		if is_instance_valid(hud) and hud is CanvasLayer:
+			(hud as CanvasLayer).visible = true
+		then.call()})
+
+
 ## world._boss_down's reward step awaits this: it returns at once when no scene is up, else when the scene is over.
 static func done_with(w: Node) -> void:
 	while live != null and is_instance_valid(live) and is_instance_valid(w) and w.is_inside_tree():

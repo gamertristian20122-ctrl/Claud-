@@ -133,35 +133,64 @@ func _draw_art() -> void:
 
 ## The candle, x2: Tallow's own body code with this line's face, flame and arms (bobbing a pixel as it talks).
 func _draw_candle(ci: CanvasItem) -> void:
-	var d: Dictionary = Candles.def_of(candle)
-	var cs: Array = d["colours"]
-	var c := {"ol": Player.OUTLINE, "hi": Color(cs[0]), "wax": Color(cs[1]), "sh": Color(cs[2]), "deep": Color(cs[3]),
-		"cheek": Color(d.get("cheek", "#f78697")), "foil": Color("#b6cbcf"), "foil_sh": Color("#7b8994")}
 	var fx: Array = FACES.get(face, FACES["open"])
-	var two := int(d.get("shots", 1)) > 1
-	var g := Player.shape(Player.rows_for(float(d["wax"])), 0, int(d["body_w"]) / 2, 0, 0,
-		d.get("straight", false), d.get("foil", false), two)
+	var fname: String = fx[2] if _blink_left > 0.0 else (fx[1] if _mouth else fx[0])
+	var g := shape_of(candle)
 	# 24 x 24 at x2, a bust: the cheeks on row 18 (the face, the arms and the flame above it show; the dish does not)
 	var o := Vector2(12, 15 - int(g["fy"]) + _bob)
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2(2, 2))
+	paint_candle(ci, o, candle, {"face": fname, "flame": "" if unlit_flame else str(fx[3]), "t": _flame_t, "arms": fx[4], "dish": false})
+	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+## A candle's shape at full wax (Player.shape, as the Candle Box shows it); `look` turns the face (-1 left, 1 right).
+static func shape_of(cid: String, look := 0) -> Dictionary:
+	var d: Dictionary = Candles.def_of(cid)
+	return Player.shape(Player.rows_for(float(d["wax"])), 0, int(d["body_w"]) / 2, 0, look,
+		d.get("straight", false), d.get("foil", false), int(d.get("shots", 1)) > 1)
+
+
+## A whole candle in one CanvasItem from Tallow's own parts (the portraits, the opening's panels). `o` = its feet.
+## opts: face (a hero/face_* name), flame ("" = unlit, else a flame kind: idle / small / mid / flare ...), t (s: the
+## flame's frame clock), arms ([left, right] poses), look (-1 / 0 / 1), dish (the brass dish, default on), tear (a
+## drop of wax running down a cheek: 0..1, how far it has run).
+static func paint_candle(ci: CanvasItem, o: Vector2, cid: String, opts := {}) -> void:
+	var d: Dictionary = Candles.def_of(cid)
+	var cs: Array = d["colours"]
+	var c := {"ol": Player.OUTLINE, "hi": Color(cs[0]), "wax": Color(cs[1]), "sh": Color(cs[2]), "deep": Color(cs[3]),
+		"cheek": Color(d.get("cheek", "#f78697")), "foil": Color("#b6cbcf"), "foil_sh": Color("#7b8994")}
+	var two := int(d.get("shots", 1)) > 1
+	var g := shape_of(cid, int(opts.get("look", 0)))
+	var dish := bool(opts.get("dish", true))
+	var holder: String = d.get("holder", "hero/holder")
+	if dish and Art.has(holder + "_back"):
+		ci.draw_texture(Art.tex(holder + "_back"), o + Vector2(-9, -7))
 	Player.paint_body(ci, o, g, c, d.get("stripes", false))
 	Player.paint_cheeks(ci, o, g, c["cheek"])
-	var fname: String = fx[2] if _blink_left > 0.0 else (fx[1] if _mouth else fx[0])
-	var ftex := Player.face_tex(fname, Color(d.get("ink", "#21141b")))
+	var ftex := Player.face_tex(str(opts.get("face", "open")), Color(d.get("ink", "#21141b")))
 	if ftex:
 		ci.draw_texture(ftex, o + Vector2(int(g["cx"]) - 5, int(g["fy"])))
-	Player.paint_arms(ci, o, g, c, fx[4])
+	var tear := float(opts.get("tear", 0.0))
+	if tear > 0.0:   # a drop of wax down the cheek (he cries wax when he is scared)
+		var tx := int(g["cx"]) - 5
+		var ty := int(g["fy"]) + 3 + int(tear * 4.0)
+		ci.draw_rect(Rect2(o.x + tx, o.y + ty, 1, 2), c["sh"])
+		ci.draw_rect(Rect2(o.x + tx, o.y + ty + 2, 1, 1), Player.OUTLINE)
+	if dish and Art.has(holder):
+		ci.draw_texture(Art.tex(holder), o + Vector2(-9, -5))
+	Player.paint_arms(ci, o, g, c, opts.get("arms", ["rest", "rest"]))
 	Player.paint_wick(ci, o, g, Player.OUTLINE)
-	if not unlit_flame:
-		var sf := Player.flame_frames(false)
-		var kind: String = fx[3]
-		var n := sf.get_frame_count(kind)
-		var fr := int(_flame_t * float(Player.FLAME_KINDS.get(kind, 8.0))) % maxi(1, n)
-		for k in (2 if two else 1):
-			var ft: Texture2D = sf.get_frame_texture(kind if k == 0 else "mid", (fr + k) % maxi(1, sf.get_frame_count(kind if k == 0 else "mid")))
-			var t2: Vector2i = g["tip"] if k == 0 else g["tip2"]
-			ci.draw_texture(ft, o + Vector2(t2) + Player.FLAME_OFS)
-	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var kind := str(opts.get("flame", "idle"))
+	if kind == "":
+		return
+	var sf := Player.flame_frames(false)
+	var tt := float(opts.get("t", 0.0))
+	for k in (2 if two else 1):
+		var fk := kind if k == 0 else "mid"
+		var n := maxi(1, sf.get_frame_count(fk))
+		var fr := (int(tt * float(Player.FLAME_KINDS.get(fk, 8.0))) + k) % n
+		var tip: Vector2i = g["tip"] if k == 0 else g["tip2"]
+		ci.draw_texture(sf.get_frame_texture(fk, fr), o + Vector2(tip) + Player.FLAME_OFS)
 
 
 ## A guardian: the face part of its frame, x2 (it breathes with its idle frames; it talks with them faster, or sings).
