@@ -773,8 +773,8 @@ func g21_organist(e: Enemy, ddt: float, _to_p: Vector2, _dist: float) -> void:
 		"ring_tell":
 			if e.t <= 0:
 				_organ_ring_fire(e)
-				if e.phase >= 3 and not e.mem.get("second", false):
-					# phase 3: a second ring follows, its gap on the other side
+				if e.phase >= 2 and not e.mem.get("second", false):
+					# from phase 2 a second ring follows, its gap on the other side
 					e.mem["second"] = true
 					e.mem["gap"] = float(e.mem["gap"]) - float(e.mem["gap_off"]) * 2.0
 					_organ_ring_mark(e, 0.9)
@@ -848,7 +848,8 @@ static func _organ_pedal(e: Enemy) -> void:
 			for i in [0, 6]:
 				var at := _pipe_at(e, i)
 				var aim: Vector2 = (e.world.player.global_position + Vector2(0, -6) - at).normalized()
-				e.world.enemy_shot(at, aim * 100.0, "bullet_water")
+				for s in [-0.12, 0.0, 0.12]:
+					e.world.enemy_shot(at, aim.rotated(s) * 100.0, "bullet_water")
 			Audio.play("enemy_shoot", -4.0, 0.05, 0.5))
 	e.state = "playing"
 	e.t = 0.55 + 0.15 * n + 0.4
@@ -887,7 +888,7 @@ static func _organ_chords(e: Enemy) -> void:
 static func _organ_ring(e: Enemy) -> void:
 	var p: Player = e.world.player
 	var at := e.global_position + ORGAN_FACE
-	var off := 0.0 if e.phase == 1 else (0.85 if randf() < 0.5 else -0.85)
+	var off := 0.0 if e.phase == 1 else (0.75 if randf() < 0.5 else -0.75)
 	e.mem["gap_off"] = off
 	e.mem["gap"] = (p.global_position + Vector2(0, -6) - at).angle() + off
 	e.mem["second"] = false
@@ -918,11 +919,11 @@ static func _organ_ring_mark(e: Enemy, dur: float) -> void:
 static func _organ_ring_fire(e: Enemy) -> void:
 	var at := e.global_position + ORGAN_FACE
 	var gap: float = e.mem["gap"]
-	var n := 24
+	var n := 30
 	for i in n:
 		var a := TAU * i / n + gap
 		if absf(angle_difference(a, gap)) > 0.5:
-			e.world.enemy_shot(at, Vector2.from_angle(a) * 50.0, "bolt_ring")
+			e.world.enemy_shot(at, Vector2.from_angle(a) * 54.0, "bolt_ring")
 	e.spr.frame = 1
 	Audio.play("bell_toll", -4.0, 0.05, 1.2)
 

@@ -146,7 +146,7 @@ const DEFS := {
 		"no_flip": true, "glow_px": ["#cae6f5"], "title": "It plays for the empty pews",
 		"phase_lines": ["", "It plays in chords...", "Every stop pulled out!"],
 		"lore": "The chapel organ played itself the night its organist was buried. It has not missed a service since.", "stain": Color("#8f4029")},
-	"weathercock": {"hp": 260.0, "speed": 22.0, "ai": "g21_weathercock", "r": 12.0, "boss": true, "heavy": true, "name": "THE WEATHERCOCK",
+	"weathercock": {"hp": 280.0, "speed": 22.0, "ai": "g21_weathercock", "r": 12.0, "boss": true, "heavy": true, "name": "THE WEATHERCOCK",
 		"no_flip": true, "glow_px": ["#facb3e"], "title": "It turns with every wind", "victory": "THE WEATHERCOCK FALLS SILENT",
 		"phase_lines": ["", "The wind changes!", "A storm breaks over the belfry!"],
 		"lore": "The copper rooster on the belfry roof. A hundred years of storms taught it which way to blow.", "stain": Color("#49a790")},
