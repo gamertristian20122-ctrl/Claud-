@@ -742,6 +742,12 @@ func _tour() -> void:
 		await BestiaryGallery.tour(self)
 		get_tree().quit()
 		return
+	if args.has("gui"):   # v2.6: every screen the UI kit dresses (scripts/ui/gui_tour.gd)
+		await _wait(0.3)
+		await load("res://scripts/ui/gui_tour.gd").tour(self)
+		Audio.stop_all()
+		get_tree().quit()
+		return
 	if args.has("slots"):   # v2.1: the save slots, the level picker, a 2.0 save moved into Slot 1
 		await _wait(0.5)
 		await load("res://scripts/ui/slots_tour.gd").tour(self)

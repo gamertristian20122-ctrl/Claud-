@@ -17,6 +17,7 @@ var autotest: Node
 
 
 func _ready() -> void:
+	UI.install()   # v2.6: the UI kit's Theme under every Control (scripts/ui/ui.gd)
 	get_tree().set_auto_accept_quit(false)
 	# physics ticks at a steady 60 Hz on every screen (project.godot [physics]); following a 90/120 Hz
 	# display used to double its CPU cost on fast phones for no gameplay gain (QA-17)
@@ -77,8 +78,10 @@ func goto(screen: String, params := {}) -> void:
 	_fade.mouse_filter = Control.MOUSE_FILTER_STOP
 	var tw := create_tween()
 	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	var calm := UI.calm()   # Settings > Reduce motion: a plain short fade instead of the paper burn
+	_fade.material = null if calm else _burn
 	Juice.burn_prepare(_burn, false, _fade.size)
-	tw.tween_property(_fade, "color:a", 1.0, 0.42 if current else 0.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_property(_fade, "color:a", 1.0, (0.15 if calm else 0.42) if current else 0.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 	await tw.finished
 	get_tree().paused = false
 	Engine.time_scale = Game.base_time_scale
@@ -95,7 +98,7 @@ func goto(screen: String, params := {}) -> void:
 	var tw2 := create_tween()
 	tw2.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	Juice.burn_prepare(_burn, true, _fade.size)
-	tw2.tween_property(_fade, "color:a", 0.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw2.tween_property(_fade, "color:a", 0.0, 0.15 if calm else 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await tw2.finished
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_busy = false
