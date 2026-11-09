@@ -39,7 +39,7 @@ const LIST := [
 	{"id": "ks_winding_key", "name": "Wind It Back", "desc": "Turn the Winding Key."},
 	{"id": "ks_smoke_jar", "name": "Up in Smoke", "desc": "Open the Smoke Jar."},
 	{"id": "rite", "name": "Candle Rite", "desc": "Complete a Candle Rite."},
-	{"id": "rite_all", "name": "Keeper of Rites", "desc": "Complete all four Candle Rites."},
+	{"id": "rite_all", "name": "Keeper of Rites", "desc": "Complete all six Candle Rites."},
 	{"id": "guttering", "name": "Clinging On", "desc": "Live through a Guttering."},
 	{"id": "two_oclock", "name": "Two O'Clock", "desc": "Melt all the way down to 2:00 AM.", "hidden": true},
 	{"id": "candle_box", "name": "Full Candle Box", "desc": "Unlock every candle."},
@@ -68,6 +68,8 @@ const LIST := [
 const BOSS_IDS := {1: "boss_cellar", 2: "boss_crypt", 3: "boss_chapel"}
 const FLOOR_IDS := {2: "floor_crypt", 3: "floor_chapel", 4: "floor_belfry"}
 const TOAST_TIME := 2.0
+const TOAST_GAP := 0.4     # s between two toasts, and after whatever held them
+const TOAST_TEXT_W := 180  # px: longer lines wrap, so a toast fits between the wax bar and the minimap
 
 var _by_id := {}
 var _layer: CanvasLayer
@@ -75,7 +77,9 @@ var _queue: Array[String] = []
 var _toast: Control
 var _toast_tw: Tween
 var _last_screen := 0   # instance id of the screen seen last frame
-var _wait := 0.0
+var _gap := 0.0
+var _toast_ids: Array[String] = []   # what the toast on screen shows (put back if it is pulled early)
+var _toast_ms := 0                   # when it came up
 var _steam: Object
 # what the watcher saw last frame in the current run
 var _w: Node
@@ -128,6 +132,10 @@ func unlock(id: String) -> bool:
 	return true
 
 
+func name_of(id: String) -> String:
+	return str(_by_id.get(id, {}).get("name", id))
+
+
 ## Shows an achievement's toast without unlocking it (screenshot tours, store trailers).
 func show_toast(id: String) -> void:
 	if _by_id.has(id):
@@ -137,10 +145,7 @@ func show_toast(id: String) -> void:
 # ---------------------------------------------------------------- the watcher
 
 func _world() -> Node:
-	var main := get_tree().current_scene
-	if main == null or not ("current" in main):
-		return null
-	var cur: Node = main.current
+	var cur := _screen()
 	if cur == null or cur.name != "Game" or cur.get("player") == null:
 		return null
 	return cur
@@ -261,24 +266,85 @@ func _pump(dt: float) -> void:
 	_last_screen = sid
 	if arrived and scr and scr.name == "Title":
 		_queue.clear()
-		_wait = 0.0
-		if _toast_tw:
-			_toast_tw.kill()
-			_toast_tw = null
-		if _toast and is_instance_valid(_toast):
-			_toast.queue_free()
-		_toast = null
+		_pull(false)
+		return
+	# hold the queue (and pull a toast that is up) while something else owns the screen: a floor or
+	# relic banner, the boss card, the pause menu, the end of the run, the ending, a screen change,
+	# the results (they list what is pending: take_pending())
+	var hold := _hold_reason(scr)
+	if hold != "":
+		if _toast != null:
+			_pull(hold != "results")
+		_gap = TOAST_GAP * 0.5
 		return
 	if _toast != null or _queue.is_empty():
 		return
-	# wait for a floor / relic banner to clear first (they share the top of the screen)
-	var w := _world()
-	var hud: Variant = w.get("hud") if w else null
-	if hud and is_instance_valid(hud) and hud.banner and hud.banner.modulate.a > 0.05 and _wait < 3.0:
-		_wait += dt
+	if _gap > 0.0:
+		_gap -= dt
 		return
-	_wait = 0.0
-	_show(_queue.pop_front())
+	if _queue.size() >= 3:   # a burst (a boss falls, a floor starts): one toast names them all
+		var ids: Array[String] = _queue.duplicate()
+		_queue.clear()
+		_show_many(ids)
+	else:
+		_show(_queue.pop_front())
+
+
+## Why toasts must wait right now ("" = they may show).
+func _hold_reason(scr: Node) -> String:
+	if scr == null or scr.is_queued_for_deletion():
+		return "switch"
+	var main := get_tree().current_scene
+	if main and bool(main.get("_busy")):
+		return "switch"
+	if scr.name == "Results":
+		return "results"
+	if scr.name == "Title":
+		return "title"   # its bottom edge is the button row now: a rare unlock there waits for the next run
+	var w := _world()
+	if w == null:
+		return ""
+	if bool(w.get("finished")):
+		return "end"
+	if bool(w.get("paused")) or get_tree().paused:
+		return "pause"
+	if Juice.holding(w):
+		return "card"
+	for c in w.get_children():
+		if c is Ending:
+			return "ending"
+	var hud: Variant = w.get("hud")
+	if hud and is_instance_valid(hud):
+		var bb: Variant = hud.get("boss_box")
+		if bb and (bb as CanvasItem).visible:
+			return "boss"   # a guardian fight: the medal can wait for the victory (and its banner)
+		for l in [hud.get("banner"), hud.get("banner_sub")]:
+			if l and is_instance_valid(l) and (l as CanvasItem).modulate.a > 0.05 and str(l.text) != "":
+				return "banner"
+	return ""
+
+
+## Take the toast off the screen now; `requeue` puts what it showed back at the front of the queue.
+func _pull(requeue: bool) -> void:
+	if _toast_tw:
+		_toast_tw.kill()
+		_toast_tw = null
+	if _toast and is_instance_valid(_toast):
+		_toast.queue_free()
+	_toast = null
+	if requeue and Time.get_ticks_msec() - _toast_ms < 1200:   # it was barely seen: show it again later
+		for i in range(_toast_ids.size() - 1, -1, -1):
+			_queue.push_front(_toast_ids[i])
+	_toast_ids.clear()
+
+
+## The results screen lists the achievements still waiting (instead of toasting over its panel).
+func take_pending() -> Array[String]:
+	var out: Array[String] = _toast_ids.duplicate()
+	out.append_array(_queue)
+	_queue.clear()
+	_pull(false)
+	return out
 
 
 func _screen() -> Node:
@@ -291,6 +357,32 @@ func _screen() -> Node:
 
 func _show(id: String) -> void:
 	var a: Dictionary = _by_id[id]
+	var reward := Items.display_name(Unlocks.reward_of(id)) if Unlocks.reward_of(id) != "" else ""
+	_toast_ids = [id]
+	_pop(a["name"].to_upper(), a["desc"], reward)
+
+
+## Three or more at once: one toast that names them all.
+func _show_many(ids: Array[String]) -> void:
+	var names: Array = []
+	var rewards: Array = []
+	for id in ids:
+		names.append(_by_id[id]["name"])
+		if Unlocks.reward_of(id) != "":
+			rewards.append(Items.display_name(Unlocks.reward_of(id)))
+	_toast_ids = ids
+	_pop("%d ACHIEVEMENTS" % ids.size(), ", ".join(names), ", ".join(rewards))
+
+
+func _line(text: String, col: Color) -> Label:
+	var l := UI.label(text, 8, col)
+	if Art.font_small.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x > TOAST_TEXT_W:
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.custom_minimum_size.x = TOAST_TEXT_W
+	return l
+
+
+func _pop(title: String, desc: String, reward: String) -> void:
 	var vs := get_viewport().get_visible_rect().size
 	var box := PanelContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -320,34 +412,66 @@ func _show(id: String) -> void:
 	col.add_theme_constant_override("separation", 0)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(col)
-	col.add_child(UI.label(a["name"].to_upper(), 8, UI.GOLD))
-	col.add_child(UI.label(a["desc"], 8, UI.CREAM))
-	if Unlocks.reward_of(id) != "": col.add_child(UI.label("NEW IN THE HOUSE: " + Items.display_name(Unlocks.reward_of(id)), 8, UI.EMBER))
+	col.add_child(_line(title, UI.GOLD))
+	col.add_child(_line(desc, UI.CREAM))
+	if reward != "":
+		col.add_child(_line("NEW IN THE HOUSE: " + reward, UI.EMBER))
+	box.set_meta("fit_group", "toast")
 	_layer.add_child(box)
 	_toast = box
+	_toast_ms = Time.get_ticks_msec()
 	box.reset_size()
 	var sz := box.get_combined_minimum_size()
-	var in_game := _world() != null
-	var y := 14.0 if in_game else 4.0
-	var scr := _screen()
+	box.size = sz
+	var at := _lane(sz, vs)
+	var y := at.y
 	var hidden := -sz.y - 2.0
+	var scr := _screen()
 	if scr and scr.name == "Title":   # under the menu, never over the logo
 		y = vs.y - sz.y - 4.0
 		hidden = vs.y + 2.0
-	box.position = Vector2(floorf((vs.x - sz.x) / 2.0), hidden)
+	box.position = Vector2(at.x, hidden)
 	if ResourceLoader.exists("res://assets/audio/sfx/achievement.ogg") or ResourceLoader.exists("res://assets/audio/sfx/achievement.wav"):
 		Audio.play("achievement")
 	else:
 		Audio.play("tick", -2.0, 0.0, 1.6)
 	var tw := create_tween().set_ignore_time_scale(true)
 	_toast_tw = tw
+	box.set_meta("fit_skip", true)   # FitCheck: sliding in / out is off the screen on purpose
 	tw.tween_property(box, "position:y", y, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_callback(box.set_meta.bind("fit_skip", false))
 	tw.tween_interval(TOAST_TIME)
+	tw.tween_callback(box.set_meta.bind("fit_skip", true))
 	tw.tween_property(box, "position:y", hidden, 0.16).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.tween_callback(func():
 		box.queue_free()
 		_toast = null
-		_toast_tw = null)
+		_toast_tw = null
+		_toast_ids.clear()
+		_gap = TOAST_GAP)
+
+
+## Where a toast of this size goes. In play: centred at the top when it fits between the wax bar
+## (and its "+N min") and the minimap; on narrow screens (384 px wide) that gap is too small, so it
+## drops into its own lane just under the HUD (below the minimap, clear of the bar, the counters and
+## the floor name in the left gutter). Elsewhere: top centre.
+func _lane(sz: Vector2, vs: Vector2) -> Vector2:
+	var x := floorf((vs.x - sz.x) / 2.0)
+	var w := _world()
+	var hud: Variant = w.get("hud") if w else null
+	if hud == null or not is_instance_valid(hud) or hud.get("bar") == null or hud.get("minimap") == null:
+		return Vector2(x, 4.0)
+	var bar: Control = hud.bar
+	var mm: Control = hud.minimap
+	var left := bar.position.x + bar.size.x
+	var spare: Variant = hud.get("spare_label")
+	if spare and str(spare.text) != "":
+		left = maxf(left, (spare as Control).position.x + Art.font_small.get_string_size(str(spare.text), HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x)
+	left += 4.0
+	var right := mm.position.x - 4.0
+	if sz.x <= right - left:
+		return Vector2(clampf(x, left, right - sz.x), 3.0)
+	return Vector2(x, mm.position.y + mm.size.y + 2.0)
 
 
 # ---------------------------------------------------------------- list screen

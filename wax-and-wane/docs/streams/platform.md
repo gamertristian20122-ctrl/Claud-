@@ -137,7 +137,7 @@ Steamworks with **exactly these API names**:
 | ks_winding_key | Wind It Back | Turn the Winding Key. | |
 | ks_smoke_jar | Up in Smoke | Open the Smoke Jar. | |
 | rite | Candle Rite | Complete a Candle Rite. | |
-| rite_all | Keeper of Rites | Complete all four Candle Rites. | |
+| rite_all | Keeper of Rites | Complete all six Candle Rites. | |
 | guttering | Clinging On | Live through a Guttering. | |
 | two_oclock | Two O'Clock | Melt all the way down to 2:00 AM. | yes |
 | candle_box | Full Candle Box | Unlock every candle. | |

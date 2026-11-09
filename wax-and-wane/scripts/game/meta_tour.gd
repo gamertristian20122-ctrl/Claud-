@@ -116,10 +116,10 @@ static func tour(at: Node) -> void:
 	await at._wait(0.3)
 	await at._shot("journal_rooms_mini")
 	j._set_tab(5, false)
-	j._select(2)
+	j._select(3)   # 0 How to play, 1 the Ledger, 2 Tonight's Candle, 3 the last run
 	await at._wait(0.3)
 	await at._shot("journal_record_run")
-	j._select(1)
+	j._select(2)
 	await at._wait(0.3)
 	await at._shot("journal_record_nights")
 	# ---- gamepad: glyphs on the tabs, the focus frame

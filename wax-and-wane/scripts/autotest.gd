@@ -3,6 +3,7 @@ extends Node
 ##   -- --autotest --playtest [--runs=N] [--speed=4] [--seed=N]   plays full runs, prints a summary
 ##        [--god] [--stress] [--unlockall --candle=id] [--relics=a,b] [--savecycle: Save & quit + Continue each floor]
 ##   -- --autotest --tour --shots=/abs/dir                         screenshots of every screen
+##        [--fit]: after each shot, FitCheck lists text/buttons off the screen or on other text
 ##   -- --autotest --audiotest                                     audio catalogue + live-mix check (audio_check.gd)
 ##   -- --autotest --herosheet --shots=/abs/dir                    Tallow in every juice state (pixel check)
 ##   -- --autotest --tour --rooms --shots=/abs/dir                 three dressed rooms on every floor
@@ -572,6 +573,9 @@ func _shot(name: String) -> void:
 	_shot_i += 1
 	img.save_png("%s/%02d_%s.png" % [_shots_dir, _shot_i, name])
 	print("[tour] shot ", name)
+	if args.has("fit"):   # layout judge: text off the screen or on other text (scripts/ui/fit_check.gd)
+		for line in FitCheck.scan(get_tree().root, get_viewport().get_visible_rect().size):
+			print("[fit] %02d_%s %s" % [_shot_i, name, line])
 
 
 func _wait(s: float) -> void:
@@ -812,7 +816,7 @@ func _platform_tour() -> void:
 	var before: Dictionary = RunSave.snap.duplicate(true)
 	print("[platform] saved: ", RunSave.summary(), "  relics=", p.relics, " rites=", p.rites, " omen=", w.omen)
 	main.goto("title")
-	await _wait(1.4)
+	await _wait(3.0)   # the burn (0.9 s) + the title's opening (2.2 s): the menu and Continue are in
 	await _shot("title_continue_" + tag)
 	SettingsPanel.open(main.current.root)
 	await _wait(0.5)
@@ -884,9 +888,9 @@ func _platform_tour() -> void:
 	await _shot("pause_gamepad_" + tag)
 	await _pad(JOY_BUTTON_DPAD_DOWN)
 	var f := get_viewport().gui_get_focus_owner()
-	if not (f is Button and (f as Button).text == "Settings"):
+	if not (f is Button and (f as Button).text == "Journal"):   # the row under Resume: Journal | Settings
 		fails += 1
-		print("[platform] FAIL d-pad down focus: ", f)
+		print("[platform] FAIL d-pad down focus: ", f, " ", f.get("text") if f else "")
 	await _shot("pause_gamepad_down_" + tag)
 	await _pad(JOY_BUTTON_B)
 	await _wait(0.3)
@@ -906,12 +910,21 @@ func _platform_tour() -> void:
 	if RunSave.has_snapshot():
 		fails += 1
 		print("[platform] FAIL the snapshot survived the end of the run")
-	# back, back: results -> title -> "blow out the candle?" (desktop)
+	# back, back: results -> title -> "blow out the candle?" (desktop). The second Back waits for the
+	# title's opening to end (a press during it only skips the opening).
 	await _ui("ui_cancel")
-	await _wait(1.4)
+	await _wait(3.2)
 	await _ui("ui_cancel")
 	await _wait(0.4)
 	await _shot("quit_prompt_" + tag)
+	var asked := false
+	if main.current and main.current.get("root"):
+		for c in (main.current.root as Control).get_children():
+			if c.get_meta("quit_prompt", false):
+				asked = true
+	if not asked and not OS.has_feature("mobile"):
+		fails += 1
+		print("[platform] FAIL Back on the title did not ask 'blow out the candle?'")
 	print("[platform] DONE fails=%d" % fails)
 ## Juice tour shots: gibs in flight, floor stains, a relic held aloft, the melt-down.
 func _tour_juice(w: Node) -> void:

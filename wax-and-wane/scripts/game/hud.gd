@@ -25,6 +25,7 @@ var pause_layer: Control
 var vignette: TextureRect
 var preview: Label
 var _preview_t := 0.0
+var _preview_lines := 1
 var _safe_t := 0.0
 var _last_safe := Rect2i()
 var _bomb_idx := -1
@@ -41,6 +42,9 @@ var streak_label: Label
 var hint_band: ColorRect
 var _banner_tw: Tween
 var _hint_tw: Tween
+var _held_tips: Array = []      # [text, dur]: tips that landed mid guardian fight, shown after it (UX-04)
+var _hint_scope := []           # [floor, cell] of the special room a hint belongs to, or [] (C11)
+var _banner_scope := []
 
 var shown_wax := 120.0
 var ghost_wax := 120.0
@@ -192,8 +196,10 @@ func _ready() -> void:
 	root.add_child(banner_sub)
 	preview = UI.label("", 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
 	preview.modulate.a = 0
+	preview.max_lines_visible = 2
+	preview.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	root.add_child(preview)
-	hint = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+	hint = UI.outlined(UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))   # outlined: in a boss fight it has no band
 	hint.modulate.a = 0
 	root.add_child(hint)
 	# --- sticks
@@ -208,6 +214,12 @@ func _ready() -> void:
 	keep_btn.add_child(keep_key)
 	for b in [pause_btn, bomb_btn]:
 		b.focus_mode = Control.FOCUS_NONE
+	# FitCheck (--fit tours): which pieces of the HUD are laid out together
+	for pair in [[bar, "status"], [clock_label, "status"], [spare_label, "status"], [streak_box, "status"],
+			[floor_label, "status"], [coin_label.get_parent(), "status"], [minimap, "map"], [pause_btn, "map"],
+			[banner, "banner"], [banner_sub, "banner"], [hint, "hints"], [preview, "hints"],
+			[boss_box, "boss"], [bomb_btn, "buttons"], [keep_btn, "buttons"]]:
+		(pair[0] as Node).set_meta("fit_group", pair[1])
 	process_physics_priority = -10      # read input before the world moves Tallow
 	get_viewport().size_changed.connect(_layout)
 	Controls.device_changed.connect(_on_device)
@@ -276,14 +288,13 @@ func _layout() -> void:
 	pause_btn.position = Vector2(vs.x - 26 - ins.y, 3)
 	bomb_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 118)
 	keep_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 154)
+	if Game.settings.get("swap_sticks", false) and Controls.touch_visible():
+		# UX-08: swapped sticks aim with the left thumb, so its buttons sit on the left edge (a little
+		# lower, clear of the floor name in the left gutter)
+		bomb_btn.position = Vector2(3 + ins.x, vs.y - 108)
+		keep_btn.position = Vector2(3 + ins.x, vs.y - 144)
 	boss_box.position = Vector2((vs.x - 170) / 2.0, vs.y - 12)
-	banner.size = Vector2(vs.x, 16)
-	banner.position = Vector2(0, 16)
-	banner_sub.size = Vector2(vs.x, 10)
-	banner_sub.position = Vector2(0, 33)
-	banner_band.position = Vector2(floorf(vs.x / 2.0) - 110, 14)
-	banner_band.size = Vector2(220, 32)
-	preview.size = Vector2(vs.x, 10)
+	_place_banner()
 	hint.size = Vector2(vs.x, 10)
 	hint_band.size = Vector2(300, 25)
 	_place_hints()
@@ -295,9 +306,16 @@ func _layout() -> void:
 func _place_hints() -> void:
 	var vs := view_size()
 	var lift := 24.0 if boss_box.visible else 0.0
-	preview.position = Vector2(0, vs.y - 23 - lift)
+	var ph := 10.0 * _preview_lines   # an item preview is one or two lines
+	preview.size = Vector2(vs.x - 16.0, ph)
+	preview.position = Vector2(8, vs.y - 13 - ph - lift)
 	hint.position = Vector2(0, vs.y - 12 - lift)
-	hint_band.position = Vector2(floorf((vs.x - hint_band.size.x) / 2.0), vs.y - 25 - lift)
+	if boss_box.visible:
+		# UX-04: during a guardian fight a hint is one line at the top, under the banner slot, with no
+		# band: the arena floor (and its bottom rows) stays clear
+		hint.position = Vector2(0, 66.0 if _narrow else 48.0)
+	hint_band.size.y = ph + 15.0
+	hint_band.position = Vector2(floorf((vs.x - hint_band.size.x) / 2.0), vs.y - 15 - ph - lift)
 
 
 ## The dark band under hints / previews grows with the longest line (a shop line can be wide).
@@ -306,14 +324,52 @@ func _fit_band(fresh: Label) -> void:
 	for l in [hint, preview]:
 		var lab: Label = l
 		if lab.text != "" and (lab == fresh or lab.modulate.a > 0.05):
-			w = maxf(w, Art.font_small.get_string_size(lab.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 16.0)
+			for line in lab.text.split("\n"):
+				w = maxf(w, _tw8(line) + 16.0)
 	hint_band.size.x = minf(ceilf(w), view_size().x)
 	_place_hints()
+
+
+static func _tw8(text: String) -> float:
+	return Art.font_small.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
+
+
+## Floor / relic / room banners: the title, then a subtitle that wraps to two lines, on a dark band
+## sized to the text. The subtitle keeps clear of the clock and counters on the left and the minimap
+## on the right; on 384-wide screens the banner sits below the wax bar (QA-11: a long relic line ran
+## over the bomb counter there).
+func _place_banner() -> void:
+	var vs := view_size()
+	var ins := safe_insets()
+	var top := 27.0 if _narrow else 16.0
+	var sub_y := top + (18.0 if _narrow else 17.0)
+	var mid := floorf(vs.x / 2.0)
+	var left := 72.0 + ins.x   # the clock, coins and bombs column
+	var right := minimap.position.x - 4.0 if sub_y < minimap.position.y + minimap.size.y else keep_btn.position.x - 4.0
+	var sub_max := 2.0 * minf(mid - left, right - mid)
+	var sw := Art.font_small.get_string_size(banner_sub.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
+	var lines := 1 if sw <= sub_max else 2
+	var w := ceilf(minf(sw, sub_max))
+	banner.size = Vector2(vs.x, 16)
+	banner.position = Vector2(0, top)
+	banner_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if lines > 1 else TextServer.AUTOWRAP_OFF
+	banner_sub.max_lines_visible = 2
+	banner_sub.size = Vector2(w + 2.0, 10.0 * lines)
+	banner_sub.position = Vector2(floorf(mid - w / 2.0) - 1.0, sub_y)
+	var tw := Art.font.get_string_size(banner.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x if banner.text != "" else 0.0
+	var bw := ceilf(maxf(maxf(tw, w) + 20.0, 120.0))
+	banner_band.position = Vector2(floorf(mid - bw / 2.0), top - 2.0)
+	banner_band.size = Vector2(bw, sub_y - top + 10.0 * lines + 4.0)
 
 
 func show_banner(title: String, sub := "", dur := 2.4) -> void:
 	banner.text = title
 	banner_sub.text = sub
+	_banner_scope = _room_scope()
+	_place_banner()
+	if title != "" and preview.text.begins_with(title.to_upper() + "  -  "):
+		preview.modulate.a = 0.0   # the banner names it now: no second copy at the bottom
+		_preview_t = 0.0
 	if _banner_tw:
 		_banner_tw.kill()
 	_banner_tw = create_tween().set_parallel(true)
@@ -323,17 +379,40 @@ func show_banner(title: String, sub := "", dur := 2.4) -> void:
 
 
 ## Shown while standing next to a relic / shop item.
+## Long offers (a Cracked Mirror relic: name, what it does, its price, the rite) take two lines, never
+## more than the screen width - 16 px: "NAME  -  what it does" / "Costs 15 max minutes (7 now)   [Rite]".
 func preview_item(title: String, sub: String) -> void:
+	# the top banner names this item right now (it was just taken): no second copy at the bottom
+	if banner.modulate.a > 0.05 and banner.text == title.to_upper():
+		return
 	var t := "%s  -  %s" % [title.to_upper(), sub]
+	var maxw := view_size().x - 16.0
+	var lines := 1
+	if _tw8(t) > maxw:
+		lines = 2
+		var cut := sub.find("   -   ")
+		if cut < 0:
+			cut = sub.find("   [")
+		if cut >= 0:
+			t = "%s  -  %s\n%s" % [title.to_upper(), sub.substr(0, cut), sub.substr(cut).trim_prefix("   -   ").strip_edges()]
 	if t != preview.text:
 		preview.text = t
+		_preview_lines = lines
+		var wrap := lines == 2 and (not t.contains("\n") or _tw8(t.get_slice("\n", 0)) > maxw or _tw8(t.get_slice("\n", 1)) > maxw)
+		preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wrap else TextServer.AUTOWRAP_OFF
 		_fit_band(preview)
 	preview.modulate.a = 1.0
 	_preview_t = 0.3
 
 
 func show_hint(text: String, dur := 6.0) -> void:
+	# UX-04: a first-time tip (Game.tip) that lands while a guardian fights waits for the fight to end
+	if boss_box.visible and int(Game.get_meta("tip_frame", -1)) == Engine.get_process_frames():
+		if _held_tips.size() < 3 and not _held_tips.any(func(h): return h[0] == text):
+			_held_tips.append([text, dur])
+		return
 	hint.text = text
+	_hint_scope = _room_scope()
 	_fit_band(hint)
 	if _hint_tw:
 		_hint_tw.kill()
@@ -344,11 +423,53 @@ func show_hint(text: String, dur := 6.0) -> void:
 
 
 func set_boss(name: String, visible_: bool) -> void:
+	var ended := boss_box.visible and not visible_
 	boss_box.visible = visible_
 	_place_hints()
+	if ended and not _held_tips.is_empty():
+		_flush_tips()
 	boss_name.text = name
 	boss_frac = 1.0
 	boss_bar.queue_redraw()
+
+
+## The tips held during the fight, one after another.
+func _flush_tips() -> void:
+	var tw := create_tween()
+	tw.tween_interval(1.0)
+	for h in _held_tips:
+		tw.tween_callback(show_hint.bind(h[0], h[1]))
+		tw.tween_interval(float(h[1]) + 1.4)
+	_held_tips.clear()
+
+
+## C11: banners and hints shown in a special room (seance, mirror, music box, study, font), a treasure
+## room, the shop or a hollow belong to it: they fade as soon as Tallow leaves it. Floor banners,
+## tutorial tips and boss lines (start / normal / boss rooms) keep their time.
+func _room_scope() -> Array:
+	var r: Variant = world.get("room")
+	if r == null or not is_instance_valid(r) or not ("data" in r):
+		return []
+	if str((r as Node).get("data").get("type", "normal")) in ["start", "normal", "boss"]:
+		return []
+	return [world.get("floor_num"), world.get("cur_cell")]
+
+
+func _drop_room_text() -> void:
+	var here := [world.get("floor_num"), world.get("cur_cell")]
+	if not _hint_scope.is_empty() and _hint_scope != here:
+		_hint_scope = []
+		if _hint_tw:
+			_hint_tw.kill()
+		_hint_tw = create_tween()
+		_hint_tw.tween_property(hint, "modulate:a", 0.0, 0.25)
+	if not _banner_scope.is_empty() and _banner_scope != here:
+		_banner_scope = []
+		if _banner_tw:
+			_banner_tw.kill()
+		_banner_tw = create_tween().set_parallel(true)
+		for l in [banner, banner_sub, banner_band]:
+			_banner_tw.tween_property(l, "modulate:a", 0.0, 0.25)
 
 
 func set_boss_frac(f: float) -> void:
@@ -382,7 +503,13 @@ func _process(dt: float) -> void:
 	_preview_t -= dt
 	if _preview_t <= 0.0 and preview.modulate.a > 0.0:
 		preview.modulate.a = move_toward(preview.modulate.a, 0.0, dt * 4.0)
-	hint_band.modulate.a = maxf(hint.modulate.a, preview.modulate.a)
+		if preview.modulate.a <= 0.0:
+			preview.text = ""
+			if _preview_lines != 1:
+				_preview_lines = 1
+				_place_hints()
+	hint_band.modulate.a = maxf(0.0 if boss_box.visible else hint.modulate.a, preview.modulate.a)
+	_drop_room_text()
 	bar.queue_redraw()
 	clock_label.text = Game.clock_text(world.clock_minutes(), false)
 	var spare := Game.spare_minutes(world.clock_minutes())
@@ -644,6 +771,7 @@ func _refresh_touch() -> void:
 	if not on:
 		release_sticks()
 	keep_key.text = "" if on else Controls.glyph("keepsake")
+	_layout()   # Swap sticks moves the bomb / keepsake buttons
 	root.queue_redraw()
 
 
@@ -857,10 +985,11 @@ func open_pause() -> void:
 	var resume := UI.button("Resume", func(): world.toggle_pause())
 	resume.set_meta("default_focus", true)
 	v.add_child(resume)
-	var row1 := HBoxContainer.new()   # Journal | Settings
+	var row1 := HBoxContainer.new()   # Journal | Settings: two halves, like the row below
 	row1.add_theme_constant_override("separation", 6)
-	row1.add_child(UI.button("Journal", func(): Journal.open(root), 96))
-	row1.add_child(UI.button("Settings", func(): SettingsPanel.open(root), 96))
+	for b in [UI.button("Journal", func(): Journal.open(root), 96), UI.button("Settings", func(): SettingsPanel.open(root), 96)]:
+		(b as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row1.add_child(b)
 	v.add_child(row1)
 	var row2 := HBoxContainer.new()
 	row2.add_theme_constant_override("separation", 6)

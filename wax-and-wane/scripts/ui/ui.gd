@@ -193,6 +193,30 @@ static func slider_row(text: String, value: float, cb: Callable) -> HBoxContaine
 	return row
 
 
+## UX-07: a button (already in the tree) that ignores presses for its first `secs`: a second press
+## meant for the screen before it can't skip a one-time card. No focus, no clicks, a little dimmed,
+## then focus moves onto it.
+static func hold_presses(b: Control, secs := 0.8) -> void:
+	if b == null or not b.is_inside_tree():
+		return
+	var fm := b.focus_mode
+	var mf := b.mouse_filter
+	b.focus_mode = Control.FOCUS_NONE
+	b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.modulate.a = 0.6
+	b.get_tree().create_timer(secs, true, false, true).timeout.connect(func():
+		if not is_instance_valid(b):
+			return
+		b.focus_mode = fm
+		b.mouse_filter = mf
+		b.modulate.a = 1.0
+		var top: Node = b
+		while top and not top.get_meta("modal", false):
+			top = top.get_parent()
+		if top is Control:
+			Controls.focus_first(top))
+
+
 ## Full-screen dim layer with a centred VBox inside a panel; returns [root Control, vbox].
 static func modal(parent: Node, title := "") -> Array:
 	var root := Control.new()

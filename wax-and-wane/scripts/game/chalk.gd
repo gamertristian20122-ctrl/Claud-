@@ -8,7 +8,10 @@ extends Node2D
 ## Attached by Records.on_room (one line at the end of Room.build). Stains and pits draw over it
 ## (z -17: above the floor art and decor, below the floor layer).
 
-const ALPHA := 0.5
+## UX-06: 0.8 (was 0.5) plus a 1 px dark under-stroke, so the drawings read on a phone in the
+## candle's light (median contrast to the floor about 2.8:1 before).
+const ALPHA := 0.8
+const INK := Color("#21141b")
 ## Where each drawing sits, room-local (the floor is (16, 32) .. (256, 176); Tallow starts at (136, 112)).
 const SPOTS := {
 	"wax_time": Vector2(136, 52),
@@ -20,6 +23,7 @@ const SPOTS := {
 
 var room: Node2D
 var _spr := {}
+var _ink := {}
 var _set := ""
 var _tw: Tween
 
@@ -41,6 +45,11 @@ func _ready() -> void:
 	z_index = -17
 	modulate.a = ALPHA
 	for k in SPOTS:
+		var ink := Sprite2D.new()   # the under-stroke: the same drawing, 1 px lower, in ink
+		ink.centered = false
+		ink.modulate = INK
+		add_child(ink)
+		_ink[k] = ink
 		var s := Sprite2D.new()
 		s.centered = false
 		add_child(s)
@@ -48,6 +57,7 @@ func _ready() -> void:
 	_show(false)
 	_clear_decals()
 	Controls.device_changed.connect(_on_device)
+	Game.settings_changed.connect(_on_settings)
 
 
 ## Device -> which drawing set ("touch", "keys", "pad"); the aim drawing also has "mouse".
@@ -88,7 +98,24 @@ func _apply(dev_set: String) -> void:
 		var s: Sprite2D = _spr[k]
 		s.texture = _tex(k, dev_set)
 		if s.texture:
-			s.position = (SPOTS[k] - s.texture.get_size() / 2.0).floor()
+			s.position = (spot(k, dev_set) - s.texture.get_size() / 2.0).floor()
+		var ink: Sprite2D = _ink[k]
+		ink.texture = s.texture
+		ink.position = s.position + Vector2(0, 1)
+
+
+## Where a drawing sits. With "Swap sticks" on a touch screen the thumbs trade sides, and so do the
+## drawings: MOVE and AIM change places, BOMB and KEEPSAKE follow the buttons to the left (UX-08).
+static func spot(part: String, dev_set: String) -> Vector2:
+	var at: Vector2 = SPOTS[part]
+	if dev_set == "touch" and bool(Game.settings.get("swap_sticks", false)) and part != "wax_time":
+		at.x = 272.0 - at.x
+	return at
+
+
+func _on_settings() -> void:
+	if is_inside_tree() and _set != "":
+		_apply(_set)
 
 
 func _on_device(_dev: String) -> void:

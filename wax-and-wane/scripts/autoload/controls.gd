@@ -255,21 +255,31 @@ func glyph(action: String) -> String:
 		"bomb": return "RB" if pad else ("E" if device != TOUCH else "BOMB")
 		"keepsake": return "LB" if pad else "Q"
 		"pause": return "START" if pad else "ESC"
-		"move": return "Left stick" if pad else ("WASD" if device != TOUCH else "Left thumb")
+		"move": return "Left stick" if pad else ("WASD" if device != TOUCH else thumb(false))
 		"aim":
 			if pad:
 				return "Right stick"
 			if device == TOUCH:
-				return "Right thumb"
+				return thumb(true)
 			return "Arrows / mouse" if Game.settings.get("mouse_aim", true) else "Arrows"
 	return action
+
+
+## Touch: which thumb moves / aims ("Settings > Controls > Swap sticks" trades them, UX-08).
+func thumb(aim: bool) -> String:
+	return "Left thumb" if aim == bool(Game.settings.get("swap_sticks", false)) else "Right thumb"
+
+
+## The side of the screen the bomb and keepsake buttons are on (under the aiming thumb).
+func button_side() -> String:
+	return "left" if bool(Game.settings.get("swap_sticks", false)) else "right"
 
 
 ## The one-line controls reminder shown at the start of a run.
 func controls_hint(with_wax := true) -> String:
 	var t := ""
 	match device:
-		TOUCH: t = "Left thumb: move    Right thumb: aim + shoot"
+		TOUCH: t = "%s: move   %s: aim + shoot   Bomb: %s button" % [thumb(false), thumb(true), button_side()]
 		PAD: t = "Left stick: move    Right stick: shoot    RB: bomb"
 		_: t = "WASD: move    %s: shoot    E: bomb" % glyph("aim")
 	return t + ("    Wax = health = time" if with_wax else "")
@@ -277,7 +287,7 @@ func controls_hint(with_wax := true) -> String:
 
 func intro_line() -> String:
 	match device:
-		TOUCH: return "Left thumb moves. Right thumb aims and fires."
+		TOUCH: return "%s moves. %s aims and fires. Bomb: the %s button." % [thumb(false), thumb(true), button_side()]
 		PAD: return "Left stick moves. Right stick aims and fires."
 	return "WASD moves. The arrow keys%s fire." % (" or the mouse" if Game.settings.get("mouse_aim", true) else "")
 
@@ -355,34 +365,48 @@ func _fit_window() -> void:
 
 # ---------------------------------------------------------------- menus and focus
 
+## The screen main.gd shows, or null while main.goto() is swapping it (the old one is queued for
+## deletion or already freed: Save & quit / Give up close their modals right then).
 func _screen() -> Node:
 	var main := get_tree().current_scene
 	if main == null or not ("current" in main):
 		return null
-	return main.current
+	var cur: Variant = main.get("current")
+	if cur == null or not is_instance_valid(cur) or (cur as Node).is_queued_for_deletion():
+		return null
+	return cur
 
 
 ## Called by UI.modal: remembers what had focus so it comes back when the modal closes.
+## The deferred calls capture instance ids, not the nodes: a modal can be freed (with its screen)
+## before they run.
 func on_modal_opened(root: Control) -> void:
 	var prev := get_viewport().gui_get_focus_owner()
 	_modals.append({"root": root, "prev": prev})
 	root.tree_exiting.connect(_on_modal_closed.bind(root))
-	(func(): if is_instance_valid(root) and root.is_inside_tree(): focus_first(root)).call_deferred()
+	var rid := root.get_instance_id()
+	(func():
+		var r := instance_from_id(rid) as Control
+		if r and r.is_inside_tree() and not r.is_queued_for_deletion():
+			focus_first(r)).call_deferred()
 
 
 func _on_modal_closed(root: Control) -> void:
-	var prev: Variant = null
+	var prev_id := 0
 	for i in range(_modals.size() - 1, -1, -1):
 		if _modals[i]["root"] == root:
-			prev = _modals[i]["prev"]
+			var p: Variant = _modals[i]["prev"]
+			if p != null and is_instance_valid(p):
+				prev_id = (p as Object).get_instance_id()
 			_modals.remove_at(i)
 			break
 	_page_handlers.erase(root)
 	(func():
 		var top := menu_root()
-		if prev is Control and is_instance_valid(prev) and (prev as Control).is_visible_in_tree() \
+		var prev := instance_from_id(prev_id) as Control if prev_id != 0 else null
+		if prev and prev.is_visible_in_tree() and not prev.is_queued_for_deletion() \
 				and (top == null or top.is_ancestor_of(prev)):
-			(prev as Control).grab_focus(not uses_buttons())
+			prev.grab_focus(not uses_buttons())
 		elif top:
 			focus_first(top)).call_deferred()
 

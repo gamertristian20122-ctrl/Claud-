@@ -165,7 +165,7 @@ func _physics_process(dt: float) -> void:
 		if price > 0:
 			ds += "   -   %d coins" % int(round(price * world.shop_discount))
 		if record and int(record.get("cost_wax", 0)) > 0:
-			ds += "   -   %d max min for good, up to %d now" % [int(record["cost_wax"]), int(record["cost_wax"]) / 2]
+			ds += "   -   Costs %d max minutes (%d now)" % [int(record["cost_wax"]), int(record["cost_wax"]) / 2]
 			var wc := float(record["cost_wax"])
 			if p.wax_max - wc >= float(Candles.def_of(world.candle_id)["wax"]) * 0.45:
 				world.hud.preview_cost(pact_cut(p, wc), wc)   # design pass: the trade, shown on the wax bar

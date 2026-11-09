@@ -190,13 +190,14 @@ func _intro() -> void:
 			"",
 			Controls.intro_line()]:
 		v.add_child(UI.label(line, 8, UI.CREAM if line != "" else UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
-	v.add_child(UI.button("Light the wick", func():
+	v.add_child(UI.button("Begin", func():   # UX-07: not the title button's name, and it waits 0.8 s
 		Game.records["seen_intro"] = true
 		Game.save()
 		root.queue_free()
 		paused = false
 		get_tree().paused = false
 		hud.show_hint(Controls.controls_hint(false), 8.0), 120))
+	UI.hold_presses(v.get_child(v.get_child_count() - 1), 0.8)
 
 
 # ---------------------------------------------------------------- floors & rooms
@@ -1416,8 +1417,57 @@ func fx_drop(pos: Vector2, v: Vector2) -> void:
 var _texts: Array = []   # live fx_text labels: a new one stacks clear of them instead of overlapping
 
 
+## C10: minute rewards that land in the same frame near the same spot (a room clear's QUICK, CLEAN and
+## hourglass, the last kill's Kindling) read as one line, "+4 min  KINDLING x3  CLEAN  QUICK".
+var _merge := {"frame": -1, "label": null, "min": 0, "words": [], "x": 0.0}
+var _min_re := RegEx.create_from_string("^(.*?)\\s*\\+(\\d+) min$")
+
+
+func _merged_text(pos: Vector2, text: String) -> bool:
+	var m := _min_re.search(text)
+	if m == null:
+		return false
+	var frame := Engine.get_process_frames()
+	var last: Variant = _merge["label"]
+	if frame == int(_merge["frame"]) and last != null and is_instance_valid(last) and absf(pos.x - float(_merge["x"])) < 24.0:
+		_merge["min"] = int(_merge["min"]) + int(m.get_string(2))
+		if m.get_string(1) != "":
+			(_merge["words"] as Array).append(m.get_string(1).strip_edges())
+		var l: Label = last
+		l.text = ("+%d min  %s" % [_merge["min"], "  ".join(_merge["words"])]).strip_edges()
+		var w := Art.font_small.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 4.0
+		if w > l.size.x:
+			l.position.x -= (w - l.size.x) / 2.0
+			l.size.x = w
+		return true
+	_merge = {"frame": frame, "label": null, "min": int(m.get_string(2)), "words": [] if m.get_string(1) == "" else [m.get_string(1).strip_edges()], "x": pos.x}
+	return false
+
+
+## A Kindling chain (KINDLING x3, BLAZE x5, BLAZE x6...) is one line that counts up, not a stack.
+var _streak := {"label": null, "min": 0, "ms": 0}
+var _streak_re := RegEx.create_from_string("^((?:KINDLING|BLAZE|INFERNO) x\\d+)\\s+\\+(\\d+) min$")
+
+
 func fx_text(pos: Vector2, text: String, col: Color) -> void:
+	var sm := _streak_re.search(text)
+	if sm:
+		var prev: Variant = _streak["label"]
+		var total := int(sm.get_string(2))
+		if prev != null and is_instance_valid(prev) and Time.get_ticks_msec() - int(_streak["ms"]) < 1500:
+			total += int(_streak["min"])
+			_texts.erase(prev)
+			(prev as Node).queue_free()
+		text = "%s  +%d min" % [sm.get_string(1), total]
+		_streak["min"] = total
+		_streak["ms"] = Time.get_ticks_msec()
+	if _merged_text(pos, text):
+		return
 	var l := UI.outlined(UI.label(text, 8, col, HORIZONTAL_ALIGNMENT_CENTER))
+	if sm:
+		_streak["label"] = l
+	if int(_merge["frame"]) == Engine.get_process_frames() and _merge["label"] == null and _min_re.search(text):
+		_merge["label"] = l
 	l.material = Art.unshaded
 	l.size = Vector2(60, 10)
 	l.position = Vector2(pos.x - 30, _free_text_y(pos))
