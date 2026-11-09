@@ -109,7 +109,17 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
 - **Queue after v2.1 + Long Night batch 1:** `docs/design/ROADMAP_V2.md` (special moves -> Challenge Nights ->
   diary pages -> translations -> Boss Rush; Long Night batch 2 as a side track). Design of the long night:
   `docs/design/LONG_NIGHT.md`.
-- Latest build: **2.6.0** (versionCode 13), APK only, sent to the owner: v2.6 the GUI overhaul (a candlelit
+- Latest build: **2.7.0** (versionCode 14), APK only, sent to the owner, built from the first REAL playtest (the
+  owner's friend: fun, but the tutorial was weak and repetitive, the story should be characters talking, "a few
+  bugs", "lacking something"): v2.7 onboarding (an animated learn-by-doing controls lesson on a slot's first run,
+  `scripts/ui/primer.gd`, every hint once per slot, How to play replay; `docs/streams/v27_onboarding.md`,
+  `--primercheck`), v2.7 dialogue (talking scenes with all 16 guardians on first meeting and fall, an animated
+  opening, Tallow's voice, ending beats, Settings > Story scenes; `scripts/ui/talk.gd`, `talk_lines.gd`,
+  `opening.gd`; `docs/streams/v27_dialogue.md`, `--talkcheck`) and v2.7 QA (12 found, 6 fixed: a pause during a
+  hit freeze crawled at 1/20 speed, reading cards in slow motion, the Swap-sticks banner, stove embers; the minimap
+  opens the map only in a quiet room; `docs/streams/v27_qa.md`, `--qacheck`, `--monkey`, `--settings=`). A first
+  run: the opening, then the lesson (the old 12:00 AM card only shows when there is no lesson).
+- 2.6.0 held v2.6 the GUI overhaul (a candlelit
   wood-and-brass UI kit in `assets/art/ui/` from `tools/art_ui2.py`, built into one Theme by `UI.theme()` and
   installed by `UI.install()` in main.gd: every screen uses it, no screen restyles itself; a new title, the HUD
   clock+wax gauge, results tiles, Reduce motion; `docs/streams/v26_gui.md`, before/after in
