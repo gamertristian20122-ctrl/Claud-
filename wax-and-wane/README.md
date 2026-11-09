@@ -166,6 +166,10 @@ python3 tools/extract_strings.py [--check | --report | --strict FILES]   # lang/
 godot --headless --path . -- --autotest --nightdump --speed=4 [--floors=N] [--dump=/abs/file.txt]
                           # every floor of 4 seeded nights, a plain one and Tonight's Candle: layouts, guardians, loot,
                           # lodgers, the floor numbers. At 4 floors it must equal docs/streams/v22_night_baseline.txt
+godot --headless --path . -- --autotest --feelcheck                   # v2.6 feel: 90-degree turns, the touch stick, pans,
+                                                                      #   inputs kept through a pan, the pickup magnet, Aim: Auto,
+                                                                      #   the full map, Quick restart (each a number; PASS/FAIL)
+                          # every --playtest run also prints [feel] lines: fight / pickup / walk / walk-back time, pans
 godot --headless --path . -- --autotest --diarycheck                  # v2.5 story: every diary page's sources proven,
                                                                       #   no repeats, no reading card in a fight (exit 1 on a FAIL)
 godot --headless --path . -- --autotest --ending=<id> [--speed=4] [--shots=/abs/dir]   # stage an ending: true,
@@ -190,6 +194,8 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
                               the Kitchen / Library / Attic banners, long-night results and Journal
     ... --tour --diary        a diary page in a room, its reading card (and the card waiting out a fight), the Diary
                               tab, every ending's cards, the results line (docs/streams/v25_story.md)
+    ... --tour --feel         v2.6: the pickup magnet mid-sweep, a hit's mark, Aim: Auto, the full map, the pause menu,
+                              Restart, the Aim and Pickup magnet rows (docs/streams/v26_feel.md)
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
     ... --tour --slots        the save slots, the level picker, a level 3 run, Level / Delete / Continue (on a copied 2.0
                               profile it checks the move into Slot 1 record by record)

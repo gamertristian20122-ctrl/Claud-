@@ -214,8 +214,14 @@ func _physics_process(dt: float) -> void:
 		global_position = global_position.move_toward(p.global_position, 40.0 * dt)
 
 
-## The pickup magnet takes loose drops Tallow can use now: coins, bombs, diary pages, wax below a full candle,
-## a match for a keepsake that is not full. Prices, pedestals (relics, tonics, keepsakes), chests, the trapdoor
+## Minutes a wax drop gives (wax_small 6, wax_big 18, times the level's drip bonus and the Honeycomb).
+func wax_amount() -> float:
+	return (6.0 if kind == "wax_small" else 18.0) * world.wax_bonus() * RelicFx.wax_mult(world)
+
+
+## The pickup magnet takes loose drops Tallow can use now: coins, bombs, diary pages, wax the candle has room for
+## (at least half of it: a stub is not wasted on a scratch, it waits in the room for a deeper cut), a match for
+## a keepsake that is not full. Prices, pedestals (relics, tonics, keepsakes), chests, the trapdoor
 ## and a pact's goods stay where they are.
 func _sweep_wants(p: Player) -> bool:
 	if price > 0 or (record and (int(record.get("cost_wax", 0)) > 0 or str(record.get("group", "")) != "")):
@@ -223,7 +229,9 @@ func _sweep_wants(p: Player) -> bool:
 	match kind:
 		"coin", "bomb", "page":
 			return true
-		"wax_small", "wax_big", "wax_warm":
+		"wax_small", "wax_big":
+			return p.wax_max - p.wax >= wax_amount() * 0.5   # never wastes most of a stub: it waits for a deeper cut
+		"wax_warm":
 			return p.wax < p.wax_max - 0.5
 		"match":
 			return p.keepsake != "" and p.charge < int(Items.KEEPSAKES[p.keepsake]["pips"])
@@ -285,7 +293,7 @@ func _collect(p: Player) -> void:
 		"wax_small", "wax_big":
 			if p.wax >= p.wax_max - 0.5:
 				return
-			var amt: float = (6.0 if kind == "wax_small" else 18.0) * world.wax_bonus() * RelicFx.wax_mult(world)
+			var amt := wax_amount()
 			p.heal(amt)
 			Audio.play("wax_pickup")
 			world.fx_text(global_position + Vector2(0, -14), "+%d min" % int(amt), UI.WAX)

@@ -1037,7 +1037,7 @@ func open_pause() -> void:
 	row2.add_theme_constant_override("separation", 6)
 	for b in [UI.button("Save & quit", _confirm_save_quit, 72), UI.button(L.t("Restart"), _confirm_restart, 72),
 			UI.button("Give up", _confirm_give_up, 72)]:
-		(b as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL   # two halves under a wide relic row
+		(b as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL   # thirds under a wide relic row
 		row2.add_child(b)
 	v.add_child(row2)
 	Audio.play("ui_open")
