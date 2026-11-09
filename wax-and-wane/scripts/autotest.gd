@@ -80,6 +80,8 @@ func _ready() -> void:
 		mode = "tour"   # the Long Night's determinism dump (scripts/night_check.gd): Tallow is never driven
 	if args.has("diarycheck") or args.has("ending"):
 		mode = "tour"   # v2.5 story: the diary's judges, a staged ending (scripts/game/diary_tour.gd)
+	if args.has("talkcheck"):
+		mode = "tour"   # v2.7 dialogue: the talking scenes' judges (scripts/game/talk_tour.gd)
 	runs_left = int(args.get("runs", "1"))
 	# save slots (v2.1): --slot=N plays in that slot, --difficulty=N (1-4) sets its level first
 	if args.has("slot"):
@@ -115,6 +117,10 @@ func _ready() -> void:
 		await DiaryTour.check(self)
 		Audio.stop_all()
 		get_tree().quit(1 if DiaryTour.fails > 0 else 0)
+	elif args.has("talkcheck"):   # v2.7 dialogue: every guardian's scenes, no live foe, the setting, the bot, saves
+		await TalkTour.check(self)
+		Audio.stop_all()
+		get_tree().quit(1 if TalkTour.fails > 0 else 0)
 	elif args.has("ending"):   # v2.5 story: --ending=<id> stages that ending (cards, credits, results)
 		await DiaryTour.stage_ending(self, str(args["ending"]))
 		Audio.stop_all()
@@ -811,6 +817,12 @@ func _tour() -> void:
 	if args.has("diary"):   # v2.5 story: a page, its reading card, the Diary tab, each ending's cards, the results
 		await _wait(0.5)
 		await DiaryTour.tour(self)
+		get_tree().quit()
+		return
+	if args.has("talk"):   # v2.7 dialogue: the opening, guardian conversations, a fall, the setting (talk_tour.gd)
+		await _wait(0.5)
+		await TalkTour.tour(self)
+		Audio.stop_all()
 		get_tree().quit()
 		return
 	if args.has("areas"):   # the Long Night's new areas: rooms, gimmicks, lodgers, guardians (areas.gd)

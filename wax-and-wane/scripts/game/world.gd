@@ -1022,7 +1022,10 @@ func _boss_down(e: Enemy) -> void:
 	var tw := create_tween()
 	tw.tween_property(e, "modulate", Color(3, 2, 1.5, 0.0), 1.2)
 	tw.tween_callback(e.queue_free)
+	var fallen := str(e.kind)
+	tw.tween_callback(func(): Talk.fall(self, fallen))   # v2.7: its last words (or a memory of Martha), the house paused
 	tw.tween_callback(func():
+		await Talk.done_with(self)   # v2.7: the rewards wait for that scene
 		hud.set_boss("", false)
 		if floor_num >= last_floor():
 			if Tower.on_last_boss_down(self):   # a ladder of light (before 1:00 AM) or the true ending
@@ -1627,7 +1630,7 @@ func toggle_pause() -> void:
 
 
 func on_back() -> void:
-	if is_instance_valid(_intro_root) or Diary.on_back(self):   # Back closes a diary page's reading card first
+	if is_instance_valid(_intro_root) or Diary.on_back(self) or Talk.on_back(self):   # Back closes a diary page's reading card first (v2.7: skips a talking scene)
 		return
 	# close a settings panel first, if one is open over the pause menu
 	var top: Node = hud.root.get_child(hud.root.get_child_count() - 1)
