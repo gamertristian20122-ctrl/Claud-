@@ -672,6 +672,8 @@ func _d_guardian(e: Dictionary) -> void:
 		_text("It waits at the end of %s." % fl, UI.DIM)
 		if kind == "big_demon" and int(Game.records.get("wins", 0)) <= 0:
 			_text("Some say the Pendulum has a master. Win once to meet it.", LOCK)
+		elif kind == "weathercock" and int(Game.records.get("wins", 0)) <= 0:
+			_text("Some nights the wind turns on the belfry. Win once to feel it.", LOCK)
 		return
 	_text("\"%s\"" % str(d.get("title", "")), UI.EMBER)
 	_text(str(d.get("lore", "")), UI.CREAM)

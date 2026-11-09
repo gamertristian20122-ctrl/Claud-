@@ -31,7 +31,7 @@ Music: one track from the game's own soundtrack (the CC0 Ninja Adventure tracks 
 | 0:13 to 0:19 | Room clears: candelabras light, doors open. Then four 1.5 s cuts, one room from each floor: Cellar, Crypt, Chapel, Belfry. | "Four floors. Midnight to 2 AM." | One cut per beat |
 | 0:19 to 0:29 | Builds. Relic pop-ups (Twin Wick, Will-o'-Wisp, Hot Drip), a Rite banner, then a room filling with seeking, piercing fire. | "Stack relics into builds that shouldn't work" | Build-up from 0:19; melody enters at 0:24 |
 | 0:29 to 0:35 | Smoke Altar: Tallow takes the deal, the top of the wax bar is cut off, then the next room gets wiped. | "Trade minutes off your candle for power" | Low drone under the altar choice; hit at 0:33 |
-| 0:35 to 0:46 | Bosses: two versus cards slam in (Old Rot, one v2.0 boss), then the Hour Fiend's clock hands sweeping the room while Tallow weaves through. | "9 GUARDIANS" | Biggest hit of the track on the first versus card at 0:35. Bell toll SFX at 0:41 |
+| 0:35 to 0:46 | Bosses: two versus cards slam in (Old Rot, one v2.0 boss), then the Hour Fiend's clock hands sweeping the room while Tallow weaves through. | "13 GUARDIANS" (9 before v2.1) | Biggest hit of the track on the first versus card at 0:35. Bell toll SFX at 0:41 |
 | 0:46 to 0:51 | Clutch. The candle is Guttering at one minute, the boss has a sliver of health; last shot lands. | (none) | **Music cuts out at 0:46.** Only the flame and footsteps. Final hit at 0:49 brings the whole track back |
 | 0:51 to 0:58 | End card: logo over a lit room. | One call to action per cut (`CTA=itch` OUT NOW ON ITCH.IO, `CTA=play` GET IT ON GOOGLE PLAY, `CTA=steam` WISHLIST ON STEAM; see `videos.md`) | Track ends on a held note; one clock tick at 0:57 |
 

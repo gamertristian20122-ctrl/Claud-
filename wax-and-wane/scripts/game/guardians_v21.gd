@@ -1297,6 +1297,19 @@ static func tour(bot: Node, kind: String) -> void:
 				await _until(bot, b, func(): return b.state == str(want[0]), 12.0)
 			await bot._wait(float(want[1]))
 			await bot._shot("g21_%s_p%d_%s" % [kind, ph, "ab"[k]])
+	# its page in the Journal (Guardians tab), as someone who has met it sees it
+	Game.no_save = true
+	var met: Dictionary = Game.records.get("met", {})
+	met[kind] = 1
+	Game.records["met"] = met
+	bot.main.goto("title")
+	await bot._wait(3.4)
+	var j := Journal.open(bot.main.current.root)
+	await bot._wait(0.5)
+	j._set_tab(2, false)
+	j._select(BestiaryGallery.boss_kinds().find(kind), false)
+	await bot._wait(0.4)
+	await bot._shot("g21_%s_journal" % kind)
 	bot.get_tree().quit()
 
 

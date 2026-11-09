@@ -929,7 +929,7 @@ def trailer(F, V):
         on_beat(tl, g, cards, cards.at("card%d" % n, 0.05), 0.86)
     on_beat(tl, g, boss, boss.at("card", 0.05), 1.0)
     s = on_beat(tl, g, boss, boss.at("hands", -0.1), 2.4)
-    add_native(s, 0.1, s.n / FPS, band("9 GUARDIANS"))
+    add_native(s, 0.1, s.n / FPS, band("13 GUARDIANS"))
     # "One secret." The Belfry falls before one: a ladder of light, the Clock Tower, the Keeper stops time.
     t = tl.t
     tl.say(t + 0.25, v5b, x5b, 4)

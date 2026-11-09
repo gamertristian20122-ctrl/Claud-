@@ -61,7 +61,7 @@ reasons to come back.
 - **64 relics** that stack: Twin Wick, Sharp Wick and Ember Heart together fire two piercing flames that set everything alight.
 - **6 Candle Rites** (set bonuses), **8 keepsakes** (charged items such as the Hand Bell and the Winding Key) and the **Smoke Altar** (power for minutes).
 - **35 kinds of lodger**, marked foes that pay out wax, coins or bombs, and omens that twist each floor.
-- **9 guardians** with versus cards (two per floor, picked by the run's seed, plus the secret Keeper of Hours) and **6 house champions**.
+- **13 guardians** with versus cards (three per floor, picked by the run's seed, plus the secret Keeper of Hours) and **6 house champions**.
 - **5 special rooms**: the Seance, the Cracked Mirror, the Music Box, the Study and the Wax Font.
 - **6 candles**: Tallow, Tea Light, Party Candle, Altar Pillar, the hard-mode Black Taper and the secret Moonwick.
 - **Tonight's Candle**: one seeded house a night, the same for every player. Typed-in seeds too.

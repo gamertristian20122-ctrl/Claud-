@@ -53,7 +53,7 @@ const LIST := [
 	# the Journal (meta stream, scripts/game/records.gd)
 	{"id": "census", "name": "House Census", "desc": "Meet every lodger in the house."},
 	{"id": "curio", "name": "Curio Cabinet", "desc": "Find every relic in the house."},
-	{"id": "guardians_all", "name": "Night Watch", "desc": "Snuff all eight guardians."},
+	{"id": "guardians_all", "name": "Night Watch", "desc": "Snuff all twelve floor guardians."},
 	# the Clock Tower and the true ending (endgame stream, scripts/game/tower.gd)
 	{"id": "tower", "name": "Above the Bells", "desc": "Climb the ladder of light into the Clock Tower.", "hidden": true},
 	{"id": "keeper", "name": "Time's Up", "desc": "Still the Keeper of Hours.", "hidden": true},

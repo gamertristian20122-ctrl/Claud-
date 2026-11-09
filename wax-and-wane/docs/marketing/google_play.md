@@ -39,7 +39,7 @@ Builds that get out of hand
 
 The house wants you snuffed
 • 35 kinds of lodger, from hoppers that splash water on your flame to a treasure chest that bites
-• 9 guardians, each with a versus card, and 6 house champions
+• 13 guardians, each with a versus card, and 6 house champions
 • 5 special rooms: the Seance, the Cracked Mirror, the Music Box, the Study and the Wax Font
 • Marked foes that pay out wax, coins or bombs, and omens that twist a floor and always pay you back
 

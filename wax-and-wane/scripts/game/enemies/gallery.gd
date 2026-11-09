@@ -3,7 +3,7 @@ extends CanvasLayer
 ## Review sheets for the bestiary (used by the screenshot tour, never in play):
 ##   -- --autotest --tour --gallery --shots=DIR   every monster + every boss labelled, then each floor's
 ##                                                 lodgers standing in a real lit room
-##   -- --autotest --tour --bosses --shots=DIR    each of the 8 guardians mid-fight (the bot plays)
+##   -- --autotest --tour --bosses --shots=DIR    each floor guardian mid-fight (the bot plays)
 
 const BG := Color("#2a2a3a")
 
@@ -96,12 +96,21 @@ static func tour(bot: Node) -> void:
 		await bot._wait(0.6)
 		await bot._shot("gallery_monsters_x2_%d" % (part + 1))
 		g2.queue_free()
+	# every guardian at 1x (13 since v2.1: two rows of seven), then x2 five at a time (one row each)
+	var bk := boss_kinds()
 	var g3 := BestiaryGallery.new()
 	bot.add_child(g3)
-	g3.build(boss_kinds(), 4, 2, "THE GUARDIANS (%d)" % boss_kinds().size())
+	g3.build(bk, 7, 1, "THE GUARDIANS (%d)" % bk.size())
 	await bot._wait(0.6)
 	await bot._shot("gallery_bosses")
 	g3.queue_free()
+	for part in ceili(bk.size() / 5.0):
+		var g4 := BestiaryGallery.new()
+		bot.add_child(g4)
+		g4.build(bk.slice(part * 5, part * 5 + 5), 5, 2, "GUARDIANS x2  (%d/%d)" % [part + 1, ceili(bk.size() / 5.0)])
+		await bot._wait(0.6)
+		await bot._shot("gallery_bosses_x2_%d" % (part + 1))
+		g4.queue_free()
 	bot.main.goto("game", {"seed": 7})
 	await bot._wait(1.6)
 	var w: Node = bot.main.current
