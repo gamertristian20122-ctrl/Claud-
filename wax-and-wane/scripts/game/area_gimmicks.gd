@@ -1071,6 +1071,31 @@ static func check() -> int:
 	stub_script.reload()
 	var stub: Node2D = stub_script.new()
 	var errs := 0
+	# the night's order (LONG_NIGHT.md): [Cellar, Crypt] + middle + [Belfry], the Chapel just before the upper areas
+	var want_seq := {4: "cellar crypt chapel belfry", 5: "cellar crypt kitchen chapel belfry",
+		6: "cellar crypt kitchen library chapel belfry", 7: "cellar crypt kitchen library chapel attic belfry"}
+	for k in [3, 4, 5, 6, 7, 8, 10]:
+		var got := " ".join(Areas.sequence(k))
+		var want: String = want_seq[clampi(k, 4, Areas.max_floors())]
+		if got != want:
+			errs += 1
+			print("[checkrooms] areas: sequence(%d) = %s, expected %s" % [k, got, want])
+	for id in Areas.LIST:
+		var d := Areas.def(id)
+		if not d.get("built", false):
+			continue
+		for slot in ["e", "h", "f"]:
+			for kind in (d["pool"] as Dictionary).get(slot, []):
+				if not Enemy.DEFS.has(kind):
+					errs += 1
+					print("[checkrooms] areas: %s's pool names an unknown lodger %s" % [id, kind])
+		for b in d["bosses"]:
+			if not Enemy.DEFS.has(b) or not Enemy.DEFS[b].get("boss", false):
+				errs += 1
+				print("[checkrooms] areas: %s's guardian %s is not a guardian" % [id, b])
+		if not Art.has("rooms/room_" + str(d["theme"])) or not ResourceLoader.exists("res://assets/audio/music/%s.ogg" % d["music"]):
+			errs += 1
+			print("[checkrooms] areas: %s has no room art or no music" % id)
 	var n := 0
 	var counts := {"stoves": 0, "rails": 0, "nooks": 0, "lanterns": 0, "pots": 0}
 	var slots: Array[Rect2] = [Rect2(120, 0, 32, 32), Rect2(120, 176, 32, 16), Rect2(0, 88, 16, 32), Rect2(256, 88, 16, 32)]
