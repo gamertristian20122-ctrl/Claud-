@@ -59,7 +59,7 @@ achievements (local now, Steam later); Windows and Linux builds. Everything belo
 
 ## Settings (`settings_panel.gd`)
 
-Two pages so it fits 384x216: **Game** (Music, Sound, Screen shake, Vibration, Gentle burn, FPS
+Two pages so it fits 384x216: **Game** (Music, Sound, Screen shake, Vibration, Effects, FPS
 counter, Fullscreen on desktop) and **Controls** (Touch AUTO/ON/OFF, Swap sticks, Aim assist, Mouse
 aim on desktop, a key list). Achievements button + Back at the bottom. New `Game.settings`:
 `fullscreen` (false), `mouse_aim` (true), `touch_controls` ("auto"). Vibration also rumbles gamepads.
@@ -141,6 +141,8 @@ Steamworks with **exactly these API names**:
 | guttering | Clinging On | Live through a Guttering. | |
 | two_oclock | Two O'Clock | Melt all the way down to 2:00 AM. | yes |
 | candle_box | Full Candle Box | Unlock every candle. | |
+| win_level3 | Spellbound | Win a night on level 3 (Witching Hour) or higher. | |
+| win_level4 | Dead of Night | Win a night on level 4 (Two O'Clock). | |
 
 Bosses are matched by floor, not by boss kind, so a new boss line-up (bestiary stream) keeps working.
 The medal icons (`icon_medal.png` / `icon_medal_off.png`) are 9x9; Steam needs 64x64 JPG/PNG icons per
@@ -155,9 +157,10 @@ achievement (to do in R3 with the store kit).
 - `./tools/build_desktop.sh` -> `build/WaxAndWane_<ver>_windows.zip` and `_linux.zip` (exe + licences +
   a short README), then boots the Linux build headless with the bot (`--quit-after`) and fails on any
   script error. `SKIP_SMOKE=1` skips the boot test.
-- Saves (`save.cfg` = settings + records + achievements, `run.cfg` = the saved run) live in
+- Saves (2.1: `save.cfg` = settings + the slot played last, `slot1.cfg`-`slot3.cfg` = each save slot's level,
+  records and achievements, `run1.cfg`-`run3.cfg` = their saved runs; 2.0 had `save.cfg` + `run.cfg`) live in
   `%APPDATA%\WaxAndWane\` on Windows and `~/.local/share/WaxAndWane/` (2.0.0: `use_custom_user_dir`)
-  on Linux / Steam Deck: use those two files for Steam Auto-Cloud (`*.cfg` in that folder).
+  on Linux / Steam Deck: use them all for Steam Auto-Cloud (`*.cfg` in that folder).
 - Steam (R3): one depot per OS from those zips' contents; launch options `WaxAndWane.exe` (Windows) and
   `WaxAndWane.x86_64` (Linux). Templates for `steamcmd` are in `tools/steam/` (fill in the App and
   Depot IDs). The Steam Deck checklist items we already meet: full controller play with no setting

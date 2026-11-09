@@ -202,7 +202,7 @@ Valve takes 30%.
 13. Discounting: a 20% launch discount for 7 days (`steam_store.md` section 9).
 14. Press **Release App**. Post the launch short and a devlog the same day.
 
-Steam achievements come later, in an update with the GodotSteam plugin, 52 achievements created in Steamworks and
+Steam achievements come later, in an update with the GodotSteam plugin, 54 achievements created in Steamworks and
 their icons (`steam_store.md` section 5). Until then the page only says the achievements are in the game.
 
 ---

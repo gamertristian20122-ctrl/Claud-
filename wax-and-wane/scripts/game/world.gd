@@ -755,10 +755,6 @@ func on_enemy_killed(e: Enemy) -> void:
 
 
 func _champ_drop(e: Enemy) -> void:
-	if candle_id == "black_taper" and e.champ in ["ember", "chilled"]:
-		for i in 3:
-			add_pickup("coin", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 40.0)
-		return
 	match e.champ:
 		"ember":
 			for i in 1:
@@ -818,11 +814,9 @@ func on_boss_hp(e: Enemy) -> void:
 ## After a floor boss: sometimes a Smoke Altar (relics for minutes), else a Vigil for struggling runs.
 func _offer_altar() -> void:
 	var chance := 0.2 + (0.3 if boss_hits == 0 else 0.0) + 0.05 * floor_clean
-	if candle_id == "black_taper":
-		chance = 1.0
 	chance = minf(chance, 0.85 if chance < 1.0 else 1.0)
 	var c := room.center()
-	if candle_id != "black_taper" and pact != "smoke" and (declined_smoke or player.wax < 48.0):
+	if pact != "smoke" and (declined_smoke or player.wax < 48.0):
 		if rng.randf() < 0.6:
 			var a := add_pickup("relic", c + Vector2(-44, -34), _next_relic())
 			var gift := "vigil_candle" if rng.randf() < 0.65 or player.relics.has("wax_seal") else "wax_seal"

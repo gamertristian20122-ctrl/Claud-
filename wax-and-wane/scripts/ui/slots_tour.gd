@@ -230,4 +230,19 @@ static func tour(at: Node) -> void:
 		j.queue_free()
 	else:
 		print("[slots] (slot %d has no saved run: Play's confirm and Continue are not checked)" % other)
+	# ---- 8. the Black Taper (no longer a hard mode): Tallow's wax and melt, a short light
+	var reach := {}
+	for cid in ["tallow", "black_taper"]:
+		if not cid in (Game.records["unlocked"] as Array):
+			(Game.records["unlocked"] as Array).append(cid)
+		main.goto("game", {"seed": 4242, "candle": cid})
+		w = await _wait_game(at)
+		await at._wait(2.8)   # the floor banner fades
+		reach[cid] = Candles.light_reach(w.player)
+		await at._shot("slots_light_%s_%s" % [cid, tag])
+		if cid == "black_taper":
+			_ok(absf(float(w.player.wax) - 120.0) < 2.0 and absf(float(w.player.drain_mult) - 1.0) < 0.001 and absf(float(w.player.hit_mult) - 1.0) < 0.001,
+				"Black Taper: wax %.0f, melt x%.2f, hits taken x%.2f (Tallow's)" % [w.player.wax, w.player.drain_mult, w.player.hit_mult])
+	_ok(absf(reach["black_taper"] / maxf(1.0, reach["tallow"]) - 0.75) < 0.08,
+		"light reach: Tallow %.0f px, Black Taper %.0f px (x%.2f)" % [reach["tallow"], reach["black_taper"], reach["black_taper"] / maxf(1.0, reach["tallow"])])
 	print("[slots] DONE fails=%d" % fails)

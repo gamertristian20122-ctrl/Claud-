@@ -936,9 +936,10 @@ func take_hit(dmg: float, knock: Vector2, burn := 0.0) -> void:
 		kvel += knock
 	else:
 		kvel += knock * 0.15
-	mat.set_shader_parameter("tint", Color(1, 1, 1))
+	var dark := Candles.dark_mult(world, self)   # the Black Taper: a foe out in the dark takes more (1.0 otherwise)
+	mat.set_shader_parameter("tint", Color(1, 1, 1) if dark == 1.0 else Color(0.8, 0.62, 1.0))   # a dark hit flashes violet
 	_flash = 1.0
-	_damage(dmg, true)
+	_damage(dmg * dark, true)
 
 
 func _damage(dmg: float, sound: bool) -> void:

@@ -72,11 +72,12 @@ Five special rooms can turn up on a floor. Ring the Seance bell and the lodgers 
 
 [h2]Reasons to light another candle[/h2]
 [list]
-[*][b]The Candle Box.[/b] Unlock five more candles, each with its own clock. The Tea Light is lit at 12:40 and fires fast. The Party Candle has two flames and thin wax. The Altar Pillar is lit at 11:45 and hits hard. The Black Taper is hard mode. The Moonwick is the Clock Tower's secret.
+[*][b]The Candle Box.[/b] Unlock five more candles, each with its own clock. The Tea Light is lit at 12:40 and fires fast. The Party Candle has two flames and thin wax. The Altar Pillar is lit at 11:45 and hits hard. The Black Taper sees only a short way, but foes out in the dark take half again the damage. The Moonwick is the Clock Tower's secret.
+[*][b]Three save slots, four levels.[/b] Every slot keeps its own difficulty, Journal and unlocks. Level 1, Gentle, is for learning: you melt slower and foes hit softer. Level 2, Midnight, is the night as it was made. Levels 3 and 4, Witching Hour and Two O'Clock, are harder and brutal.
 [*][b]Tonight's Candle.[/b] One seeded house a night: the same house for every player, scored on your first try. Or type in a friend's seed.
 [*][b]Hollows.[/b] Every floor hides a secret room behind a cracked wall. Bring a bomb.
 [*][b]The Journal.[/b] Every relic, lodger, guardian and room you have met, your records and your last 20 runs. Unseen pages stay as silhouettes.
-[*][b]52 achievements[/b], tracked in the game. Eighteen relics and two keepsakes move into the house as you earn them.
+[*][b]54 achievements[/b], tracked in the game. Eighteen relics and two keepsakes move into the house as you earn them.
 [/list]
 
 [h2]Keyboard, mouse or gamepad[/h2]
@@ -94,7 +95,7 @@ Notes on choices:
 - Real item names (Twin Wick, Hand Bell, Old Rot) do the selling. Generic lines like "tons of items" could sit on any roguelite page.
 - The mechanic gets the longest section because it's the one thing other roguelites don't have.
 - No review quotes, awards or player counts until they exist.
-- Steam achievements are not promised: the 52 achievements live in the game (see section 5).
+- Steam achievements are not promised: the 54 achievements live in the game (see section 5).
 
 ---
 
@@ -145,13 +146,14 @@ tags from Steam's own list in the tag picker; if one is missing there, skip it.
   | `WinAppDataRoaming` | `WaxAndWane` | `*.cfg` | Windows |
   | `LinuxXdgDataHome` | `WaxAndWane` | `*.cfg` | Linux (and Steam Deck) |
 
-  The 2.0.0 build saves `save.cfg` and `run.cfg` in exactly those folders (`project.godot`:
+  The game saves `save.cfg` (settings), `slot1.cfg`-`slot3.cfg` (the three save slots) and `run1.cfg`-`run3.cfg`
+  (their saved runs; an upgraded 2.0 save also keeps `save_2.0.cfg`: 8 files at most) in exactly those folders (`project.godot`:
   `custom_user_dir_name = WaxAndWane`). Test once: play on one PC, then check the save appears on a second one.
 - **Family Sharing:** on by default; leave it on.
 
 **Do not tick at launch:**
 - **Steam Achievements.** The build has no Steamworks connection yet (the GodotSteam plugin is not in it), so
-  the 52 achievements are shown in the game only. Tick it after an update adds GodotSteam, the 52 achievements
+  the 54 achievements are shown in the game only. Tick it after an update adds GodotSteam, the 54 achievements
   are created in Steamworks with the same API names, and each has its 64x64 earned and unearned icons.
   In the page text, achievements are described as in-game.
 - Steam Leaderboards, Trading Cards, Remote Play: later, if you add them.

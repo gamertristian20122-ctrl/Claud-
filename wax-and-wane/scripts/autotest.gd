@@ -111,6 +111,8 @@ func _next_run() -> void:
 		Unlocks.force_all = true   # every relic and keepsake in the pool
 	if args.has("candle"):
 		params["candle"] = str(args["candle"])
+		if not Candles.is_unlocked(params["candle"]):   # just this candle: the relic pool stays the profile's own
+			(Game.records["unlocked"] as Array).append(params["candle"])
 	if args.has("seed"):
 		params["seed"] = int(args["seed"]) + results.size()
 	_cycled = -1
@@ -206,6 +208,10 @@ func _process(dt: float) -> void:
 			results.size(), "WIN" if p["won"] else "LOSS", p["floor"], Game.clock_text(p["clock"]), p["kills"], p["rooms"], p["time"], p["relics"]])
 		print("[playtest]    best streak x%d, hits %d" % [p.get("streak", 0), p.get("hits", 0)])
 		print("[playtest]    level %d, candle %s, seed %d, slot %d" % [int(p.get("level", 2)), p.get("candle", "?"), int(p.get("seed", 0)), Game.slot])
+		if Candles.blows > 0:   # a dark_hit candle (the Black Taper): how many blows landed out in the dark
+			print("[playtest]    blows %d, in the dark %d (%d%%)" % [Candles.blows, Candles.dark_blows, roundi(100.0 * Candles.dark_blows / Candles.blows)])
+		Candles.blows = 0
+		Candles.dark_blows = 0
 		var parts: Array = []
 		for f in _diag.keys():
 			var d: Array = _diag[f]

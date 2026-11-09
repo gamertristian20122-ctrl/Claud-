@@ -741,6 +741,10 @@ func _d_candle(e: Dictionary) -> void:
 		bits.append("melts x%s" % str(snappedf(float(d["drain"]), 0.01)))
 	if int(d["shots"]) > 1:
 		bits.append("%d flames" % int(d["shots"]))
+	if float(d.get("light", 1.0)) != 1.0:
+		bits.append("light x%s" % str(snappedf(float(d["light"]), 0.01)))
+	if float(d.get("dark_hit", 1.0)) != 1.0:
+		bits.append("x%s damage in the dark" % str(snappedf(float(d["dark_hit"]), 0.01)))
 	if not bits.is_empty():
 		var line := ", ".join(bits)
 		_text(line.substr(0, 1).to_upper() + line.substr(1), UI.DIM)

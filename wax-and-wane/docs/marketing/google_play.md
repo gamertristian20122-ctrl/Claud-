@@ -18,7 +18,7 @@ Backup: `Wax & Wane` (10). The longer one tells a stranger in search results wha
 **Short description (limit 80):** `A twin-stick roguelite where your health bar is a candle burning toward 2 AM.` (77 characters)
 Backup: `Shoot through a haunted house as a living candle whose wax is also your clock.` (78)
 
-**Full description (limit 4,000; this one is 2,905).** Play shows plain text, so headings are plain lines.
+**Full description (limit 4,000; this one is 3,257).** Play shows plain text, so headings are plain lines.
 
 ```
 Wax & Wane is a twin-stick roguelite where your health bar is a burning candle.
@@ -27,6 +27,9 @@ You are Tallow, the last candle in the cellar of an old house, and at midnight t
 
 Two thumbs, one candle
 Your left thumb moves. Your right thumb shoots in any direction; hold it to keep firing. The bomb button breaks rocks and cracked walls. The game plays fully offline, and if you leave in the middle of a run it saves so you can carry on later. Keyboards and gamepads work too.
+
+Three save slots, four levels
+Each of the three save slots has its own difficulty, its own Journal and its own unlocks. Level 1, Gentle, is for learning: you melt slower and foes hit softer. Level 2, Midnight, is the night as it was made. Level 3, Witching Hour, and level 4, Two O'Clock, are for when the house no longer scares you.
 
 Four floors before two o'clock, and one secret
 Fight room to room through the Cellar, the Crypt, the Chapel and the Belfry. Every floor is rebuilt each run from 69 hand-made rooms. Clear a room and the candelabras light up. Bells toll at 1:00, 1:30 and 1:45 so you can hear the night running out. Snuff the Belfry's guardian by 1:00 AM and a ladder of light opens to a secret fifth floor, the Clock Tower, and the true ending.
@@ -44,10 +47,10 @@ The house wants you snuffed
 • Marked foes that pay out wax, coins or bombs, and omens that twist a floor and always pay you back
 
 Reasons to light another candle
-• 5 more candles to unlock: the Tea Light, the Party Candle, the Altar Pillar, the hard-mode Black Taper and the secret Moonwick
+• 5 more candles to unlock: the Tea Light, the Party Candle, the Altar Pillar, the Black Taper with its short, dark light and the secret Moonwick
 • Tonight's Candle: one seeded house each night, the same for every player, scored on your first try
 • A secret Hollow on every floor, behind a cracked wall that seeps wax
-• The Journal of everything you've met, and 52 achievements
+• The Journal of everything you've met, and 54 achievements
 
 One price buys the whole game. There are no ads and nothing else to buy.
 

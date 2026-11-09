@@ -87,8 +87,8 @@ Posting notes: post the same file to all three apps. Use 3 to 5 hashtags, not 20
 9. **"Always take the Smoke Altar deal"**: the next day, a run where it won.
 10. **Secret Hollow**: "There's a room behind this wall", then the bomb.
 11. **The mimic chest**: open a chest; it bites.
-12. **Each candle in 5 seconds**: Tea Light, Party Candle, Altar Pillar, Black Taper.
-13. **Black Taper hard mode attempt**: day 1, day 2, day 3 progress.
+12. **Each candle in 5 seconds**: Tea Light, Party Candle, Altar Pillar, Black Taper (its short light, a violet hit out in the dark).
+13. **Level 4, Two O'Clock, attempt**: day 1, day 2, day 3 progress.
 14. **Pixel art process**: Tallow's sprite drawn pixel by pixel, sped up (r/pixelart crossover).
 15. **"Making a game with almost no coding experience"**: an honest devlog about working with an AI coding assistant. Expect strong opinions in the comments; answer them calmly.
 16. **Sound design**: mute the game, then add each sound layer one by one.

@@ -108,6 +108,11 @@ def facts():
     f["floors"] = [(k, field(t, "name"), field(t, "boss"), re.findall(r'"(\w+)"', re.search(r'"bosses":\s*\[([^\]]*)\]', t).group(1)))
                    for k, t, _ in [(int(re.match(r'\t(\d+)', l).group(1)), l, "") for l in block(world, "FLOORS").splitlines() if re.match(r"\t\d+:", l)]]
     f["last_floor"] = int(re.search(r"const LAST_FLOOR := (\d+)", world).group(1))
+    # difficulty levels (one per save slot) and the slots themselves
+    f["levels"] = [(int(n), name, line, {k: float(v) for k, v in re.findall(r'"(melt|dmg|hp|champ|wax)": ([\d.]+)', body)})
+                   for n, name, line, body in re.findall(r'\t(\d+): \{"name": "([^"]+)", "line": "([^"]+)",(.*?)\}', block(world, "LEVELS"), re.S)]
+    f["default_level"] = int(re.search(r"const DEFAULT_LEVEL := (\d+)", world).group(1))
+    f["slots"] = int(re.search(r"const SLOTS := (\d+)", read("scripts/autoload/game.gd")).group(1))
     f["omens"] = [field(t, "name") for _, t, _ in entries(block(world, "OMENS"))]
     m = re.search(r"streak_t = ([\d.]+)", world)
     f["kindle_window"] = float(m.group(1))
@@ -206,7 +211,7 @@ HAND = """
 | Data collected | None. No ads, analytics, accounts or network access | `PRIVACY.md`; the Android build's only permission is listed above |
 | Blood | Cartoon only: creatures burst into small chunks that fade and leave flat coloured splats on the floor; some splats are red (`#9f294e`, `#62232f`, `#da4e38`) | `scripts/game/fx_gibs.gd`, `stains.gd`, `Enemy.DEFS` stain colours |
 | Random rewards | Chests, the Music Box (3 in-game coins a crank) and the Wax Font use in-game coins or wax only. No real money anywhere | `scripts/game/specials.gd` |
-| Steam features at launch | No Steam achievements or Steam overlay calls yet (GodotSteam is not in the build); the 52 achievements are in-game. Steam Cloud works without code (Auto-Cloud) | `scripts/autoload/achievements.gd` (Steam bridge waits for GodotSteam) |
+| Steam features at launch | No Steam achievements or Steam overlay calls yet (GodotSteam is not in the build); the {ach} achievements are in-game. Steam Cloud works without code (Auto-Cloud) | `scripts/autoload/achievements.gd` (Steam bridge waits for GodotSteam) |
 | Demo | None. There is no demo build; do not promise one | |
 | Languages | English only | |
 """
@@ -256,6 +261,14 @@ def md(f):
     a("| Special rooms | **%d**: %s | `Specials.INFO` |" % (len(f["specials"]), ", ".join(n for n, _ in f["specials"])))
     a("| Omens (floor twists) | **%d**: %s | `world.OMENS` |" % (len(f["omens"]), ", ".join(f["omens"])))
     a("| Achievements | **%d** (%d hidden), shown in the game | `Achievements.LIST` |" % (f["achievements"], f["achievements_hidden"]))
+    a("| Save slots | **%d**, each with its own difficulty level, records, Journal, unlocks, achievements and saved run; settings are shared | `Game.SLOTS` |" % f["slots"])
+
+    def lv_terms(m):
+        names = {"melt": "melt", "dmg": "foe damage", "hp": "foe health", "champ": "marked foes", "wax": "drip wax"}
+        parts = ["%s x%g" % (names[k], v) for k, v in m.items() if v != 1.0]
+        return ", ".join(parts) if parts else "the game as it was made"
+    a("| Difficulty levels | **%d**: %s. Tonight's Candle always plays level %d | `world.LEVELS` |" % (
+        len(f["levels"]), "; ".join("%d %s (%s)" % (n, name, lv_terms(m)) for n, name, _, m in f["levels"]), f["default_level"]))
     a("| Music | %d tracks + %d original jingles | `assets/licenses/CREDITS_music.txt` |" % (len(f["music"]), len(f["jingles"])))
     a("| Sound effect files | %d | `assets/audio/sfx/` |" % f["sfx"])
     a("| Builds | %s | `export_presets.cfg` |" % ", ".join(f["presets"]))
@@ -291,7 +304,7 @@ def md(f):
     a("### Music slots")
     a("")
     a(", ".join("%s: %s" % (slot, track) for slot, track in f["music"]) + ".")
-    a(HAND.rstrip())
+    a(HAND.rstrip().replace("{ach}", str(f["achievements"])))
     a("")
     return "\n".join(L) + "\n"
 

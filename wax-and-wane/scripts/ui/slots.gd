@@ -169,7 +169,8 @@ func _line(v: VBoxContainer, text: String, col: Color) -> void:
 ## An empty slot's picture: Tallow drawn like the Candle Box (Player.paint_preview), eyes shut, no flame.
 class SleepyCandle extends Control:
 	func _draw() -> void:
-		Player.paint_preview(self, Vector2(size.x / 2.0, size.y - 4.0).floor() + Vector2(0, 4), "tallow", {"unlit": true, "face": "blink"})
+		# its feet a little under the middle of the free space, so the ~20 px candle sits in the centre
+		Player.paint_preview(self, Vector2(size.x / 2.0, size.y / 2.0 + 10.0).floor(), "tallow", {"unlit": true, "face": "blink"})
 
 
 ## A button with a 16 px word and an 8 px gold line under it ("Continue" / "Floor 3 - 12:41 AM").
