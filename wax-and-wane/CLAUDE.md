@@ -8,6 +8,7 @@ base viewport, integer pixel scaling). Read `README.md` (content, layout, comman
 - Limited coding experience: explain in plain, phone-friendly language with short numbered steps.
 - Plays on an Android phone. **Send the APK as soon as a build is done.** Keep zips under 30 MB.
 - Keep the work moving; give a short plan, then do it.
+- **No more videos** (trailer, shorts, loops) unless the owner asks again: the 2.0.0 cuts in `build/videos/` are final.
 
 ## Hard rules
 - Original game: never copy names, characters, art or music from existing games. Genre conventions are fine.
