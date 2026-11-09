@@ -220,6 +220,7 @@ func _physics_process(dt: float) -> void:
 		if _blocked():
 			_wait = START_DELAY
 			return
+		_elapsed += dt   # (the world counts these seconds as play: they come off again at the end)
 		_wait -= dt
 		if _wait <= 0.0:
 			_go(0)

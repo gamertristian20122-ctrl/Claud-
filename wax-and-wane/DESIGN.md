@@ -179,6 +179,10 @@ opaque; the game draws them at one alpha (0.5), lit like the floor. Lines drop o
   colon 4), `hud_clockplate.png` 12x12 [4], `hud_chip.png` 10x10 [3], `hud_coin.png` / `hud_bomb.png` 12x12,
   `boss_frame.png` 16x10 [5/4]. Icons 11x11: `ico_journal|seed|settings|credits|quit|flame|flame_dark|moon|clock|
   stairs|skull|page|relic|rooms|back`. Title: `title_books.png` 36x16 (Tallow's stand).
+- v2.7 controls primer (primer/) - `art_primer.py`: `thumb.png` 11x18 (a thumb, nail first), `key.png` /
+  `key_down.png` 16x16 nine-patches [5/5/5/6] (an ivory keycap, the pressed one lit gold and 1 px lower; words drawn
+  in code), `pad.png` 48x30 (a gamepad from above) + `pad_cap(_on).png` 7x7 + `pad_lb|rb|lt|rt.png` overlays,
+  `mouse.png` / `mouse_left.png` 11x16, the wax dummy `dummy_f0..f2.png` 18x26 (sway frames) + `dummy_hit.png`.
 
 ### Audio (audio/)
 - `sfx/<name>.ogg` mono, trimmed, loudness-matched; extra takes `<name>_2.ogg`, `<name>_3.ogg`... are picked

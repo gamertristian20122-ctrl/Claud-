@@ -120,16 +120,21 @@ practice room: nothing in a run changes (a practice room would need guards in th
 
 | Device | Light the wick -> first kill | of which the primer | Words before the first kill (reading) | Teaching texts in 3:00 | Repeats |
 |---|---|---|---|---|---|
-| touch | 36.9 s (was 18.6) | 17.6 s | 98 (~30 s; was 120) | 11 (was 18) | **0** (was 8) |
-| keys | 33.8 s (was 17.3) | 13.0 s | 98 (was 115) | 10 (was 16) | **0** (was 6) |
-| gamepad | 31.6 s (was 17.4) | 12.9 s | 98 (was 114) | 13 (was 17) | **0** (was 6) |
+| touch | 38.6 s (was 18.6) | 17.6 s | 98 (~30 s; was 120) | 12 (was 18) | **0** (was 8) |
+| keys | 31.4 s (was 17.3) | 13.0 s | 98 (was 115) | 12 (was 16) | **0** (was 6) |
+| gamepad | 31.7 s (was 17.4) | 12.9 s | 98 (was 114) | 11 (was 17) | **0** (was 6) |
+
+(Final code. After the first kill the three minutes are the bot's own play at 4x, so the hints it meets vary a little
+from run to run - an earlier run on this branch counted 11 / 10 / 13 - but never a repeat.)
 
 The simulated player reacts 0.8 s after each step appears and then does it at once, so the primer's seconds are a
 quick player's; a first-time player who watches each animation for a couple of seconds and reads its line takes
 about 35-45 s. The first kill comes later than in 2.6 because the controls are shown and tried first (that is the
 request), while the reading load before it dropped by a fifth and nothing is told twice. Every teaching text of the
-first three minutes is in the judge's log with what it teaches (AFTER, touch: the five primer steps, then just in
-time: treasure, cracked wall, music box, omen, marked foe, Kindling).
+first three minutes is in the judge's log with what it teaches. AFTER, touch, in order: the five primer steps (0:04
+MOVE, 0:06 AIM + FIRE, 0:09 WAX = TIME, 0:12 BOMB, 0:16 FLARE UP), then only just in time and once each: 0:25 the
+first treasure room, 0:30 a cracked wall, 1:03 Kindling, 1:30 the music box, 2:02 the first omen, 2:04 a marked foe,
+2:13 soot.
 
 Other judge lines (all PASS): the primer completes with simulated input on touch (fingers through the HUD's own
 touch handling), keys and a gamepad (sticks and buttons through `Input`), the doors open and the clock still reads
@@ -137,3 +142,56 @@ touch handling), keys and a gamepad (sticks and buttons through `Input`), the do
 remembers it, the next run in that slot has none; no primer for a returning slot, Tonight's Candle or a typed-in
 seed; Swap sticks draws the move thumb on the right and plays through; Reduce motion plays through faster (15.3 s
 against 17.6 s); the play-test bot plays a forced primer through and reaches its first kill (24 game s).
+
+Every step on every device, and How to play: `docs/streams/img/v27_primer_steps.png` (480x216 shots from
+`--tour --primer`).
+
+## Checks (final code)
+
+| Judge | Result |
+|---|---|
+| `--checkscripts` | 83 scripts, 0 failed |
+| `--checkrooms` | 0 problems (69 layouts, 1776 dressed rooms, 657 area rooms) |
+| `--playtest --speed=4 --runs=1 --god` | WIN, floor 4/4 at 12:38 AM (824 s, 135 kills, Flare Up x13), 0 script errors |
+| `--primercheck` (fresh profile) | 26 PASS, 0 FAIL (`[primer] DONE fails=0`) |
+| `--tour --primer --fit` at 1600x720 (480x216), 1152x648 (384x216) and 1280x800 (384x240) | 37 shots each, 0 fit flags, 0 script errors; looked at zoomed (every step x device, Swap sticks, Reduce motion, the reel, the Journal) |
+| `python3 tools/art_primer.py` | palette check PASS (16 files) |
+| `python3 tools/extract_strings.py --check`, `--strict` on the four new scripts | up to date (540 keys); PASS |
+
+## Hooks in shared files (small, for the merge)
+
+- `world.gd`: `_ready` +1 line `Primer.maybe_start(self)` (before the story card check); `_intro()` builds its lines
+  as story + `rules` (empty when `Primer.active`) and its Begin hint is `if not Primer.active(self) and
+  Game.tip("controls")`; `_start_floor`: the omen hint `and Game.tip("omen_" + omen)`, the floor-1 controls hint
+  `and not Primer.would_run(self) and Game.tip("controls")`; the treasure hint and "<keepsake> is ready" behind
+  `Game.tip`. The `dialogue` stream's opening scene: the primer waits while the tree or the world is paused, Tallow is
+  frozen or a modal is on the HUD, then starts 0.6 s later; a scene that blocks play some other way can call
+  `Primer.maybe_start(world)` when it ends (it is safe to call twice), and should drop the old rules lines too.
+- `hud.gd`: `show_hint` holds hints while `Primer.active(world)` (the UX-04 held-tips queue); the pause menu's first
+  row + How to play; `_place_banner` (Swap sticks on a 384-wide screen: the subtitle's right edge is the screen's
+  when the keepsake button sits on the left - the CLAUDE.md follow-up; the `qa` stream may touch the same line).
+- `autotest.gd`: `--primercheck` (mode + dispatch), `--tour --primer` (dispatch), `drive()` +3 lines
+  (`Primer.bot_drive`).
+- `journal.gd` `_d_howto` (Show me), `chalk.gd` (`PARTS`, the attach rule), `game.gd` (`tip` default 1),
+  `moves.gd` / `specials.gd` (tips once), `relic_fx.gd` (the device-neutral Stove Door / Blowlamp line),
+  `README.md` (commands), `DESIGN.md` (the primer's art). `settings_panel.gd` untouched.
+- New: `scripts/ui/primer.gd`, `primer_glyphs.gd`, `primer_reel.gd`, `scripts/game/wax_dummy.gd`,
+  `scripts/primer_check.gd`, `tools/art_primer.py`, `assets/art/primer/`.
+
+## Known issues / not done
+
+- The first real kill comes about 15-20 s later than in 2.6 for a quick player (the primer comes first: that is the
+  ask); everything after it is unchanged.
+- How to play is an animated reel, not a playable practice room (one would need guards in the world's Save &
+  Continue and records paths).
+- A slot whose very first run is Tonight's Candle or a typed-in seed never gets the primer by itself (the rule is "a
+  slot with no runs"): its story card keeps the rules lines and the controls line shows once; How to play is there.
+- The wax dummy is a picture: Tallow walks through it, and aim assist does not pull toward it (its hit circle is
+  generous instead). The bomb step's blast cannot hurt Tallow, so the primer does not show a bomb hurting its owner.
+- With a mouse, the bomb and special steps show the keyboard keys (E, SHIFT), not the right / thumb mouse buttons.
+- On a 384-wide touch screen the special step's ring round the move button loses 1-2 px at the screen's right edge.
+- The ghost sticks (touch, runs 1-3) stay as a passive affordance after the primer.
+- The judge's 3 minutes after the primer are the play-test bot's (seed 2701 keeps the house the same before and
+  after); lodgers' own hints (`house_ai.gd`) never show under the test harness, so the judge cannot count them.
+- `--tour --journal`'s "chalk start room" shots now show a clean floor (the chalk is only a skipper's reminder).
+- Not checked on a real phone; sizes judged on 480x216, 384x216 and 384x240 screenshots.
