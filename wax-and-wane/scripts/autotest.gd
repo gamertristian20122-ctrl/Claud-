@@ -30,6 +30,8 @@ extends Node
 ##   -- --autotest --nightdump --speed=4 [--floors=N] [--dump=/abs/file]  every floor of a few seeded nights: layouts,
 ##        guardians, loot, lodgers and the floor numbers (scripts/night_check.gd; the 4-floor baseline must not change)
 
+const QA_MONKEY := preload("res://scripts/qa_monkey.gd")
+
 var main: Node
 var args := {}
 var mode := "playtest"
@@ -80,6 +82,8 @@ func _ready() -> void:
 		mode = "tour"   # the Long Night's determinism dump (scripts/night_check.gd): Tallow is never driven
 	if args.has("diarycheck") or args.has("ending"):
 		mode = "tour"   # v2.5 story: the diary's judges, a staged ending (scripts/game/diary_tour.gd)
+	if args.has("qacheck"):
+		mode = "tour"   # v2.7 QA: one probe per bug the QA pass fixed (scripts/qa_check.gd)
 	runs_left = int(args.get("runs", "1"))
 	# save slots (v2.1): --slot=N plays in that slot, --difficulty=N (1-4) sets its level first
 	if args.has("slot"):
@@ -92,6 +96,12 @@ func _ready() -> void:
 	Game.base_time_scale = float(args.get("speed", "1"))
 	Engine.time_scale = Game.base_time_scale
 	Game.settings["aim_assist"] = true
+	# v2.7 QA: --settings=swap_sticks:true,reduce_motion:true,aim:auto,magnet:false (true / false, numbers or words)
+	for kv in str(args.get("settings", "")).split(",", false):
+		var sv: Variant = kv.get_slice(":", 1)
+		sv = true if sv == "true" else (false if sv == "false" else (float(sv) if (sv as String).is_valid_float() else sv))
+		Game.settings[kv.get_slice(":", 0)] = sv
+		print("[settings] %s = %s" % [kv.get_slice(":", 0), sv])
 	await get_tree().create_timer(0.8).timeout
 	if args.has("herosheet") and args.has("costumes"):
 		_costume_sheet()
@@ -115,6 +125,10 @@ func _ready() -> void:
 		await DiaryTour.check(self)
 		Audio.stop_all()
 		get_tree().quit(1 if DiaryTour.fails > 0 else 0)
+	elif args.has("qacheck"):   # v2.7 QA: every fixed bug's probe (scripts/qa_check.gd; exit 1 on a FAIL)
+		var failed: int = await load("res://scripts/qa_check.gd").run(self)
+		Audio.stop_all()
+		get_tree().quit(1 if failed > 0 else 0)
 	elif args.has("ending"):   # v2.5 story: --ending=<id> stages that ending (cards, credits, results)
 		await DiaryTour.stage_ending(self, str(args["ending"]))
 		Audio.stop_all()
@@ -204,25 +218,31 @@ var _cycling := false
 
 func _save_cycle() -> void:
 	_cycling = true
+	# the Long Night: the same area, night length and rooms must come back. Both sides are read the moment their
+	# floor starts: a room the bot walks into writes its candelabras / emptied chest cells into its grid, and
+	# what it breaks comes back on a Continue by design (the floor starts again).
+	var house_before := _house_sig(main.current)
 	await get_tree().create_timer(0.8).timeout
 	var w: Node = main.current
 	# compare with the floor-start snapshot (relics picked up since then are not in it, by design)
 	var pd: Dictionary = RunSave.snap.get("player", {})
 	var before: String = "snapshot relics %d wax %.0f" % [pd.get("relics", []).size(), float(pd.get("wax", 0.0))]
-	var house_before := _house_sig(w)   # the Long Night: the same area, night length and rooms must come back
 	RunSave.flush()
 	main.goto("title")
 	await get_tree().create_timer(1.6).timeout
 	RunSave.continue_run(main)
-	var waited := 0.0
-	while waited < 8.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null and not main._busy):
-		await get_tree().create_timer(0.1).timeout
-		waited += 0.1
+	var waited := 0
+	while waited < 2000 and not (main.current and main.current.name == "Game" and main.current.get("player") != null):
+		await get_tree().process_frame
+		waited += 1
+	var house_after := _house_sig(main.current) if main.current and main.current.name == "Game" else "no game"
+	while waited < 2000 and main._busy:
+		await get_tree().process_frame
+		waited += 1
 	await get_tree().create_timer(0.5).timeout
 	w = main.current
 	_stress_cell = w.cur_cell   # the restored run must match its snapshot exactly (no stress relic yet)
 	print("[savecycle] floor %d: %s -> %s (floor %d)" % [_cycled, before, "relics %d wax %.0f" % [w.player.relics.size(), w.player.wax], w.floor_num])
-	var house_after := _house_sig(w)
 	print("[savecycle]    house %s -> %s: %s" % [house_before, house_after, "SAME" if house_before == house_after else "DIFFERENT"])
 	_cycling = false
 
@@ -261,6 +281,8 @@ func _process(dt: float) -> void:
 		_save_cycle()
 	if args.has("area"):
 		Areas.test_watch(self, cur)   # one line when the area's floor is done, then the run ends
+	if args.has("monkey"):   # v2.7 QA: a person's random presses on top of the bot, with a watchdog (scripts/qa_monkey.gd)
+		QA_MONKEY.step(self, cur)
 	if _status_t > 10.0 and cur and cur.name == "Game":
 		_status_t = 0.0
 		var w: Node = cur
@@ -1033,7 +1055,7 @@ func _platform_tour() -> void:
 	await _shot("pause_gamepad_" + tag)
 	await _pad(JOY_BUTTON_DPAD_DOWN)
 	var f := get_viewport().gui_get_focus_owner()
-	if not (f is Button and (f as Button).text == "Journal"):   # the row under Resume: Journal | Settings
+	if not (f is Button and (f as Button).text in ["Journal", L.t("Map"), "Settings"]):   # the row under Resume (v2.6: Journal | Map | Settings)
 		fails += 1
 		print("[platform] FAIL d-pad down focus: ", f, " ", f.get("text") if f else "")
 	await _shot("pause_gamepad_down_" + tag)

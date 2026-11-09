@@ -1620,6 +1620,9 @@ func toggle_pause() -> void:
 	get_tree().paused = paused
 	Audio.set_paused(paused)
 	if paused:
+		# a hit's freeze (hitstop) or the guardian's slow fall ends with a tween that waits out the pause: the
+		# menus (and Save & quit's fade) must not run at x0.05 meanwhile
+		Engine.time_scale = Game.base_time_scale
 		hud.open_pause()
 	else:
 		hud.close_pause()
@@ -1654,7 +1657,8 @@ func hitstop(dur: float, scale_ := 0.05) -> void:
 	if finished:
 		return
 	Engine.time_scale = scale_ * Game.base_time_scale
-	var tw := create_tween().set_ignore_time_scale(true)
+	# real time, and on time even if a menu or a card pauses the house meanwhile (else they would run at x0.05)
+	var tw := create_tween().set_ignore_time_scale(true).set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tw.tween_interval(dur)
 	tw.tween_callback(func():
 		if not finished:

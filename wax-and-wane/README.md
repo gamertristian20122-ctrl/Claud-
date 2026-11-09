@@ -159,6 +159,11 @@ godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
     --boss=<kind>         straight into one guardian's fight with its floor's fixed kit, a line per fight
                           (time to kill, hits; the v2.1 balance check against its floor-mates)
     --device=touch|keyboard|mouse|gamepad,  --touchmouse   input to show / emulate
+    --settings=swap_sticks:true,reduce_motion:true,aim:auto,magnet:false   any settings for the run (v2.7 QA)
+    --monkey              a person's random presses on top of the bot (Back, pause, map, moves, menus, focus lost),
+                          with a watchdog: [monkey] PROBLEM lines (docs/streams/v27_qa.md)
+godot --headless --path . -- --autotest --qacheck                     # v2.7 QA: a probe per bug the QA pass fixed + Back /
+                                                                      #   Quick restart regression probes (exit 1 on a FAIL)
 godot --headless --path . -- --autotest --bench [--secs=6] [--seed=N] [--ablate]   # CPU per frame, lights, leaks
 godot --headless --path . -- --autotest --movescheck                  # v2.3 special moves: every move's numbers, the
                                                                       #   key / touch -> move frame timing, rebinding (exit 1 on a FAIL)
