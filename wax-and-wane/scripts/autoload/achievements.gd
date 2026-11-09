@@ -90,6 +90,7 @@ var _toast_ms := 0                   # when it came up
 var _steam: Object
 # what the watcher saw last frame in the current run
 var _w: Node
+var _area_floor := {}   # tonight: area -> its floor number (FLOOR_IDS), worked out once per run
 var _coins := 0
 var _ks := ""
 var _ks_full := false
@@ -168,6 +169,7 @@ func _process(dt: float) -> void:
 	var p: Node = w.player
 	if w != _w:
 		_w = w
+		_area_floor = {}
 		_coins = int(p.coins)
 		_ks = str(p.keepsake)
 		_ks_full = bool(w.keepsake_full())
@@ -185,9 +187,12 @@ func _watch(w: Node, p: Node) -> void:
 	if total >= 1000:
 		unlock("chimney_sweep")
 	var f := int(w.floor_num)
-	var nf := int(w.get("night_floors")) if w.get("night_floors") != null else 4
+	if _area_floor.is_empty():
+		var nf := int(w.get("night_floors")) if w.get("night_floors") != null else 4
+		for a in FLOOR_IDS:
+			_area_floor[a] = Areas.depth_in(a, nf)
 	for a in FLOOR_IDS:
-		if f >= Areas.depth_in(a, nf):   # reached that area (or past it) tonight
+		if f >= int(_area_floor[a]):   # reached that area (or past it) tonight
 			unlock(FLOOR_IDS[a])
 	if w.daily:
 		unlock("tonight")

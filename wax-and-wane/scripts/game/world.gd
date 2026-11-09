@@ -1387,16 +1387,20 @@ func _physics_process(dt: float) -> void:
 
 ## The bells of the night: every hour it strikes before the last half hour, then half an hour before the end
 ## ("Half past one. Hurry." on a 4-floor night) and a quarter before ("Your wick is nearly gone").
+var _marks: Array = []
+
+
 func bell_marks() -> Array:
+	if not _marks.is_empty():
+		return _marks
 	var end := night_minutes()
-	var out: Array = []
 	var h := 60.0
 	while h < end - 30.0:
-		out.append(h)
+		_marks.append(h)
 		h += 60.0
-	out.append(end - 30.0)
-	out.append(end - 15.0)
-	return out
+	_marks.append(end - 30.0)
+	_marks.append(end - 15.0)
+	return _marks
 
 
 func _clock_events() -> void:
