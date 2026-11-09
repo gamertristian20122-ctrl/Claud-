@@ -85,7 +85,7 @@ func _ready() -> void:
 	_name = UI.label(title, 16, UI.CREAM)
 	_name.position = Vector2(_vs.x * 0.07, 50)
 	add_child(_name)
-	var fl: Dictionary = world.FLOORS.get(world.floor_num, {})
+	var fl: Dictionary = world.fdef() if world.has_method("fdef") else world.FLOORS.get(world.floor_num, {})   # the area (a longer night)
 	_sub = UI.label(str(d.get("title", "Guardian of %s" % fl.get("name", "the house"))), 8, Color("#d3bfa9"))
 	_sub.position = Vector2(_vs.x * 0.07 + 2, 70)
 	add_child(_sub)

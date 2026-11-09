@@ -1309,11 +1309,7 @@ func _end_run(won: bool) -> void:
 	Game.records["best_floor"] = maxi(int(Game.records["best_floor"]), floor_num)
 	if won:
 		Game.records["wins"] += 1
-		var t := clock_minutes()
-		var key := "best_finish" if candle_id == "tallow" else "best_finish_" + candle_id
-		var best := float(Game.records.get(key, 0.0))
-		if best == 0.0 or t < best:
-			Game.records[key] = t if t != 0.0 else 0.001   # 0 means "never won"
+		Records.note_finish(candle_id, night_floors, clock_minutes())   # kept per night length (a 7-floor finish is its own record)
 	Game.save()
 	main.goto("results", Records.end_run(self, won, {"won": won, "floor": floor_num, "clock": clock_minutes(), "kills": kills,
 		"rooms": rooms_cleared, "relics": player.relics.duplicate(), "time": run_time, "streak": best_streak, "hits": hits_total, "candle": candle_id, "unlocked": unlocked_this_run.duplicate(), "daily": daily, "coins": player.coins,

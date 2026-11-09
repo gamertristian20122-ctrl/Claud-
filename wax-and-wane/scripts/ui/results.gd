@@ -33,7 +33,11 @@ func _ready() -> void:
 	var f := maxi(1, int(params.get("floor", 1)))
 	var floors: Dictionary = preload("res://scripts/game/world.gd").FLOORS
 	var room := TextureRect.new()
-	room.texture = Art.tex("rooms/room_" + (str(floors[f]["theme"]) if floors.has(f) else "cellar"))
+	var theme := str(floors[f]["theme"]) if floors.has(f) else "cellar"
+	var area := str(params.get("area", ""))
+	if Areas.is_built(area):
+		theme = str(Areas.def(area)["theme"])   # the area the run ended in (a longer night's Kitchen, Library, Attic)
+	room.texture = Art.tex("rooms/room_" + theme)
 	room.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 	room.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	room.modulate = Color(0.32, 0.26, 0.28)
@@ -311,19 +315,20 @@ func _header(v: VBoxContainer, won: bool, f: int) -> void:
 		col.add_child(lvl)
 		return
 	col.add_child(UI.label("SNUFFED OUT", 16, UI.RED))
-	col.add_child(UI.label(Records.death_line(killer), 8, UI.CREAM))
+	col.add_child(UI.label(Records.death_line(killer, Records.night_of(params)), 8, UI.CREAM))
 	col.add_child(UI.label(_where(f, ", floor "), 8, UI.EMBER))
 	col.add_child(lvl)
 
 
-## "The Crypt 2/4" / "The Crypt, floor 2 of 4"; the secret floor above the house is never "5/4".
+## "The Crypt 2/4" / "The Kitchen, floor 3 of 7"; the secret floor above the house is never "5/4".
 func _where(f: int, style: String) -> String:
 	var nm := Records.floor_name(f, false, str(params.get("area", "")))   # a Long Night area names itself
-	if f > Records.floor_count():
+	var n := Records.night_of(params)   # the run's night length
+	if f > n:
 		return "%s%sabove the bells" % [nm, " - " if style == " " else ", "]
 	if style == " ":
-		return "%s %d/%d" % [nm, f, Records.floor_count()]
-	return "%s%s%d of %d" % [nm, style, f, Records.floor_count()]
+		return "%s %d/%d" % [nm, f, n]
+	return "%s%s%d of %d" % [nm, style, f, n]
 
 
 ## Score for the nightly seeded run; only the first try of a date counts as "first".
@@ -331,7 +336,8 @@ func _daily_score() -> int:
 	var won: bool = params.get("won", false)
 	var s := 1000 * int(params.get("floor", 1)) + 60 * int(params.get("rooms", 0)) + 5 * int(params.get("kills", 0)) - 40 * int(params.get("hits", 0))
 	if won:
-		s += 2000 + int(25.0 * (120.0 - float(params.get("clock", 120.0))))
+		var night := Game.night_minutes(Records.night_of(params))   # the wax left at the finish
+		s += 2000 + int(25.0 * (night - float(params.get("clock", night))))
 	s = maxi(s, 0)
 	var today := Time.get_date_string_from_system()
 	if not params.get("scored", false):

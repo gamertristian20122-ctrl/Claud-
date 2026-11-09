@@ -318,16 +318,11 @@ func _count_belfry_win() -> void:
 	var t: float = w.clock_minutes()
 	Game.unlock("black_taper")
 	Game.records["wins"] = int(Game.records["wins"]) + 1
-	var key := "best_finish" if w.candle_id == "tallow" else "best_finish_" + str(w.candle_id)
-	var best := float(Game.records.get(key, 0.0))
-	if best == 0.0 or t < best:
-		Game.records[key] = t if t != 0.0 else 0.001
+	Records.note_finish(str(w.candle_id), int(w.night_floors), t)   # kept per night length
 	Game.save()
-	Achievements.unlock("win")
+	Achievements.on_win(w, t)   # Before Two, Early to Bed, The Long Night ... (true to their words on any night)
 	if w.candle_id != "tallow":
 		Achievements.unlock("win_" + str(w.candle_id))
-	if Game.shown_minute(t) < 60:   # "Win before 1:00 AM": a clock showing 12:59 AM or earlier
-		Achievements.unlock("win_early")
 	if w.daily:
 		Achievements.unlock("tonight_win")
 	if (w.player.relics as Array).size() <= 4:
@@ -355,9 +350,7 @@ func true_end() -> void:
 	if keeper_clock < 90.0:
 		Achievements.unlock("true_early")
 	Game.records["true_endings"] = int(Game.records.get("true_endings", 0)) + 1
-	var best := float(Game.records.get("true_best", 0.0))
-	if best == 0.0 or keeper_clock < best:
-		Game.records["true_best"] = keeper_clock if keeper_clock != 0.0 else 0.001
+	Records.note_true_end(int(w.night_floors), keeper_clock)   # true_best per night length
 	Game.save()
 	var tw := create_tween()
 	tw.tween_interval(3.2)

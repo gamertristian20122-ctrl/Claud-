@@ -36,7 +36,7 @@ const LIST := {
 		"wax": 135.0, "drain": 1.15, "speed": 0.85, "damage": 1.15, "fire_delay": 1.0, "shots": 1,
 		"body_w": 17, "colours": ["#fdf7ed", "#f3e6cf", "#d3bfa9", "#aa8d7a"], "straight": true, "cheek": "#f78697",
 		"start_relic": "wax_coat",
-		"unlock_text": "Snuff the Chapel's guardian (floor 3)",
+		"unlock_text": "Snuff the Chapel's guardian",
 	},
 	# a sidegrade, not a hard mode (difficulty is the save slot's level now): Tallow's wax and melt,
 	# a short light, and foes out in the dark take more damage (dark_mult)

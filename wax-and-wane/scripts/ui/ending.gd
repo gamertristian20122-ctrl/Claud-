@@ -139,7 +139,8 @@ func _next_card() -> void:
 			_stage.add_child(_front)
 			_dial_a = -TAU * 3.0
 			_dial_stopped = false
-			lines = ["THE CLOCK STOPS AT %s" % Game.clock_text(_clock), "It will not strike two tonight."]
+			var nm: float = get_parent().night_minutes() if get_parent() and get_parent().has_method("night_minutes") else Game.END_MINUTES
+			lines = ["THE CLOCK STOPS AT %s" % Game.clock_text(_clock), "It will not strike %s tonight." % Records.hour_words(nm)]
 		2:
 			_sky = 0
 			_add_tex("tower/end_window")

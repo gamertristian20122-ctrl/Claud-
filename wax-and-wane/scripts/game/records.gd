@@ -165,13 +165,21 @@ static func on_kill(w: Node, e: Node) -> void:
 			rec["best"] = secs
 		bb[kind] = rec
 		var all := true
-		for b in BestiaryGallery.boss_kinds():
-			if Enemy.DEFS.get(b, {}).get("secret", false):
-				continue   # the Keeper is not one of the eight
+		for b in house_guardians():   # "all twelve": the 4-floor house's own (a longer night's areas add more)
 			if not bb.has(b):
 				all = false
 		if all:
 			Achievements.unlock("guardians_all")
+
+
+## The twelve guardians of the 4-floor house (Cellar to Belfry, three each): the Night Watch achievement.
+static func house_guardians() -> Array:
+	var out: Array = []
+	for n in range(1, 5):
+		for b in preload("res://scripts/game/world.gd").FLOORS[n]["bosses"]:
+			if not b in out:
+				out.append(b)
+	return out
 
 
 # ---------------------------------------------------------------- the death note
@@ -268,10 +276,10 @@ static func killer_name(k: String) -> String:
 	return "Something in the Dark"
 
 
-## A few words for a row in the Journal's run list.
-static func short_killer(k: String) -> String:
+## A few words for a row in the Journal's run list (`floors`: the run's night length; its end is the clock's).
+static func short_killer(k: String, floors := 4) -> String:
 	match k:
-		"clock": return "Melted down to two"
+		"clock": return "Melted down to two" if floors <= 4 else "Melted down at %s" % Game.clock_text(Game.night_minutes(floors), false)
 		"gave_up": return "Gave up"
 		"bomb": return "Own bomb"
 		"spikes": return "Floor spikes"
@@ -282,10 +290,10 @@ static func short_killer(k: String) -> String:
 	return killer_name(k)
 
 
-## One line for the results screen and the Journal.
-static func death_line(k: String) -> String:
+## One line for the results screen and the Journal ("The clock struck half past three." ends a 7-floor night).
+static func death_line(k: String, floors := 4) -> String:
 	match k:
-		"clock": return "The clock struck two."
+		"clock": return "The clock struck %s." % hour_words(Game.night_minutes(floors))
 		"gave_up": return "You blew out your own flame."
 		"": return "Your flame went out."
 	return "Snuffed by %s" % killer_name(k)
@@ -361,6 +369,9 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 	params["seeded"] = bool(w.get_meta("seeded", false))
 	params["candle"] = str(w.candle_id)
 	params["area"] = str(w.fdef().get("area", "")) if w.has_method("fdef") else ""   # the area the run ended in
+	var floors := int(w.get("night_floors")) if w.get("night_floors") != null else 4
+	params["floors"] = floors   # the night's length (results, Share, the Journal)
+	note_deepest(params["area"])
 	if int(w.best_streak) > int(Game.records.get("best_streak", 0)):
 		Game.records["best_streak"] = int(w.best_streak)
 	if won:
@@ -374,7 +385,7 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 	hist.push_front({"won": won, "candle": str(w.candle_id), "floor": int(w.floor_num), "clock": float(w.clock_minutes()),
 		"killer": killer, "relics": (w.player.relics as Array).duplicate(), "time": float(w.run_time), "kills": int(w.kills),
 		"streak": int(w.best_streak), "seed": int(w.run_seed), "daily": bool(w.daily), "date": lit,
-		"n": int(Game.records.get("runs", 0)), "level": int(w.level), "area": params["area"]})
+		"n": int(Game.records.get("runs", 0)), "level": int(w.level), "area": params["area"], "floors": floors})
 	while hist.size() > HISTORY:
 		hist.pop_back()
 	if bool(w.daily):
@@ -389,7 +400,8 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 static func daily_score(params: Dictionary) -> int:
 	var s := 1000 * int(params.get("floor", 1)) + 60 * int(params.get("rooms", 0)) + 5 * int(params.get("kills", 0)) - 40 * int(params.get("hits", 0))
 	if params.get("won", false):
-		s += 2000 + int(25.0 * (120.0 - float(params.get("clock", 120.0))))
+		var night := Game.night_minutes(int(params.get("floors", 4)))   # the wax left at the finish (Tonight's Candle: 4 floors)
+		s += 2000 + int(25.0 * (night - float(params.get("clock", night))))
 	return maxi(s, 0)
 
 
@@ -445,8 +457,90 @@ static func floor_name(n: int, lower_the := false, area := "") -> String:
 	return ("the " + nm.substr(4)) if lower_the and nm.begins_with("The ") else nm
 
 
+## The 4-floor night's last floor. A run's own night length: params / history entries carry "floors" (night_of).
 static func floor_count() -> int:
 	return int(preload("res://scripts/game/world.gd").LAST_FLOOR)
+
+
+## The night length of a run's results params or Journal history entry (runs from before 2.2: 4).
+static func night_of(r: Dictionary) -> int:
+	return int(r.get("floors", 4))
+
+
+## "7 floors - until 3:30 AM": a night length the way the Night length picker shows it.
+static func night_text(floors: int) -> String:
+	return "%d floors - until %s" % [floors, Game.clock_text(Game.night_minutes(floors), false)]
+
+
+# ---------------------------------------------------------------- best times, by night length
+
+## The earliest finish (clock minute, 0 = never won) of `candle` on a night of `floors` floors. The 4-floor night
+## keeps the keys it always had (best_finish = Tallow's, best_finish_<candle>); a longer night's times live in
+## best_nights[floors][candle], so a 7-floor finish never competes with a 4-floor one.
+static func best_finish_of(candle: String, floors := 4, rec: Dictionary = {}) -> float:
+	var r: Dictionary = rec if not rec.is_empty() else Game.records
+	if floors <= 4:
+		return float(r.get("best_finish" if candle == "tallow" else "best_finish_" + candle, 0.0))
+	var bn: Dictionary = r.get("best_nights", {}) if r.get("best_nights", {}) is Dictionary else {}
+	var by: Dictionary = bn.get(str(floors), {}) if bn.get(str(floors), {}) is Dictionary else {}
+	return float(by.get(candle, 0.0))
+
+
+## A win at clock minute `t`: keep it if it is the candle's earliest on a night this long.
+static func note_finish(candle: String, floors: int, t: float) -> void:
+	var best := best_finish_of(candle, floors)
+	if best != 0.0 and t >= best:
+		return
+	var v := t if t != 0.0 else 0.001   # 0 means "never won"
+	if floors <= 4:
+		Game.records["best_finish" if candle == "tallow" else "best_finish_" + candle] = v
+		return
+	var bn := _dict("best_nights")
+	var by: Dictionary = bn.get(str(floors), {}) if bn.get(str(floors), {}) is Dictionary else {}
+	by[candle] = v
+	bn[str(floors)] = by
+
+
+## The earliest finish over every candle on a night of `floors` floors (0 = never won there).
+static func best_of_night(floors: int, rec: Dictionary = {}) -> float:
+	var best := 0.0
+	for c in Candles.ORDER:
+		var t := best_finish_of(c, floors, rec)
+		if t > 0.0 and (best == 0.0 or t < best):
+			best = t
+	return best
+
+
+## The true ending's earliest clock (true_best on a 4-floor night, true_best_nights[floors] on a longer one).
+static func note_true_end(floors: int, t: float) -> void:
+	var v := t if t != 0.0 else 0.001
+	if floors <= 4:
+		var best := float(Game.records.get("true_best", 0.0))
+		if best == 0.0 or t < best:
+			Game.records["true_best"] = v
+		return
+	var tb := _dict("true_best_nights")
+	var b := float(tb.get(str(floors), 0.0))
+	if b == 0.0 or t < b:
+		tb[str(floors)] = v
+
+
+## The furthest area of the house a run reached (the Journal's "Deepest"): house order, the Clock Tower last.
+static func note_deepest(area: String) -> void:
+	var order := Areas.house_order()
+	if area == "" or not area in order:
+		return
+	if order.find(area) > order.find(deepest_area()):
+		Game.records["best_area"] = area
+
+
+static func deepest_area(rec: Dictionary = {}) -> String:
+	var r: Dictionary = rec if not rec.is_empty() else Game.records
+	var a := str(r.get("best_area", ""))
+	if a != "":
+		return a
+	var bf := int(r.get("best_floor", 0))   # before 2.2: the deepest floor of the 4-floor house
+	return ["", "cellar", "crypt", "chapel", "belfry", "tower"][clampi(bf, 0, 5)]
 
 
 const NUMBER_WORDS := ["twelve", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"]
@@ -470,12 +564,12 @@ static func hour_words(minutes: float, capital := false) -> String:
 
 ## How a night of `floors` floors must end: "before it strikes two" (4 floors), "before half past three" (7),
 ## "before dawn" (10).
-static func night_end_phrase(floors: int) -> String:
+static func night_end_phrase(floors: int, subject := "it") -> String:
 	var end := Game.night_minutes(floors)
 	if end >= Game.DAWN_MINUTES:
 		return "before dawn"
 	if roundi(end) % 60 == 0:
-		return "before it strikes " + hour_words(end)
+		return "before %s strikes %s" % [subject, hour_words(end)]
 	return "before " + hour_words(end)
 
 

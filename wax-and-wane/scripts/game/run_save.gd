@@ -58,6 +58,9 @@ static func summary_of(s: Dictionary) -> String:
 	if s.is_empty():
 		return ""
 	var r: Dictionary = s["run"]
+	var nf := int(r.get("floors", 4))
+	if nf > 4:   # a longer night says how long ("Floor 5/7 - 1:41 AM")
+		return "Floor %d/%d - %s" % [int(r["floor"]), nf, Game.clock_text(float(r["clock"]))]
 	return "Floor %d - %s" % [int(r["floor"]), Game.clock_text(float(r["clock"]))]
 
 

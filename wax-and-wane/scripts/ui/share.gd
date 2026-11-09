@@ -7,8 +7,10 @@ extends RefCounted
 ##   Tallow at level 2: done by 1:41 AM
 ##   🔥🔥🔥🔥  7 relics, Kindling x14
 ##
-## One glyph per floor of the house: 🔥 floor cleared, 🔔 snuffed by its guardian, 💨 snuffed in its
-## halls, ⌛ the clock ran out there, ⬛ not reached. A fifth glyph appears only if the run got that far.
+## A seeded or ordinary run names its seed and the night's length ("seed 4821 7730, 7 floors"), so a friend can
+## light the same house (Tonight's Candle is always 4 floors).
+## One glyph per floor of the night: 🔥 floor cleared, 🔔 snuffed by its guardian, 💨 snuffed in its
+## halls, ⌛ the clock ran out there, ⬛ not reached. One more glyph appears only if the run got above the bells.
 ## Every glyph is a single code point with emoji presentation (no variation selectors), so the text
 ## stays short on every platform. DesignCheck.share_check() tests the length and that it is stable.
 
@@ -24,17 +26,17 @@ const UNREACHED := "⬛"
 static func text(p: Dictionary) -> String:
 	var won: bool = p.get("won", false)
 	var f := maxi(1, int(p.get("floor", 1)))
-	var house := int(preload("res://scripts/game/world.gd").LAST_FLOOR)
+	var house := Records.night_of(p)   # the night's length (4 before 2.2)
 	var head := "Wax & Wane - "
 	if p.get("daily", false):
 		head += "Tonight's Candle %s" % str(p.get("date", ""))
 	else:
-		head += "seed %s" % Records.seed_text(int(p.get("seed", 0)))
+		head += "seed %s, %d floors" % [Records.seed_text(int(p.get("seed", 0))), house]
 	# the candle and the run's difficulty level ("Tallow at level 3"; Tonight's Candle is always 2)
 	var candle := "%s at level %d" % [str(Candles.def_of(str(p.get("candle", "tallow")))["name"]), int(p.get("level", 2))]
 	var how := ""
 	if won:
-		how = "%s: done by %s" % [candle, Game.clock_text(float(p.get("clock", 120.0)))]
+		how = "%s: done by %s" % [candle, Game.clock_text(float(p.get("clock", Game.night_minutes(house))))]
 		if f > house:
 			how += ", above the bells"   # the secret floor: never "Floor 5" of a four-floor house
 	elif f > house:

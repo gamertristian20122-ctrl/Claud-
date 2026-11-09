@@ -750,8 +750,9 @@ func _d_candle(e: Dictionary) -> void:
 ## The rules from the one-time intro (world._intro), for anyone who skipped it.
 func _d_howto() -> void:
 	# short enough for the 384-wide Journal (the detail panel must not push the Back row off the screen)
-	_head(_pic(Art.tex("hero/hero_preview"), 2), "How to play", [["Midnight to two", UI.EMBER]])
-	_text("Burn down four floors and snuff the Belfry's guardian before the clock strikes two.")
+	var nf := Records.night_floors()   # this slot's night length
+	_head(_pic(Art.tex("hero/hero_preview"), 2), "How to play", [["Midnight to %s" % Records.hour_words(Game.night_minutes(nf)), UI.EMBER]])
+	_text("Burn down %s floors and snuff the Belfry's guardian %s." % [Records.number_word(nf), Records.night_end_phrase(nf, "the clock")])
 	_text("Your wax is your life and your time: hits melt it, drippings mend it.", UI.WAX)
 	_text(Controls.intro_line(), UI.DIM)
 
@@ -760,8 +761,8 @@ func _d_totals() -> void:
 	var rec := Game.records
 	_head(_pic(Art.tex("ui/icon_medal"), 2), "The Ledger", [["Everything you have burnt through", UI.EMBER]])
 	_text("Slot %d  -  %s" % [Game.slot, Records.level_text(Game.level)], UI.WAX)   # this save slot and its level
-	var bf := int(rec.get("best_floor", 0))
-	_text("Runs %d   Wins %d   Deepest: %s" % [int(rec.get("runs", 0)), int(rec.get("wins", 0)), Records.floor_name(bf) if bf > 0 else "-"], UI.CREAM)
+	var deep := Records.deepest_area()   # the furthest area of the house reached, on any night
+	_text("Runs %d   Wins %d   Deepest: %s" % [int(rec.get("runs", 0)), int(rec.get("wins", 0)), str(Areas.def(deep).get("name", "-")) if deep != "" else "-"], UI.CREAM)
 	_text("Creatures snuffed %s   Best Kindling x%d" % [_num(int(rec.get("kills", 0))), int(rec.get("best_streak", 0))], UI.CREAM)
 	_text("Achievements %d / %d" % [Achievements.count(), Achievements.LIST.size()], UI.CREAM)
 	_text("Best finish, by candle", UI.EMBER)
@@ -773,6 +774,14 @@ func _d_totals() -> void:
 		var best := float(rec.get(key, 0.0))
 		lines.append("%s %s" % [Candles.def_of(c)["name"], Game.clock_text(best) if best > 0.0 else "-"])
 	_text("   ".join(lines), UI.WAX)
+	# longer nights keep their own records (a 7-floor finish never competes with a 4-floor one)
+	var longs: Array = []
+	for n in range(Areas.MIN_FLOORS + 1, Areas.max_floors() + 1):
+		var t := Records.best_of_night(n)
+		if t > 0.0:
+			longs.append("%d floors %s" % [n, Game.clock_text(t)])
+	if not longs.is_empty():
+		_text("Best on longer nights: " + "   ".join(longs), UI.WAX)
 
 
 func _d_nights() -> void:
@@ -793,17 +802,19 @@ func _d_run(r: Dictionary) -> void:
 	var k := 2 if tex and tex.get_width() <= 24 and tex.get_height() <= 24 else 1
 	var fl := maxi(1, int(r.get("floor", 1)))
 	var title := "Run %d" % int(r.get("n", 0))
-	var sub := ("Done by %s" % Game.clock_text(float(r.get("clock", 0.0)))) if won else Records.death_line(killer)
+	var nf := Records.night_of(r)   # the run's night length (runs from before 2.2: 4)
+	var sub := ("Done by %s" % Game.clock_text(float(r.get("clock", 0.0)))) if won else Records.death_line(killer, nf)
 	_head(_pic(tex, k), title, [[sub, UI.GOLD if won else UI.RED]], UI.GOLD)
 	var where := "%s - %s (%s)" % [Candles.def_of(str(r.get("candle", "tallow")))["name"], Records.floor_name(fl, false, str(r.get("area", ""))),
-		"above the bells" if fl > Records.floor_count() else "%d/%d" % [fl, Records.floor_count()]]
+		"above the bells" if fl > nf else "%d/%d" % [fl, nf]]
 	if won:
 		where += " - " + Game.clock_text(float(r.get("clock", 0.0)))
 	_text(where, UI.CREAM)
 	_text("Played %s   Kills %d   Kindling x%d" % [_mmss(float(r.get("time", 0.0))), int(r.get("kills", 0)), int(r.get("streak", 0))], UI.WAX)
 	# the run's difficulty level (runs from before 2.1 have none to show)
 	var lv := ("  -  Level %d" % int(r["level"])) if r.has("level") else ""
-	_text(("Tonight's Candle  -  " if r.get("daily", false) else "") + "Seed " + Records.seed_text(int(r.get("seed", 0))) + lv, UI.DIM)
+	var nl := ("  -  %d floors" % nf) if r.has("floors") else ""   # the night's length (2.2 runs on)
+	_text(("Tonight's Candle  -  " if r.get("daily", false) else "") + "Seed " + Records.seed_text(int(r.get("seed", 0))) + lv + nl, UI.DIM)
 	var relics: Array = r.get("relics", [])
 	if not relics.is_empty():
 		var flow := HFlowContainer.new()
@@ -889,7 +900,7 @@ class JSlot extends Button:
 					line2 = "Done by " + Game.clock_text(float(r.get("clock", 0.0)))
 					c2 = UI.GOLD
 				else:
-					line2 = Records.short_killer(str(r.get("killer", "")))
+					line2 = Records.short_killer(str(r.get("killer", "")), Records.night_of(r))
 					c2 = UI.RED
 		if _tex:
 			var s := _tex.get_size()
