@@ -635,6 +635,12 @@ static func blink_target(room: Room, from: Vector2, dir: Vector2, dist: float) -
 	last_ok = minf(last_ok, reach)
 	var goal := from + dir * reach
 	if not room.blocked(goal, Player.RADIUS):
+		# it passes over spikes, it does not stop on them: a few px back along the line if that is clear
+		if room.char_at(room.cell_of(goal - room.position)) == "S":
+			for back in [4.0, 8.0, 12.0, 16.0]:
+				var q2 := from + dir * maxf(0.0, reach - back)
+				if not room.blocked(q2, Player.RADIUS) and room.char_at(room.cell_of(q2 - room.position)) != "S":
+					return q2
 		return goal
 	# the nearest free spot round the goal (rings of 16 directions); never further along the line than
 	# the stop when something stopped it (no sliding round a wall of rubble), else the last free point
