@@ -290,15 +290,35 @@ func is_tower(n := floor_num) -> bool:
 	return n > night_floors
 
 
-## The floor's place in the night on the 4-floor scale: floor 1 = 1.0, the last floor (the Belfry) = 4.0, the
-## Clock Tower = 5.0, the floors between stretched evenly (a 7-floor night: 1, 1.5, 2 ... 4). On a 4-floor
-## night it is the floor number, so every per-floor table reads exactly as it was made.
+## The Long Night's depth curve (its own numbers, tuned with the bot; the 4-floor night never reads them): the
+## Cellar and the Crypt are floors 1 and 2 of every night and keep their depths (the start of the night plays as
+## it was made); the floors above stretch from the Crypt's depth (2) to the Belfry's (4), bent by NIGHT_CURVE
+## (1 = evenly; below 1 the middle floors sit nearer the top).
+const NIGHT_CURVE := 1.0
+## "Your flame grows" after each guardian but the last: +FLAME_GROWTH damage, spread over a longer night so the
+## whole night grows the flame as much as the 4-floor night's three guardians do (flame_growth()).
+const FLAME_GROWTH := 0.15
+
+
+## The floor's place in the night on the 4-floor scale: floor 1 = 1.0, floor 2 (the Crypt) = 2.0, the last floor
+## (the Belfry) = 4.0, the Clock Tower = 5.0, the floors between stretched (NIGHT_CURVE; a 7-floor night: 1, 2,
+## 2.4, 2.8, 3.2, 3.6, 4). On a 4-floor night it is the floor number, so every per-floor table reads exactly as it
+## was made.
 func depth(n := floor_num) -> float:
 	if n > night_floors:
 		return float(LAST_FLOOR + 1)
-	if night_floors <= LAST_FLOOR:
+	if night_floors <= LAST_FLOOR or n <= 2:
 		return float(n)
-	return 1.0 + float(n - 1) * float(LAST_FLOOR - 1) / float(night_floors - 1)
+	var t := float(n - 2) / float(night_floors - 2)
+	return 2.0 + float(LAST_FLOOR - 2) * pow(t, NIGHT_CURVE)
+
+
+## The damage a guardian's fall adds ("Your flame grows"): 0.15 on a 4-floor night; a longer night has more
+## guardians before the last, each adds less, the night as a whole the same +0.45.
+func flame_growth() -> float:
+	if night_floors <= LAST_FLOOR:
+		return FLAME_GROWTH
+	return FLAME_GROWTH * float(LAST_FLOOR - 1) / float(night_floors - 1)
 
 
 ## What FloorGen needs to build floor n of this night: its depth (floor size, the hard layouts' gate), its
@@ -389,7 +409,7 @@ func _start_floor(n: int) -> void:
 	Audio.music(fdef(n)["music"])
 	Audio.set_space(int(fdef(n).get("space", n)))
 	var steady := 0.0
-	if not is_tower(n) and roundi(depth(n)) in STEADY_FLOORS and player.wax < STEADY_BELOW:   # by depth: a longer night steadies more often
+	if not is_tower(n) and depth(n) >= float(STEADY_FLOORS[0]) and player.wax < STEADY_BELOW:   # from the Chapel's depth up
 		steady = minf(STEADY_ADD, STEADY_BELOW - player.wax)
 		player.heal(steady)
 		fx_text(player.global_position + Vector2(0, -30), "YOUR WICK STEADIES  +%d min" % int(steady), UI.GOLD)
@@ -984,7 +1004,7 @@ func _boss_down(e: Enemy) -> void:
 		add_pickup("trapdoor", free_spot_near(room.center() + Vector2(0, 36), 8.0))
 		for i in 4:
 			add_pickup("coin", room.center() + Vector2(0, 14), "", 0, Vector2.from_angle(rng.randf() * TAU) * 50.0)
-		player.damage += 0.15
+		player.damage += flame_growth()
 		fx_text(room.center() + Vector2(0, -30), "Your flame grows", UI.GOLD)
 		if str(fdef().get("area", "")) == "chapel":   # the Altar Pillar: snuff the Chapel's guardian
 			Game.unlock("pillar")
