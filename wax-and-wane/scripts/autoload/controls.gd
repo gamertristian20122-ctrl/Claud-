@@ -363,8 +363,9 @@ func rebind(action: String, event: InputEvent) -> String:
 	for other in InputMap.get_actions():
 		if other == action or str(other).begins_with("ui_"):
 			continue
-		if InputMap.action_has_event(other, event):
-			return str(other)
+		for e in InputMap.action_get_events(other):
+			if _same_input(e, event):
+				return str(other)
 	if event is InputEventKey:
 		b["key"] = int((event as InputEventKey).physical_keycode)
 		b["loc"] = int((event as InputEventKey).location)
@@ -378,6 +379,25 @@ func rebind(action: String, event: InputEvent) -> String:
 	Game.set_setting("binds", binds)
 	apply_binds()
 	return ""
+
+
+## The same key (by physical key; Left / Right only when both say), pad button or pad axis.
+## Modifier flags are ignored: pressing Shift reports itself as held, the map's Shift does not.
+static func _same_input(a: InputEvent, b: InputEvent) -> bool:
+	if a is InputEventKey and b is InputEventKey:
+		var ka := a as InputEventKey
+		var kb := b as InputEventKey
+		var ca := ka.physical_keycode if ka.physical_keycode != KEY_NONE else ka.keycode
+		var cb := kb.physical_keycode if kb.physical_keycode != KEY_NONE else kb.keycode
+		if ca != cb:
+			return false
+		return ka.location == KEY_LOCATION_UNSPECIFIED or kb.location == KEY_LOCATION_UNSPECIFIED or ka.location == kb.location
+	if a is InputEventJoypadButton and b is InputEventJoypadButton:
+		return (a as InputEventJoypadButton).button_index == (b as InputEventJoypadButton).button_index
+	if a is InputEventJoypadMotion and b is InputEventJoypadMotion:
+		return (a as InputEventJoypadMotion).axis == (b as InputEventJoypadMotion).axis \
+			and signf((a as InputEventJoypadMotion).axis_value) == signf((b as InputEventJoypadMotion).axis_value)
+	return false
 
 
 func reset_binds() -> void:

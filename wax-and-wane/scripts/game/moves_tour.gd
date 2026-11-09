@@ -126,8 +126,15 @@ static func check(at: Node) -> void:
 	e_key.physical_keycode = KEY_E
 	var r2 := Controls.rebind("special", e_key)
 	Controls.reset_binds()
-	_ok("rebind special (G, clash, reset)", g_ok and r2 == "bomb" and Controls.bound_glyph("special", false) == "SHIFT",
-		"G -> %s, E clash -> '%s', reset -> %s" % [g_ok, r2, Controls.bound_glyph("special", false)])
+	var ls := InputEventKey.new()   # a real Left Shift press reports Shift as held
+	ls.physical_keycode = KEY_SHIFT
+	ls.keycode = KEY_SHIFT
+	ls.location = KEY_LOCATION_LEFT
+	ls.shift_pressed = true
+	ls.pressed = true
+	var r3 := Controls.rebind("bomb", ls)
+	_ok("rebind special (G, clash, reset)", g_ok and r2 == "bomb" and r3 == "special" and Controls.bound_glyph("special", false) == "SHIFT",
+		"G -> %s, E clash -> '%s', bomb on Left Shift -> '%s', reset -> %s" % [g_ok, r2, r3, Controls.bound_glyph("special", false)])
 
 	# ---- frame timing (Tea Light): key press between two physics steps -> the move fires on the next one
 	var w: Node = await _stage(at, "tea_light")
