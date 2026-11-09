@@ -18,6 +18,7 @@ extends Node
 ##   -- --autotest --trailer=<scene>                               staged trailer footage (scripts/trailer.gd, tools/make_trailer.sh)
 ##   -- --autotest --playtest --boss=<kind> [--runs=N] [--speed=4]  one guardian's fight with its floor's kit, a line per fight
 ##   -- --autotest --tour --boss=<kind> --shots=/abs/dir           its versus card + two shots per phase (GuardiansV21.tour)
+##   -- --autotest --tour --intros[=<kind>] --shots=/abs/dir       every guardian's entrance, two shots each (BossIntro.tour)
 ##   -- --autotest --movescheck                                    v2.3 special moves: numbers, frame timing (MovesTour)
 ##   -- --autotest --tour --moves --shots=/abs/dir                 each candle's move mid-action, the HUD button, Keys page
 ##        [--nomoves]: playtests without the special moves (balance comparison)
@@ -757,6 +758,11 @@ func _tour() -> void:
 	if args.has("night"):   # the Long Night: the night length picker, a 7-floor run's HUD and banners, results, Journal
 		await _wait(0.5)
 		await load("res://scripts/night_check.gd").tour(self)
+		get_tree().quit()
+		return
+	if args.has("intros"):   # v2.4: each guardian's entrance mid-animation (boss_intro.gd); --intros=<kind>: one
+		await _wait(0.5)
+		await BossIntro.tour(self)
 		get_tree().quit()
 		return
 	if args.has("areas"):   # the Long Night's new areas: rooms, gimmicks, lodgers, guardians (areas.gd)
