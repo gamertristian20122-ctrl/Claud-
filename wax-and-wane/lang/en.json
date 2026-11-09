@@ -28,6 +28,7 @@
  "Bell Wire": "Bell Wire",
  "Bellows": "Bellows",
  "Big Game": "Big Game",
+ "Big round button: {move}. {line}": "Big round button: {move}. {line}",
  "Bigger shots, heavy knockback": "Bigger shots, heavy knockback",
  "Black Taper": "Black Taper",
  "Black flame!": "Black flame!",
@@ -327,7 +328,6 @@
  "special": "special",
  "stuns the lodgers near you": "stuns the lodgers near you",
  "{key}: {move}": "{key}: {move}",
- "{move}: press {key}. {line}": "{move}: press {key}. {line}",
- "{move}: tap the big round button. {line}": "{move}: tap the big round button. {line}",
+ "{key}: {move}. {line}": "{key}: {move}. {line}",
  "{move}: {line}": "{move}: {line}"
 }

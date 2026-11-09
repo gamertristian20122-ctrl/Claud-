@@ -384,6 +384,7 @@ static func tour(at: Node) -> void:
 		var foes := _lodgers(w, "goblin", [Vector2(34, -8), Vector2(-30, 16), Vector2(8, -30)])
 		if id == "slam":
 			foes.append(w.spawn_enemy("skelet", p.global_position + Vector2(26, 18)))
+		w.hud.show_hint(Controls.special_hint(id), 5.0)   # the first-fight tip (judged by --fit on every shot)
 		await at._wait(0.9)
 		for e in foes:
 			if is_instance_valid(e):
@@ -456,6 +457,7 @@ static func tour(at: Node) -> void:
 	w2.player.keepsake = "flare_match"
 	w2.player.charge = 1
 	await at._wait(0.3)
+	w2.hud.show_hint(Controls.special_hint("flare"), 4.0)
 	await at._shot("hud_keys")
 	Controls.set_device(Controls.PAD)
 	await at._wait(0.3)

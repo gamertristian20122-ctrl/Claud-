@@ -299,9 +299,10 @@ func controls_hint(with_wax := true) -> String:
 func special_hint(move_id: String) -> String:
 	if not Moves.LIST.has(move_id):
 		return ""
+	# one line under 80 characters (the hint is one line across the bottom of the screen)
 	if device == TOUCH:
-		return L.t("{move}: tap the big round button. {line}", {"move": Moves.name_of(move_id), "line": Moves.line_of(move_id)})
-	return L.t("{move}: press {key}. {line}", {"move": Moves.name_of(move_id), "key": glyph("special"), "line": Moves.line_of(move_id)})
+		return L.t("Big round button: {move}. {line}", {"move": Moves.name_of(move_id), "line": Moves.line_of(move_id)})
+	return L.t("{key}: {move}. {line}", {"move": Moves.name_of(move_id), "key": glyph("special"), "line": Moves.line_of(move_id)})
 
 
 ## The candle's move in the run on screen ("special" on the title and elsewhere).
