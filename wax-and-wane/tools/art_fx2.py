@@ -262,16 +262,23 @@ def save(im, name):
 
 
 # --------------------------------------------------------------------------
-# Enemy shots (7x7, two frames; Shot loads fx/<kind>). This file owns all eight: art_hero_fx_items.py
-# (the orbs) and art_tower.py (the cog) call build_enemy_shots() / enemy_shot_images() after their own
-# old versions, and tools/design_bullets.py rebuilds and judges just these.
+# Enemy shots (two frames each; Shot loads fx/<kind>_f<i>, or fx/<kind>_lg_f<i> with "Enemy shots: Large").
+# This file owns all eight: art_hero_fx_items.py (the orbs), art_tower.py (the cog) and art_monsters.py (the
+# bolts) call build_enemy_shots() / enemy_shot_images() after their own old versions, and
+# tools/design_bullets.py rebuilds and judges just these.
 # Friend or foe by SHAPE and LIGHTNESS, not hue (UX-02): every enemy shot is a dark-rimmed token (1 px
 # #21141b all round) with a white-hot core of at least a quarter of its inside (so it still clears 3:1
 # on every lit floor, tools/design_contrast.py) and the rest in the darkest tones of its hue; Tallow's
 # embers are bright flames with no dark rim. The cog is white enamel (pewter read as the Blue Flame's
 # ember for colour-blind players), the ring and the bone are white with dark rims.
+# v2.1 (easier to see on a phone): the shots are drawn one step bigger, 9 px (BIG_SHAPES[9], the Normal
+# set) and 11 px (BIG_SHAPES[11], the Large set, same hitboxes), with a 1 px rim of their own colour just
+# inside the dark outline (the orbs' rim is lit on the top-left and falls into shade on the bottom-right)
+# and a bigger white-hot core; frame 1 is a gentle pulse (the core one or two pixels bigger, the ring a
+# notch round, the bone or page a turn on). ENEMY_SHOTS keeps the 2.0 7 px drawings: a shot that only has
+# one of those (a new shot) is grown to 9 / 11 px by grow() until it is drawn by hand in BIG_SHAPES.
 # Judge: python3 tools/design_bullets.py --judge (colour distance to the player's shots under
-# protanopia / deuteranopia / tritanopia, the floor contrast, and a side-by-side sheet).
+# protanopia / deuteranopia / tritanopia, the floor contrast, and a side-by-side sheet, for both sets).
 # --------------------------------------------------------------------------
 SHOT_PAL = {
     "K": "#21141b", "2": "#2a2a3a", "w": "#fdf7ed", "p": "#9f294e", "v": "#5f2d56", "m": "#62232f",
@@ -396,24 +403,364 @@ for _k, _tones in ORB_TONES.items():
     ENEMY_SHOTS[_k] = ["".join(_tones.get(ch, ch) for ch in f) for f in ORB_SHAPE]
 
 
-def shot_image(rows):
+# ---- v2.1: the 9 px (Normal) and 11 px (Large) sets. Layers: K outline, C the shot's own rim colour (E: the
+# rim's shaded half), M / D body (lit side / shade), w the white-hot core; A / X / a ivory, parchment and tan.
+BIG_SHAPES = {
+    "orb": {9: ["""
+...KKK...
+.KKCCCKK.
+.KCMwMEK.
+KCMwwwDEK
+KCwwwwDEK
+KCMwwDDEK
+.KEDDDEK.
+.KKEEEKK.
+...KKK...
+""", """
+...KKK...
+.KKCCCKK.
+.KCwwMEK.
+KCwwwwDEK
+KCwwwwDEK
+KCMwwDDEK
+.KEDDDEK.
+.KKEEEKK.
+...KKK...
+"""], 11: ["""
+....KKK....
+..KKCCCKK..
+.KCCMMMEEK.
+.KCMwwwDEK.
+KCMwwwwwDEK
+KCMwwwwDDEK
+KCMwwwDDDEK
+.KEMwDDDEK.
+.KEEDDDEEK.
+..KKEEEKK..
+....KKK....
+""", """
+....KKK....
+..KKCCCKK..
+.KCCMwMEEK.
+.KCMwwwwEK.
+KCMwwwwwDEK
+KCMwwwwDDEK
+KCMwwwwDDEK
+.KEMwDDDEK.
+.KEEDDDEEK.
+..KKEEEKK..
+....KKK....
+"""]},
+    # rose wax: the bead with a drip
+    "wax": {9: ["""
+...KKK...
+.KKCCCKK.
+.KCMwMEK.
+KCMwwwDEK
+KCwwwwDEK
+.KCwwDEK.
+.KKEDEKK.
+...KEK...
+....K....
+""", """
+...KKK...
+.KKCCCKK.
+.KCwwMEK.
+KCwwwwDEK
+KCwwwwDEK
+.KCwwDEK.
+.KKEDEKK.
+...KEK...
+....K....
+"""], 11: ["""
+....KKK....
+..KKCCCKK..
+.KCCMMMEEK.
+.KCMwwwDEK.
+KCMwwwwwDEK
+KCMwwwwDDEK
+.KCMwwDDEK.
+..KEMwDEK..
+...KKEEKK..
+.....KEK...
+.....KK....
+""", """
+....KKK....
+..KKCCCKK..
+.KCCMwMEEK.
+.KCMwwwwEK.
+KCMwwwwwDEK
+KCMwwwwDDEK
+.KCMwwDDEK.
+..KEMwDEK..
+...KKEEKK..
+.....KEK...
+.....KK....
+"""]},
+    # the Sexton's bone, tumbling end over end: ivory edges, a white heart
+    "bone": {9: ["""
+.KK......
+KwwK.....
+KwAAK....
+.KAwAK...
+..KAwAK..
+...KAwAK.
+....KAAwK
+.....KwwK
+......KK.
+""", """
+......KK.
+.....KwwK
+....KAAwK
+...KAwAK.
+..KAwAK..
+.KAwAK...
+KwAAK....
+KwwK.....
+.KK......
+"""], 11: ["""
+.KKK.......
+KwwwK......
+KwwwAK.....
+KwwAwAK....
+.KAwwwAK...
+..KAwwwAK..
+...KAwwwAK.
+....KAwAwwK
+.....KAwwwK
+......KwwwK
+.......KKK.
+""", """
+.......KKK.
+......KwwwK
+.....KAwwwK
+....KAwAwwK
+...KAwwwAK.
+..KAwwwAK..
+.KAwwwAK...
+KwwAwAK....
+KwwwAK.....
+KwwwK......
+.KKK.......
+"""]},
+    # a sound wave: a white ring with an ivory rim, dark inside and out; the two swap (it ripples)
+    "ring": {9: ["""
+...KKK...
+.KKwwwKK.
+.KwAAAwK.
+KwAKKKAwK
+KwAK.KAwK
+KwAKKKAwK
+.KwAAAwK.
+.KKwwwKK.
+...KKK...
+""", """
+...KKK...
+.KKAAAKK.
+.KAwwwAK.
+KAwKKKwAK
+KAwK.KwAK
+KAwKKKwAK
+.KAwwwAK.
+.KKAAAKK.
+...KKK...
+"""], 11: ["""
+....KKK....
+..KKwwwKK..
+.KwwwwwwwK.
+.KwAAAAAwK.
+KwwAKKKAwwK
+KwwAK.KAwwK
+KwwAKKKAwwK
+.KwAAAAAwK.
+.KwwwwwwwK.
+..KKwwwKK..
+....KKK....
+""", """
+....KKK....
+..KKAAAKK..
+.KAAwwwAAK.
+.KAwwwwwAK.
+KAAwKKKwAAK
+KAwwK.KwwAK
+KAAwKKKwAAK
+.KAwwwwwAK.
+.KAAwwwAAK.
+..KKAAAKK..
+....KKK....
+"""]},
+    # a hymn-book page with a parchment edge, face on and edge on
+    "page": {9: ["""
+.KKKKKKK.
+KXXXXXXXK
+KXwwwwwXK
+KXwaaawXK
+KXwwwwwXK
+KXwaawwXK
+KXwwwwwXK
+KXXXXXXXK
+.KKKKKKK.
+""", """
+.........
+.........
+KKKKKKKKK
+KXXXXXXXK
+KwaaawaaK
+KXXXXXXXK
+KKKKKKKKK
+.........
+.........
+"""], 11: ["""
+.KKKKKKKKK.
+KXXXXXXXXXK
+KXXwwwwwXXK
+KXwwwwwwwXK
+KXwaaaawwXK
+KXwwwwwwwXK
+KXwaaawaaXK
+KXwwwwwwwXK
+KXXwwwwwXXK
+KXXXXXXXXXK
+.KKKKKKKKK.
+""", """
+...........
+...........
+KKKKKKKKKKK
+KXXXXXXXXXK
+KXwwwwwwwXK
+KwaaaawaaaK
+KXwwwwwwwXK
+KXXXXXXXXXK
+KKKKKKKKKKK
+...........
+...........
+"""]},
+    # the Keeper's and the sentries' cogs: white enamel, ivory teeth turning a notch each frame
+    "cog": {9: ["""
+...XKX...
+.KKAwAKK.
+.KAwwwaK.
+XAwwKwwaX
+KwwKKKwaK
+XAwwKwaaX
+.KaawaaK.
+.KKaaaKK.
+...XKX...
+""", """
+...KXK...
+.XKAwAKX.
+.KAwwwaK.
+KAwwKwwaK
+XwwKKKwaX
+KAwwKwaaK
+.KaawaaK.
+.XKaaaKX.
+...KXK...
+"""], 11: ["""
+....XKX....
+..KKXAXKK..
+.KAAwwwAAK.
+.KAwwwwwaK.
+XXwwwKwwaXX
+KAwwKKKwaaK
+XXwwwKwaaXX
+.KawwwwaaK.
+.KaaaaaaaK.
+..KKXaXKK..
+....XKX....
+""", """
+....KXK....
+..XKAAAKX..
+.XXwwwwwXX.
+.KAwwwwwaK.
+KAwwwKwwaaK
+XAwwKKKwaaX
+KAwwwKwaaaK
+.KawwwwaaK.
+.XXaaaaaXX.
+..XKaaaKX..
+....KXK....
+"""]},
+}
+BIG_BASE = {"K": "#21141b", "w": "#fdf7ed", "A": "#d3bfa9", "X": "#e2b694", "a": "#aa8d7a"}
+# shape and colours per shot. The rim colours were picked with design_bullets.py --judge: every pair with
+# the player's embers stays >= 30 apart for normal sight, protanopia and deuteranopia.
+BIG_TONES = {
+    "bullet_purple": ("orb", {"C": "#dc4a7b", "E": "#9b1a0a", "M": "#5f2d56", "D": "#9b1a0a"}),  # pink rim, plum and blood
+    "bullet_green": ("orb", {"C": "#4ba747", "E": "#3d734f", "M": "#3e5442", "D": "#2a2a3a"}),   # moss
+    "bullet_water": ("orb", {"C": "#72d6ce", "E": "#1f1833", "M": "#302c2b", "D": "#302c2b"}),   # black water, a lit rim
+    "bolt_wax": ("wax", {"C": "#f78697", "E": "#9b1a0a", "M": "#62232f", "D": "#9b1a0a"}),       # rose wax
+    "bolt_bone": ("bone", {}),
+    "bolt_cog": ("cog", {}),
+    "bolt_page": ("page", {}),
+    "bolt_ring": ("ring", {}),
+}
+# file suffix -> drawn size: fx/<kind>_f<i> (Normal) and fx/<kind>_lg_f<i> (Large)
+SHOT_SETS = {"": 9, "_lg": 11}
+
+
+def _rows(rows):
     rows = [r.strip() for r in rows.strip().split("\n")]
-    im = Image.new("RGBA", (7, 7), CLEAR)
+    assert all(len(r) == len(rows[0]) for r in rows), rows
+    return rows
+
+
+def shot_image(rows, pal=None):
+    """A shot drawing (any size) to an image: SHOT_PAL letters, or `pal` (letter -> "#rrggbb")."""
+    rows = _rows(rows)
+    pal = pal or SHOT_PAL
+    im = Image.new("RGBA", (len(rows[0]), len(rows)), CLEAR)
     px = im.load()
     for y, r in enumerate(rows):
-        assert len(r) == 7 and len(rows) == 7, rows
         for x, ch in enumerate(r):
             if ch != ".":
-                px[x, y] = hexc(SHOT_PAL[ch])
+                px[x, y] = hexc(pal[ch])
     return im
 
 
+def grow(rows, steps):
+    """A 2.0 7 px drawing (SHOT_PAL letters) grown by `steps` px all round, for a shot with no hand-drawn
+    9 / 11 px version yet: its old outline and the new pixels inside the new outline take its brightest
+    colour (the rim), and a new #21141b outline goes round the outside."""
+    rows = _rows(rows)
+    lum = lambda ch: sum(hexc(SHOT_PAL[ch])[:3])
+    cols = {ch for r in rows for ch in r} - {".", "K", "w"}
+    rim = max(cols, key=lum) if cols else "w"
+    n = len(rows) + 2 * steps
+    g = [["."] * n for _ in range(n)]
+    for y, r in enumerate(rows):
+        for x, ch in enumerate(r):
+            if ch != ".":
+                g[y + steps][x + steps] = rim if ch == "K" else ch
+    for s in range(steps):
+        add = []
+        for y in range(n):
+            for x in range(n):
+                if g[y][x] == "." and any(0 <= y + dy < n and 0 <= x + dx < n and g[y + dy][x + dx] != "."
+                                          for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                    add.append((x, y))
+        for x, y in add:
+            g[y][x] = "K" if s == steps - 1 else rim
+    return "\n".join("".join(r) for r in g)
+
+
+def big_shot_frames(kind, size):
+    """The two frames of an enemy shot at 9 or 11 px (hand-drawn, else grown from its 7 px drawing)."""
+    if kind in BIG_TONES:
+        shape, tones = BIG_TONES[kind]
+        pal = dict(BIG_BASE)
+        pal.update(tones)
+        return [shot_image(f, pal) for f in BIG_SHAPES[shape][size]]
+    return [shot_image(grow(f, (size - 7) // 2)) for f in ENEMY_SHOTS[kind]]
+
+
 def enemy_shot_images(names=None, prefix=""):
-    """{"<prefix><kind>_f<i>": Image} for the given enemy shots (all eight by default)."""
+    """{"<prefix><kind>[_lg]_f<i>": Image} for the given enemy shots (all of them by default), both sets."""
     out = {}
-    for k in names or ENEMY_SHOTS:
-        for i, f in enumerate(ENEMY_SHOTS[k]):
-            out["%s%s_f%d" % (prefix, k, i)] = shot_image(f)
+    for k in names or list(dict.fromkeys(list(ENEMY_SHOTS) + list(BIG_TONES))):
+        for suffix, size in SHOT_SETS.items():
+            for i, im in enumerate(big_shot_frames(k, size)):
+                out["%s%s%s_f%d" % (prefix, k, suffix, i)] = im
     return out
 
 

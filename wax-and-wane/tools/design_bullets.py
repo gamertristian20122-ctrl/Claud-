@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Rebuild only the enemy bullet sprites (assets/art/fx/bullet_*, bolt_*) and judge them against the player's
-shots (fix/art, UX-02: friend or foe by shape and lightness, not hue):
+"""Rebuild only the enemy bullet sprites (assets/art/fx/bullet_*, bolt_*: the 9 px Normal set <kind>_f<i> and the
+11 px Large set <kind>_lg_f<i>, v2.1) and judge them against the player's shots (fix/art, UX-02: friend or foe by
+shape and lightness, not hue):
 
     python3 tools/design_bullets.py [--review DIR] [--judge DIR] [--floors SHOTS_DIR]
 
 All eight are drawn by tools/art_fx2.py (ENEMY_SHOTS); art_hero_fx_items.py (orbs) and art_tower.py (cog)
 hand their old versions over to it, so re-running any of the three keeps these.
 
---judge DIR writes DIR/bullets_cvd.png (player shots above enemy shots on each floor's colour, with normal sight
-and simulated protanopia, deuteranopia and tritanopia; Machado, Oliveira & Fernandes 2009, severity 1) and prints:
+--judge DIR writes DIR/bullets_cvd.png (player shots above both sets of enemy shots on each floor's colour, with normal
+sight and simulated protanopia, deuteranopia and tritanopia; Machado, Oliveira & Fernandes 2009, severity 1) and prints,
+for each set:
   * dE: CIELAB dE76 between the mean colours of each enemy shot and the player's ember / Blue Flame ember (outline
     pixels left out, as the UX review's bullet_de.py), per vision type. Target: >= 30 for normal, protan, deutan.
   * floor: tools/design_contrast.py's rule (the better of rim and body against each floor's typical and bright
@@ -29,6 +31,7 @@ import art_fx2  # noqa: E402
 
 ART = os.path.join(os.path.dirname(HERE), "assets", "art")
 ENEMY = ["bullet_purple", "bullet_green", "bullet_water", "bolt_bone", "bolt_cog", "bolt_page", "bolt_ring", "bolt_wax"]
+SETS = {"": "Normal (9 px)", "_lg": "Large (11 px)"}   # file suffix -> "Enemy shots" setting
 PLAYER = {"ember": "fx/ember_f0", "blue ember": "fx/ember_blue_f0"}
 SHEET_PLAYER = ["fx/ember_f0", "fx/ember_f2", "fx/ember_blue_f0", "fx/ember_big_f0", "items/fx/spark_f0",
                 "items/fx/spark_blue_f0", "items/fx/ghost_f0", "items/fx/ring_f0"]
@@ -111,14 +114,14 @@ def dark_rim(im):
 
 def sheet(path, scale=6):
     cell = 13
-    names = [SHEET_PLAYER, ["fx/%s_f0" % n for n in ENEMY]]
+    names = [SHEET_PLAYER] + [["fx/%s%s_f0" % (n, sfx) for n in ENEMY] for sfx in SETS]
     W = (max(len(n) for n in names) + 1) * cell
-    H = 2 * cell * len(FLOOR_RGB)
+    H = len(names) * cell * len(FLOOR_RGB)
     base = Image.new("RGB", (W, H))
     d = ImageDraw.Draw(base)
     for fi, bg in enumerate(FLOOR_RGB):
         for row, ns in enumerate(names):
-            y = (fi * 2 + row) * cell
+            y = (fi * len(names) + row) * cell
             d.rectangle([0, y, W, y + cell - 1], fill=bg)
             for i, n in enumerate(ns):
                 if not os.path.exists(os.path.join(ART, n + ".png")):
@@ -133,7 +136,8 @@ def sheet(path, scale=6):
         a = arr if kind == "normal" else sim(arr.reshape(-1, 3), kind).reshape(arr.shape).astype(np.uint8)
         x, y = (i % 2) * (w + 8), (i // 2) * (h + 22)
         out.paste(Image.fromarray(a).resize((w, h), Image.NEAREST), (x, y + 12))
-        d.text((x + 2, y), "%s - rows: player shots / enemy shots, on each floor's colour" % kind, fill=(255, 255, 255))
+        d.text((x + 2, y), "%s - rows: player shots / enemy shots Normal / Large, on each floor's colour" % kind,
+               fill=(255, 255, 255))
     out.save(path)
     return path
 
@@ -141,23 +145,25 @@ def sheet(path, scale=6):
 def judge(d, floors):
     os.makedirs(d, exist_ok=True)
     players = {k: load(v) for k, v in PLAYER.items()}
-    print("dE76 to the player's shots (normal / protan / deutan / tritan), floor contrast, dark rim share")
     worst = 999.0
     worst_c = 999.0
-    for n in ENEMY:
-        frames = [load("fx/%s_f%d" % (n, i)) for i in range(2)]
-        cells = []
-        for pk, pim in players.items():
-            vals = []
-            for kind in CVD:
-                v = min(np.linalg.norm(mean_lab(f, kind) - mean_lab(pim, kind)) for f in frames)
-                vals.append(v)
-                if kind != "tritanopia":
-                    worst = min(worst, v)
-            cells.append("%s %s" % (pk, "/".join("%.0f" % v for v in vals)))
-        fc = min(floor_contrast(f, floors) for f in frames)
-        worst_c = min(worst_c, fc)
-        print("  %-14s %s | floor %.2f | rim %.0f%%" % (n, " | ".join(cells), fc, 100 * min(dark_rim(f) for f in frames)))
+    for sfx, label in SETS.items():
+        print("%s: dE76 to the player's shots (normal / protan / deutan / tritan), floor contrast, dark rim share" % label)
+        for n in ENEMY:
+            frames = [load("fx/%s%s_f%d" % (n, sfx, i)) for i in range(2)]
+            cells = []
+            for pk, pim in players.items():
+                vals = []
+                for kind in CVD:
+                    v = min(np.linalg.norm(mean_lab(f, kind) - mean_lab(pim, kind)) for f in frames)
+                    vals.append(v)
+                    if kind != "tritanopia":
+                        worst = min(worst, v)
+                cells.append("%s %s" % (pk, "/".join("%.0f" % v for v in vals)))
+            fc = min(floor_contrast(f, floors) for f in frames)
+            worst_c = min(worst_c, fc)
+            print("  %-14s %dpx %s | floor %.2f | rim %.0f%%" % (n, frames[0].shape[0], " | ".join(cells), fc,
+                                                              100 * min(dark_rim(f) for f in frames)))
     for k, pim in players.items():
         print("  %-14s (player) dark rim %.0f%%" % (k, 100 * dark_rim(pim)))
     print("worst dE (normal/protan/deutan) %.1f (target 30), worst floor contrast %.2f (target 3)" % (worst, worst_c))
@@ -185,11 +191,13 @@ def main():
     if "--review" in sys.argv:
         d = sys.argv[sys.argv.index("--review") + 1]
         os.makedirs(d, exist_ok=True)
-        sh = Image.new("RGBA", (len(ENEMY) * 80, 160), (40, 30, 34, 255))
+        sh = Image.new("RGBA", (len(ENEMY) * 104, 4 * 104), (40, 30, 34, 255))
         for i, n in enumerate(ENEMY):
-            for f in range(2):
-                im = Image.open(os.path.join(ART, "fx", "%s_f%d.png" % (n, f))).convert("RGBA")
-                sh.alpha_composite(im.resize((56, 56), Image.NEAREST), (i * 80 + 8, f * 80 + 8))
+            for j, sfx in enumerate(SETS):
+                for f in range(2):
+                    im = Image.open(os.path.join(ART, "fx", "%s%s_f%d.png" % (n, sfx, f))).convert("RGBA")
+                    sh.alpha_composite(im.resize((im.width * 8, im.height * 8), Image.NEAREST),
+                                       (i * 104 + 8, (j * 2 + f) * 104 + 8))
         sh.save(os.path.join(d, "bullets_8x.png"))
     print("bullets rebuilt")
     if "--judge" in sys.argv:
