@@ -164,10 +164,10 @@ func _draw() -> void:
 	for s in _sparks:
 		var pos: Vector2 = (s[0] as Vector2).round()
 		var k := clampf(float(s[5]) / Moves.SPARK_R, 0.0, 0.999)
-		# a 3 px trail behind each spark, stepping down the fire ramp
-		for t in 3:
-			var at := (pos - (s[1] as Vector2) * (2.0 + t * 2.0)).round()
-			draw_rect(Rect2(at, Vector2.ONE), Moves.SPARK_COLS[mini(t + 1 + int(k * 2.0), 4)])
+		# a 5 px trail behind each spark, stepping down the fire ramp
+		for t in 5:
+			var at := (pos - (s[1] as Vector2) * (2.0 + t * 1.5)).round()
+			draw_rect(Rect2(at, Vector2.ONE), Moves.SPARK_COLS[mini(1 + t / 2 + int(k * 2.0), 4)])
 		if not spark_frames.is_empty():
 			var tex: Texture2D = spark_frames[mini(int(k * spark_frames.size()), spark_frames.size() - 1)]
 			draw_texture(tex, pos - (tex.get_size() / 2.0).floor())

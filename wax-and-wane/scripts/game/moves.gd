@@ -82,6 +82,7 @@ var denied := 0.0           # s: a press was turned away (the button shakes)
 var _live := false
 var _was_ready := true
 var _cell := Vector2i(-99, -99)
+var _tipped := false         # the move's one-line tip was considered this run
 # Skip
 var _dash_left := 0.0
 var _dash_dir := Vector2.RIGHT
@@ -135,6 +136,23 @@ static func icon(id: String) -> String:
 
 static func cooldown(id: String) -> float:
 	return float(def(id).get("cd", 1.0))
+
+
+static var _rings := {}
+
+
+## The pixels of a 1 px ring of radius `r` round (0, 0), cached (the Slam's telegraph).
+static func ring_pixels(r: int) -> PackedVector2Array:
+	if _rings.has(r):
+		return _rings[r]
+	var out := PackedVector2Array()
+	for y in range(-r - 1, r + 2):
+		for x in range(-r - 1, r + 2):
+			var d := Vector2(x, y).length()
+			if d >= r - 0.5 and d < r + 0.5:
+				out.append(Vector2(x, y))
+	_rings[r] = out
+	return out
 
 
 ## The player's Moves node (null on stand-in players without one).
@@ -347,6 +365,12 @@ func _physics_process(dt: float) -> void:
 		if _snuff_t <= 0.0:
 			_end_snuff(true)
 	_watch_black()
+	if not _tipped and float(w.run_time) > 6.0 and w.count_enemies() > 0:
+		# the first fight of a run: a candle's first two runs (per slot) name its move and its key
+		_tipped = true
+		var tid := move_id()
+		if tid != "" and enabled and Game.tip("move_" + tid, 2):
+			w.hud.show_hint(Controls.special_hint(tid), 6.0)
 	if p.world and p.world.hud and move_id() == "flare" and ready and p.wax >= FLARE_MIN and w.count_enemies() > 0:
 		w.hud.preview_cost(FLARE_COST)   # the price, marching on the wax bar while Flare Up is ready
 
@@ -407,10 +431,12 @@ func _dash_step(dt: float) -> void:
 		p._move(_dash_dir * s)
 	var moved := p.global_position.distance_to(before)
 	_dash_trail += moved
-	while _dash_trail >= 5.0:
-		_dash_trail -= 5.0
-		var at := p.global_position - _dash_dir * _dash_trail + Vector2(randf_range(-2, 2), randf_range(-8, -1))
-		Juice.of(w).hot.emit(at, -_dash_dir * randf_range(10, 30) + Vector2(0, -randf_range(4, 14)),
+	while _dash_trail >= 6.0:
+		# the trail: a spark star every 6 px (plays out in 0.17 s) and loose embers round it
+		_dash_trail -= 6.0
+		var at := p.global_position - _dash_dir * _dash_trail + Vector2(0, -5)
+		MoveFx.of(w).burst(at + Vector2(randf_range(-1, 1), randf_range(-2, 2)), "moves/spark", 18.0)
+		Juice.of(w).hot.emit(at + Vector2(randf_range(-3, 3), randf_range(-3, 4)), -_dash_dir * randf_range(10, 30) + Vector2(0, -randf_range(4, 14)),
 			randf_range(0.18, 0.32), FxParts.SPARK, 30.0, 3.0, 1, false)
 	if moved < step * 0.25:   # into a wall: the dash is over
 		_dash_left = 0.0
@@ -509,7 +535,7 @@ func _slam_hit() -> void:
 					if room.char_at(cc) in ["U", "Z", "C", "B"]:
 						room.damage_obstacle(cc, 1.0)
 	var fx := MoveFx.of(w)
-	fx.ring(c, "moves/ring", 26.0)
+	fx.ring(c, "moves/ring", 20.0)
 	fx.flash(c + Vector2(0, -4), Color(1.0, 0.85, 0.6), 1.2, 1.3)
 	for i in 10:
 		var a := TAU * i / 10.0
@@ -703,13 +729,15 @@ func _watch_black() -> void:
 
 func _draw() -> void:
 	if _slam_t >= 0.0:
-		# the Slam's reach, chalked on the floor as it winds up (gold and cream dots)
+		# the Slam's reach on the floor as it winds up: a dashed gold and cream ring closing in on
+		# the real radius (what it will hit)
 		var k := 1.0 - clampf(_slam_t / SLAM_WINDUP, 0.0, 1.0)
-		var r := SLAM_R * (0.55 + 0.45 * k)
-		var n := 28
-		for i in n:
-			var at := (Vector2.from_angle(TAU * i / n) * r).round()
-			draw_rect(Rect2(at - Vector2(0, 1), Vector2(2, 1)), RING_COLS[i % 2])
+		var r := int(roundf(SLAM_R * (0.6 + 0.4 * k)))
+		var px := Moves.ring_pixels(r)
+		for i in px.size():
+			var v: Vector2 = px[i]
+			var dash := int(fposmod(atan2(v.y, v.x), TAU) / TAU * 40.0)
+			draw_rect(Rect2(v + Vector2(0, -1), Vector2.ONE), RING_COLS[dash % 2])
 	if _flare_t > 0.0:
 		_draw_heat(false)
 

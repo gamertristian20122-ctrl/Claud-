@@ -17,9 +17,9 @@ const GROW := 4.0            # the touch hit area reaches this far outside the b
 const SEGMENTS := 12
 const GOLD := Color("#facb3e")
 const CREAM := Color("#fdf7ed")
-const DIM_RING := Color("#483b3a")
+const DIM_RING := Color("#775c55")
 const DISC := Color("#21141b")
-const RIM := Color("#775c55")
+const RIM := Color("#aa8d7a")
 const RED := Color("#da4e38")
 
 var hud: Node
