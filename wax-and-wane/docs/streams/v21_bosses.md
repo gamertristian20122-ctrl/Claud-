@@ -70,7 +70,40 @@ Wax Coat; plus +0.15 damage per guardian already beaten and 100 / 88 / 78 / 100 
 the bot died to the Great Pendulum and the Hour Fiend every time, which says nothing about their pace). Omens are
 switched off.
 
-BALANCE_PLACEHOLDER
+## Balance judge (bot, `--speed=4`, `--boss=<kind> --runs=4`, the floor's kit above)
+Each new guardian was fought 4 times and compared with its two floor-mates under the same kit (target: within
+about +-30% on time to kill, hits taken and bot deaths). "Pace" is how long a whole guardian takes at the rate the
+bot actually took its health (a death counts the share it took), so it compares fights the bot sometimes loses.
+
+| Floor | Guardian | Fights | Bot deaths | Time to kill (s, mean of wins) | Pace (s per whole guardian) | Hits per fight | Hits per minute | Each fight |
+|---|---|---|---|---|---|---|---|---|
+| Cellar | Old Rot | 4 | 0 | 31.5 | 31.5 | 2.2 | 4.3 | 25s/0h, 33s/5h, 28s/1h, 40s/3h |
+| Cellar | Wax Mother | 4 | 0 | 35.6 | 35.6 | 2.5 | 4.2 | 36s/3h, 36s/3h, 35s/3h, 35s/1h |
+| Cellar | **Coal Furnace** | 4 | 0 | 29.6 | 29.5 | 2.8 | 5.6 | 30s/4h, 30s/2h, 29s/3h, 29s/2h |
+| Cellar | *new vs floor-mates* | | +0.0 deaths | -12% | -12% | +16% | | mates: 33.5 s (pace 33.5), 2.4 hits |
+| Crypt | Gaoler | 4 | 3 | 35.9 | 44.7 | 12.0 | 20.3 | died 41s@27%/11h, died 34s@14%/13h, died 31s@41%/13h, 36s/11h |
+| Crypt | Sexton | 4 | 0 | 43.4 | 43.4 | 4.0 | 5.5 | 47s/5h, 45s/4h, 46s/5h, 36s/2h |
+| Crypt | **Ossuary** | 4 | 0 | 40.8 | 40.8 | 7.2 | 10.7 | 46s/7h, 39s/9h, 36s/6h, 42s/7h |
+| Crypt | *new vs floor-mates* | | -1.5 deaths | +3% | -7% | -9% | | mates: 39.7 s (pace 44.0), 8.0 hits |
+| Chapel | Hollow Warden | 4 | 0 | 58.0 | 58.0 | 6.5 | 6.7 | 56s/5h, 60s/7h, 58s/7h, 59s/7h |
+| Chapel | Melted Choir | 4 | 0 | 36.5 | 36.5 | 6.8 | 11.1 | 36s/9h, 36s/7h, 36s/7h, 36s/4h |
+| Chapel | **Organist** | 4 | 0 | 44.2 | 44.2 | 5.2 | 7.1 | 46s/7h, 44s/5h, 42s/5h, 45s/4h |
+| Chapel | *new vs floor-mates* | | +0.0 deaths | -6% | -6% | -21% | | mates: 47.3 s (pace 47.3), 6.6 hits |
+| Belfry | Great Pendulum | 4 | 4 | - | 108.3 | 9.8 | 7.3 | died 57s@36%/11h, died 66s@26%/10h, died 125s@14%/7h, died 74s@27%/11h |
+| Belfry | Hour Fiend | 4 | 2 | 56.5 | 58.4 | 9.0 | 9.5 | 57s/9h, 56s/6h, died 55s@5%/11h, died 60s@5%/10h |
+| Belfry | **Weathercock** | 4 | 2 | 90.4 | 98.5 | 10.0 | 6.4 | died 101s@1%/11h, 105s/6h, 76s/12h, died 94s@17%/11h |
+| Belfry | *new vs floor-mates* | | -1.0 deaths | n/a (the Pendulum never fell) | +18% | +7% | | mates: pace 83.4 s, 9.4 hits |
+
+How it got there (new guardian vs the mean of its floor-mates; time to kill / hits):
+| Guardian | First build | Pass 1 | Pass 2 | Final |
+|---|---|---|---|---|
+| Coal Furnace | hp 86: -26% / +79% (coal under the bot's feet) | hp 100, 2/3/4 coals, 1.0 s first warning: -15% / +142% | hp 106, coal lands round Tallow: **-12% / +16%** | = pass 2 |
+| Ossuary | hp 106: -6% / -9% | skulls hurt only while rolling: **+3% / -9%** (pace -7%) | = pass 1 | = pass 1 |
+| Organist | hp 152, fixed lanes: -25% / -58% | hp 180, lanes fan round Tallow, quicker: -5% / -70% | pedal crossfire: -3% / -66%; then ring walls (30), rings in pairs, pedal spreads: -8% / -70% | hymn books from phase 2, pedal crossfires twice as often, lane notes in pairs: **-6% / -21%** |
+| Weathercock | hp 234, 72 wax: pace -24% / -68%, 0 vs 4 deaths | hp 224, fans + gale volleys, 100 wax: -35% / -36%, 0 vs 3 | hp 260, more darts, stronger gales: -26% / -15%, 0 vs 3 | hp 280: **pace +18% / hits +7%, 2 vs 3 deaths in 4** |
+
+### Normal runs (fresh profile, fresh seeds, `--playtest --speed=4 --runs=8`, all four new guardians in the pools)
+NORMAL_PLACEHOLDER
 
 ## Hooks (outside my files)
 - `enemy.gd`: four `DEFS` entries (before the Keeper) and the AI dispatch line (`g21_*` -> `GuardiansV21.ai()`).
