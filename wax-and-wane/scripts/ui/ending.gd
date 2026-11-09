@@ -400,7 +400,7 @@ func _credits() -> Array:
 		["DUNGEON ART", ["0x72 - 16x16 DungeonTileset II (CC0)", "the dungeon tiles, %s" % pages.cast_line(false)]],
 		["MUSIC", ["Ninja Adventure Asset Pack by Pixel-boy and AAA (CC0)",
 			"Dream - Crypt - Dungeon - Temple - Final Area", "Boat - Fight - Tension - Ascension - Credit Theme",
-			"Jingles: original, made for this game"]],
+			"Curse - Ruins - Melancholia", "Jingles: original, made for this game"]],
 		["SOUND", ["Kenney audio packs (CC0)", "Ninja Adventure sounds (CC0)", "Original synthesis"]],
 		["FONTS", ["Kenney Pixel and Kenney Mini by Kenney (CC0)"]],
 		["ENGINE", ["Godot Engine (MIT) - godotengine.org/license"]],

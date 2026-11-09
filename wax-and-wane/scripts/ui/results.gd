@@ -318,11 +318,12 @@ func _header(v: VBoxContainer, won: bool, f: int) -> void:
 
 ## "The Crypt 2/4" / "The Crypt, floor 2 of 4"; the secret floor above the house is never "5/4".
 func _where(f: int, style: String) -> String:
+	var nm := Records.floor_name(f, false, str(params.get("area", "")))   # a Long Night area names itself
 	if f > Records.floor_count():
-		return "%s%sabove the bells" % [Records.floor_name(f), " - " if style == " " else ", "]
+		return "%s%sabove the bells" % [nm, " - " if style == " " else ", "]
 	if style == " ":
-		return "%s %d/%d" % [Records.floor_name(f), f, Records.floor_count()]
-	return "%s%s%d of %d" % [Records.floor_name(f), style, f, Records.floor_count()]
+		return "%s %d/%d" % [nm, f, Records.floor_count()]
+	return "%s%s%d of %d" % [nm, style, f, Records.floor_count()]
 
 
 ## Score for the nightly seeded run; only the first try of a date counts as "first".

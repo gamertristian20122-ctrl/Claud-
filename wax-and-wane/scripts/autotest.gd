@@ -135,6 +135,9 @@ func _next_run() -> void:
 	if args.has("boss") and mode == "playtest":   # --boss=<kind>: one guardian's fight with its floor's kit
 		await get_tree().create_timer(0.5).timeout
 		GuardiansV21.trial(main.current, str(args["boss"]))
+	elif args.has("area") and mode == "playtest":   # --area=<id> [--areadepth=N] [--areaboss2]: a new area of the house (areas.gd)
+		await get_tree().create_timer(0.5).timeout
+		Areas.test_start(main.current, str(args["area"]), int(args.get("areadepth", str(Areas.TEST_DEPTH))), args.has("areaboss2"))
 
 
 ## --relics=a,b,c gives those relics at the start; --keepsake=id hands over a full keepsake.
@@ -198,6 +201,8 @@ func _process(dt: float) -> void:
 			and int(RunSave.snap["run"].get("floor", 0)) == cur.floor_num:
 		_cycled = cur.floor_num
 		_save_cycle()
+	if args.has("area"):
+		Areas.test_watch(self, cur)   # one line when the area's floor is done, then the run ends
 	if _status_t > 10.0 and cur and cur.name == "Game":
 		_status_t = 0.0
 		var w: Node = cur
@@ -220,6 +225,8 @@ func _process(dt: float) -> void:
 			print("[playtest]    blows %d, in the dark %d (%d%%)" % [Candles.blows, Candles.dark_blows, roundi(100.0 * Candles.dark_blows / Candles.blows)])
 		Candles.blows = 0
 		Candles.dark_blows = 0
+		if args.has("area"):
+			Areas.test_result(self, p)
 		var parts: Array = []
 		for f in _diag.keys():
 			var d: Array = _diag[f]
@@ -334,6 +341,7 @@ func drive(w: Node) -> Array:
 		if pos.distance_to(c) > 80:
 			mv += (c - pos).normalized() * 0.5
 		mv += Keeper.bot_push(w, pos)   # the Keeper's hands: get behind them or past their tips
+		mv += AreaGimmicks.bot_push(w, pos)   # hot stove tops, scalding broth, ink, the Dressmaker's whirling sheets
 		if w.keepsake_full() and (w.count_enemies() >= 3 or (w.boss and is_instance_valid(w.boss))):
 			w.use_keepsake()
 		if w.boss and is_instance_valid(w.boss) and p.bombs > 0 and _bomb_cd <= 0 and pos.distance_to(w.boss.global_position) < 30:
@@ -347,7 +355,7 @@ func drive(w: Node) -> Array:
 			if o is Pickup and o.kind == "trapdoor":
 				pick = o
 	if pick:
-		return [(pick.global_position - pos).normalized(), Vector2.ZERO]
+		return [((pick.global_position - pos).normalized() + AreaGimmicks.bot_push(w, pos)).normalized(), Vector2.ZERO]
 	# special rooms: ring the Seance bell, wind the music box, feed the font (sensibly, then move on)
 	var sp: Variant = Specials.bot_target(w)
 	if sp != null:
@@ -376,10 +384,10 @@ func drive(w: Node) -> Array:
 	if _room_t_total > 20.0 and Engine.get_physics_frames() % 120 == 0:
 		print("   [nav] cell=%s dir=%s my=%s door=%s next=%s grid=%s" % [w.cur_cell, dir, my_cell, door_cell, _path_next(room, my_cell, door_cell), room.data["grid"]])
 	if my_cell == door_cell or my_cell.x < 0 or my_cell.y < 0 or my_cell.x >= Room.COLS or my_cell.y >= Room.ROWS:
-		return [(exit_pt - pos).normalized(), Vector2.ZERO]
+		return [((exit_pt - pos).normalized() + AreaGimmicks.bot_push(w, pos)).normalized(), Vector2.ZERO]
 	var wp := _path_next(room, my_cell, door_cell)
 	var goal: Vector2 = room.cell_center(wp) + Vector2(0, 2)
-	return [(goal - pos).normalized(), Vector2.ZERO]
+	return [((goal - pos).normalized() + AreaGimmicks.bot_push(w, pos)).normalized(), Vector2.ZERO]   # round hot stove tops too
 
 
 ## Per floor: seconds, hits, wax lost to hits and wax gained back (printed with each result).
@@ -701,6 +709,10 @@ func _tour() -> void:
 		await _wait(1.0)
 		await Tower.tour(self)
 		get_tree().quit()
+		return
+	if args.has("areas"):   # the Long Night's new areas: rooms, gimmicks, lodgers, guardians (areas.gd)
+		await _wait(1.0)
+		await Areas.tour(self)
 		return
 	await _wait(0.25)
 	await _shot("title_intro")

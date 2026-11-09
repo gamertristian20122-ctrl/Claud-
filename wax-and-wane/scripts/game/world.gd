@@ -242,10 +242,25 @@ func _intro() -> void:
 
 # ---------------------------------------------------------------- floors & rooms
 
+## The area each floor is built from (scripts/game/areas.gd): floor number -> area id. Empty = the house as it is
+## (FLOORS / POOLS); only `--area=<id>` fills it for now. The night stream fills it from Areas.sequence().
+var floor_areas := {}
+
+
+## This floor's entry (name, theme, dark, music, boss, bosses): its area's, or FLOORS[n].
+func fdef(n := floor_num) -> Dictionary:
+	return Areas.floor_def(floor_areas[n]) if floor_areas.has(n) else FLOORS[n]
+
+
+## Who lives on this floor: its area's lodgers, or POOLS[n].
+func fpool(n := floor_num) -> Dictionary:
+	return Areas.pool(floor_areas[n]) if floor_areas.has(n) else POOLS[n]
+
+
 func floor_title() -> String:
-	var t := "%s  -  %d/%d" % [FLOORS[floor_num]["name"], floor_num, LAST_FLOOR]
+	var t := "%s  -  %d/%d" % [fdef()["name"], floor_num, LAST_FLOOR]
 	if floor_num > LAST_FLOOR:
-		t = "%s  -  above the bells" % FLOORS[floor_num]["name"]
+		t = "%s  -  above the bells" % fdef()["name"]
 	if omen != "":
 		t += "\n" + OMENS[omen]["name"]
 	return t
@@ -291,8 +306,8 @@ func _start_floor(n: int) -> void:
 	else:
 		layout = FloorGen.generate(n, frng)
 	recompute_discount()
-	boss_kind = Enemy.pick_boss(FLOORS[n]["bosses"], n, run_seed, Unlocks.fixed(self))   # seeded / daily: the seed alone
-	dark.color = FLOORS[n]["dark"]
+	boss_kind = Enemy.pick_boss(fdef(n)["bosses"], n, run_seed, Unlocks.fixed(self))   # seeded / daily: the seed alone
+	dark.color = fdef(n)["dark"]
 	for c in layout["cells"].keys():
 		layout["cells"][c]["seen"] = false
 	cur_cell = layout["start"]
@@ -309,15 +324,15 @@ func _start_floor(n: int) -> void:
 	player.vel = Vector2.ZERO
 	cam.position = _cam_target(room)
 	_on_enter_room()
-	Audio.music(FLOORS[n]["music"])
-	Audio.set_space(n)
+	Audio.music(fdef(n)["music"])
+	Audio.set_space(int(fdef(n).get("space", n)))
 	var steady := 0.0
 	if n in STEADY_FLOORS and player.wax < STEADY_BELOW:
 		steady = minf(STEADY_ADD, STEADY_BELOW - player.wax)
 		player.heal(steady)
 		fx_text(player.global_position + Vector2(0, -30), "YOUR WICK STEADIES  +%d min" % int(steady), UI.GOLD)
 	var omen_txt := ("   -   Omen: %s" % OMENS[omen]["name"]) if omen != "" else ""
-	hud.show_banner(FLOORS[n]["name"].to_upper(), "Floor %d of %d   -   %s%s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes()), omen_txt], 2.6)
+	hud.show_banner(fdef(n)["name"].to_upper(), "Floor %d of %d   -   %s%s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes()), omen_txt], 2.6)
 	if steady > 0.0 and Game.tip("steady", 1):
 		hud.show_hint("A new floor steadies a low wick: +%d min" % int(steady), 4.0)
 	elif omen != "":
@@ -346,7 +361,7 @@ func _build_room(c: Vector2i) -> Room:
 			if layout["cells"][c]["type"] == "secret" and not layout["cells"][c].get("revealed", false):
 				pass
 	rooms_layer.add_child(r)
-	r.build(self, c, layout["cells"][c], FLOORS[floor_num]["theme"], neighbours)
+	r.build(self, c, layout["cells"][c], fdef()["theme"], neighbours)
 	Juice.of(self).attach_stains(r)
 	# restore persistent pickups
 	for rec in layout["cells"][c]["pickups"]:
@@ -422,7 +437,7 @@ func champ_chance() -> float:
 
 func _spawn_room_enemies() -> void:
 	var champs_left := 2 if omen == "tallow_moon" else 1
-	var pool: Dictionary = POOLS[floor_num]
+	var pool: Dictionary = fpool()
 	var depth: int = room.data["dist"]
 	var opening := FloorGen.opening_now(layout, room.data)   # floor 1: the first two rooms call slow lodgers, no marked foes
 	for slot in room.spawn_slots():
@@ -457,7 +472,7 @@ func _spawn_room_enemies() -> void:
 func _start_boss() -> void:
 	room.set_open(false, true)
 	player.frozen = true
-	var kind: String = boss_kind if boss_kind != "" else FLOORS[floor_num]["boss"]
+	var kind: String = boss_kind if boss_kind != "" else fdef()["boss"]
 	var name: String = Enemy.DEFS[kind]["name"]
 	Audio.music("final_boss" if floor_num >= LAST_FLOOR else "boss")
 	Audio.play("boss_roar")
@@ -909,7 +924,7 @@ func _boss_down(e: Enemy) -> void:
 		if floor_num == 3:
 			Game.unlock("pillar")
 		_offer_altar()
-		Audio.music(FLOORS[floor_num]["music"]))
+		Audio.music(fdef()["music"]))
 	for i in 6:
 		var t2 := create_tween()
 		t2.tween_interval(i * 0.15)

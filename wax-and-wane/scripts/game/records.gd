@@ -260,6 +260,8 @@ static func killer_name(k: String) -> String:
 		"spikes": return "Floor Spikes"
 		"hearth": return "a Lit Hearth"
 		"oil": return "an Oil Jar"
+		"stove": return "a Hot Stove"
+		"scald": return "Scalding Broth"
 		"bomb": return "Your Own Bomb"
 		"clock": return "the Clock"
 		"gave_up": return "Your Own Breath"
@@ -275,6 +277,8 @@ static func short_killer(k: String) -> String:
 		"spikes": return "Floor spikes"
 		"hearth": return "A lit hearth"
 		"oil": return "An oil jar"
+		"stove": return "A hot stove"
+		"scald": return "Scalding broth"
 	return killer_name(k)
 
 
@@ -297,6 +301,7 @@ static func killer_icon(k: String, big := true) -> Texture2D:
 	if k.begins_with("e:"):
 		return portrait(k.substr(2))
 	var path: String = {"spikes": "0x72/floor_spikes_anim_f3", "hearth": "decor/prop_hearth", "oil": "decor/prop_oil_jar",
+		"stove": "areas/kitchen/stove", "scald": "areas/kitchen/pot",
 		"bomb": "0x72/bomb_f0", "clock": "items/pocket_watch", "gave_up": "items/snuffer_cap"}.get(k, "items/snuffer_cap")
 	for p in [path, "items/snuffer_cap"]:
 		if Art.has(p):
@@ -355,6 +360,7 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 	params["seed"] = int(w.run_seed)
 	params["seeded"] = bool(w.get_meta("seeded", false))
 	params["candle"] = str(w.candle_id)
+	params["area"] = str(w.fdef().get("area", "")) if w.has_method("fdef") else ""   # the area the run ended in
 	if int(w.best_streak) > int(Game.records.get("best_streak", 0)):
 		Game.records["best_streak"] = int(w.best_streak)
 	if won:
@@ -368,7 +374,7 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 	hist.push_front({"won": won, "candle": str(w.candle_id), "floor": int(w.floor_num), "clock": float(w.clock_minutes()),
 		"killer": killer, "relics": (w.player.relics as Array).duplicate(), "time": float(w.run_time), "kills": int(w.kills),
 		"streak": int(w.best_streak), "seed": int(w.run_seed), "daily": bool(w.daily), "date": lit,
-		"n": int(Game.records.get("runs", 0)), "level": int(w.level)})
+		"n": int(Game.records.get("runs", 0)), "level": int(w.level), "area": params["area"]})
 	while hist.size() > HISTORY:
 		hist.pop_back()
 	if bool(w.daily):
@@ -429,10 +435,13 @@ static func level_text(n: int) -> String:
 	return "Level %d - %s" % [n, str(level_def(n)["name"])]
 
 
-## "The Cellar" for floor 1 (any floor the world defines; "the House" past them).
-static func floor_name(n: int, lower_the := false) -> String:
+## "The Cellar" for floor 1 (any floor the world defines; "the House" past them). `area`: the area of the house the
+## floor was built from (world.fdef()["area"], kept with each run), which names it on longer nights.
+static func floor_name(n: int, lower_the := false, area := "") -> String:
 	var floors: Dictionary = preload("res://scripts/game/world.gd").FLOORS
 	var nm: String = str(floors[n]["name"]) if floors.has(n) else "The House"
+	if area != "" and Areas.LIST.has(area):
+		nm = str(Areas.def(area)["name"])
 	return ("the " + nm.substr(4)) if lower_the and nm.begins_with("The ") else nm
 
 

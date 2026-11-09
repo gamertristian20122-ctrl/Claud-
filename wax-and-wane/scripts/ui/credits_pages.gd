@@ -22,7 +22,7 @@ const PRIVACY := [
 ## [pack, what the game uses from it, licence, where it comes from]
 const ASSETS := [
 	["16x16 DungeonTileset II by 0x72", "dungeon tiles, %s, chests, coins, bombs, flasks", "CC0 1.0", "0x72.itch.io/dungeontileset-ii"],
-	["Ninja Adventure Asset Pack by Pixel-boy and AAA", "all 10 music tracks and a few sounds", "CC0 1.0", "pixel-boy.itch.io/ninja-adventure-asset-pack"],
+	["Ninja Adventure Asset Pack by Pixel-boy and AAA", "all 13 music tracks and a few sounds", "CC0 1.0", "pixel-boy.itch.io/ninja-adventure-asset-pack"],
 	["Kenney Pixel and Kenney Mini by Kenney", "the fonts", "CC0 1.0", "kenney.nl"],
 	["Kenney Foley, Impact, Interface, RPG Audio, Retro Sounds 1 and 2", "most sound effects, layered and processed", "CC0 1.0", "kenney.nl"],
 ]

@@ -87,6 +87,9 @@ scripts/game/enemies/             house_ai.gd (lodger AIs), boss_ai.gd (guardian
                                   soot_patch.gd, gallery.gd (bestiary review sheets)
 scripts/game/keeper.gd            the Clock Tower's creatures and the Keeper of Hours
 scripts/game/tower.gd             the Clock Tower: unlock, ladder, floor 5 layout and dressing, true ending hook
+scripts/game/areas.gd             the Long Night's areas of the house (Kitchen, Library, Attic + the 2.0 floors), sequence()
+scripts/game/area_ai.gd           the areas' lodgers and guardians (the Stockpot, the Head Librarian, the Dressmaker's Form)
+scripts/game/area_gimmicks.gd     stove tops, boiling pots, sliding shelves, shelf-doors, lanterns, dust sheets
 scripts/game/specials.gd          special rooms, offers and the house champions
 scripts/game/items.gd             relics, tonics, keepsakes, rites, Vigil gifts (data + stat relics)
 scripts/game/relic_fx.gd          everything relics do live (shots, curses, helpers, tonics, relic pools)
@@ -111,7 +114,7 @@ assets/0x72/frames/               0x72 DungeonTileset II frames (CC0)
 assets/art/                       our own pixel art (see DESIGN.md for every folder)
 assets/audio/                     music/ (12 slots) and sfx/ (74 files)
 assets/fonts/, assets/licenses/   Kenney fonts; every licence and per-file credit list
-tools/art_*.py                    art generators (rooms, decor, fx, items, monsters, specials, chalk, tower, ui, icon)
+tools/art_*.py                    art generators (rooms, decor, fx, items, monsters, specials, chalk, tower, areas, ui, icon)
 tools/import_audio.py, make_audio.py   music import + loudness, SFX and jingles
 tools/build_apk.sh, build_aab.sh, build_desktop.sh, android_sdk_setup.sh, store_art.py, steam/
 docs/                             REVAMP.md, streams/ (notes per 2.0 work stream), marketing/ (store pages, store_assets/)
@@ -137,6 +140,7 @@ godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
     --relics=a,b,c  --keepsake=id    start with these
     --savecycle           Save & quit + Continue at every floor
     --tower [--keeper [--keeperwax=N]]   start in the Clock Tower with a test kit (or at the Keeper)
+    --area=kitchen|library|attic|chapel [--areadepth=N] [--areaboss2]   start on a Long Night area (floor 3, a kit); one [area] line per run
     --nospecials          no special rooms or champions (balance baseline)
     --nocard              skip the boss versus card
     --boss=<kind>         straight into one guardian's fight with its floor's fixed kit, a line per fight
@@ -155,6 +159,7 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
     ... --tour --specials     every special room, Seance waves, the champions, the minimap marks
     ... --tour --journal      every Journal tab, death note, seed keypad, credits, chalk start room
     ... --tour --tower        ladder, Clock Tower, the Keeper's phases, the four ending scenes, TRUE ENDING
+    ... --tour --areas        the Long Night's new areas: rooms, gimmicks, lodgers, guardian cards and fights
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
     ... --tour --slots        the save slots, the level picker, a level 3 run, Level / Delete / Continue (on a copied 2.0
                               profile it checks the move into Slot 1 record by record)
@@ -212,6 +217,9 @@ AI narrator, which is not in the game.
   | The Crypt | 21 - Dungeon |
   | The Chapel | 12 - Temple |
   | The Belfry | 24 - Final Area |
+  | The Kitchen (longer nights) | 14 - Curse |
+  | The Library (longer nights) | 30 - Ruins |
+  | The Attic (longer nights) | 16 - Melancholia |
   | The Clock Tower | 19 - Ascension |
   | Shop | 39 - Boat |
   | Guardians (floors 1-3) | 17 - Fight |

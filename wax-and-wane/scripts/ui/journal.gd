@@ -623,19 +623,7 @@ func _d_relic(e: Dictionary) -> void:
 
 
 func _haunts(kind: String) -> String:
-	var fl: Array = []
-	var pools: Dictionary = preload("res://scripts/game/world.gd").POOLS
-	var ns: Array = pools.keys()
-	ns.sort()
-	for n in ns:
-		for slot in pools[n].values():
-			if kind in slot and not Records.floor_name(n, true) in fl:
-				fl.append(Records.floor_name(n, true))
-	if fl.is_empty():
-		return ""
-	if fl.size() == 1:
-		return "Haunts " + fl[0]
-	return "Haunts " + ", ".join(fl.slice(0, fl.size() - 1)) + " and " + fl[fl.size() - 1]
+	return Areas.haunts_text(kind)   # every area of the house, in order (scripts/game/areas.gd)
 
 
 func _d_lodger(e: Dictionary) -> void:
@@ -661,11 +649,7 @@ func _d_guardian(e: Dictionary) -> void:
 	var kind: String = e["id"]
 	var d: Dictionary = Enemy.DEFS[kind]
 	var known: bool = e["known"]
-	var fl := ""
-	var floors: Dictionary = preload("res://scripts/game/world.gd").FLOORS
-	for n in floors:
-		if kind in floors[n]["bosses"]:
-			fl = Records.floor_name(n, true)
+	var fl := Areas.guards_text(kind)   # e.g. "the Cellar and the Kitchen"
 	var subs: Array = [["Guardian of " + fl, UI.EMBER]]
 	_head(_creature_pic(kind, known), Records.title_case(str(d.get("name", kind))) if known else "???", subs, UI.GOLD if known else UI.DIM)
 	if not known:
@@ -811,7 +795,7 @@ func _d_run(r: Dictionary) -> void:
 	var title := "Run %d" % int(r.get("n", 0))
 	var sub := ("Done by %s" % Game.clock_text(float(r.get("clock", 0.0)))) if won else Records.death_line(killer)
 	_head(_pic(tex, k), title, [[sub, UI.GOLD if won else UI.RED]], UI.GOLD)
-	var where := "%s - %s (%s)" % [Candles.def_of(str(r.get("candle", "tallow")))["name"], Records.floor_name(fl),
+	var where := "%s - %s (%s)" % [Candles.def_of(str(r.get("candle", "tallow")))["name"], Records.floor_name(fl, false, str(r.get("area", ""))),
 		"above the bells" if fl > Records.floor_count() else "%d/%d" % [fl, Records.floor_count()]]
 	if won:
 		where += " - " + Game.clock_text(float(r.get("clock", 0.0)))
@@ -900,7 +884,7 @@ class JSlot extends Button:
 				line2 = "%d night%s" % [(Game.records.get("daily_history", []) as Array).size(), "" if (Game.records.get("daily_history", []) as Array).size() == 1 else "s"]
 			"run":
 				var r: Dictionary = e["run"]
-				line1 = "Run %d  %s" % [int(r.get("n", 0)), Records.floor_name(maxi(1, int(r.get("floor", 1))))]
+				line1 = "Run %d  %s" % [int(r.get("n", 0)), Records.floor_name(maxi(1, int(r.get("floor", 1))), false, str(r.get("area", "")))]
 				if r.get("won", false):
 					line2 = "Done by " + Game.clock_text(float(r.get("clock", 0.0)))
 					c2 = UI.GOLD

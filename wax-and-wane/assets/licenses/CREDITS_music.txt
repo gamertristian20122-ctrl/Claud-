@@ -17,6 +17,9 @@ Ogg Vorbis q4, 44.1 kHz stereo, loop=true.
   final_boss.ogg       "28 - Tension" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
   floor_5.ogg          "19 - Ascension" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
   ending.ogg           "15 - Credit Theme" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  area_kitchen.ogg     "14 - Curse" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  area_library.ogg     "30 - Ruins" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
+  area_attic.ogg       "16 - Melancholia" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
   victory_jingle.ogg   original composition, synthesized for this game (tools/make_audio.py)
   death_jingle.ogg     original composition, synthesized for this game (tools/make_audio.py)
 
@@ -31,3 +34,6 @@ Why each track (measured; see tools/import_audio.py MUSIC):
   final_boss: Hour Fiend: the densest usable track in the pack (4.89 onsets/s) and one of the two most percussive (0.30) - the peak of the tension ramp.
   floor_5: Clock Tower (secret floor 5): a step sideways after the Belfry - low (MIDI 60), sparse (2.29 onsets/s), unsettled (diss 0.21, B minor-ish) and moonlit-eerie; the Keeper of Hours still gets final_boss.
   ending: True ending cards and credits roll: the pack's own credits piece, high (MIDI 77) and consonant (diss 0.04), C# minor but gentle; 68 s covers the four cards and the roll.
+  area_kitchen: The Kitchen: warm and low (mean pitch MIDI 61, the darkest centroid of the candidates, 432 Hz), consonant (diss 0.01) but restless (3.01 onsets/s) with slow simmering swells (12.4 dB): a busy range with something wrong in the pot; 72 s. (Manor was denser than the Belfry, 3.83/s.)
+  area_library: The Library: the hush - sparse (2.46 onsets/s), the clearest minor of the candidates (Bb minor, +0.13), uneasy (diss 0.28), low (MIDI 63) and the widest swells of all (17.2 dB): long quiet stretches that rise and fall like pages turning; a breather before the Chapel; 48 s.
+  area_attic: The Attic: old things under dust sheets - the softest percussion of every candidate (0.11), music-box-like and melancholy, uneasy (diss 0.17) with wide swells (12.2 dB), a little denser than the Chapel (2.95 onsets/s) on the last climb before the Belfry; 40 s.

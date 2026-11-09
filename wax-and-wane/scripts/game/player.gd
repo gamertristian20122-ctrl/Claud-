@@ -562,6 +562,7 @@ func _process(dt: float) -> void:
 	light.texture_scale = lerpf(0.95, 1.5, wf) * flick * light_mult
 	if world and world.get("omen") == "smoky_halls":
 		light.texture_scale = maxf(0.95 * light_mult, light.texture_scale * 0.85)
+	light.texture_scale *= AreaGimmicks.light_mult(world)   # the attic's deep dark
 	var keep := clampf(1.0 - _melt / 0.8, 0.0, 1.0)
 	if dead:
 		light.energy = 1.0 * keep * flick

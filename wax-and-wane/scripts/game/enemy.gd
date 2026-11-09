@@ -106,6 +106,25 @@ const DEFS := {
 		"name": "Minute-Hand Wraith", "lore": "It was late, once. It has been hurrying ever since.", "stain": Color("#b6cbcf")},
 	"gutterspout": {"hp": 18.0, "speed": 0.0, "ai": "turret", "r": 6.0, "heavy": true, "cd": 1.2, "name": "Gutterspout", "glow_px": ["#facb3e"],
 		"lore": "Spat rain off the belfry roof for centuries. It aims better now.", "stain": Color("#7b8994")},
+	# ---- the Long Night's new areas (scripts/game/area_ai.gd, art in assets/art/areas/<area>/)
+	"lid_crab": {"hp": 6.0, "speed": 30.0, "ai": "area_crab", "r": 6.0, "cd": 1.8, "no_flip": true, "sprite": "areas/kitchen/lid_crab",
+		"name": "Pot-Lid Crab", "lore": "Found a copper lid under the dresser and never let it go. Hit it where the lid isn't.",
+		"stain": Color("#da4e38")},
+	"flour_ghost": {"hp": 7.0, "speed": 34.0, "ai": "area_flour", "r": 5.0, "fly": true, "cd": 4.0, "sprite": "areas/kitchen/flour_ghost",
+		"name": "Flour Ghost", "lore": "The mice emptied the miller's sack, and the sack got up. Its clouds swallow every shot.",
+		"stain": Color("#d3bfa9")},
+	"bookworm": {"hp": 7.0, "speed": 30.0, "ai": "area_worm", "r": 5.0, "cd": 1.6, "face_dir": true, "sprite": "areas/library/bookworm",
+		"name": "Bookworm", "lore": "Has eaten through every shelf in the library and read none of it.", "stain": Color("#dc4a7b")},
+	"inkblot": {"hp": 10.0, "speed": 22.0, "ai": "area_ink", "r": 6.0, "cd": 2.8, "split": ["ink_drop", 2], "sprite": "areas/library/inkblot",
+		"name": "Inkblot", "lore": "Spilled on a ghost story and soaked up the ending. It leaves the rest of it on the floor.",
+		"stain": Color("#314152")},
+	"ink_drop": {"hp": 2.0, "speed": 40.0, "ai": "area_inkdrop", "r": 4.0, "touch": 4.0, "small_fry": true, "sprite": "areas/library/ink_drop",
+		"name": "Ink Drop", "lore": "A blot that got away. Whatever it crawls over stays sticky.", "stain": Color("#314152")},
+	"mannequin": {"hp": 14.0, "speed": 54.0, "ai": "area_dummy", "r": 6.0, "cd": 2.4, "sprite": "areas/attic/mannequin", "glow_px": ["#da4e38"],
+		"name": "Lantern-Shy Mannequin", "lore": "The artist's wooden figure from under the eaves. In the light it is only wood.",
+		"stain": Color("#d8a57d")},
+	"trunk": {"hp": 15.0, "speed": 70.0, "ai": "area_trunk", "r": 6.0, "cd": 1.6, "sprite": "areas/attic/trunk",
+		"name": "Snapping Trunk", "lore": "Packed for a voyage that never sailed. It has been hungry ever since.", "stain": Color("#8a503e")},
 	# ---- bosses
 	"big_zombie": {"hp": 78.0, "speed": 20.0, "ai": "boss_rot", "r": 11.0, "boss": true, "heavy": true, "name": "OLD ROT",
 		"title": "It sleeps under the cellar stairs", "lore": "The first lodger. It has been rotting down there since the house was built.",
@@ -150,6 +169,20 @@ const DEFS := {
 		"no_flip": true, "glow_px": ["#facb3e"], "title": "It turns with every wind", "victory": "THE WEATHERCOCK FALLS SILENT",
 		"phase_lines": ["", "The wind changes!", "A storm breaks over the belfry!"],
 		"lore": "The copper rooster on the belfry roof. A hundred years of storms taught it which way to blow.", "stain": Color("#49a790")},
+	# the Long Night's guardians (scripts/game/area_ai.gd); each area's second option is an older guardian (Areas.LIST)
+	"stockpot": {"hp": 175.0, "speed": 16.0, "ai": "area_stockpot", "r": 13.0, "boss": true, "heavy": true, "sprite": "areas/kitchen/stockpot",
+		"name": "THE STOCKPOT", "title": "It has simmered since the house was built", "glow_px": ["#facb3e"],
+		"phase_lines": ["", "It boils over...", "The broth is SCALDING!"],
+		"lore": "Every soup the house ever made went into it. Something in there is still cooking.", "stain": Color("#c56025")},
+	"librarian": {"hp": 158.0, "speed": 20.0, "ai": "area_librarian", "r": 10.0, "boss": true, "heavy": true, "sprite": "areas/library/librarian",
+		"name": "THE HEAD LIBRARIAN", "title": "Silence in the reading room", "glow_px": ["#72d6ce"],
+		"phase_lines": ["", "Shhhh...", "SILENCE!"],
+		"lore": "She shushed the house for two hundred years. Tonight she wants it quiet for good.", "stain": Color("#314152")},
+	"dress_form": {"hp": 165.0, "speed": 22.0, "ai": "area_form", "r": 12.0, "boss": true, "heavy": true, "sprite": "areas/attic/dress_form",
+		"name": "THE DRESSMAKER'S FORM", "title": "Still waiting for its fitting",
+		"phase_lines": ["", "It pins you down...", "Cut along the dotted line!"],
+		"lore": "The dressmaker left it pinned and half-finished. It has been measuring the dark for someone to fit.",
+		"stain": Color("#e2b694")},
 	"keeper": {"hp": 380.0, "speed": 0.0, "ai": "tower_keeper", "r": 14.0, "boss": true, "heavy": true, "name": "THE KEEPER OF HOURS",
 		"title": "It winds the house, every night", "phase_lines": ["", "Time stands still...", "It chimes for you!"],
 		"victory": "THE KEEPER OF HOURS IS STILLED", "no_flip": true, "secret": true,
@@ -254,16 +287,17 @@ static func frames_for(sname: String) -> SpriteFrames:
 	if _frames_cache.has(sname):
 		return _frames_cache[sname]
 	var sf: SpriteFrames
-	if Art.has("monsters/%s_idle_f0" % sname):
+	var base := sname if "/" in sname else "monsters/" + sname   # the areas' creatures: "areas/<area>/<name>"
+	if Art.has("%s_idle_f0" % base):
 		sf = SpriteFrames.new()
 		sf.remove_animation("default")
 		for a in MONSTER_ANIMS:
-			if not Art.has("monsters/%s_%s_f0" % [sname, a]):
+			if not Art.has("%s_%s_f0" % [base, a]):
 				continue
 			sf.add_animation(a)
 			sf.set_animation_loop(a, a in ["idle", "run", "atk", "mound"])
 			sf.set_animation_speed(a, {"idle": 7.0, "run": 10.0, "atk": 8.0, "rise": 10.0, "mound": 6.0}.get(a, 8.0))
-			for tx in Art.seq("monsters/%s_%s" % [sname, a]):
+			for tx in Art.seq("%s_%s" % [base, a]):
 				sf.add_frame(a, tx)
 	elif sname == "chest_mimic":
 		sf = Art.anim("0x72/chest_mimic_open_anim", 8.0)
@@ -364,7 +398,7 @@ func _ready() -> void:
 			_house = HouseAI.new()
 			_bosses = BossAI.new()
 		_ext = true
-		_brain = Callable(Keeper.ai() if ai.begins_with("tower_") else (GuardiansV21.ai() if ai.begins_with("g21_") else (_bosses if ai.begins_with("boss_") else _house)), ai)
+		_brain = Callable(Keeper.ai() if ai.begins_with("tower_") else (GuardiansV21.ai() if ai.begins_with("g21_") else (AreaAI.ai() if ai.begins_with("area_") else (_bosses if ai.begins_with("boss_") else _house))), ai)
 		if _brain.get_object().has_method("init_" + ai):
 			_brain.get_object().call("init_" + ai, self)
 	# some arrive in a flutter of friends
@@ -947,6 +981,8 @@ func _ai_boss_fiend(ddt: float, to_p: Vector2, dist: float) -> void:
 func take_hit(dmg: float, knock: Vector2, burn := 0.0) -> void:
 	if not alive or not active:
 		return
+	if _ext and _brain.get_object().has_method("hit_" + def["ai"]) and not _brain.get_object().call("hit_" + def["ai"], self, dmg, knock):
+		return   # the behaviour turned the hit away (the Pot-Lid Crab's lid)
 	if burn > 0.0:
 		burn_t = maxf(burn_t, burn)
 	if not heavy:
@@ -1016,6 +1052,8 @@ func _die() -> void:
 		get_tree().create_timer(0.4, false).timeout.connect(func():
 			if is_instance_valid(w) and not w.finished:
 				w.burst(at, 6, 65.0, "bullet_water", off))
+	if _ext and _brain.get_object().has_method("died_" + def["ai"]):
+		_brain.get_object().call("died_" + def["ai"], self)   # e.g. an Inkblot leaves its puddles
 	if def.has("split") and world.room and not get_meta("no_split", false):
 		# a Rose Melt falls apart into drops that keep coming
 		var sp: Array = def["split"]

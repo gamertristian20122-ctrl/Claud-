@@ -87,6 +87,21 @@ MUSIC = {
     "ending": {"src": NINJA_MUSIC + "15 - Credit Theme.ogg", "why":
                "True ending cards and credits roll: the pack's own credits piece, high (MIDI 77) and consonant "
                "(diss 0.04), C# minor but gentle; 68 s covers the four cards and the roll."},
+    # v2.2 areas stream (The Long Night): one track per new area of the house, slot area_<id> (scripts/game/areas.gd).
+    # Picked with `analyse` from the 14 tracks no slot used yet; the night's ramp by onset density then reads
+    # Cellar 1.96 -> Crypt 2.50 -> Kitchen 3.01 -> Library 2.46 -> Chapel 2.72 -> Attic 2.95 -> Belfry 3.72 /s.
+    "area_kitchen": {"src": NINJA_MUSIC + "14 - Curse.ogg", "why":
+                     "The Kitchen: warm and low (mean pitch MIDI 61, the darkest centroid of the candidates, 432 Hz), "
+                     "consonant (diss 0.01) but restless (3.01 onsets/s) with slow simmering swells (12.4 dB): a busy "
+                     "range with something wrong in the pot; 72 s. (Manor was denser than the Belfry, 3.83/s.)"},
+    "area_library": {"src": NINJA_MUSIC + "30 - Ruins.ogg", "why":
+                     "The Library: the hush - sparse (2.46 onsets/s), the clearest minor of the candidates (Bb minor, "
+                     "+0.13), uneasy (diss 0.28), low (MIDI 63) and the widest swells of all (17.2 dB): long quiet "
+                     "stretches that rise and fall like pages turning; a breather before the Chapel; 48 s."},
+    "area_attic": {"src": NINJA_MUSIC + "16 - Melancholia.ogg", "why":
+                   "The Attic: old things under dust sheets - the softest percussion of every candidate (0.11), "
+                   "music-box-like and melancholy, uneasy (diss 0.17) with wide swells (12.2 dB), a little denser "
+                   "than the Chapel (2.95 onsets/s) on the last climb before the Belfry; 40 s."},
 }
 # victory_jingle / death_jingle stay the original synthesized ones (tools/make_audio.py): they are 3-4 s long to fit
 # the victory banner and the snuff-out sequence, minor/major as needed and built from the game's own bell and music

@@ -17,6 +17,10 @@ const SCONCE := {
 	"chapel": {"flame": "candle", "top": [Vector2(8, 4)], "side": [Vector2(6, 4)], "col": Color(1.0, 0.74, 0.45), "e": 0.8, "s": 0.55},
 	"belfry": {"flame": "glass", "top": [Vector2(8, 9)], "side": [Vector2(5, 8)], "col": Color(1.0, 0.66, 0.36), "e": 0.9, "s": 0.6},
 	"tower": {"flame": "glass", "top": [Vector2(8, 9)], "side": [Vector2(5, 8)], "col": Color(1.0, 0.7, 0.42), "e": 0.85, "s": 0.58},
+	# the Long Night's areas (tools/art_areas.py): an oil lamp, a green-shaded reading lamp, a tin candle holder
+	"kitchen": {"flame": "glass", "top": [Vector2(8, 9)], "side": [Vector2(4, 9)], "col": Color(1.0, 0.66, 0.36), "e": 0.9, "s": 0.6},
+	"library": {"flame": "candle", "top": [Vector2(8, 11)], "side": [Vector2(4, 9)], "col": Color(0.95, 0.84, 0.55), "e": 0.8, "s": 0.55},
+	"attic": {"flame": "candle", "top": [Vector2(8, 8)], "side": [Vector2(3, 8)], "col": Color(1.0, 0.7, 0.42), "e": 0.7, "s": 0.5},
 }
 ## theme -> top wall pieces: [name, width in tiles, x offset, y]. The first is the theme's signature
 ## piece and is tried first in most rooms.
@@ -30,9 +34,16 @@ const WALL := {
 		["wall_hole_1_belfry", 1, 0, 16], ["wall_hole_2_belfry", 1, 0, 16]],
 	"tower": [["wall_tower_clock", 2, 1, 10], ["wall_tower_gear", 1, 0, 16], ["wall_tower_weights", 1, 0, 16],
 		["wall_tower_shelf", 2, 0, 16], ["wall_tower_gear", 1, 0, 16]],
+	"kitchen": [["wall_kitchen_pans", 2, 0, 16], ["wall_kitchen_ladles", 1, 0, 16], ["wall_kitchen_plates", 2, 0, 16],
+		["wall_kitchen_onions", 1, 0, 16], ["wall_kitchen_spices", 2, 0, 16], ["wall_kitchen_knives", 1, 0, 16]],
+	"library": [["wall_library_books", 2, 0, 16], ["wall_library_narrow", 1, 0, 16], ["wall_library_books_b", 2, 0, 16],
+		["wall_library_portrait", 2, 0, 16], ["wall_library_map", 1, 0, 16], ["wall_library_narrow", 1, 0, 16]],
+	"attic": [["wall_attic_shelf", 2, 0, 16], ["wall_attic_lavender", 1, 0, 16], ["wall_attic_frame", 1, 0, 16],
+		["wall_attic_coat", 1, 0, 16]],
 }
-const SIDE := {"cellar": "side_herbs", "crypt": "side_chains", "chapel": "side_banner", "belfry": "side_rope", "tower": "side_tower"}
-const CORNER_WEBS := ["cellar", "crypt"]
+const SIDE := {"cellar": "side_herbs", "crypt": "side_chains", "chapel": "side_banner", "belfry": "side_rope", "tower": "side_tower",
+	"kitchen": "side_kitchen", "library": "side_library", "attic": "side_attic"}
+const CORNER_WEBS := ["cellar", "crypt", "attic"]
 ## theme -> flat floor decals (any floor cell) and wall-foot decals (row 0, leaning on the top wall)
 const FLOOR := {
 	"cellar": ["decor/floor_straw_0", "decor/floor_straw_1", "decor/floor_puddle", "decor/floor_grain", "rooms/decal_crack_0", "rooms/decal_crack_1"],
@@ -40,9 +51,17 @@ const FLOOR := {
 	"chapel": ["decor/floor_pages_0", "decor/floor_pages_1", "decor/floor_book", "rooms/decal_crack_1", "decor/floor_pages_1"],
 	"belfry": ["decor/floor_feathers_0", "decor/floor_feathers_1", "decor/floor_cog", "decor/floor_rope_coil", "rooms/decal_crack_0", "decor/floor_feathers_0"],
 	"tower": ["tower/floor_cogs", "tower/floor_spring", "tower/floor_screws", "tower/floor_key", "tower/floor_oil", "decor/floor_cog", "rooms/decal_crack_0"],
+	"kitchen": ["areas/kitchen/floor_flour", "areas/kitchen/floor_peas", "areas/kitchen/floor_spoon", "areas/kitchen/floor_shards",
+		"areas/kitchen/floor_puddle", "areas/kitchen/floor_flour"],
+	"library": ["areas/library/floor_book", "areas/library/floor_pages", "areas/library/floor_stack", "areas/library/floor_ink",
+		"areas/library/floor_quill", "areas/library/floor_pages"],
+	"attic": ["areas/attic/floor_dust", "areas/attic/floor_buttons", "areas/attic/floor_scraps", "areas/attic/floor_soldier",
+		"areas/attic/floor_pins", "areas/attic/floor_dust"],
 }
 const FOOT := {"cellar": ["decor/floor_sack"], "crypt": ["decor/floor_candle_stubs"],
-	"chapel": ["decor/floor_candle_stubs", "decor/floor_book"], "belfry": ["decor/floor_rope_coil"], "tower": ["tower/floor_weight"]}
+	"chapel": ["decor/floor_candle_stubs", "decor/floor_book"], "belfry": ["decor/floor_rope_coil"], "tower": ["tower/floor_weight"],
+	"kitchen": ["areas/kitchen/foot_sack", "areas/kitchen/foot_basket"], "library": ["areas/library/foot_books", "areas/library/foot_globe"],
+	"attic": ["areas/attic/foot_hatbox", "areas/attic/foot_frames"]}
 const WINDOW_LIGHT := {"a": Color(0.42, 0.62, 1.0), "b": Color(1.0, 0.38, 0.5), "c": Color(0.62, 0.48, 1.0)}
 
 var room: Room
@@ -88,6 +107,8 @@ func setup(r: Room, used_lights: int) -> void:
 		budget -= 2
 	if th == "tower":
 		budget -= Tower.dress(self, free_top, budget)   # moonlit slatted windows, turning wall gears
+	if th in AreaGimmicks.THEMES:
+		budget -= AreaGimmicks.dress(self, free_top, budget)   # the attic's round window + lanterns, a library shelf-door
 	# ---- sconces: a symmetric pair on the top wall or the side walls
 	var want := 2 if th != "chapel" else 2
 	if kind == "boss":
@@ -400,7 +421,7 @@ static func check_dressing() -> int:
 	layouts.append(["secret", "secret", RoomTemplates.TREASURE])
 	layouts.append(["boss", "boss", RoomTemplates.BOSS])
 	var n := 0
-	for th in ["cellar", "crypt", "chapel", "belfry", "tower"]:
+	for th in ["cellar", "crypt", "chapel", "belfry", "tower", "kitchen", "library", "attic"]:
 		for L in layouts:
 			for sd in [1, 77, 4242]:
 				var d := {"type": L[0], "grid": RoomTemplates.to_grid(L[2]), "cleared": true, "visited": true,
