@@ -335,6 +335,9 @@ func drive(w: Node) -> Array:
 		return td
 	if (mode == "tour" or mode == "audiotest" or mode == "designcheck" or mode == "movescheck" or mode == "feelcheck") and not args.has("drive"):
 		return []
+	var pd := Primer.bot_drive(w)   # v2.7: a run with the controls primer (--primer): the bot plays it through
+	if not pd.is_empty():
+		return pd
 	if args.has("herosheet"):
 		return [Vector2.ZERO, Vector2.ZERO]   # the in-game hero shot: stand still
 	var p: Player = w.player
@@ -763,6 +766,12 @@ func _tour() -> void:
 	if args.has("gallery") or args.has("bosses"):
 		await _wait(1.0)
 		await BestiaryGallery.tour(self)
+		get_tree().quit()
+		return
+	if args.has("primer"):   # v2.7: the controls primer, each step on touch / keys / pad (scripts/primer_check.gd)
+		await _wait(0.5)
+		await PrimerCheck.tour(self)
+		Audio.stop_all()
 		get_tree().quit()
 		return
 	if args.has("gui"):   # v2.6: every screen the UI kit dresses (scripts/ui/gui_tour.gd)

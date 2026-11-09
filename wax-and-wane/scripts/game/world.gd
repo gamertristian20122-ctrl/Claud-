@@ -210,6 +210,7 @@ func _ready() -> void:
 	Game.light_slot()   # an empty save slot gets its file with the first candle lit in it
 	Game.save()
 	_start_floor(RunSave.begin(self))   # floor 1, or the saved floor when continuing
+	Primer.maybe_start(self)   # v2.7: a slot's first run is shown the controls first (scripts/ui/primer.gd)
 	if not Game.records["seen_intro"] and main.autotest == null:
 		_intro()
 

@@ -286,9 +286,14 @@ static func check(at: Node) -> void:
 		print("[primer] note: this profile has save slots; the judge plays in memory only (Game.no_save)")
 	for dev in devs:
 		await _scenario(at, dev, seed_n)
+	if not at.args.has("device"):
+		await _skip_checks(at, seed_n)
+		await _never_checks(at, seed_n)
+		await _variant_checks(at, seed_n)
+		await _bot_check(at, seed_n)
 	print("[primer] ---- summary (seed %d; game seconds; texts = teaching texts in the first 3:00)" % seed_n)
 	for r in _rows:
-		print("[primer] %-9s first kill %5.1f s   reading ~%4.1f s (%d words)   texts %d   repeats %d   re-told lessons %d   lessons %s" % r)
+		print("[primer] %-9s first kill %5.1f s   primer %5.1f s   reading ~%4.1f s (%d words)   texts %d   repeats %d   re-told lessons %d   lessons %s" % r)
 	print("[primer] DONE fails=%d" % fails)
 
 
@@ -307,9 +312,16 @@ static func _scenario(at: Node, dev: String, seed_n: int) -> void:
 		log.queue_free()
 		return
 	var story_words := await _begin(at, w)
-	var pr: Variant = w.get_meta("primer") if w.has_meta("primer") else null
-	if pr != null:
-		await _play_primer(at, w, dev)
+	var primer_secs := 0.0
+	if w.has_meta("primer"):
+		primer_secs = await _play_primer(at, w, dev)
+		var taught: Array = Game.records.get("primer_taught", [])
+		_ok(str(Game.records.get("primer", "")) == "done" and taught.size() == Primer.STEPS.size(),
+			"%s: the primer completes with simulated input in %.1f s (taught: %s)" % [dev, primer_secs, ", ".join(taught)])
+		_ok(w.room.is_open and absf(w.player.wax - w.player.wax_max) < 0.01 and w.clock_minutes() <= 0.01,
+			"%s: at its end the doors are open and the clock still reads %s" % [dev, Game.clock_text(w.clock_minutes())])
+	else:
+		print("[primer] %s: (no primer in this build)" % dev)
 	at.args["drive"] = true                # the bot walks on to the first room and fights
 	var t_kill := -1.0
 	while log.t < WINDOW and is_instance_valid(w) and not w.finished:
@@ -323,7 +335,6 @@ static func _scenario(at: Node, dev: String, seed_n: int) -> void:
 	_release_all()
 	# the words read before the first kill: the story card, then every teaching text up to that moment
 	var words := story_words
-	var counted := {}
 	var told := {}
 	var n_teach := 0
 	var n_repeat := 0
@@ -350,17 +361,346 @@ static func _scenario(at: Node, dev: String, seed_n: int) -> void:
 			str(ls) + ("  (again: %s)" % str(again) if not again.is_empty() and not rep else "")])
 	var lesson_list: Array = told.keys()
 	lesson_list.sort()
-	_rows.append([dev, t_kill, words / READ_WPS, words, n_teach, n_repeat, n_retold, ", ".join(lesson_list)])
+	_rows.append([dev, t_kill, primer_secs, words / READ_WPS, words, n_teach, n_repeat, n_retold, ", ".join(lesson_list)])
 	_ok(t_kill > 0.0, "%s: the first kill came %.1f s after Light the wick" % [dev, t_kill])
+	_ok(n_repeat == 0, "%s: no teaching text repeats a lesson in the first 3:00 (%d repeats)" % [dev, n_repeat])
 	log.queue_free()
+	await _leave(at, w)
+
+
+static func _leave(at: Node, w: Node) -> void:
 	Game.base_time_scale = 1.0
 	Engine.time_scale = 1.0
+	at.args.erase("drive")
+	_release_all()
 	if is_instance_valid(w) and not w.finished:
 		w.finished = true
 	at.main.goto("title")
 	await at._wait(1.2)
 
 
-## Plays the primer the way a player would on `dev` (filled in with the primer itself).
-static func _play_primer(_at: Node, _w: Node, _dev: String) -> void:
-	pass
+## A run lit with `params` the way the game lights it for a real player (no test-only paths in world._ready).
+static func _run(at: Node, params: Dictionary) -> Node:
+	var main: Node = at.main
+	main.autotest = null
+	main.goto("game", params)
+	var waited := 0.0
+	while waited < 10.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null and not main._busy):
+		await at._wait(0.05)
+		waited += 0.05
+	main.autotest = at
+	return main.current
+
+
+## Skip, on each device: one tap / Enter / Back ends it at once; the doors open; it is never asked again in the slot.
+static func _skip_checks(at: Node, seed_n: int) -> void:
+	for dev in [Controls.TOUCH, Controls.KEYS, Controls.PAD]:
+		_fresh(dev)
+		var w: Node = await _light(at, seed_n)
+		await _begin(at, w)
+		var pr: Primer = Primer.of(w)
+		if pr == null:
+			_ok(false, "%s: a new slot's first run has the primer" % dev)
+			continue
+		while pr.step < 0 or pr.t < 0.4:
+			await gwait(at, 0.05)
+		var f0 := Engine.get_process_frames()
+		match dev:
+			Controls.TOUCH:
+				var c: Vector2 = pr._skip.position + pr._skip.size / 2.0
+				touch(at, 4, c, true)
+				touch(at, 4, c, false)
+			Controls.KEYS:
+				key(KEY_ENTER, true)
+				key(KEY_ENTER, false)
+			Controls.PAD:
+				button(JOY_BUTTON_BACK, true)
+				button(JOY_BUTTON_BACK, false)
+		await at.get_tree().process_frame
+		await at.get_tree().process_frame
+		var frames := Engine.get_process_frames() - f0
+		_ok(pr.ended and pr.skipped and w.room.is_open and str(Game.records.get("primer", "")) == "skipped" and not is_instance_valid(pr._dummy),
+			"%s: Skip (%s) ends it within %d frames, the doors open, the slot remembers it" % [dev,
+			{Controls.TOUCH: "a tap", Controls.KEYS: "Enter", Controls.PAD: "Back"}[dev], frames])
+		if dev == Controls.TOUCH:
+			_ok(w.hud.hint.text == Controls.controls_hint(), "touch: skipped before the sticks: the one-line controls reminder shows once (\"%s\")" % w.hud.hint.text)
+			await _leave(at, w)
+			var w2: Node = await _run(at, {"candle": "tallow", "floors": 4})
+			_ok(not w2.has_meta("primer"), "touch: the next run in that slot has no primer (runs %d)" % int(Game.records["runs"]))
+			await _leave(at, w2)
+		else:
+			await _leave(at, w)
+
+
+## It never runs for a returning player, in Tonight's Candle or for a typed-in seed.
+static func _never_checks(at: Node, _seed_n: int) -> void:
+	_fresh(Controls.TOUCH)
+	Game.slot_live = true
+	Game.records["runs"] = 3          # a slot with runs from 2.6 (no primer record)
+	Game.records["seen_intro"] = true
+	var w: Node = await _run(at, {"candle": "tallow", "floors": 4})
+	_ok(not w.has_meta("primer"), "a returning slot (3 runs before 2.7) gets no primer")
+	await _leave(at, w)
+	for params in [{"seed": 4242, "daily": true, "candle": "tallow"}, {"seed": 4242, "seeded": true, "candle": "tallow", "floors": 4}]:
+		_fresh(Controls.TOUCH)
+		var w2: Node = await _run(at, params)
+		_ok(not w2.has_meta("primer"), "%s on a fresh slot: no primer" % ("Tonight's Candle" if params.has("daily") else "a typed-in seed"))
+		await _leave(at, w2)
+
+
+## Swap sticks mirrors the thumbs and still plays through; Reduce motion is shorter.
+static func _variant_checks(at: Node, seed_n: int) -> void:
+	for v in ["swap", "calm"]:
+		_fresh(Controls.TOUCH)
+		Game.settings["swap_sticks"] = v == "swap"
+		Game.settings["reduce_motion"] = v == "calm"
+		var w: Node = await _light(at, seed_n)
+		await _begin(at, w)
+		var pr: Primer = Primer.of(w)
+		while pr != null and pr.step < 0:
+			await gwait(at, 0.05)
+		var vs: Vector2 = w.hud.view_size()
+		var mirrored: bool = pr != null and pr._spot(false).x > vs.x / 2.0 and pr._spot(true).x < vs.x / 2.0
+		var secs := await _play_primer(at, w, Controls.TOUCH)
+		if v == "swap":
+			_ok(mirrored and str(Game.records.get("primer", "")) == "done", "Swap sticks: the move thumb is drawn on the right, the aim thumb on the left; it plays through (%.1f s)" % secs)
+		else:
+			var normal := 0.0
+			for r in _rows:
+				if r[0] == Controls.TOUCH:
+					normal = float(r[2])
+			_ok(str(Game.records.get("primer", "")) == "done" and (normal <= 0.0 or secs < normal),
+				"Reduce motion: it plays through in %.1f s (%.1f s with motion)" % [secs, normal])
+		Game.settings["swap_sticks"] = false
+		Game.settings["reduce_motion"] = false
+		await _leave(at, w)
+
+
+## The play-test bot through a forced primer (--primer): it plays every step, then goes on to its first kill.
+static func _bot_check(at: Node, seed_n: int) -> void:
+	_fresh(Controls.TOUCH)
+	Game.base_time_scale = 2.0
+	at.args["primer"] = true
+	at.args["drive"] = true
+	at.main.goto("game", {"candle": "tallow", "floors": 4, "seed": seed_n, "seeded": false})
+	var t := 0.0
+	var w: Node = null
+	while t < 120.0:
+		w = at.main.current
+		if w and w.name == "Game" and w.get("player") != null and not w.has_meta("primer") and int(w.kills) >= 1:
+			break
+		await gwait(at, 0.1)
+		t += 0.1
+	at.args.erase("primer")
+	_ok(w != null and str(Game.records.get("primer", "")) == "done" and int(w.kills) >= 1,
+		"the bot plays a forced primer through and reaches its first kill (%.0f game s; primer %s)" % [t, Game.records.get("primer", "-")])
+	await _leave(at, w)
+
+
+const REACT := 0.8   # s a player takes to see a step's picture and start doing it
+
+
+## Plays the primer the way a player would on `dev`: real input events (fingers on the screen through the HUD and
+## the primer, keys, a gamepad's sticks and buttons), a reaction time on every step. Returns its play seconds.
+static func _play_primer(at: Node, w: Node, dev: String) -> float:
+	var pr: Node = w.get_meta("primer")
+	var held := {}
+	var last := -2
+	var tapped := false
+	var t0 := -1.0
+	var clock := 0.0
+	while is_instance_valid(pr) and not pr.get("ended") and clock < 150.0:
+		var s := int(pr.get("step"))
+		if s >= 0 and t0 < 0.0:
+			t0 = clock
+		if s != last:
+			_lift(at, dev, held)   # a new step: hands off, look at it first
+			last = s
+			tapped = false
+		if s >= 0 and float(pr.get("t")) >= REACT and float(pr.get("_next_t")) < 0.0:
+			var me: Vector2 = w.player.global_position
+			match Primer.STEPS[s]:
+				"move":
+					_hold_move(at, dev, held, pr, Vector2.RIGHT)
+				"aim":
+					var d: Node = pr.get("_dummy")
+					if d and is_instance_valid(d) and not d.get("popped"):
+						_hold_aim(at, dev, held, pr, ((d as WaxDummy).target() - (me + Vector2(0, -6))).normalized())
+				"wax":
+					var goal := Vector2.INF
+					for dr in pr.get("_drops"):
+						if not dr["taken"] and float(dr["t"]) >= 0.0:
+							goal = (dr["s"] as Node2D).global_position
+							break
+					if goal != Vector2.INF:
+						_hold_move(at, dev, held, pr, (goal - me).normalized())
+					else:
+						_lift(at, dev, held)
+				"bomb":
+					if not tapped:
+						tapped = true
+						await _tap(at, dev, w, "bomb")
+					else:
+						_hold_move(at, dev, held, pr, Vector2.LEFT if me.x > w.room.center().x else Vector2.RIGHT)
+				"special":
+					if not tapped:
+						tapped = true
+						await _tap(at, dev, w, "special")
+		await gwait(at, 1.0 / 30.0)
+		clock += 1.0 / 30.0
+	_lift(at, dev, held)
+	return clock - maxf(t0, 0.0)
+
+
+## Walk toward `dir` (a unit vector) on `dev`, holding it until _lift.
+static func _hold_move(at: Node, dev: String, held: Dictionary, pr: Node, dir: Vector2) -> void:
+	match dev:
+		Controls.TOUCH:
+			var c: Vector2 = pr._spot(false)
+			if not held.has("f0"):
+				touch(at, 0, c, true)
+				held["f0"] = c
+			var to := c + dir * 16.0
+			drag(at, 0, to, to - (held["f0"] as Vector2))
+			held["f0p"] = to
+		Controls.PAD:
+			axis(JOY_AXIS_LEFT_X, dir.x)
+			axis(JOY_AXIS_LEFT_Y, dir.y)
+			held["ls"] = true
+		_:
+			var want := {KEY_D: dir.x > 0.38, KEY_A: dir.x < -0.38, KEY_S: dir.y > 0.38, KEY_W: dir.y < -0.38}
+			for k in want:
+				if want[k] != bool(held.get(k, false)):
+					key(k, want[k])
+					held[k] = want[k]
+
+
+## Aim and fire toward `dir`, holding it until _lift.
+static func _hold_aim(at: Node, dev: String, held: Dictionary, pr: Node, dir: Vector2) -> void:
+	match dev:
+		Controls.TOUCH:
+			var c: Vector2 = pr._spot(true)
+			if not held.has("f1"):
+				touch(at, 1, c, true)
+				held["f1"] = c
+			var to := c + dir * 12.0
+			drag(at, 1, to, to - (held["f1"] as Vector2))
+		Controls.PAD:
+			axis(JOY_AXIS_RIGHT_X, dir.x)
+			axis(JOY_AXIS_RIGHT_Y, dir.y)
+			held["rs"] = true
+		_:
+			var k: Key = (KEY_RIGHT if dir.x > 0.0 else KEY_LEFT) if absf(dir.x) >= absf(dir.y) else (KEY_DOWN if dir.y > 0.0 else KEY_UP)
+			for a in [KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]:
+				var on: bool = a == k
+				if on != bool(held.get(a, false)):
+					key(a, on)
+					held[a] = on
+
+
+## Press the bomb or the special move once: the HUD's round button on touch, E / F, RB / LT.
+static func _tap(at: Node, dev: String, w: Node, what: String) -> void:
+	match dev:
+		Controls.TOUCH:
+			var b: Control = w.hud.bomb_btn if what == "bomb" else w.hud.move_btn
+			var c := b.position + b.size / 2.0
+			touch(at, 2, c, true)
+			await gwait(at, 0.1)
+			touch(at, 2, c, false)
+		Controls.PAD:
+			if what == "bomb":
+				button(JOY_BUTTON_RIGHT_SHOULDER, true)
+				await gwait(at, 0.1)
+				button(JOY_BUTTON_RIGHT_SHOULDER, false)
+			else:
+				axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+				await gwait(at, 0.1)
+				axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+		_:
+			var k := KEY_E if what == "bomb" else KEY_F
+			key(k, true)
+			await gwait(at, 0.1)
+			key(k, false)
+
+
+static func _lift(at: Node, dev: String, held: Dictionary) -> void:
+	if held.has("f0"):
+		touch(at, 0, held.get("f0p", held["f0"]), false)
+	if held.has("f1"):
+		touch(at, 1, held["f1"], false)
+	if dev == Controls.PAD:
+		for a in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y]:
+			axis(a, 0.0)
+	for k in [KEY_W, KEY_A, KEY_S, KEY_D, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]:
+		if bool(held.get(k, false)):
+			key(k, false)
+	held.clear()
+
+
+# ---------------------------------------------------------------- the tour (--tour --primer)
+
+## A run with the primer forced (--primer), its steps on one device. The bot plays each step once its picture is taken.
+static func _staged_run(at: Node, dev: String) -> Node:
+	_fresh(dev)
+	at.args["primer"] = true
+	at.args.erase("drive")
+	at.main.goto("game", {"candle": "tallow", "floors": 4, "seed": SEED, "seeded": false})
+	var waited := 0.0
+	while waited < 10.0 and not (at.main.current and at.main.current.name == "Game" and at.main.current.get("player") != null and not at.main._busy):
+		await at._wait(0.05)
+		waited += 0.05
+	return at.main.current
+
+
+## Waits (game time) until the primer is on step `id` and its clock has passed `t0`; null if it ended first.
+static func _at_step(at: Node, w: Node, id: String, t0: float) -> Node:
+	for i in 400:
+		var pr: Node = w.get_meta("primer") if w.has_meta("primer") else null
+		if pr == null or not is_instance_valid(pr) or pr.get("ended"):
+			return null
+		var s := int(pr.get("step"))
+		if s >= 0 and Primer.STEPS[s] == id and float(pr.get("t")) >= t0 and float(pr.get("_next_t")) < 0.0:
+			return pr
+		await gwait(at, 0.05)
+	return null
+
+
+static func tour(at: Node) -> void:
+	var tag: String = at._vs()
+	for dev in [Controls.TOUCH, Controls.KEYS, Controls.PAD]:
+		var w: Node = await _staged_run(at, dev)
+		var short: String = {Controls.TOUCH: "touch", Controls.KEYS: "keys", Controls.PAD: "pad"}[dev]
+		for st in [["move", 0.3], ["aim", 0.55], ["wax", 2.2], ["bomb", 0.3], ["special", 0.3]]:
+			var pr: Node = await _at_step(at, w, st[0], st[1])
+			if pr == null:
+				print("[primer] tour: no step %s on %s" % [st[0], dev])
+				break
+			await at._shot("primer_%s_%d_%s_%s" % [short, Primer.STEPS.find(st[0]) + 1, st[0], tag])
+			at.args["drive"] = true
+			while is_instance_valid(pr) and not pr.get("ended") and int(pr.get("step")) == Primer.STEPS.find(st[0]):
+				await gwait(at, 0.05)
+			at.args.erase("drive")
+		await gwait(at, 0.3)
+		await at._shot("primer_%s_6_ready_%s" % [short, tag])
+	# Swap sticks (touch) and Reduce motion
+	Game.settings["swap_sticks"] = true
+	var w2: Node = await _staged_run(at, Controls.TOUCH)
+	Game.settings["swap_sticks"] = true
+	w2.hud._layout()
+	var pr2: Node = await _at_step(at, w2, "move", 0.3)
+	if pr2:
+		await at._shot("primer_touch_swap_move_" + tag)
+		at.args["drive"] = true
+		await _at_step(at, w2, "aim", 0.55)
+		at.args.erase("drive")
+		await at._shot("primer_touch_swap_aim_" + tag)
+	Game.settings["swap_sticks"] = false
+	Game.settings["reduce_motion"] = true
+	var w3: Node = await _staged_run(at, Controls.TOUCH)
+	Game.settings["reduce_motion"] = true
+	at.args["drive"] = true
+	await _at_step(at, w3, "wax", 1.0)
+	at.args.erase("drive")
+	await at._shot("primer_calm_wax_" + tag)
+	Game.settings["reduce_motion"] = false
+	at.args.erase("primer")
