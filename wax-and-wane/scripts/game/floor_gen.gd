@@ -32,15 +32,32 @@ static func generate(floor_num: int, rng: RandomNumberGenerator, extra := 0, tre
 	for attempt in 200:
 		var res := _try(floor_num, target, rng, treasures, night)
 		if not res.is_empty():
+			if night.get("wild", false):
+				_wild(res, rng, floor_num, night)
 			_add_hollow(res, rng)
 			_add_specials(res, rng, key)
 			_add_mini(res, rng, key, night.get("minis", []))
 			return res
 	var fb := _try(floor_num, 4, rng, 1, night)
+	if night.get("wild", false):
+		_wild(fb, rng, floor_num, night)
 	_add_hollow(fb, rng)
 	_add_specials(fb, rng, key)
 	_add_mini(fb, rng, key, night.get("minis", []))
 	return fb
+
+
+## A longer night's wild floor (world.wild_floor: its new areas): the treasure room and the shop become ordinary
+## rooms. From the floor's own RNG, so a seed still builds the same house.
+static func _wild(res: Dictionary, rng: RandomNumberGenerator, floor_num: int, night: Dictionary) -> void:
+	if res.is_empty():
+		return
+	for c in res["cells"].keys():
+		var d: Dictionary = res["cells"][c]
+		if d["type"] == "treasure" or d["type"] == "shop":
+			d["type"] = "normal"
+			d["cleared"] = false
+			d["grid"] = RoomTemplates.to_grid(RoomTemplates.pick_normal(rng, floor_num, int(d["dist"]), night))
 
 
 ## Floor n of the 4-floor house (1 Cellar .. 4 Belfry, 5 the Clock Tower) as a `night` for generate().

@@ -74,6 +74,9 @@ const LIST := {
 }
 
 const MIN_FLOORS := 4
+## The house as it was made: on a longer night these four keep their treasure rooms, shops and guardians' relics;
+## the new areas between them are wilder (world.wild_floor).
+const HOUSE := ["cellar", "crypt", "chapel", "belfry"]
 const MAX_FLOORS := 10
 ## The middle of the house, in the order it fills: [area, the night length it first appears in].
 const BEFORE_CHAPEL := [["kitchen", 5], ["library", 6], ["ballroom", 9], ["gallery", 10]]
@@ -92,6 +95,10 @@ static func def(id: String) -> Dictionary:
 
 static func is_built(id: String) -> bool:
 	return bool(def(id).get("built", false))
+
+
+static func is_house(id: String) -> bool:
+	return id in HOUSE
 
 
 ## The ordered area ids of a night of `n` floors (clamped to MIN_FLOORS .. max_floors()).

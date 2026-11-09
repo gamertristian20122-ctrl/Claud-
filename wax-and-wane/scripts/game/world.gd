@@ -48,8 +48,9 @@ const KINDLE_CAP := [4.0, 4.0, 3.0, 2.0, 2.0]
 const QUICK_WAX := [2.0, 2.0, 1.0, 1.0, 1.0]
 ## Odds of wax in a cleared room's reward, a chest, an urn and a plain kill's drop (x the Cellar's), per floor.
 const WAX_ODDS := [1.0, 1.0, 0.75, 0.65, 0.65]
-## A low wick steadies on reaching the Chapel or the Belfry: below STEADY_BELOW wax it gets up to STEADY_ADD
-## minutes back (so a run that limps out of the Crypt is not doomed on arrival; a strong run gets nothing).
+## A low wick steadies on reaching the Chapel or the Belfry (the night's last two floors on any night): below
+## STEADY_BELOW wax it gets up to STEADY_ADD minutes back (so a run that limps out of the Crypt is not doomed on
+## arrival; a strong run gets nothing).
 const STEADY_FLOORS := [3, 4]
 const STEADY_BELOW := 40.0
 const STEADY_ADD := 15.0
@@ -294,7 +295,7 @@ func is_tower(n := floor_num) -> bool:
 ## Cellar and the Crypt are floors 1 and 2 of every night and keep their depths (the start of the night plays as
 ## it was made); the floors above stretch from the Crypt's depth (2) to the Belfry's (4), bent by NIGHT_CURVE
 ## (1 = evenly; below 1 the middle floors sit nearer the top).
-const NIGHT_CURVE := 1.0
+const NIGHT_CURVE := 0.5
 ## "Your flame grows" after each guardian but the last: +FLAME_GROWTH damage, spread over a longer night so the
 ## whole night grows the flame as much as the 4-floor night's three guardians do (flame_growth()).
 const FLAME_GROWTH := 0.15
@@ -323,14 +324,22 @@ func flame_growth() -> float:
 
 ## What FloorGen needs to build floor n of this night: its depth (floor size, the hard layouts' gate), its
 ## area (the tower, the crypt's skull piles) and the room layouts that area likes, which floor of the 4-floor
-## house it stands in for (`key`: special rooms, house champions) and the area's own champions.
+## house it stands in for (`key`: special rooms, house champions), the area's own champions and whether it is a
+## wild floor (no treasure room, no shop).
 func gen_night(n: int) -> Dictionary:
 	var id := str(floor_areas.get(n, ""))
 	var d := depth(n)
 	var key := LAST_FLOOR + 1 if is_tower(n) else (1 if n == 1 else (LAST_FLOOR if n == night_floors else clampi(roundi(d), 2, LAST_FLOOR)))
 	var ad := Areas.def(id)
 	return {"depth": d, "area": id, "likes": ad.get("likes", RoomTemplates.FLOOR_LIKES.get(key, {})), "key": key,
-		"minis": ad.get("minis", [])}
+		"minis": ad.get("minis", []), "wild": wild_floor(n)}
+
+
+## A longer night's new areas are wild (the Long Night's own rule, so a longer night is not simply a richer one):
+## no treasure room, no shop, and their guardian leaves wax and coins but no relic. The house's own four floors
+## (Areas.HOUSE) keep theirs; every floor of a 4-floor night is the house's own.
+func wild_floor(n := floor_num) -> bool:
+	return night_floors > LAST_FLOOR and not is_tower(n) and not Areas.is_house(str(floor_areas.get(n, "")))
 
 
 func floor_title() -> String:
@@ -409,7 +418,7 @@ func _start_floor(n: int) -> void:
 	Audio.music(fdef(n)["music"])
 	Audio.set_space(int(fdef(n).get("space", n)))
 	var steady := 0.0
-	if not is_tower(n) and depth(n) >= float(STEADY_FLOORS[0]) and player.wax < STEADY_BELOW:   # from the Chapel's depth up
+	if not is_tower(n) and n >= night_floors - (STEADY_FLOORS.size() - 1) and player.wax < STEADY_BELOW:   # the night's last two floors
 		steady = minf(STEADY_ADD, STEADY_BELOW - player.wax)
 		player.heal(steady)
 		fx_text(player.global_position + Vector2(0, -30), "YOUR WICK STEADIES  +%d min" % int(steady), UI.GOLD)
@@ -999,7 +1008,8 @@ func _boss_down(e: Enemy) -> void:
 			_victory()
 			return
 		_clear_room()
-		add_pickup("relic", room.center() + Vector2(-24, 0), _next_relic())
+		if not wild_floor():   # a wild area's guardian leaves no relic (a longer night's new areas)
+			add_pickup("relic", room.center() + Vector2(-24, 0), _next_relic())
 		add_pickup("wax_big", room.center() + Vector2(24, 4))
 		add_pickup("trapdoor", free_spot_near(room.center() + Vector2(0, 36), 8.0))
 		for i in 4:
