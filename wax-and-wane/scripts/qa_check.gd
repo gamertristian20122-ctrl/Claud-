@@ -23,6 +23,7 @@ static func run(at: Node) -> int:
 	print("[qa] screen %s" % at.get_viewport().get_visible_rect().size)
 	await _banner_swap(at)
 	await _back_matrix(at)
+	await _stove_embers(at)
 	print("[qa] %d failed -> %s" % [fails, "PASS" if fails == 0 else "FAIL"])
 	return fails
 
@@ -183,3 +184,46 @@ static func _banner_swap(at: Node) -> void:
 	Game.settings["swap_sticks"] = swap0
 	Controls.set_device(dev0)
 	hud._refresh_touch()
+
+
+## The Kitchen's hot stove tops were hard to see on a phone (a 16 px tile turning orange on an orange-brown floor):
+## a hot top now throws a few rising embers, like a hearth's coals (area_gimmicks._kitchen_step, visual only).
+static func _stove_embers(at: Node) -> void:
+	var tree: SceneTree = at.get_tree()
+	var w: Node = await _new_run(at, {"seed": 4242})
+	w.floor_areas = {Areas.TEST_DEPTH: "kitchen"}
+	w._start_floor(Areas.TEST_DEPTH)
+	await _frames(tree, 2)
+	var g: AreaGimmicks = null
+	for c in w.layout["cells"]:
+		if w.layout["cells"][c]["type"] != "normal":
+			continue
+		w.layout["cells"][c]["cleared"] = true   # an empty room: the stoves heat with nobody fighting
+		at._jump(w, c)
+		await _frames(tree, 2)
+		g = AreaGimmicks.of(w.room)
+		if g and not g.stoves.is_empty():
+			break
+	if g == null or g.stoves.is_empty():
+		_say("hot stove tops throw embers (Kitchen)", false, "no Kitchen room with stove tops")
+		return
+	w.player.invuln = 99.0
+	var waited := 0
+	while waited < 900 and not g.stoves.any(func(s): return g.stove_state(s) == "hot"):
+		await tree.physics_frame
+		waited += 1
+	await tree.create_timer(0.4).timeout
+	var parts: FxParts = Juice.of(w).hot
+	var embers := 0
+	var hot := 0
+	for s in g.stoves:
+		if g.stove_state(s) != "hot":
+			continue
+		hot += 1
+		var r := Rect2(w.room.position + w.room.cell_pos(s["c"]) + Vector2(-4, -30), Vector2(24, 46))
+		for i in parts.count():
+			if parts.ramp[i] == FxParts.EMBER and r.has_point(parts.pos[i]):
+				embers += 1
+	_say("hot stove tops throw embers (Kitchen)", hot > 0 and embers >= hot, "%d embers over %d hot tops" % [embers, hot])
+	await _shot(at, "qa_stove_hot")
+	w.player.invuln = 0.0

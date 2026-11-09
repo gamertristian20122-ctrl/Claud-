@@ -346,6 +346,12 @@ func _kitchen_step(dt: float) -> void:
 			glow.texture = Art.tex("areas/kitchen/stove_glow_f%d" % (1 + int(_t * 6.0) % 2))
 		if st != "hot":
 			continue
+		# v2.7: a hot top throws a few rising embers, like a hearth's coals: it reads at a glance on a phone
+		s["ember"] = float(s.get("ember", 0.0)) - dt
+		if float(s["ember"]) <= 0.0:
+			s["ember"] = 0.1
+			Juice.of(w).hot.emit(room.position + room.cell_pos(s["c"]) + Vector2(randf_range(3.0, 13.0), randf_range(4.0, 11.0)),
+				Vector2(randf_range(-5.0, 5.0), randf_range(-34.0, -20.0)), randf_range(0.35, 0.6), FxParts.EMBER, -6.0, 0.5)
 		var rect := Rect2(room.position + room.cell_pos(s["c"]) + Vector2(2, 3), Vector2(12, 11))
 		if not p.dead and Room._touches(rect, p.global_position, Player.RADIUS * 0.7):
 			Records.blame("stove")
