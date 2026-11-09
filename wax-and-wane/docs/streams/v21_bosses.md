@@ -117,7 +117,11 @@ How it got there (new guardian vs the mean of its floor-mates; time to kill / hi
 | Weathercock | hp 234, 72 wax: pace -24% / -68%, 0 vs 4 deaths | hp 224, fans + gale volleys, 100 wax: -35% / -36%, 0 vs 3 | hp 260, more darts, stronger gales: -26% / -15%, 0 vs 3 | hp 280: **pace +18% / hits +7%, 2 vs 3 deaths in 4** |
 
 ### Normal runs (fresh profile, fresh seeds, `--playtest --speed=4 --runs=8`, all four new guardians in the pools)
-NORMAL_PLACEHOLDER
+Judged on the merged 2.1 build as part of the level judge (`v21_slots.md` > Checks): level 2, 8 fresh-seed runs,
+6 wins (winners 12:25-1:54 AM), losses on floors 2 and 3; all four new guardians were met in the batch (the
+Weathercock after the first win, as designed). One bug turned up at level 4 and is fixed: the Ossuary's split
+stalled for the rest of the fight when a skull was destroyed before it rolled (a freed node assigned to a typed
+variable in `g21_ossuary`; it hit 2 of 8 level-4 runs).
 
 ## Hooks (outside my files)
 - `enemy.gd`: four `DEFS` entries (before the Keeper) and the AI dispatch line (`g21_*` -> `GuardiansV21.ai()`).
