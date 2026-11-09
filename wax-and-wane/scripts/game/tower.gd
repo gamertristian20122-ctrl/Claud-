@@ -1,9 +1,11 @@
 class_name Tower
 extends Node
-## THE CLOCK TOWER: the secret fifth floor and the true ending.
-## Snuff the Belfry's guardian with the clock at or before 1:00 AM and, instead of the normal victory, a
-## ladder of light climbs past the bells to floor 5: a short floor (6-8 rooms, one treasure room, no shop,
-## the Keeper of Hours at the end). The wax keeps burning up there and two o'clock still ends the run.
+## THE CLOCK TOWER: the secret floor above the bells and the true ending.
+## Snuff the Belfry's guardian with at least half the night left (1:00 AM on a 4-floor night, 1:45 AM on a
+## 7-floor one, 2:30 AM on a 10-floor one: unlock_clock) and, instead of the normal victory, a ladder of light
+## climbs past the bells to the floor above the night's last (floor_of: floor 5 of a 4-floor night): a short
+## floor (6-8 rooms, one treasure room, no shop, the Keeper of Hours at the end). The wax keeps burning up there
+## and the end of the night (two o'clock on a 4-floor night) still ends the run.
 ## Beat the Keeper for the true ending (scripts/ui/ending.gd), Moonwick and the tower achievements.
 ##
 ## Hooks (one line each): world._start_floor -> on_floor_start, world._build_room -> on_build,
@@ -13,8 +15,9 @@ extends Node
 ## The Clock Tower's entry in the 4-floor tables (its layout, FLOOR_LIKES[5], Enemy.FLOOR_HP[4] ...). It is the
 ## floor above the night's last floor: floor 5 of a 4-floor night, floor 8 of a 7-floor one (floor_of).
 const FLOOR := 5
-## The Belfry's guardian must fall at or before this clock minute (1:00 AM, as the clock shows it) for the
-## ladder to appear, and only once the player has won a night before (ladder_open).
+## On a 4-floor night the Belfry's guardian must fall at or before this clock minute (1:00 AM, as the clock
+## shows it) for the ladder to appear, and only once the player has won a night before (ladder_open). Any night:
+## half the night (unlock_clock).
 const UNLOCK_CLOCK := 60.0
 const HINT := "Something ticks above the belfry... next night, be done by one."
 const MOON := Color(0.55, 0.68, 1.0)
@@ -75,6 +78,25 @@ static func floor_of(w: Node) -> int:
 	return int(w.night_floors) + 1 if w.get("night_floors") != null else FLOOR
 
 
+## The latest clock minute the Belfry may fall at for the ladder: half the night (UNLOCK_CLOCK = 1:00 AM on a
+## 4-floor night, 1:45 AM on a 7-floor one, 2:30 AM on a 10-floor one).
+static func unlock_clock(w: Node) -> float:
+	return float(w.night_minutes()) / 2.0 if w.has_method("night_minutes") else UNLOCK_CLOCK
+
+
+## The results' hint after a win while the tower is still a secret ("... next night, be done by one.").
+static func hint_for(floors: int) -> String:
+	if floors <= 4:
+		return HINT
+	return "Something ticks above the belfry... next night, be done by %s." % Records.hour_words(Game.night_minutes(floors) / 2.0)
+
+
+## "Two o'clock" / "Half past three": the end of the night, for the tower's own lines.
+static func end_words(w: Node) -> String:
+	var end: float = float(w.night_minutes()) if w.has_method("night_minutes") else Game.END_MINUTES
+	return Records.hour_words(end, true) + (" o'clock" if roundi(end) % 60 == 0 else "")
+
+
 ## world._start_floor hook (after the floor banner).
 static func on_floor_start(w: Node) -> void:
 	if int(w.floor_num) != floor_of(w):
@@ -82,7 +104,7 @@ static func on_floor_start(w: Node) -> void:
 	# the ladder's light runs down the wick: a reward for being done by one (saved in the floor snapshot)
 	w.player.heal(ARRIVAL_WAX)
 	w.hud.show_banner("THE CLOCK TOWER", "Above the bells   -   %s" % Game.clock_text(w.clock_minutes()), 3.0)
-	w.hud.show_hint("The ladder's light ran down your wick: +%d min. Two o'clock still comes." % int(ARRIVAL_WAX), 5.0)
+	w.hud.show_hint("The ladder's light ran down your wick: +%d min. %s still comes." % [int(ARRIVAL_WAX), end_words(w)], 5.0)
 	Game.records["tower_seen"] = true
 	Game.save()
 	Achievements.unlock("tower")
@@ -222,11 +244,11 @@ static func on_last_boss_down(w: Node) -> bool:
 	return false
 
 
-## The ladder rises for a Belfry win done by 1:00 AM as the clock shows it ("1:00 AM" counts: QA-14),
-## and only for a player who has already won a night: the first win always ends with the normal
-## victory, so the credits never roll on a first night (C2).
+## The ladder rises for a Belfry win done with half the night left as the clock shows it (1:00 AM on a
+## 4-floor night; "1:00 AM" counts: QA-14), and only for a player who has already won a night: the first win
+## always ends with the normal victory, so the credits never roll on a first night (C2).
 static func ladder_open(w: Node) -> bool:
-	return int(Game.records.get("wins", 0)) >= 1 and Game.shown_minute(w.clock_minutes()) <= int(UNLOCK_CLOCK)
+	return int(Game.records.get("wins", 0)) >= 1 and Game.shown_minute(w.clock_minutes()) <= int(unlock_clock(w))
 
 
 ## The Belfry fell before one: the bells are not done with you.
@@ -385,7 +407,7 @@ static func on_results(res: Control, v: Container, params: Dictionary) -> void:
 	elif won and not Game.records.get("tower_seen", false):
 		for l in labels:
 			if l.text.begins_with("The house is quiet"):
-				var hint := UI.label(HINT, 8, Color("#b6cbcf"), HORIZONTAL_ALIGNMENT_CENTER)
+				var hint := UI.label(hint_for(int(params.get("floors", 4))), 8, Color("#b6cbcf"), HORIZONTAL_ALIGNMENT_CENTER)
 				v.add_child(hint)
 				v.move_child(hint, v.get_children().find(l) + 1)
 				break
