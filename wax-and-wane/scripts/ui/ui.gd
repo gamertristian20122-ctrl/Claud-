@@ -120,6 +120,8 @@ static func theme() -> Theme:
 	t.set_stylebox("panel", &"PlatePanel", _tex_box("kit_plate", [5, 5, 5, 5], [8, 3, 8, 5]))
 	t.set_type_variation(&"StripPanel", &"PanelContainer")
 	t.set_stylebox("panel", &"StripPanel", _tex_box("kit_strip", [5, 4, 5, 4], [8, 2, 8, 2]))
+	t.set_type_variation(&"ChipPanel", &"PanelContainer")   # the HUD's counters
+	t.set_stylebox("panel", &"ChipPanel", _tex_box("hud_chip", [3, 3, 3, 3], [3, 0, 4, 0]))
 	# thin pixel scroll bars (the default ones are smooth grey pills)
 	for type in [&"VScrollBar", &"HScrollBar"]:
 		var track := _flat(INK)
