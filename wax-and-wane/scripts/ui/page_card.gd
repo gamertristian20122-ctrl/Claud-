@@ -76,8 +76,7 @@ func _ready() -> void:
 	v.add_child(_hint)
 	Controls.on_modal_opened(self)
 	Audio.play("page_flip", -2.0, 0.04, 0.95)
-	modulate.a = 0.0
-	create_tween().tween_property(self, "modulate:a", 1.0, 0.18)
+	UI.pop_in(self, center, 5.0, 0.18)   # v2.6: the sheet rises a little as it fades in (Reduce motion: at once)
 
 
 ## A label in ink on the paper: no drop shadow (the UI's shadow muddies dark text on cream).

@@ -150,6 +150,7 @@ func _ready() -> void:
 	_on_device(Controls.device)
 	Audio.play("page_flip")
 	_set_tab(tab, false)
+	UI.wipe_in(self)   # v2.6: a candle-light edge sweeps the screen in (Reduce motion: at once)
 
 
 func close() -> void:

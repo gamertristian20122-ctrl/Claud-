@@ -66,6 +66,7 @@ func _ready() -> void:
 	Controls.on_modal_opened(self)   # keyboard / gamepad focus comes in (the last slot used), and goes back on close
 	get_viewport().size_changed.connect(_build)
 	Audio.play("ui_open")
+	UI.wipe_in(self)   # v2.6: a candle-light edge sweeps the screen in (Reduce motion: at once)
 
 
 func close() -> void:
