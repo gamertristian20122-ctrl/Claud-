@@ -106,6 +106,8 @@ static func _controls_page(body: VBoxContainer) -> void:
 	grid.add_child(UI.toggle("Aim assist", Game.settings["aim_assist"], func(b): Game.set_setting("aim_assist", b)))
 	if OS.has_feature("pc"):
 		grid.add_child(UI.toggle("Mouse aim", Game.settings.get("mouse_aim", true), func(b): Game.set_setting("mouse_aim", b)))
+	grid.add_child(UI.cycle("Enemy shots", ["normal", "large"], ["Normal", "Large"], Game.settings.get("shot_size", "normal"),
+		func(v): Game.set_setting("shot_size", v)))   # v2.1: bigger, bolder enemy shots (shot.gd)
 	body.add_child(grid)
 	var lines := [
 		["Keys", "WASD move   Arrows shoot   E bomb   Q keepsake   Esc pause"],
