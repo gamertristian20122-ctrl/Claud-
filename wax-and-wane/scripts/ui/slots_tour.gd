@@ -229,6 +229,10 @@ static func tour(at: Node) -> void:
 		j._select(1)   # 0 How to play, 1 the Ledger (slot + level)
 		await at._wait(0.3)
 		await at._shot("slots_journal_ledger_" + tag)
+		j._set_tab(4, false)   # the Candle Box: the Black Taper's new line and stats
+		j._select(Candles.ORDER.find("black_taper"))
+		await at._wait(0.3)
+		await at._shot("slots_journal_black_taper_" + tag)
 		j.queue_free()
 	else:
 		print("[slots] (slot %d has no saved run: Play's confirm and Continue are not checked)" % other)
