@@ -52,8 +52,11 @@ leave it alone, and a bomb that sets `active` is undone the next frame (and its 
 ## Tests
 - `godot --headless --path . -- --checkscripts`: clean.
 - `godot --headless --path . -- --checkrooms`: 0 problems.
-- `stdbuf -o0 godot --headless --path . -- --autotest --playtest --speed=4 --runs=1 --god`: see the result line
-  below (the bot aims at the guardian, which counts as a shot, so it mostly skips the entrances).
+- `stdbuf -o0 godot --headless --path . -- --autotest --playtest --speed=4 --runs=1 --god`: reaches the end
+  (`[playtest] run 1: WIN floor=4/4 (belfry)`, no script errors, nothing stuck). The bot only aims at active foes,
+  so it simply waits through each entrance. Under `--autotest` every entrance logs
+  `[intro] <kind> played|skipped at <t> s of <length>` (a `--boss=pendulum` trial: `played at 1.90 s of 1.9`,
+  then its fight as before).
 - `xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 -- --autotest --tour --intros --shots=DIR`
   (new; `--intros=<kind>` for one guardian): each guardian's entrance shot twice at its signature moments
   (`TOUR_AT`), then a line `[intros] <kind>: <len> s, ends ready: true`; then one entrance skipped with a key press
@@ -66,7 +69,6 @@ leave it alone, and a bomb that sets `active` is undone the next frame (and its 
   two gates), `scripts/autotest.gd` (`--tour --intros` dispatch + one header line), `README.md` (layout + command).
 
 ## Known issues
-- The play-test bot skips most entrances (its aiming counts as a shot); the tour plays them whole.
 - The camera punch-in after the versus card (Juice) still runs as soon as the guardian appears (0.8 s), so for
   most guardians the zoom is back out before the climax (the door bursting, the stomp, the strike). It reads well
   as it is; it could be retimed to the climax later.
