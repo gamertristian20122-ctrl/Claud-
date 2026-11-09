@@ -18,6 +18,8 @@ extends Node
 ##   -- --autotest --trailer=<scene>                               staged trailer footage (scripts/trailer.gd, tools/make_trailer.sh)
 ##   -- --autotest --playtest --boss=<kind> [--runs=N] [--speed=4]  one guardian's fight with its floor's kit, a line per fight
 ##   -- --autotest --tour --boss=<kind> --shots=/abs/dir           its versus card + two shots per phase (GuardiansV21.tour)
+##   -- --autotest --nightdump --speed=4 [--floors=N] [--dump=/abs/file]  every floor of a few seeded nights: layouts,
+##        guardians, loot, lodgers and the floor numbers (scripts/night_check.gd; the 4-floor baseline must not change)
 
 var main: Node
 var args := {}
@@ -60,6 +62,8 @@ func _ready() -> void:
 		mode = "tour"   # store art: the bot only plays when the staging asks it to
 	if args.has("lightjudge"):
 		mode = "tour"   # light pass judge images (scripts/game/light_judge.gd, tools/light_judge.py)
+	if args.has("nightdump"):
+		mode = "tour"   # the Long Night's determinism dump (scripts/night_check.gd): Tallow is never driven
 	runs_left = int(args.get("runs", "1"))
 	# save slots (v2.1): --slot=N plays in that slot, --difficulty=N (1-4) sets its level first
 	if args.has("slot"):
@@ -81,6 +85,9 @@ func _ready() -> void:
 		_hero_sheet()
 	elif args.has("lightjudge"):
 		await LightJudge.run(self)
+		get_tree().quit()
+	elif args.has("nightdump"):   # v2.2 night: every floor of a few seeded nights (determinism baseline)
+		await load("res://scripts/night_check.gd").run(self)
 		get_tree().quit()
 	elif args.has("shots-store") or args.has("keyart"):
 		await load("res://scripts/store_shots.gd").run(self)
