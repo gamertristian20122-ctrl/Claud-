@@ -92,7 +92,7 @@ static func theme() -> Theme:
 	t.set_type_variation(&"DangerButton", &"Button")
 	_button_type(t, &"DangerButton", "kit_btn_danger", CREAM, SHINE)
 	# tabs: the open one is a lit plate with a gold rule; the others sit darker (their words 1 px lower)
-	for pair in [[&"TabButton", "kit_tab", DIM, CREAM, [6, 5, 6, 3]], [&"TabButtonOn", "kit_tab_on", GOLD, GOLD, [6, 4, 6, 4]]]:
+	for pair in [[&"TabButton", "kit_tab", DIM, CREAM, [5, 5, 5, 3]], [&"TabButtonOn", "kit_tab_on", GOLD, GOLD, [5, 4, 5, 4]]]:
 		var type: StringName = pair[0]
 		t.set_type_variation(type, &"Button")
 		var box := _tex_box(pair[1], [5, 5, 5, 4], pair[4])
@@ -293,13 +293,12 @@ static func icon_button(text: String, icon_path: String, cb: Callable, min_w := 
 
 ## The flame lit next to the words of the button that has the keyboard / gamepad focus (the ring is the Theme's).
 static func _focus_flame(b: Button) -> void:
-	if not b.has_focus(true) or b.text == "" or b.alignment != HORIZONTAL_ALIGNMENT_CENTER:
+	# (not on narrow keys, nor on icon buttons: their picture already stands where the flame would)
+	if not b.has_focus(true) or b.text == "" or b.alignment != HORIZONTAL_ALIGNMENT_CENTER or b.icon or b.size.x < 56.0:
 		return
 	var f := Art.tex("ui/kit_focus_flame")
 	var font := b.get_theme_font("font")
 	var tw := font.get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, b.get_theme_font_size("font_size")).x
-	if b.icon:
-		tw += b.icon.get_width() + 3.0
 	var x := floorf((b.size.x - tw) / 2.0) - f.get_width() - 2.0
 	if x < 3.0:
 		return

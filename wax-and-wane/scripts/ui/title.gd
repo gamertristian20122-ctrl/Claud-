@@ -2,6 +2,13 @@ extends Node2D
 ## Title screen: the little candle alone in a dark cellar, the logo, Play / Settings / Credits.
 ## Opening (about 2.2 s, any tap skips): darkness, a match strikes and lights Tallow's wick, the room
 ## light blooms, the logo flickers on, embers drift up and the menu slides in.
+##
+## v2.6 layout (docs/streams/v26_gui.md): the logo at the top; Tallow (the chosen candle) in the middle on a stack of
+## old books, lit, his light pooled on the floor and the slot's numbers under him; the Candle Box on the left
+## (arrows, the candle's name, its special move and lines, in a panel); the actions on the right (Continue, ONE big
+## brass "Light the wick", Tonight's Candle); Journal / Seed / Settings / Credits (/ Quit) as small icon buttons
+## along the bottom; the version small in the top-right corner. Every piece is placed from the screen's centre
+## (_layout), so 384x216, 384x240 and the phone's 480x216 keep the same composition.
 
 const INTRO_END := 2.2
 
@@ -12,24 +19,28 @@ var hero: Player
 var dark: CanvasModulate
 var _t := 0.0
 var sel := "tallow"
-var sub: Label
+var sub: Label           # the candle's line (or what unlocks it), in the Candle Box
 var sel_name: Label
 var play_btn: Button
 var journal_btn: Button
 var cont_btn: Button   # Continue (the saved run of the slot played last), or null
-## UX-05: menu buttons are 24 px tall with 4 px gaps (thumb-sized on a phone). The two big actions
-## (and Continue) stand in the column on the right; Journal / Seed / Settings / Credits (and Quit on
-## desktop) are a row along the bottom edge.
+## UX-05: menu buttons are 24 px tall with 4 px gaps (thumb-sized on a phone); the main action is 32 px.
 const MENU_W := 120
 const MENU_H := 24
+const BIG_H := 32
 const GAP := 4
+const BOX_W := 132       # the Candle Box panel
+const SIDE := 56         # the Candle Box and the actions keep this far from the centre (Tallow's stage)
+const STAND := Vector2(0, 16)   # Tallow's feet, from the room's centre (on top of the books)
 var bar: HBoxContainer
 # ---- opening
 var logo: TextureRect
+var tagline: Label
 var menu: VBoxContainer
-var box: HBoxContainer
+var box: PanelContainer
 var stats: Label
 var ver: Label
+var books: Sprite2D
 var embers: FxParts
 var match_spr: Sprite2D
 var match_flame: AnimatedSprite2D
@@ -68,9 +79,15 @@ func _ready() -> void:
 	Lighting.attach(self)   # banded pixel light (lighting.gd)
 	var fw := FakeWorld.new()
 	add_child(fw)
+	# Tallow's stand: three old books in the middle of the room (lit by him like the rest of the room)
+	books = Sprite2D.new()
+	books.texture = Art.tex("ui/title_books")
+	books.centered = false
+	books.position = STAND + Vector2(-18, -1)
+	add_child(books)
 	hero = Player.new()
 	hero.world = fw
-	hero.position = Vector2(-78, 44)
+	hero.position = STAND
 	hero.wax = 105.0
 	add_child(hero)
 	hero.set_physics_process(false)
@@ -88,98 +105,145 @@ func _ready() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(root)
+	# ---- the logo and the tagline
 	logo = TextureRect.new()
 	logo.texture = Art.tex("ui/title_logo") if Art.has("ui/title_logo") else null
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	logo.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	logo.position = Vector2(-110, 10)
-	logo.size = Vector2(220, 60)
+	logo.size = Vector2(210, 41)
+	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(logo)
 	if logo.texture == null:
 		var t := UI.label("WAX & WANE", 16, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
-		t.size = Vector2(220, 20)
-		t.position = Vector2(-110, 30)
+		t.size = Vector2(210, 20)
+		t.position = Vector2(0, 14)
 		logo.add_child(t)
-	sub = UI.label("Burn through the house before the clock strikes two.", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
-	sub.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	sub.size = Vector2(300, 10)
-	sub.position = Vector2(-150, 70)
-	root.add_child(sub)
-	# ---- the menu: [Continue] / Light the wick / Tonight's Candle, and along the bottom edge
-	# Journal | Seed | Settings | Credits [| Quit on desktop]
+	tagline = UI.label(L.t("Burn through the house before the clock strikes two."), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	root.add_child(tagline)
 	Unlocks.take_new()   # anything unlocked since the last visit gets its Journal dot
+	# ---- the actions (right): [Continue] / LIGHT THE WICK / Tonight's Candle
 	menu = VBoxContainer.new()
 	menu.add_theme_constant_override("separation", GAP)
-	menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	menu.position = Vector2(-6, -(4 + MENU_H + 8) - (MENU_H * 2 + GAP))
 	root.add_child(menu)
-	play_btn = _menu_btn("Light the wick", _play, MENU_W)
+	play_btn = UI.icon_button(L.t("Light the wick"), "ui/ico_flame_dark", _play, MENU_W, "primary")
+	play_btn.custom_minimum_size.y = BIG_H
+	play_btn.set_meta("default_focus", true)
 	menu.add_child(play_btn)
-	menu.add_child(_menu_btn("Tonight's Candle", _daily, MENU_W))
+	var daily := UI.icon_button(L.t("Tonight's Candle"), "ui/ico_moon", _daily, MENU_W)
+	daily.custom_minimum_size.y = MENU_H
+	menu.add_child(daily)
+	cont_btn = RunSave.add_continue_button(menu, main)   # "Continue / Slot N: Floor N - 12:41 AM" when a run is saved
+	if cont_btn:
+		cont_btn.custom_minimum_size.x = MENU_W
+		play_btn.set_meta("default_focus", false)
+	# ---- the rest (bottom): Journal | Seed | Settings | Credits [| Quit on desktop], small icon buttons
 	bar = HBoxContainer.new()
 	bar.add_theme_constant_override("separation", GAP)
-	journal_btn = _menu_btn("Journal", func(): Journal.open(root).tree_exited.connect(journal_btn.queue_redraw), 56)
+	journal_btn = _small_btn(L.t("Journal"), "ui/ico_journal", func(): Journal.open(root).tree_exited.connect(journal_btn.queue_redraw))
 	journal_btn.draw.connect(func():
 		if Records.any_new():
 			Journal._dot(journal_btn, Vector2(journal_btn.size.x - 7, 5)))
 	bar.add_child(journal_btn)
-	bar.add_child(_menu_btn("Seed", open_seed_pad, 44))
-	bar.add_child(_menu_btn("Settings", func(): SettingsPanel.open(root), 60))
-	bar.add_child(_menu_btn("Credits", _credits, 56))
+	bar.add_child(_small_btn(L.t("Seed"), "ui/ico_seed", open_seed_pad))
+	bar.add_child(_small_btn(L.t("Settings"), "ui/ico_settings", func(): SettingsPanel.open(root)))
+	bar.add_child(_small_btn(L.t("Credits"), "ui/ico_credits", _credits))
 	if OS.has_feature("pc"):   # QA-22: desktops get a Quit button (it asks first)
-		bar.add_child(_menu_btn("Quit", func(): Controls.quit_prompt(root), 44))
-	bar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)   # centred, 4 px above the bottom edge
-	var bw := bar.get_combined_minimum_size().x
-	bar.offset_left = -floorf(bw / 2.0)
-	bar.offset_right = bar.offset_left + bw
-	bar.offset_top = -4 - MENU_H
-	bar.offset_bottom = -4
+		bar.add_child(_small_btn(L.t("Quit"), "ui/ico_quit", func(): Controls.quit_prompt(root)))
 	root.add_child(bar)
-	cont_btn = RunSave.add_continue_button(menu, main)   # "Continue / Slot N: Floor N - 12:41 AM" when a run is saved
-	if cont_btn:
-		cont_btn.custom_minimum_size.x = MENU_W
-	# --- the Candle Box: pick which candle to light
-	box = HBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
-	box.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	box.position = Vector2(-140, -(4 + MENU_H + 8) - 24)
+	# ---- the Candle Box (left): pick which candle to light
+	box = UI.panel(Vector2(BOX_W, 0))
+	box.set_meta("fit_group", "candle_box")
 	root.add_child(box)
-	box.add_child(UI.button("<", func(): _cycle(-1), 24))
-	sel_name = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
-	sel_name.custom_minimum_size = Vector2(62, 24)
+	var bv := VBoxContainer.new()
+	bv.add_theme_constant_override("separation", 2)
+	box.add_child(bv)
+	bv.add_child(UI.label(L.t("THE CANDLE BOX"), 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
+	var pick := HBoxContainer.new()
+	pick.add_theme_constant_override("separation", 2)
+	pick.add_child(UI.button("<", func(): _cycle(-1), 24))
+	sel_name = UI.label("", 16, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
+	sel_name.custom_minimum_size = Vector2(54, 24)
+	sel_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sel_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	box.add_child(sel_name)
-	_add_move_caption()   # v2.3: the candle's special move (name under the candle's, its line above it)
-	box.add_child(UI.button(">", func(): _cycle(1), 24))
+	pick.add_child(sel_name)
+	pick.add_child(UI.button(">", func(): _cycle(1), 24))
+	bv.add_child(pick)
+	_add_move_caption(bv)   # v2.3: the candle's special move (icon, name, its line)
+	sub = UI.label("", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub.custom_minimum_size = Vector2(BOX_W - 18, 24)
+	sub.max_lines_visible = 3
+	sub.add_theme_constant_override("line_spacing", 0)
+	bv.add_child(sub)
 	sel = str(Game.records.get("candle", "tallow"))   # each save slot remembers its own candle
 	if not Candles.is_unlocked(sel):
 		sel = "tallow"
 	_show_candle()
 	Controls.set_page_handler(root, _cycle)   # LB / RB (Q / E) pick a candle
-	stats = UI.label(_stats_text(), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
-	stats.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	stats.size = Vector2(300, 10)
-	stats.position = Vector2(-150, 81)   # under the candle's line (the bottom edge holds the button row)
+	# ---- the slot's numbers, under Tallow's books
+	stats = UI.label(_stats_text(), 8, UI.WAX, HORIZONTAL_ALIGNMENT_CENTER)
+	stats.add_theme_constant_override("line_spacing", 0)
 	root.add_child(stats)
-	ver = UI.label("v" + Game.VERSION, 8, Color(0.4, 0.33, 0.33))
-	ver.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
-	ver.position = Vector2(-28, -12)
+	ver = UI.label("v" + Game.VERSION, 8, UI.MUTED, HORIZONTAL_ALIGNMENT_RIGHT)
 	root.add_child(ver)
 	Game.slot_changed.connect(refresh_slot)   # the Slots screen deleted the slot in use or changed its level
+	get_viewport().size_changed.connect(_layout)
+	_layout()
 	_intro_begin()
+	if UI.calm():   # Settings > Reduce motion: the title is simply there
+		_intro_finish()
 
 
-## "Slot 1, level 2   Runs 23   Wins 4   Tonight: 4120   Best: done by 12:58 AM"
+## Places every piece from the screen's centre (see the header). The opening slides the menu, the Candle Box and
+## the bottom row in from below these spots (_home).
+func _layout() -> void:
+	if not is_inside_tree():
+		return
+	var vs := get_viewport().get_visible_rect().size
+	var cx := floorf(vs.x / 2.0)
+	var cy := floorf(vs.y / 2.0)
+	var at := {}
+	at[logo] = Vector2(cx - 105, cy - 104)
+	tagline.size = Vector2(300, 10)
+	at[tagline] = Vector2(cx - 150, cy - 61)
+	var bottom := vs.y - 4 - MENU_H
+	bar.size = bar.get_combined_minimum_size()
+	at[bar] = Vector2(cx - floorf(bar.size.x / 2.0), bottom)
+	var mid := floorf((cy - 50 + bottom - 4) / 2.0)   # the middle of the band between the tagline and the bottom row
+	box.size = box.get_combined_minimum_size()
+	at[box] = Vector2(cx - SIDE - box.size.x, mid - floorf(box.size.y / 2.0))
+	menu.size = menu.get_combined_minimum_size()
+	at[menu] = Vector2(cx + SIDE, mid - floorf(menu.size.y / 2.0))
+	stats.size = Vector2(2 * SIDE - 8, 40)
+	at[stats] = Vector2(cx - SIDE + 4, cy + STAND.y + 17)
+	ver.size = Vector2(60, 10)
+	at[ver] = Vector2(vs.x - 63, 3)
+	for c in at:
+		_home[c] = at[c]
+		(c as Control).position = at[c]
+
+
+## "Slot 1 - level 2" / "Runs 23   Wins 4" / "Best: 12:58 AM" / "Tonight: 4120": short lines under the books.
 func _stats_text() -> String:
 	var rec := Game.records
-	var line := "Runs %d   Wins %d" % [rec["runs"], rec["wins"]]
+	var lines: Array[String] = []
 	if Game.slot_live:   # the slot played last (the Slots screen switches slots)
-		line = "Slot %d, level %d   %s" % [Game.slot, Game.level, line]
-	if rec.get("daily_date", "") == Time.get_date_string_from_system():
-		line += "   Tonight: %d" % int(rec.get("daily_first", 0))
+		lines.append(L.t("Slot {n} - level {lv}", {"n": Game.slot, "lv": Game.level}))
+	if int(rec["runs"]) == 0:
+		lines.append(L.t("Your first night"))
+	else:
+		lines.append(L.t("Runs {r}   Wins {w}", {"r": rec["runs"], "w": rec["wins"]}))
 	if float(rec["best_finish"]) != 0.0:
-		line += "   Best: done by %s" % Game.clock_text(float(rec["best_finish"]))
-	return line
+		lines.append(L.t("Best: {t}", {"t": Game.clock_text(float(rec["best_finish"]))}))
+	if rec.get("daily_date", "") == Time.get_date_string_from_system():
+		lines.append(L.t("Tonight: {n}", {"n": int(rec.get("daily_first", 0))}))
+	return "\n".join(lines)
+
+
+## A small icon + word button for the bottom row (24 px tall: still a thumb-sized target).
+func _small_btn(text: String, icon: String, cb: Callable) -> Button:
+	var b := UI.icon_button(text, icon, cb, 0)
+	b.custom_minimum_size.y = MENU_H
+	return b
 
 
 ## The slot in use changed under the title (deleted, or a new level): its line, Continue and the
@@ -188,27 +252,23 @@ func refresh_slot() -> void:
 	if not is_inside_tree() or stats == null:
 		return
 	stats.text = _stats_text()
-	var sep := float(menu.get_theme_constant("separation"))
 	if is_instance_valid(cont_btn) and not RunSave.has_snapshot():
-		var dy := cont_btn.custom_minimum_size.y + sep
 		menu.remove_child(cont_btn)
 		cont_btn.queue_free()
 		cont_btn = null
-		menu.position.y += dy
-		if _home.has(menu):
-			_home[menu] = menu.position if not _intro else _home[menu] + Vector2(0, dy)
+		play_btn.set_meta("default_focus", true)
 	sel = str(Game.records.get("candle", "tallow"))
 	if not Candles.is_unlocked(sel):
 		sel = "tallow"
 	_show_candle()
 	journal_btn.queue_redraw()
+	_layout.call_deferred()
 
 
 # ---------------------------------------------------------------- opening
 
 func _intro_begin() -> void:
-	for c in [logo, sub, menu, box, bar, stats, ver]:
-		_home[c] = c.position
+	for c in [logo, tagline, menu, box, bar, stats, ver]:
 		c.modulate.a = 0.0
 	dark.color = DARK_OFF
 	hero.unlit = true
@@ -280,7 +340,7 @@ func _intro_step(dt: float) -> void:
 	for c in [menu, box, bar]:
 		c.position = _home[c] + Vector2(0, roundf((1.0 - back) * 70.0))
 		c.modulate.a = minf(1.0, mk * 2.0)
-	for c in [sub, stats, ver]:
+	for c in [tagline, stats, ver]:
 		c.modulate.a = clampf((_it - 1.6) / 0.35, 0.0, 1.0)
 	if _it >= INTRO_END:
 		_intro_finish()
@@ -337,31 +397,37 @@ func _process(dt: float) -> void:
 		var tip := hero.flame.global_position + Vector2(randf_range(-1, 1), -9)
 		embers.emit(tip, Vector2(randf_range(-5, 5), randf_range(-26, -16)), randf_range(0.9, 1.5), FxParts.EMBER, -5.0, 0.5)
 	if logo.modulate.a > 0.5 and randf() < dt * 1.1:
-		embers.emit(Vector2(-12 + randf_range(-1, 1), -88), Vector2(randf_range(-4, 4), randf_range(-14, -8)), randf_range(0.8, 1.4), FxParts.EMBER, -3.0, 0.5)
+		var lf := logo.position + Vector2(93, 1) - get_viewport().get_visible_rect().size / 2.0
+		embers.emit(lf + Vector2(randf_range(-1, 1), 0), Vector2(randf_range(-4, 4), randf_range(-14, -8)), randf_range(0.8, 1.4), FxParts.EMBER, -3.0, 0.5)
 
 
-## v2.3 special moves in the Candle Box: the candle's name gets a second line, its move ("Flare Up",
-## gold), and the move's line sits over the candle, as if chalked on the wall behind it. Both are
-## children of the name label, so they fade in with the menu.
+## v2.3 special moves in the Candle Box: the move's icon and name (gold) under the candle's name, and the move's
+## line under them; the candle's own line (or what unlocks it) at the bottom of the panel. Fixed heights, so the
+## panel keeps its size from candle to candle.
+var move_icon: TextureRect
 var move_name: Label
 var move_line: Label
 
 
-func _add_move_caption() -> void:
-	move_name = UI.label("", 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
-	move_name.size = Vector2(62, 10)
-	move_name.position = Vector2(0, 14)
-	move_name.set_meta("fit_group", "candle_box")
-	sel_name.add_child(move_name)
-	move_line = UI.label("", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
+func _add_move_caption(v: VBoxContainer) -> void:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 3)
+	row.custom_minimum_size.y = 16
+	move_icon = TextureRect.new()
+	move_icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	move_icon.custom_minimum_size = Vector2(16, 16)
+	row.add_child(move_icon)
+	move_name = UI.label("", 8, UI.GOLD)
+	move_name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(move_name)
+	v.add_child(row)
+	move_line = UI.label("", 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
 	move_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	move_line.custom_minimum_size = Vector2(BOX_W - 18, 20)
 	move_line.max_lines_visible = 2
 	move_line.add_theme_constant_override("line_spacing", 0)
-	move_line.size = Vector2(136, 20)
-	move_line.position = Vector2(31 - 68, -52)
-	move_line.set_meta("fit_group", "candle_box")
-	sel_name.add_child(move_line)
-	sel_name.set_meta("fit_group", "candle_box")
+	v.add_child(move_line)
 
 
 func _show_move(unlocked: bool) -> void:
@@ -369,8 +435,8 @@ func _show_move(unlocked: bool) -> void:
 		return
 	var mv := Moves.for_candle(sel)
 	var on := unlocked and mv != ""
-	sel_name.vertical_alignment = VERTICAL_ALIGNMENT_TOP if on else VERTICAL_ALIGNMENT_CENTER
-	move_name.text = Moves.name_of(mv) if on else ""
+	move_name.text = Moves.name_of(mv) if on else L.t("? ? ?")
+	move_icon.texture = Art.tex(Moves.icon(mv)) if on and Moves.icon(mv) != "" else null
 	move_line.text = Moves.line_of(mv) if on else ""
 
 
@@ -387,9 +453,9 @@ func _show_candle() -> void:
 	for k in Candles.ORDER:
 		if Candles.is_unlocked(k):
 			n += 1
-	sel_name.text = def["name"] if unlocked else "? ? ?"
+	sel_name.text = L.t(str(def["name"])) if unlocked else L.t("? ? ?")
 	_show_move(unlocked)
-	sub.text = def["line"] if unlocked else "Locked: %s" % def["unlock_text"]
+	sub.text = L.t(str(def["line"])) if unlocked else L.t("Locked: {how}", {"how": L.t(str(def["unlock_text"]))})
 	sub.add_theme_color_override("font_color", UI.DIM if unlocked else UI.RED)
 	# rebuild the preview candle with this candle's look
 	var pos := hero.position
@@ -440,7 +506,7 @@ func _daily() -> void:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 12)
-	var light := UI.button("Light it", func():
+	var light := UI.primary(L.t("Light it"), func():
 		Game.records["daily_explained"] = true
 		Game.save()
 		r.queue_free()
@@ -494,12 +560,6 @@ func _credits() -> void:
 	v.add_child(btns)
 
 
-## Menu buttons are MENU_H (24) px tall: a thumb-sized target (UX-05).
-func _menu_btn(text: String, cb: Callable, w: int) -> Button:
-	var b := UI.button(text, cb, w)
-	b.custom_minimum_size.y = MENU_H
-	return b
-
 
 # ---------------------------------------------------------------- a seeded run (the keypad)
 
@@ -523,7 +583,7 @@ func open_seed_pad() -> void:
 	grid.add_theme_constant_override("h_separation", GAP)
 	grid.add_theme_constant_override("v_separation", GAP)
 	grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	var go := UI.button("Light", func(): pass, 30)
+	var go := UI.button(L.t("Light"), func(): pass, 30, "primary")
 	var night := Slots.NightSlider.new()   # the night's length: the same seed and floors are the same house
 	night.lo = Areas.MIN_FLOORS
 	night.hi = Areas.max_floors()
