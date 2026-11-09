@@ -1,8 +1,10 @@
 class_name Journal
 extends Control
 ## The Journal: everything the house has shown you. Opened from the title and from the pause menu.
-## Six tabs: Relics (relics, keepsakes, gifts), Lodgers, Guardians, Rooms (special rooms and their
-## champions), Candles and Records (totals, Tonight's Candle, the last 20 runs).
+## Seven tabs: Relics (relics, keepsakes, gifts), Lodgers, Guardians, Rooms (special rooms and their
+## champions), Candles, Records (totals, Tonight's Candle, the last 20 runs) and Diary (v2.5: Martha's 24
+## pages in story order, "???" for the missing ones with where they turn up; select a found page again to
+## read it on its own card, scripts/ui/page_card.gd).
 ##
 ## A paged grid on the left, the selected entry on the right. Unseen entries are dark silhouettes
 ## named "???"; new ones carry a small gold dot until you look at them.
@@ -10,8 +12,8 @@ extends Control
 ## (Q / E) switch tabs, left / right past the edge of the grid turns the page, B / Esc goes back.
 ## Data: Game.records via Records (scripts/game/records.gd) and Unlocks (scripts/game/unlocks.gd).
 
-const TABS := ["relics", "lodgers", "guardians", "rooms", "candles", "records"]
-const TAB_NAMES := ["Relics", "Lodgers", "Guardians", "Rooms", "Candles", "Records"]
+const TABS := ["relics", "lodgers", "guardians", "rooms", "candles", "records", "diary"]
+const TAB_NAMES := ["Relics", "Lodgers", "Guardians", "Rooms", "Candles", "Records", "Diary"]
 ## cols, rows, slot size (the left panel's inside is 158 x 142)
 const LAYOUT := {
 	"relics": [8, 7, Vector2(18, 18)],
@@ -20,6 +22,7 @@ const LAYOUT := {
 	"rooms": [4, 3, Vector2(37, 46)],
 	"candles": [5, 1, Vector2(30, 64)],
 	"records": [1, 7, Vector2(158, 18)],
+	"diary": [6, 4, Vector2(24, 32)],
 }
 const SOCKET := Color("#21141b")
 const SIL := Color("#483b3a")
@@ -53,6 +56,7 @@ var _anim_sf: SpriteFrames
 var _anim_name := ""
 var _anim_t := 0.0
 var _press_at := Vector2.INF
+var _sel_ms := 0   # when the selection last changed (a second press on a diary page opens its card)
 
 
 static func open(parent: Control, start_tab := 0) -> Journal:
@@ -89,7 +93,7 @@ func _ready() -> void:
 	_glyph_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tabs.add_child(_glyph_l)
 	for i in TABS.size():
-		var b := UI.button(TAB_NAMES[i], func(): _set_tab(i, true), 0)
+		var b := UI.button(L.t("Diary") if TABS[i] == "diary" else TAB_NAMES[i], func(): _set_tab(i, true), 0)
 		b.add_theme_stylebox_override("normal", _tab_box(false))
 		b.add_theme_stylebox_override("hover", _tab_box(false))
 		b.add_theme_stylebox_override("pressed", _tab_box(true))
@@ -248,6 +252,8 @@ func _select(i: int, sound := true) -> void:
 		_show_detail({})
 		return
 	var changed := i != sel
+	if changed:
+		_sel_ms = Time.get_ticks_msec()
 	sel = i
 	for s in _slots:
 		s.queue_redraw()
@@ -261,8 +267,17 @@ func _select(i: int, sound := true) -> void:
 		Audio.play("ui_move", -6.0)
 
 
+## A slot was pressed (tap, click, Enter / A): it is selected; a diary page pressed while it was already
+## selected opens on its own reading card (the paper, bigger text).
+func _press(i: int) -> void:
+	var again := i == sel and Time.get_ticks_msec() - _sel_ms > 250
+	_select(i)
+	if again and i < entries.size() and entries[i]["kind"] == "page" and entries[i]["known"]:
+		PageCard.open(self, str(entries[i]["id"]))
+
+
 func _draw_tab_dot(b: Button, i: int) -> void:
-	var pre: Array = {"relics": ["r:"], "lodgers": ["l:"], "guardians": ["g:"], "rooms": ["s:", "m:"], "candles": ["c:"], "records": []}[TABS[i]]
+	var pre: Array = {"relics": ["r:"], "lodgers": ["l:"], "guardians": ["g:"], "rooms": ["s:", "m:"], "candles": ["c:"], "records": [], "diary": ["d:"]}[TABS[i]]
 	for p in pre:
 		if Records.any_new(p):
 			_dot(b, Vector2(b.size.x - 7, 5))
@@ -362,6 +377,9 @@ func _entries(t: String) -> Array:
 			var hist: Array = Game.records.get("run_history", [])
 			for h in hist:
 				out.append({"kind": "run", "id": "", "known": true, "run": h})
+		"diary":
+			for pg in Diary.PAGES:
+				out.append({"kind": "page", "id": str(pg["id"]), "known": Diary.is_found(str(pg["id"])), "new_key": "d:" + str(pg["id"])})
 	return out
 
 
@@ -393,6 +411,12 @@ func _counts(t: String) -> String:
 			return "In the Candle Box: %d / %d" % [known, entries.size()]
 		"records":
 			return "Runs %d   Wins %d" % [int(Game.records.get("runs", 0)), int(Game.records.get("wins", 0))]
+		"diary":
+			var ends := 0
+			for k in Diary.ENDINGS:
+				if Diary.ending_seen(k) > 0:
+					ends += 1
+			return L.t("Pages {n} / {total}   Endings {e} / {all}", {"n": known, "total": entries.size(), "e": ends, "all": Diary.ENDINGS.size()})
 	return ""
 
 
@@ -433,6 +457,8 @@ func icon_of(e: Dictionary) -> Texture2D:
 			tex = Art.tex("ui/icon_medal")
 		"nights":
 			tex = Art.tex("items/hourglass") if Art.has("items/hourglass") else null
+		"page":
+			tex = Art.tex("story/page_icon")
 	if tex and not e["known"]:
 		return silhouette(tex)
 	return tex
@@ -583,6 +609,7 @@ func _show_detail(e: Dictionary) -> void:
 		"totals": _d_totals()
 		"nights": _d_nights()
 		"run": _d_run(e["run"])
+		"page": _d_page(e)
 
 
 func _d_relic(e: Dictionary) -> void:
@@ -771,6 +798,26 @@ func _move_row(c: String) -> Control:
 	return row
 
 
+## v2.5: a page of Martha's diary: its title, its place in the story and the page itself; a missing page
+## says where it can turn up (Diary.where_text).
+func _d_page(e: Dictionary) -> void:
+	var id: String = e["id"]
+	var known: bool = e["known"]
+	var pg := Diary.page(id)
+	var nm := UI.label(L.t(str(pg["title"])) if known else "???", 16, UI.GOLD if known else UI.DIM)
+	nm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	nm.custom_minimum_size = Vector2(150, 0)
+	_detail.add_child(nm)
+	_text(L.t("Page {n} of {total}", {"n": Diary.number(id), "total": Diary.TOTAL}), UI.EMBER)
+	if not known:
+		_text(Diary.where_text(id), UI.DIM)
+		return
+	_text(L.t(str(pg["text"])), UI.CREAM)
+	var run := int(Diary.found().get(id, 0))
+	if run > 0:
+		_text(L.t("Found on run {n}", {"n": run}), UI.WAX)
+
+
 ## The rules from the one-time intro (world._intro), for anyone who skipped it.
 func _d_howto() -> void:
 	# short enough for the 384-wide Journal (the detail panel must not push the Back row off the screen)
@@ -869,7 +916,7 @@ class JSlot extends Button:
 		for st in ["normal", "hover", "pressed", "focus", "disabled", "hover_pressed"]:
 			add_theme_stylebox_override(st, empty)
 		_tex = j.icon_of(e)
-		pressed.connect(func(): j._select(idx))
+		pressed.connect(func(): j._press(idx))
 		focus_entered.connect(func(): j._select(idx))
 		mouse_entered.connect(func():
 			if Controls.device == Controls.MOUSE:
@@ -883,6 +930,11 @@ class JSlot extends Button:
 			CandleArt.paint(self, str(e["id"]), Vector2(size.x / 2.0, size.y - 6.0).floor(), not e["known"], 0)
 		elif kind == "run" or kind == "totals" or kind == "nights" or kind == "howto":
 			_draw_row()
+		elif kind == "page" and _tex:   # v2.5: a diary page, its number under it
+			draw_texture(_tex, Vector2(floorf((size.x - _tex.get_width()) / 2.0), 3.0))
+			var num := str(Diary.number(str(e["id"])))
+			draw_string(Art.font_small, Vector2(1, size.y - 3), num, HORIZONTAL_ALIGNMENT_CENTER, size.x, 8, UI.INK)
+			draw_string(Art.font_small, Vector2(0, size.y - 4), num, HORIZONTAL_ALIGNMENT_CENTER, size.x, 8, UI.CREAM if e["known"] else UI.DIM)
 		elif _tex:
 			var p := ((size - _tex.get_size()) / 2.0).floor()
 			var tint := Color.WHITE
