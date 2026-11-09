@@ -1191,7 +1191,7 @@ static func paint_preview(ci: CanvasItem, feet: Vector2, cid: String, opts := {}
 		ci.draw_texture(front, o + Vector2(-9, -5))
 	Player.paint_arms(ci, o, g, c, ["rest", "rest"])
 	Player.paint_wick(ci, o, g, OUTLINE)
-	if sil != null:
+	if sil != null or opts.get("unlit", false):   # unlit: no flame (an empty save slot's sleeping candle)
 		return
 	var sf := Player.flame_frames(false)
 	var fr := int(opts.get("frame", 0))

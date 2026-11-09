@@ -135,6 +135,16 @@ func clear() -> void:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
+## Throw away slot n's saved run (a new run in that slot replaces it).
+func clear_slot(n: int) -> void:
+	if n == Game.slot:
+		clear()
+		return
+	var path := Game.run_path(n)
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
 ## Make sure the floor-start snapshot is on disk (window closed, app sent to the background).
 func flush() -> void:
 	if not snap.is_empty() and _run_live():
@@ -297,7 +307,8 @@ static func _read(path: String) -> Dictionary:
 
 # ---------------------------------------------------------------- title screen
 
-## Adds "Continue / Floor N - 12:41 AM" on top of the title menu (and moves the menu up to fit).
+## Adds "Continue / Slot 1: Floor N - 12:41 AM" on top of the title menu (and moves the menu up to
+## fit): the saved run of the slot played last.
 func add_continue_button(menu: Container, main: Node) -> Button:
 	if snap.is_empty():
 		return null
@@ -308,7 +319,7 @@ func add_continue_button(menu: Container, main: Node) -> Button:
 	top.offset_top = 1
 	top.offset_bottom = 17
 	b.add_child(top)
-	var sub := UI.label(summary(), 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	var sub := UI.label("Slot %d: %s" % [Game.slot, summary()], 8, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER)   # the slot played last
 	sub.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	sub.offset_top = 17
 	sub.offset_bottom = 27

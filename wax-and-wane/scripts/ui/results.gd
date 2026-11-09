@@ -303,14 +303,17 @@ func _header(v: VBoxContainer, won: bool, f: int) -> void:
 	col.add_theme_constant_override("separation", 0)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_child(col)
+	var lvl := UI.label(Records.level_text(int(params.get("level", 2))), 8, UI.DIM)   # the run's difficulty (save slot)
 	if won:
 		col.add_child(UI.label("DONE BY %s" % clock, 16, UI.GOLD))
 		col.add_child(UI.label("The house is quiet. You can finally rest.", 8, UI.CREAM))
 		col.add_child(UI.label("%s - %s" % [Candles.def_of(str(params.get("candle", "tallow")))["name"], "Tonight's Candle" if params.get("daily", false) else "Snuffed every guardian"], 8, UI.EMBER))
+		col.add_child(lvl)
 		return
 	col.add_child(UI.label("SNUFFED OUT", 16, UI.RED))
 	col.add_child(UI.label(Records.death_line(killer), 8, UI.CREAM))
 	col.add_child(UI.label(_where(f, ", floor "), 8, UI.EMBER))
+	col.add_child(lvl)
 
 
 ## "The Crypt 2/4" / "The Crypt, floor 2 of 4"; the secret floor above the house is never "5/4".

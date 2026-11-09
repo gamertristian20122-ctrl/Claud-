@@ -769,6 +769,7 @@ func _d_howto() -> void:
 func _d_totals() -> void:
 	var rec := Game.records
 	_head(_pic(Art.tex("ui/icon_medal"), 2), "The Ledger", [["Everything you have burnt through", UI.EMBER]])
+	_text("Slot %d  -  %s" % [Game.slot, Records.level_text(Game.level)], UI.WAX)   # this save slot and its level
 	var bf := int(rec.get("best_floor", 0))
 	_text("Runs %d   Wins %d   Deepest: %s" % [int(rec.get("runs", 0)), int(rec.get("wins", 0)), Records.floor_name(bf) if bf > 0 else "-"], UI.CREAM)
 	_text("Creatures snuffed %s   Best Kindling x%d" % [_num(int(rec.get("kills", 0))), int(rec.get("best_streak", 0))], UI.CREAM)
@@ -810,7 +811,9 @@ func _d_run(r: Dictionary) -> void:
 		where += " - " + Game.clock_text(float(r.get("clock", 0.0)))
 	_text(where, UI.CREAM)
 	_text("Played %s   Kills %d   Kindling x%d" % [_mmss(float(r.get("time", 0.0))), int(r.get("kills", 0)), int(r.get("streak", 0))], UI.WAX)
-	_text(("Tonight's Candle  -  " if r.get("daily", false) else "") + "Seed " + Records.seed_text(int(r.get("seed", 0))), UI.DIM)
+	# the run's difficulty level (runs from before 2.1 have none to show)
+	var lv := ("  -  Level %d" % int(r["level"])) if r.has("level") else ""
+	_text(("Tonight's Candle  -  " if r.get("daily", false) else "") + "Seed " + Records.seed_text(int(r.get("seed", 0))) + lv, UI.DIM)
 	var relics: Array = r.get("relics", [])
 	if not relics.is_empty():
 		var flow := HFlowContainer.new()

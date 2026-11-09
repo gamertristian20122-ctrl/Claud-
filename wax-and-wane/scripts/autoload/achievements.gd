@@ -1,7 +1,8 @@
 extends Node
 ## Achievements (autoload "Achievements"): the list, local unlocks in Game.records["achievements"]
-## (id -> unix time), a small pixel toast at the top of the screen, and a bridge to Steam when a
-## GodotSteam singleton is present (Steam API names are the ids below, exactly).
+## (id -> unix time; each save slot earns its own), a small pixel toast at the top of the screen, and a
+## bridge to Steam when a GodotSteam singleton is present (Steam API names are the ids below, exactly;
+## Steam gets every achievement earned in any slot).
 ##
 ## Most triggers are read from the running world each frame (_watch), so other scripts need no
 ## hooks. New mechanics can call Achievements.unlock("id") directly.
@@ -64,6 +65,9 @@ const LIST := [
 	{"id": "keeper_pillar", "name": "Load-Bearing", "desc": "Still the Keeper as the Altar Pillar.", "hidden": true},
 	{"id": "keeper_black_taper", "name": "Midnight Oil", "desc": "Still the Keeper as the Black Taper.", "hidden": true},
 	{"id": "keeper_moonwick", "name": "Moon Over the Tower", "desc": "Still the Keeper as Moonwick.", "hidden": true},
+	# difficulty levels (v2.1 save slots): a win on a higher level counts for the lower one too
+	{"id": "win_level3", "name": "Spellbound", "desc": "Win a night on level 3 (Witching Hour) or higher."},
+	{"id": "win_level4", "name": "Dead of Night", "desc": "Win a night on level 4 (Two O'Clock)."},
 ]
 const BOSS_IDS := {1: "boss_cellar", 2: "boss_crypt", 3: "boss_chapel"}
 const FLOOR_IDS := {2: "floor_crypt", 3: "floor_chapel", 4: "floor_belfry"}
@@ -246,6 +250,11 @@ func _run_over(w: Node, p: Node) -> void:
 		unlock("tonight_win")
 	if (p.relics as Array).size() <= 4:
 		unlock("win_plain")
+	var lv := int(w.get("level")) if w.get("level") != null else 2   # Tonight's Candle is always 2
+	if lv >= 3:
+		unlock("win_level3")
+	if lv >= 4:
+		unlock("win_level4")
 
 
 func _check_candles() -> void:
@@ -556,8 +565,9 @@ func _steam_init() -> void:
 			push_warning("Steam init failed: %s" % res.get("verbal", ""))
 			_steam = null
 			return
-	# achievements earned before Steam was there light up now
-	for id in _records():
+	# achievements earned before Steam was there light up now, from every save slot (Steam has one
+	# list per account: an achievement earned in any slot counts)
+	for id in Game.all_achievements():
 		_steam_set(id, false)
 	_steam_store()
 

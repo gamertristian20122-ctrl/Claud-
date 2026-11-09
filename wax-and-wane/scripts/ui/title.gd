@@ -156,6 +156,8 @@ func _ready() -> void:
 	Controls.set_page_handler(root, _cycle)   # LB / RB (Q / E) pick a candle
 	var rec := Game.records
 	var line := "Runs %d   Wins %d" % [rec["runs"], rec["wins"]]
+	if Game.slot_live:   # the slot played last (the Slots screen switches slots)
+		line = "Slot %d, level %d   %s" % [Game.slot, Game.level, line]
 	if rec.get("daily_date", "") == Time.get_date_string_from_system():
 		line += "   Tonight: %d" % int(rec.get("daily_first", 0))
 	if float(rec["best_finish"]) != 0.0:
@@ -343,19 +345,15 @@ func _show_candle() -> void:
 		hero.modulate = Color(0.12, 0.1, 0.11)
 		hero.light.enabled = false
 		hero.glow.enabled = false
-	play_btn.disabled = not unlocked
-	play_btn.modulate.a = 1.0 if unlocked else 0.4
+	# Light the wick opens the Slots screen whatever is shown here: each slot lights its own unlocked candle
 	if unlocked and str(Game.records.get("candle", "")) != sel:
 		Game.records["candle"] = sel
 		Game.save()
 
 
+## Light the wick: the three save slots (scripts/ui/slots.gd), each with its own difficulty level.
 func _play() -> void:
-	if not Candles.is_unlocked(sel):
-		return
-	_abandon_check(func():
-		Audio.play("ui_open")
-		main.goto("game", {"candle": sel}))
+	Slots.open(root, main)
 
 
 func _daily() -> void:
@@ -388,28 +386,10 @@ func _daily() -> void:
 	v.add_child(row)
 
 
-## QA-02: a saved run is never thrown away silently. Starting a new candle while one is saved asks
-## first; only "Light new" lets the new run replace it.
+## QA-02: a saved run is never thrown away silently. Tonight's Candle or a seed lit while the slot in
+## use has a saved run asks first (Slots.abandon_check; the Slots screen's Play asks the same).
 func _abandon_check(start: Callable) -> void:
-	if not RunSave.has_snapshot():
-		start.call()
-		return
-	var m := UI.modal(root, "YOUR CANDLE IS STILL LIT")
-	var r: Control = m[0]
-	var v: VBoxContainer = m[1]
-	v.add_child(UI.label("Your run on %s will go out for good." % RunSave.summary().replace(" - ", " at "), 8, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER))
-	v.add_child(UI.label("Light a new candle anyway?", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER))
-	var row := HBoxContainer.new()
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 12)
-	var keep := UI.button("Keep it", func(): r.queue_free(), 90)
-	keep.set_meta("default_focus", true)
-	row.add_child(keep)
-	row.add_child(UI.button("Light new", func():
-		r.queue_free()
-		RunSave.clear()
-		start.call(), 90))
-	v.add_child(row)
+	Slots.abandon_check(root, Game.slot, start)
 
 
 func _credits() -> void:

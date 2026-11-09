@@ -110,7 +110,11 @@ func _migrate(cf: ConfigFile) -> int:
 	var lvl := 1 if bool(cf.get_value("settings", "gentle", false)) else DEFAULT_LEVEL
 	_write_slot(1, lvl, rec)
 	if FileAccess.file_exists(OLD_RUN) and not FileAccess.file_exists(run_path(1)):
-		DirAccess.rename_absolute(_abs(OLD_RUN), _abs(run_path(1)))
+		var run := ConfigFile.new()
+		if run.load(OLD_RUN) == OK:   # the saved run keeps the level it was lit at, whatever the slot changes to
+			run.set_value("run", "level", lvl)
+			_store(run, run_path(1))
+			DirAccess.remove_absolute(_abs(OLD_RUN))
 	# save.cfg keeps only the settings from now on (and which slot was used last)
 	var out := ConfigFile.new()
 	for k in settings.keys():
@@ -196,6 +200,8 @@ func _read_slot(n: int) -> Dictionary:
 
 ## "New candle" on an empty slot: it becomes the slot in use, at this level, and gets its file.
 func start_slot(n: int, lvl: int) -> void:
+	if not slot_exists(n) and FileAccess.file_exists(run_path(n)):
+		DirAccess.remove_absolute(_abs(run_path(n)))   # a new slot starts clean (no stray saved run)
 	use_slot(n)
 	level = clampi(lvl, 1, MAX_LEVEL)
 	slot_live = true

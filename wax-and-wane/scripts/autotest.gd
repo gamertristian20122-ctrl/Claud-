@@ -666,6 +666,12 @@ func _tour() -> void:
 		await BestiaryGallery.tour(self)
 		get_tree().quit()
 		return
+	if args.has("slots"):   # v2.1: the save slots, the level picker, a 2.0 save moved into Slot 1
+		await _wait(0.5)
+		await load("res://scripts/ui/slots_tour.gd").tour(self)
+		Audio.stop_all()
+		get_tree().quit()
+		return
 	if args.has("journal"):   # meta stream: the Journal, the death note, the chalk start room
 		await _wait(1.0)
 		await MetaTour.tour(self)
