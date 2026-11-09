@@ -263,6 +263,7 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 	position = pos
 	var f := float(floor_num - 1)
 	max_hp = float(def["hp"]) * FLOOR_HP[clampi(floor_num, 1, FLOOR_HP.size()) - 1] if not def.get("boss", false) else float(def["hp"])
+	max_hp *= float(w.difficulty()["hp"]) if w and w.has_method("difficulty") else 1.0   # the slot's level (world.LEVELS)
 	hp = max_hp
 	speed = float(def["speed"]) * (1.0 + 0.05 * f)
 	radius = float(def["r"])

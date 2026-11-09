@@ -1,14 +1,15 @@
 extends SceneTree
 ## Run-rule probe (docs/streams/fix_balance.md): boots the real Main scene and checks the run rules,
 ## printing PASS / FAIL per check and exiting 1 on any FAIL. Give it its own profile (XDG_DATA_HOME):
-##   godot --headless --path . --script res://tools/balance_probe.gd -- --check=guardians,continue,daily,gate,gentle,summoner
+##   godot --headless --path . --script res://tools/balance_probe.gd -- --check=guardians,continue,daily,gate,levels,summoner
 ##   godot --headless --path . --script res://tools/balance_probe.gd -- --check=keeper --keeper
 ## guardians: a seed is the same house whatever the win count (QA-06); a new player's first Belfry is
 ##   The Great Pendulum and the Hour Fiend joins after a win (C5).
 ## continue: Save & quit + Continue keeps a run's seeded flag and its guardians (QA-08).
 ## daily: Tonight's Candle is logged, scored and shared under the night it was lit (QA-15).
 ## gate: the ladder follows the clock the player sees and waits for a first win (QA-14, C2).
-## gentle: Gentle burn changes the melt at once, never in Tonight's Candle (QA-16).
+## levels: each difficulty level's multipliers on a live run; Tonight's Candle is always level 2; a
+##   continued run keeps its level (v2.1, replaced the Gentle burn check of QA-16).
 ## summoner: two Hooded Mourners stop summoning after their budget (QA-10).
 ## keeper: burst damage cannot skip a Keeper phase; phase 3 lasts its minimum (QA-03).
 
@@ -297,21 +298,36 @@ func _check_summoner() -> void:
 	_ok(killed <= 12, "two mourners over %d game seconds, their Shamblers killed as they come: %d summoned (mourners alive %d)" % [int(t), killed, alive])
 
 
-# QA-16: Gentle burn switched mid-run changes the melt at once (not in Tonight's Candle).
-func _check_gentle() -> void:
-	game.set_setting("gentle", false)
-	var w: Node = await _light({})
-	await _wait(1.0)
-	var off: float = await _melt_rate(w, 2.0)
-	game.set_setting("gentle", true)
-	var on: float = await _melt_rate(w, 2.0)
-	game.set_setting("gentle", false)
-	var back: float = await _melt_rate(w, 2.0)
-	_ok(absf(on / off - 0.75) < 0.03 and absf(back / off - 1.0) < 0.03, "normal run: melt %.4f/s, Gentle on mid-run %.4f/s (x%.2f), off again %.4f/s" % [off, on, on / off, back])
+# v2.1 difficulty levels (world.LEVELS through world.difficulty(), which replaced Gentle burn): each
+# level's melt, foe damage, creature health, marked-foe chance and drip wax, measured on a live run
+# against level 2; Tonight's Candle plays level 2 whatever the slot's level; Save & Continue keeps the
+# level a run was lit at, even if the slot's level changed in between.
+func _check_levels() -> void:
+	var lv: Dictionary = load("res://scripts/game/world.gd").LEVELS
+	var base := {}
+	for n in [2, 1, 3, 4]:
+		var w: Node = await _light({"level": n, "seed": 4242})
+		await _wait(1.0)
+		var melt: float = await _melt_rate(w, 2.0)
+		var e: Node = w.spawn_enemy("goblin", w.room.center() + Vector2(40, 0))
+		var row := {"melt": melt, "dmg": float(w.enemy_dmg_mult()), "hp": float(e.max_hp), "champ": float(w.champ_chance()), "wax": float(w.wax_bonus())}
+		e.queue_free()
+		if n == 2:
+			base = row
+		var ok: bool = w.level == n
+		var parts: Array = []
+		for k in row:
+			var ratio: float = row[k] / maxf(0.0001, float(base[k]))
+			ok = ok and absf(ratio - float(lv[n][k])) < 0.03
+			parts.append("%s x%.2f" % [k, ratio])
+		_ok(ok, "level %d %s: %s (melt %.4f/s, goblin hp %.1f)" % [n, lv[n]["name"], ", ".join(parts), melt, row["hp"]])
+	game.level = 4
 	var d: Node = await _light({"seed": 99, "daily": true, "candle": "tallow"})
-	await _wait(1.0)
-	var d_off: float = await _melt_rate(d, 2.0)
-	game.set_setting("gentle", true)
-	var d_on: float = await _melt_rate(d, 2.0)
-	game.set_setting("gentle", false)
-	_ok(absf(d_on / d_off - 1.0) < 0.03, "Tonight's Candle ignores it: %.4f/s -> %.4f/s" % [d_off, d_on])
+	_ok(d.level == 2 and absf(float(d.enemy_dmg_mult()) - float(base["dmg"])) < 0.001, "Tonight's Candle with the slot at level 4 plays level %d" % d.level)
+	game.level = 3
+	var w3: Node = await _light({})
+	_ok(w3.level == 3, "a run takes the slot's level: %d" % w3.level)
+	game.level = 1
+	w3 = await _save_and_continue()
+	_ok(w3.level == 3, "continued after the slot went to level 1: the run stays at level %d" % w3.level)
+	game.level = 2

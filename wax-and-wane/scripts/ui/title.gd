@@ -149,7 +149,7 @@ func _ready() -> void:
 	sel_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	box.add_child(sel_name)
 	box.add_child(UI.button(">", func(): _cycle(1), 24))
-	sel = Game.settings.get("candle", "tallow")
+	sel = str(Game.records.get("candle", "tallow"))   # each save slot remembers its own candle
 	if not Candles.is_unlocked(sel):
 		sel = "tallow"
 	_show_candle()
@@ -345,8 +345,8 @@ func _show_candle() -> void:
 		hero.glow.enabled = false
 	play_btn.disabled = not unlocked
 	play_btn.modulate.a = 1.0 if unlocked else 0.4
-	if unlocked:
-		Game.settings["candle"] = sel
+	if unlocked and str(Game.records.get("candle", "")) != sel:
+		Game.records["candle"] = sel
 		Game.save()
 
 
