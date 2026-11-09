@@ -664,16 +664,16 @@ KzyyyocyyyocK
 """
 COIN = """
 ...KKKKKK...
-.KKzzyyyyKK.
-.KzyyyyyyoK.
-KzyyyRyyyyoK
-KzyyRyRyyyoK
-KyyyRyRyyycK
-KyyyyRyyyycK
-KyyyRRRyyycK
-KoyyyyyyyccK
-.KoyyyyyccK.
-.KKcccccRKK.
+.KKccccccKK.
+.KczzyyyycK.
+KczyyyocyycK
+KczyyyocyycK
+KcyyyyocyycK
+KcyyyyocyycK
+KcyyyyocyycK
+KcyyyyyyyycK
+.KcyyyyyycK.
+.KKccccccKK.
 ...KKKKKK...
 """
 BOMB = """

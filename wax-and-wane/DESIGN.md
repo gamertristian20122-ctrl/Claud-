@@ -166,6 +166,19 @@ opaque; the game draws them at one alpha (0.5), lit like the floor. Lines drop o
   Cursors: `cursor_arrow.png`, `cursor_cross.png` (scaled by the game's integer pixel scale).
 - `title_logo.png` 210x41 "WAX & WANE" hand-pixelled logo. App icons: `app_icon_192.png`, `app_icon_fg_432.png`,
   `app_icon_bg_432.png` (Android adaptive), `app_icon.ico` (Windows, 16-256 px, pixel-exact).
+- v2.6 UI kit, `art_ui2.py` ("candlelit wood and brass"; how it is used: `docs/streams/v26_gui.md`). Nine-patches
+  (margins in brackets): `kit_panel.png` 24x24 [8] mahogany frame + brass corner brackets, `kit_drip.png` 30x11 /
+  `kit_drip_small.png` 15x11 wax poured on a panel's top rail (overlays), `kit_card.png` 12x12 [4], `kit_inset.png`
+  10x10 [3], `kit_plate.png` 16x16 [5] brass plate, `kit_strip.png` 16x12 [5/4] dark ribbon with brass ends;
+  buttons 24x24 [6/6/6/7] `kit_btn(_hover|_pressed).png` dark oak, `kit_btn_primary(...)` brass,
+  `kit_btn_danger(...)` red wax, `kit_btn_disabled.png`; `kit_focus.png` 12x12 [4] gold ring (drawn 2 px outside),
+  `kit_focus_flame.png` 7x10; `kit_tab(_on).png` 16x16 [5/5/5/4]; `kit_track(_fill).png` 12x7 [4/3],
+  `kit_knob.png` 7x10 flame knob; `kit_switch_on|off.png` 20x11; `kit_orn_l|r.png` 18x7 heading flourishes,
+  `kit_sep.png` + `kit_sep_gem.png` 7x7; `kit_slot.png` 18x18 [3] icon socket; `kit_seal.png` 12x12, `kit_medal.png`
+  15x15. HUD: `hud_digits.png` / `hud_digits_hot.png` 88x12 (0-9 and ':' in 8x12 cells, drawn 7 px apart, the
+  colon 4), `hud_clockplate.png` 12x12 [4], `hud_chip.png` 10x10 [3], `hud_coin.png` / `hud_bomb.png` 12x12,
+  `boss_frame.png` 16x10 [5/4]. Icons 11x11: `ico_journal|seed|settings|credits|quit|flame|flame_dark|moon|clock|
+  stairs|skull|page|relic|rooms|back`. Title: `title_books.png` 36x16 (Tallow's stand).
 
 ### Audio (audio/)
 - `sfx/<name>.ogg` mono, trimmed, loudness-matched; extra takes `<name>_2.ogg`, `<name>_3.ogg`... are picked

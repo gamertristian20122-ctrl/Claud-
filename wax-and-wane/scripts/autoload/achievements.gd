@@ -429,18 +429,7 @@ func _pop(title: String, desc: String, reward: String) -> void:
 	var vs := get_viewport().get_visible_rect().size
 	var box := PanelContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var sb := StyleBoxTexture.new()
-	if Art.has("ui/panel_9"):
-		sb.texture = Art.tex("ui/panel_9")
-		sb.texture_margin_left = 8
-		sb.texture_margin_right = 8
-		sb.texture_margin_top = 8
-		sb.texture_margin_bottom = 8
-	sb.content_margin_left = 7
-	sb.content_margin_right = 8
-	sb.content_margin_top = 5
-	sb.content_margin_bottom = 5
-	box.add_theme_stylebox_override("panel", sb)
+	box.theme_type_variation = &"CardPanel"   # v2.6: the UI kit's slim card (scripts/ui/ui.gd)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 5)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE

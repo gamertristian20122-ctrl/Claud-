@@ -21,7 +21,7 @@ var _buttons: HBoxContainer
 const EDGE := 4          # px kept free at the screen edges
 const MAX_NEWS := 2      # unlocks shown in their card (one row); the rest is "+N more in the Journal" in its heading
 const RELIC_ROW := 16    # relic icons in the row (a longer collection: 15 and a "+N" button)
-const BODY_W := 306      # the column's width on a 384-wide screen; wider screens (the phone's 480) get up to BODY_MAX
+const BODY_W := 306      # the narrowest column (the screen minus 64 px, between BODY_W and BODY_MAX: 320 on 384, 400 on 480)
 const BODY_MAX := 400
 var _relic_row: HFlowContainer
 
