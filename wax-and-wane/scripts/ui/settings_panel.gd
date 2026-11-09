@@ -45,7 +45,9 @@ static func open(parent: Control, page := 0) -> void:
 		if focus_tab:
 			tab_btns[i].grab_focus(not Controls.uses_buttons())
 	st["show"] = show_page
-	for i in PAGES.size():
+	# the Keys page needs keys or a pad: a phone played by touch alone does not list it
+	var n_pages := PAGES.size() if OS.has_feature("pc") or Controls.device != Controls.TOUCH else PAGES.size() - 1
+	for i in n_pages:
 		var b := UI.button(L.t(PAGES[i]), func(): pass, 72)
 		b.pressed.connect(func(): show_page.call(i, true))
 		tabs.add_child(b)
@@ -58,8 +60,8 @@ static func open(parent: Control, page := 0) -> void:
 		Audio.play("ui_back")
 		root.queue_free(), 96)
 	bottom.add_child(back)
-	show_page.call(page, false)
-	Controls.set_page_handler(root, func(d: int): show_page.call((st["page"] + d + PAGES.size()) % PAGES.size(), true))
+	show_page.call(mini(page, n_pages - 1), false)
+	Controls.set_page_handler(root, func(d: int): show_page.call((st["page"] + d + n_pages) % n_pages, true))
 
 
 static func _hint(t: String) -> Label:
