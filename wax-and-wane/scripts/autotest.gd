@@ -30,6 +30,8 @@ extends Node
 ##   -- --autotest --nightdump --speed=4 [--floors=N] [--dump=/abs/file]  every floor of a few seeded nights: layouts,
 ##        guardians, loot, lodgers and the floor numbers (scripts/night_check.gd; the 4-floor baseline must not change)
 
+const QA_MONKEY := preload("res://scripts/qa_monkey.gd")
+
 var main: Node
 var args := {}
 var mode := "playtest"
@@ -279,6 +281,8 @@ func _process(dt: float) -> void:
 		_save_cycle()
 	if args.has("area"):
 		Areas.test_watch(self, cur)   # one line when the area's floor is done, then the run ends
+	if args.has("monkey"):   # v2.7 QA: a person's random presses on top of the bot, with a watchdog (scripts/qa_monkey.gd)
+		QA_MONKEY.step(self, cur)
 	if _status_t > 10.0 and cur and cur.name == "Game":
 		_status_t = 0.0
 		var w: Node = cur
