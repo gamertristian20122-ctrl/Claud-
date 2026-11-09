@@ -1142,6 +1142,7 @@ static func _tour_enter(bot: Node, w: Node, item: Array, limit := 3.0) -> BossIn
 	w.boss_kind = item[0]
 	w.player.wax = 100.0
 	await bot._wait(2.9)   # the floor banner clears
+	Juice.of(w).stain_store.clear()   # the test areas share a floor number: no puddles carried between them
 	live = null
 	bot._jump(w, w.layout["boss"])
 	var waited := 0.0
@@ -1169,4 +1170,3 @@ static func _tour_clear(w: Node) -> void:
 	w.hud.set_boss("", false)
 	w._clear_shots()
 	Keeper.cleanup(w)
-	Juice.of(w).stain_store.clear()   # the test areas share a floor number: no puddles carried between them
