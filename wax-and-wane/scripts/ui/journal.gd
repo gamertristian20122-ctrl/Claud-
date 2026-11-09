@@ -758,8 +758,10 @@ func _move_row(c: String) -> void:
 	row.add_theme_constant_override("separation", 4)
 	row.add_child(_pic(Art.tex(Moves.icon(mv))))
 	var used := int((Game.records.get("move_uses", {}) as Dictionary).get(mv, 0))
-	var txt := L.t("{move}: {line}", {"move": Moves.name_of(mv), "line": Moves.line_of(mv)})
-	if used > 0:
+	# a 384-wide screen keeps it to one line (the page must not push the Back row off the screen)
+	var narrow := get_viewport().get_visible_rect().size.x < 432.0
+	var txt := L.t("{move}: {line}", {"move": Moves.name_of(mv), "line": Moves.short_of(mv) if narrow else Moves.line_of(mv)})
+	if used > 0 and not narrow:
 		txt += " " + L.t("(used {n})", {"n": used})
 	var l := UI.label(txt, 8, UI.GOLD)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

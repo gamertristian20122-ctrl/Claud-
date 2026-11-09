@@ -441,6 +441,8 @@ static func tour(at: Node) -> void:
 	w2.player.wax = 4.0
 	await at._wait(0.4)
 	await at._shot("hud_button_refused")
+	w2.player.wax = 80.0
+	await at._wait(2.2)   # let the clock's 1:45 banner (low wax) clear before the next pictures
 	Controls.set_device(Controls.KEYS)
 	await at._wait(0.3)
 	w2.player.wax = 80.0
@@ -496,7 +498,7 @@ static func tour(at: Node) -> void:
 	var j := Journal.open(title.root)
 	await at._wait(0.4)
 	j._set_tab(Journal.TABS.find("candles"), false)
-	for c in ["tallow", "party"]:
+	for c in Candles.ORDER:
 		j._select(Candles.ORDER.find(c))
 		await at._wait(0.3)
 		await at._shot("journal_candle_%s" % c)

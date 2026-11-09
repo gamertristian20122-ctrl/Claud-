@@ -16,17 +16,17 @@ extends Node2D
 
 const LIST := {
 	"skip": {"name": "Skip", "line": "A quick dash; nothing can touch you for a moment.",
-		"cd": 2.5, "cost": 0.0, "icon": "moves/icon_skip"},
+		"short": "a quick, untouchable dash", "cd": 2.5, "cost": 0.0, "icon": "moves/icon_skip"},
 	"sparkler": {"name": "Sparkler", "line": "Twelve sparks burst all around and pop enemy shots.",
-		"cd": 8.0, "cost": 0.0, "icon": "moves/icon_sparkler"},
+		"short": "sparks all round, shots pop", "cd": 8.0, "cost": 0.0, "icon": "moves/icon_sparkler"},
 	"slam": {"name": "Slam", "line": "Slam the floor: lodgers are stunned, guardians slowed.",
-		"cd": 9.0, "cost": 0.0, "icon": "moves/icon_slam"},
+		"short": "stuns the lodgers near you", "cd": 9.0, "cost": 0.0, "icon": "moves/icon_slam"},
 	"blink": {"name": "Blink", "line": "Vanish and step out further on, past pits and rubble.",
-		"cd": 4.0, "cost": 0.0, "icon": "moves/icon_blink"},
+		"short": "past pits, spikes and rubble", "cd": 4.0, "cost": 0.0, "icon": "moves/icon_blink"},
 	"flare": {"name": "Flare Up", "line": "Burn 2 minutes of wax to blaze for 3 seconds.",
-		"cd": 10.0, "cost": 2.0, "icon": "moves/icon_flare"},
+		"short": "2 minutes of wax, 3 s of fire", "cd": 10.0, "cost": 2.0, "icon": "moves/icon_flare"},
 	"snuff": {"name": "Snuff", "line": "Go dark for 2 s, then a black flame that pierces.",
-		"cd": 9.0, "cost": 0.0, "icon": "moves/icon_snuff"},
+		"short": "go dark, then a black flame", "cd": 9.0, "cost": 0.0, "icon": "moves/icon_snuff"},
 }
 const ORDER := ["skip", "sparkler", "slam", "blink", "flare", "snuff"]
 
@@ -132,6 +132,11 @@ static func name_of(id: String) -> String:
 
 static func line_of(id: String) -> String:
 	return L.t(str(def(id).get("line", ""))) if LIST.has(id) else ""
+
+
+## The move's line cut to a few words, for narrow spots (the Journal on a 384-wide screen).
+static func short_of(id: String) -> String:
+	return L.t(str(def(id).get("short", def(id).get("line", "")))) if LIST.has(id) else ""
 
 
 static func icon(id: String) -> String:
