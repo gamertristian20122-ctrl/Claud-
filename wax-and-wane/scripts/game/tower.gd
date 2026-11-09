@@ -387,11 +387,9 @@ static func on_results(res: Control, v: Container, params: Dictionary) -> void:
 	if won and f == top:
 		for l in labels:
 			if l.text.begins_with("DONE BY"):
-				var at := v.get_children().find(l)
 				l.text = "TRUE ENDING"
-				var done := UI.label("Done by %s. The clock has stopped." % Game.clock_text(float(params.get("clock", 0.0))), 8, Color("#cae6f5"), HORIZONTAL_ALIGNMENT_CENTER)
-				v.add_child(done)
-				v.move_child(done, at + 1)
+				var done := UI.label("Done by %s. The clock has stopped." % Game.clock_text(float(params.get("clock", 0.0))), 8, Color("#cae6f5"), l.horizontal_alignment)
+				_insert_after(l, done)   # v2.6: next to the line it follows (the results' headline card)
 			elif l.text.begins_with("The house is quiet"):
 				l.text = "The bells are done with you. Sleep well."
 	elif not won and f == top:
@@ -401,10 +399,16 @@ static func on_results(res: Control, v: Container, params: Dictionary) -> void:
 	elif won and not Game.records.get("tower_seen", false):
 		for l in labels:
 			if l.text.begins_with("The house is quiet"):
-				var hint := UI.label(hint_for(int(params.get("floors", 4))), 8, Color("#b6cbcf"), HORIZONTAL_ALIGNMENT_CENTER)
-				v.add_child(hint)
-				v.move_child(hint, v.get_children().find(l) + 1)
+				var hint := UI.label(hint_for(int(params.get("floors", 4))), 8, Color("#b6cbcf"), l.horizontal_alignment)
+				_insert_after(l, hint)
 				break
+
+
+## Puts `extra` right after `l` in l's own container (the results screen nests its lines in cards).
+static func _insert_after(l: Label, extra: Label) -> void:
+	var par := l.get_parent()
+	par.add_child(extra)
+	par.move_child(extra, l.get_index() + 1)
 
 
 static func _labels(n: Node, out: Array) -> void:

@@ -1130,12 +1130,12 @@ func open_pause() -> void:
 		var relic_info := UI.label("Tap a relic to read it" if Controls.device == Controls.TOUCH else "Select a relic to read it",
 			8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 		for r in p.relics:
-			var tb := TextureButton.new()
-			tb.texture_normal = Art.tex(Items.icon(r))
+			var tb := Button.new()   # v2.6: an icon socket (the Theme's SlotButton)
+			tb.theme_type_variation = &"SlotButton"
+			tb.icon = Art.tex(Items.icon(r))
+			tb.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			tb.custom_minimum_size = Vector2(slot, slot)
-			tb.stretch_mode = TextureButton.STRETCH_KEEP_CENTERED
-			tb.ignore_texture_size = true
-			UI.focusable_slot(tb)
+			tb.focus_mode = Control.FOCUS_ALL
 			var rid: String = r
 			var read := func(): relic_info.text = "%s - %s" % [Items.display_name(rid), Items.desc(rid)]
 			tb.pressed.connect(read)
@@ -1143,7 +1143,7 @@ func open_pause() -> void:
 			row.add_child(tb)
 		v.add_child(row)
 		v.add_child(relic_info)
-	var resume := UI.button("Resume", func(): world.toggle_pause())
+	var resume := UI.primary("Resume", func(): world.toggle_pause())   # v2.6: the brass button
 	resume.set_meta("default_focus", true)
 	v.add_child(resume)
 	var row1 := HBoxContainer.new()   # Journal | Settings: two halves, like the row below
@@ -1154,7 +1154,7 @@ func open_pause() -> void:
 	v.add_child(row1)
 	var row2 := HBoxContainer.new()
 	row2.add_theme_constant_override("separation", 6)
-	for b in [UI.button("Save & quit", _confirm_save_quit, 96), UI.button("Give up", _confirm_give_up, 96)]:
+	for b in [UI.button("Save & quit", _confirm_save_quit, 96), UI.danger("Give up", _confirm_give_up, 96)]:
 		(b as Control).size_flags_horizontal = Control.SIZE_EXPAND_FILL   # two halves under a wide relic row
 		row2.add_child(b)
 	v.add_child(row2)
@@ -1171,7 +1171,9 @@ func _confirm_save_quit() -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_child(UI.button("Keep burning", func(): r.queue_free(), 100))
+	var keep := UI.primary("Keep burning", func(): r.queue_free(), 100)
+	keep.set_meta("default_focus", true)
+	row.add_child(keep)
 	row.add_child(UI.button("Save & quit", func():
 		RunSave.flush()
 		world.main.goto("title"), 90))
@@ -1184,8 +1186,10 @@ func _confirm_give_up() -> void:
 	r.process_mode = Node.PROCESS_MODE_ALWAYS
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	row.add_child(UI.button("Keep burning", func(): r.queue_free(), 100))
-	row.add_child(UI.button("Give up", func():
+	var keep := UI.primary("Keep burning", func(): r.queue_free(), 100)
+	keep.set_meta("default_focus", true)
+	row.add_child(keep)
+	row.add_child(UI.danger("Give up", func():
 		r.queue_free()
 		world.give_up(), 80))
 	(m[1] as VBoxContainer).add_child(row)

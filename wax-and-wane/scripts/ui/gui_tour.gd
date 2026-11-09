@@ -80,7 +80,7 @@ static func tour(at: Node) -> void:
 	await at._shot("gui_pause")
 	w.toggle_pause()
 	await at._wait(0.2)
-	var card := PageCard.open(w.hud.root, "p01")
+	var card := PageCard.open(w.hud.root, "first_night")
 	await at._wait(0.5)
 	await at._shot("gui_reading_card")
 	card.close()
@@ -89,13 +89,13 @@ static func tour(at: Node) -> void:
 	main.goto("results", {"won": true, "floor": 4, "clock": 66.0, "kills": 87, "rooms": 31, "time": 1270.0,
 		"streak": 9, "hits": 6, "candle": "tallow", "relics": ["blue_flame", "moth_friend", "twin_wick", "candelabra",
 		"sharp_wick", "matchbook", "tin_sconce"], "new_unlocks": ["dust_bunny", "bell_rope"], "unlocked": ["tea_light"],
-		"level": 2, "floors": 4, "seed": 48217730, "killer": "clock", "diary_new": ["p01", "p02"]})
+		"level": 2, "floors": 4, "seed": 48217730, "killer": "clock", "diary_new": ["first_night", "rounds"]})
 	await _screen(at, "Results")
 	await at._wait(0.6)
 	await at._shot("gui_results_won")
 	main.goto("results", {"won": false, "floor": 2, "clock": 120.0, "kills": 23, "rooms": 9, "time": 431.0,
 		"streak": 4, "hits": 14, "candle": "tallow", "relics": ["blue_flame", "moth_friend"], "level": 2, "floors": 4,
-		"seed": 1234567, "killer": "e:skeleton"})
+		"seed": 1234567, "killer": "e:skelet"})
 	await _screen(at, "Results")
 	await at._wait(0.6)
 	await at._shot("gui_results_dead")

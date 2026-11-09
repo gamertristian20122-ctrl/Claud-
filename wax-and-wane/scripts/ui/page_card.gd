@@ -113,6 +113,9 @@ func _draw_sheet() -> void:
 		_sheet.draw_rect(Rect2(x, top - up - 1, 1, 1), EDGE)
 		_sheet.draw_rect(Rect2(x, bot, 1, dn), col)
 		_sheet.draw_rect(Rect2(x, bot + dn, 1, 1), EDGE)
+	# v2.6: Martha's red wax seal on the top-right corner (the UI kit's kit_seal.png)
+	var seal := Art.tex("ui/kit_seal")
+	_sheet.draw_texture(seal, Vector2(w - seal.get_width() - 4, 1))
 	# a fold across the middle, where it was folded to fit a pocket
 	var fy := top + int((bot - top) * 0.52)
 	for x in range(1, w - 3):
