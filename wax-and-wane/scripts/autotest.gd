@@ -94,6 +94,12 @@ func _ready() -> void:
 	Game.base_time_scale = float(args.get("speed", "1"))
 	Engine.time_scale = Game.base_time_scale
 	Game.settings["aim_assist"] = true
+	# v2.7 QA: --settings=swap_sticks:true,reduce_motion:true,aim:auto,magnet:false (true / false, numbers or words)
+	for kv in str(args.get("settings", "")).split(",", false):
+		var sv: Variant = kv.get_slice(":", 1)
+		sv = true if sv == "true" else (false if sv == "false" else (float(sv) if (sv as String).is_valid_float() else sv))
+		Game.settings[kv.get_slice(":", 0)] = sv
+		print("[settings] %s = %s" % [kv.get_slice(":", 0), sv])
 	await get_tree().create_timer(0.8).timeout
 	if args.has("herosheet") and args.has("costumes"):
 		_costume_sheet()
