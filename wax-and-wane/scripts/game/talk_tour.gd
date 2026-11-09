@@ -110,7 +110,7 @@ static func tour(bot: Node) -> void:
 	var w: Node = await _world(bot)
 	if str(bot.args.get("talk", "")) == "all":   # --tour --talk=all: every guardian's first two lines (portraits, crops)
 		for item in BossIntro.TOUR:
-			var g: Enemy = await _meet(bot, w, str(item[0]))
+			await _meet(bot, w, str(item[0]))
 			if Talk.live == null:
 				print("[talk] tour: no scene for ", item[0])
 				continue
@@ -123,8 +123,6 @@ static func tour(bot: Node) -> void:
 			Talk.live.skip()
 			await _until_closed(bot)
 			BossIntro._tour_clear(w)
-			if g:
-				pass
 		# every candle of the house speaks with its own face, colours and name (the speaker "me" is the candle played)
 		for cid in Candles.ORDER:
 			var t := Talk.open(Talk._layer(w), [{"who": "me", "face": "brave", "text": "(the tour) Going up. Don't wait for me."},
@@ -197,10 +195,9 @@ static func tour(bot: Node) -> void:
 	j._watch.pressed.emit()
 	await bot._wait(2.2)
 	await bot._shot("journal_opening_replay")
-	if true:   # the replay ends (Skip)
-		for n in j.get_children():
-			if n is Opening:
-				n.skip()
+	for n in j.get_children():   # the replay ends (Skip) and gives the Journal back
+		if n is Opening:
+			n.skip()
 	await bot._wait(0.5)
 	# ---- an ending's closing beat: the true ending, the candle and Martha's memory on the sill before dawn
 	for c in w.hud.root.get_children():
