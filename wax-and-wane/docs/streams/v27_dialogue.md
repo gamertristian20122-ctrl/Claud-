@@ -7,18 +7,21 @@ Tallow answers (brave, scared, a little funny), Martha Fenn speaks as a memory, 
 animated story, and the endings close with a few words between Tallow and Martha. Branch `v27/dialogue`. The story is
 still `docs/design/STORY.md`; the diary pages stay as the extra lore. **No old line was changed.**
 
+Eight moments at 480x216 (the opening's kitchen and cellar, a meeting, Martha's memory at a fall, the Organist, the
+true ending's beat): `docs/streams/img/v27_dialogue.png`.
+
 ## What changed
 
 | Where | What |
 |---|---|
 | `scripts/ui/talk.gd` (new, class `Talk`) | The talk box (below) and the hooks: `Talk.meet`, `Talk.fall`, `Talk.on_back`, `Talk.done_with`, `Talk.ending_lines` / `ending_beat`; the setting (`Talk.mode`), the records (`Talk.talks`, `seen`, `note`). |
 | `scripts/ui/talk_portrait.gd` (new, class `TalkPortrait`) | A speaker's portrait in a 56 x 56 brass frame; `TalkPortrait.paint_candle` draws any candle from Tallow's own parts (any face, flame, arms, look, the dish, a wax tear). |
-| `scripts/game/talk_lines.gd` (new, class `TalkLines`) | Every line: `SPEAKERS` (voices, portrait crops), `MEET`, `FALL`, `AGAIN` (16 guardians), `OPENING`, `ENDINGS` (+ `ENDING_CARD`, `TALLOW_ONLY`). 179 lines. |
+| `scripts/game/talk_lines.gd` (new, class `TalkLines`) | Every line: `SPEAKERS` (voices, portrait crops), `MEET`, `FALL`, `AGAIN` (16 guardians), `OPENING`, `ENDINGS` (+ `ENDING_CARD`, `TALLOW_ONLY`). 161 lines (138 for the guardians, 11 for the opening, 12 for the endings). |
 | `scripts/ui/opening.gd` (new, class `Opening`) | The story's opening: four animated panels, 11 lines (a screen, or over the Journal). |
 | `scripts/game/talk_tour.gd` (new, class `TalkTour`) | `--talkcheck`, `--tour --talk`, `--tour --talk=all`. |
 | `tools/art_talk.py` (new) | 7 new face frames for Tallow (`hero/face_*_talk`, `face_teary*`), Martha's sepia talk portrait (`talk/martha_f0/f1/blink/smile`, 24 x 24), Martha at her kitchen table (`talk/martha_stand/match/light`, 36 x 52), the cellar (`talk/open_cellar`, 192 x 96). 0x72 palette asserted for every file, 1 px outline, reviewed zoomed. |
 | Hooks in shared files (small, commented `v2.7`) | `boss_intro.gd` `_finish` (`Talk.meet`, 4 lines re-indented), `world.gd` `_boss_down` (3 lines) and `on_back` (1 line), `main.gd` (`SCREENS["opening"]` + 2 lines in `goto`), `settings_panel.gd` (one row), `journal.gd` (the Watch the beginning button, 9 lines), `ending.gd` (`_next_card`: the beat; the card's fade-out moved into `_card_out`), `game.gd` (the `talk` setting, the `talks` record), `autotest.gd` (two dispatch lines each for `--talkcheck` and `--tour --talk`). |
-| `tools/extract_strings.py`, `lang/en.json` | `TalkLines` MEET / FALL / AGAIN / OPENING / ENDINGS are data tables of the extractor (`text`); every new string goes through `L.t` (`--strict` PASS on all five new scripts); en.json 694 keys. |
+| `tools/extract_strings.py`, `lang/en.json` | `TalkLines` MEET / FALL / AGAIN / OPENING / ENDINGS are data tables of the extractor (`text`); every new string goes through `L.t` (`--strict` PASS on all five new scripts); en.json 696 keys. |
 | `README.md`, `DESIGN.md` | New files, commands, the `talk/` art. |
 
 ## The talk box (`Talk`)
@@ -26,7 +29,7 @@ still `docs/design/STORY.md`; the diary pages stay as the extra lore. **No old l
   whoever it talks to on the right (Martha's memory takes the right frame for her line). The speaker is lit, blinks and
   talks (a 2-frame mouth while the line types); the listener sits dimmed. The speaker's name is engraved on a brass
   plate over its side of the box ("a memory" beside Martha's). A letterbox bar on top holds how to go on ("Tap to
-  continue" / "Any key: next   Esc: skip" / "Any button: next   B: skip") and **Skip**.
+  continue" / "Click to continue" / "Any key: next   Esc: skip" / "Any button: next   B: skip") and **Skip**.
 - The line types out at 40 letters a second, pausing a moment at . ! ? , and ellipses; each speaker has a soft voice:
   a pitched CC0 blip every other letter (`TalkLines.SPEAKERS`: Tallow a high tick, Martha a soft click, Old Rot a low
   step, the Choir ticks in thirds, the Pendulum ticks and tocks, the Keeper a deep tick...). Whispered lines "(...)"
@@ -59,8 +62,9 @@ Rules (all checked by `--talkcheck`):
 - **Tonight's Candle never takes more than a tap**: a meeting is one line (a first meeting: its first line; later: an
   AGAIN line), a first fall its first line, each closing by itself or on one press. A first meeting in Tonight's Candle
   is not counted, so its whole scene still plays on a normal night.
-- **Saves remember**: `Game.records["talks"]` ("meet:<kind>", "fall:<kind>", "end:<id>", "opening" -> times), saved the
-  moment a scene opens. A save from before 2.7 has no record, so every guardian talks once on its next meeting.
+- **Saves remember**: `Game.records["talks"]` ("meet:<kind>", "fall:<kind>", "end:<id>", "opening" -> times), saved
+  when a scene ends (seen or skipped; one cut short by closing the game plays again). A save from before 2.7 has no
+  record, so every guardian talks once on its next meeting.
 
 ## The setting
 Settings > Game > **Story scenes**: **First time** (default: a guardian's whole scene the first time a slot meets it, its
@@ -69,8 +73,9 @@ whole scenes every time), **Off** (no scenes, no one-liners, nothing recorded; t
 slot and stays in the Journal). Stored in `Game.settings["talk"]` (shared by the slots, like the other settings).
 
 ## The opening (`Opening`)
-Four panels at x2, gently animated, with narration typed in a band along the bottom (Martha and Tallow speak their
-lines with their voices), about 33 s when nobody taps (`Opening.length()`; a tap moves on sooner):
+Four panels at x2, gently animated, with narration typed in a band along the bottom (the band also holds how to go on,
+who speaks and Skip, so the art keeps its corners: the moon, the stairs' lit door; Martha and Tallow speak their
+lines with their voices), about 37 s when nobody taps (`Opening.length()`; a tap moves on sooner):
 1. **The house at midnight** (`tower/end_house`): stars, the chimney smoking, the kitchen window lit, the tower clock
    creeping to twelve, the view easing up. "There is an old house that runs on a great clock." / "Every night at twelve,
    the Keeper of Hours winds it, and the house gets up to do its chores."
@@ -143,7 +148,37 @@ the card's scene keeps moving), then the ending goes on:
   until it has them. Run `python3 tools/extract_strings.py` after editing lines.
 
 ## Judges (final code)
-See the end of this file (filled in with the final run).
+
+| Judge | Result |
+|---|---|
+| `godot --headless --path . -- --autotest --talkcheck` | 48 checks, 0 failed (below) |
+| `--checkscripts` / `--checkrooms` | clean / 0 problems (69 layouts, 1776 dressed rooms, 657 area rooms) |
+| `--diarycheck --speed=4` | 42 checks, 0 failed (unchanged: no scene opens under a test) |
+| `stdbuf -o0 godot --headless --path . -- --autotest --playtest --speed=4 --runs=1 --god` (fresh profile) | WIN floor 4/4 (Belfry) at 12:25 AM, 0 SCRIPT ERRORs; every guardian logged `[talk] meet / fall <kind>: no scene (bot / test)` (Furnace, Gaoler, Choir, Pendulum): the bot never waited on a scene |
+| `--tour --talk --fit` at 1600x720 (480x216) and 1152x648 (384x216) | 28 shots each, 0 fit flags; the opening measured 37.9 s |
+| `--tour --talk=all --fit` at 1600x720 | every guardian's first two lines and every candle's portrait, 0 fit flags |
+| `python3 tools/extract_strings.py --strict` on the five new scripts | PASS (en.json 696 keys) |
+| `python3 tools/art_talk.py` | palette check PASS (15 files); zoomed review sheets with `--review=DIR` |
+
+`--talkcheck` proves, on a throwaway profile: all 16 guardians have a first meeting (2-4 lines), a fall (1-2) and later
+lines, with a portrait crop and a voice; the 138 guardian lines have known speakers and faces, none over 120 letters or three box
+lines at 384 px; every face sprite, Martha's portrait and every voice file exists; the opening's lines, art and length
+(37.3 s untouched, 20-40); the opening plays on a fresh slot's first run only, never under a test, skips into the same
+run (same seed) and is remembered, an older slot gets the gold dot, the Journal replay gives the Journal back; a real
+first meeting opens after the entrance with the guardian held, the house paused, no other foe, the HUD hidden; a press
+in the first 0.3 s is ignored, a press finishes the line, the next moves on; the fight starts after it (guardian
+active, house running, HUD back); a real fall opens with nothing up, before the rewards, which come after; later
+meetings get one self-closing line and later falls nothing; Always plays everything again (Esc skips); Off plays and
+records nothing; Tonight's Candle gets one line that closes by itself or on one tap and does not count as the first
+meeting; a scene never opens while another foe is up; Reduce motion shows lines whole; the bot (no `Talk.force`) gets
+no scene, its guardian fights right after its entrance, nothing is recorded; the talks record survives the slot file's
+format; all 4 endings have a beat on a card before the last, the true ending's opens on its card and the ending goes on
+after it, First time / Always / Off and the Tallow-only Housekeeper beat behave.
+
+Tours: `--tour --talk` = the opening's 8 moments (a fresh slot, the real `goto("game")`), four first meetings (Old Rot
+with its fall, Martha's memory and a later one-liner; the Wax Mother; the Organist; the Weathercock), the Story scenes
+row, the Journal's Watch the beginning and its replay, the true ending's beat. `--tour --talk=all` = every guardian's
+first two lines (portraits and crops) and every candle's talk portrait.
 
 ## Hooks outside this stream's files (for the merge)
 - `boss_intro.gd` `_finish`: `if not Talk.meet(w, e, _skipped):` around the three lines that start the fight.
@@ -156,5 +191,17 @@ See the end of this file (filled in with the final run).
 - `ending.gd` `_next_card`: `Talk.ending_lines` / `Talk.ending_beat`; the fade-out is `_card_out(t1, t2, tw)`.
 - `game.gd`: `settings["talk"]`, `RECORDS["talks"]`. `autotest.gd`: `--talkcheck`, `--tour --talk`.
 
-## Known issues
-See the end of this file.
+## Known issues / not done
+- Guardians do not blink (their art has no eyelid frames): they breathe with their own idle frames, faster while they
+  talk (the Choir and the Organist sing). Tallow and Martha blink and talk with a 2-frame mouth.
+- The voices were set by level and pitch numbers (-10 to -16 dB under the Sound volume): nobody has listened to them on
+  a phone yet. The same for sizes: judged on 480x216 and 384x216 screenshots, not on the owner's phone.
+- In Tonight's Candle a first meeting shows only its first line; the whole scene waits for a normal night.
+- The candle's lines suit any candle of the house (its own name and portrait); the opening and the Housekeeper's beat
+  are Tallow's own story (the opening always shows Tallow).
+- A slot from before 2.7 has runs, so the opening does not play by itself: the Journal's Diary tab offers it with a
+  gold dot. Its guardians all talk once on their next meeting (no talks record yet).
+- The opening runs about 37 s untouched (a tap moves on sooner); there is no reading-speed setting.
+- On a phone the Settings Game page now has seven rows, so the Effects Lite note gives way (as it already did on a PC).
+- Guardian names on the plates are the versus card's names, not translated yet (like the card).
+- The opening's kitchen is storybook scale: Tallow on the table reaches Martha's shoulder, as in the endings' cards.

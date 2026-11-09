@@ -125,6 +125,14 @@ static func tour(bot: Node) -> void:
 			BossIntro._tour_clear(w)
 			if g:
 				pass
+		# every candle of the house speaks with its own face, colours and name (the speaker "me" is the candle played)
+		for cid in Candles.ORDER:
+			var t := Talk.open(Talk._layer(w), [{"who": "me", "face": "brave", "text": "(the tour) Going up. Don't wait for me."},
+				{"who": "martha", "face": "smile", "text": "..."}], {"candle": cid})
+			await bot._wait(1.4)
+			await bot._shot("candle_%s" % cid)
+			t.skip()
+			await _until_closed(bot)
 		Talk.force = false
 		print("[talk] tour done")
 		return

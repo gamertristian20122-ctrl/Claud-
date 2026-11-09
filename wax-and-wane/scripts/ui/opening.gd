@@ -175,6 +175,7 @@ func _layout() -> void:
 func _hint_text() -> String:
 	match Controls.device:
 		"touch": return L.t("Tap to go on")
+		"mouse": return L.t("Click to go on")
 		"gamepad": return L.t("Any button: next   B: skip")
 	return L.t("Any key: next   Esc: skip")
 
@@ -208,6 +209,8 @@ func _process(_dt: float) -> void:
 				_pt = 0.0
 				_cue.clear()
 				_smoke.clear()
+				_text.text = ""   # the last panel's line leaves with it
+				_who.text = ""
 				_state = "in"
 				_st = 0.0
 	_black.color.a = _fade

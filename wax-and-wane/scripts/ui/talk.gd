@@ -176,6 +176,7 @@ func _exit_tree() -> void:
 func _continue_text() -> String:
 	match Controls.device:
 		"touch": return L.t("Tap to continue")
+		"mouse": return L.t("Click to continue")
 		"gamepad": return L.t("Any button: next   B: skip")
 	return L.t("Any key: next   Esc: skip")
 
@@ -463,12 +464,13 @@ static func meet(w: Node, e: Node, _skipped := false) -> bool:
 		return false
 	if one and not first:
 		_last_again[kind] = str(scene[0]["text"])
-	if not daily or not first:
-		note(key)
+	var count := not daily or not first   # (Tonight's Candle's one line does not count as the first meeting)
 	_log(w, "meet %s: %s (%d line%s)" % [kind, "one line" if one else "first meeting" if first else "the whole scene again",
 		scene.size(), "" if scene.size() == 1 else "s"])
 	_hold(w, e)
 	_open_in(w, scene, one, -6.0, func():
+		if count:
+			note(key)   # once the scene is over (seen or skipped): a scene cut short by closing the game plays again
 		_release(w, e)
 		_log(w, "meet %s: the fight starts" % kind))
 	return true
@@ -499,11 +501,12 @@ static func fall(w: Node, kind: String) -> void:
 		scene = TalkLines.fall(kind)
 	else:
 		return
-	if not daily:
-		note(key)
 	_log(w, "fall %s: %d line%s" % [kind, scene.size(), "" if scene.size() == 1 else "s"])
 	_hold(w, null)
-	_open_in(w, scene, one, -12.0, func(): _release(w, null))
+	_open_in(w, scene, one, -12.0, func():
+		if not daily:
+			note(key)
+		_release(w, null))
 
 
 ## ending.gd: the closing beat said over this card of this ending ([] = none): the candle and Martha's memory. The
