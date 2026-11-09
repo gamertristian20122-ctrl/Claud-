@@ -38,10 +38,10 @@ listed at the end.
 
    | Level | Name | Line | melt | foe damage | foe health | marked foes | drip wax |
    |---|---|---|---|---|---|---|---|
-   | 1 | Gentle | For learning: you melt slower and foes hit softer. | x0.8 | x0.6 | x0.85 | x1 | x1.25 |
+   | 1 | Gentle | For learning: you melt slower and foes hit softer. | x0.75 | x0.5 | x0.85 | x1 | x1.25 |
    | 2 | Midnight | The night as it was made: a fair fight. | x1 | x1 | x1 | x1 | x1 |
-   | 3 | Witching Hour | Harder: a faster melt, harder hits, more marked foes. | x1.1 | x1.3 | x1.15 | x1.5 | x1 |
-   | 4 | Two O'Clock | Brutal: tough foes, cruel hits and thin wax. | x1.2 | x1.6 | x1.3 | x2 | x0.8 |
+   | 3 | Witching Hour | Harder: a faster melt, harder hits, more marked foes. | x1.1 | x1.2 | x1.15 | x1.5 | x1 |
+   | 4 | Two O'Clock | Brutal: tough foes, cruel hits and thin wax. | x1.15 | x1.35 | x1.3 | x2 | x0.85 |
 
    Hooks: the melt in `world._physics_process` (replaces `gentle_mult`), `world.enemy_dmg_mult()` (contact,
    shots, the Keeper's hands), `Enemy.setup` (creatures and guardians), `world.champ_chance()`,
@@ -66,7 +66,27 @@ listed at the end.
 
 ## Checks (before -> after)
 
-JUDGE_PLACEHOLDER
+Level judge: `--autotest --playtest --speed=4 --runs=8 --difficulty=N` on a fresh profile, fresh seeds (the bot
+ignores most telegraphs, so people do better). Targets: level 1 85-100 %, level 2 as 2.0.0 (7 of 12, about
+55 %), level 3 25-40 %, level 4 5-20 %.
+
+| Level | Numbers judged (melt / foe damage / drip wax) | On this branch (before the merge) | Merged 2.1 build (+ the four new guardians, bigger shots) |
+|---|---|---|---|
+| 1 Gentle | x0.8 / x0.6 / x1.25 | 6 of 8 (both losses on floor 3, within two minutes of the end) | |
+| 1 Gentle | **x0.75 / x0.5 / x1.25** | 7 of 8 | **8 of 8**, winners 12:09-12:58 AM, 7 of them climbed the Clock Tower |
+| 2 Midnight | x1 (2.0.0) | 4 of 8 | **6 of 8**, winners 12:25-1:54 AM (median about 1:00), losses on floors 2 and 3 |
+| 3 Witching Hour | x1.1 / x1.3 / x1 | 2 of 8 | |
+| 3 Witching Hour | **x1.1 / x1.2 / x1** | 3 of 6 (cut off) | **3 of 8**, losses mostly in the Crypt |
+| 4 Two O'Clock | x1.15 / x1.3 / x0.85 | 2 of 8 | |
+| 4 Two O'Clock | x1.2 / x1.4 / x0.8 | | 0 of 8 (2 runs hit the Ossuary bug, since fixed) |
+| 4 Two O'Clock | x1.2 / x1.4 / x0.85 | | 0 of 12 (10 of the 12 ended on floors 1-2) |
+| 4 Two O'Clock | **x1.15 / x1.35 / x0.85** | | **2 of 8** (25 %, a hair above the goal; foe damage x1.4 is a cliff for the bot) |
+
+Foe health (x0.85 / x1 / x1.15 / x1.3) and marked foes (x1 / x1 / x1.5 / x2) did not change between passes.
+Black Taper at level 2 (before the merge): 4 of 8 (Tallow on 2.0.0: 7 of 12), winners' median 1:09 AM, 16 % of its
+blows landed in the dark (1,425 of 9,116). Save move: a real 2.0 profile (8 runs, 4 wins, 28 achievements, a
+saved run) became Slot 1 with 29 records and 0 mismatches (`--tour --slots` on a copy). God runs: both reach the
+end; `--checkscripts`, `--checkrooms` clean; `--tour --slots` 12 checks pass.
 
 ## Hooks outside this stream's files (for the merge)
 - `scripts/game/enemy.gd`: `Enemy.setup` one line (`max_hp *= world.difficulty()["hp"]`); `take_hit` two lines

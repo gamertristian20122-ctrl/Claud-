@@ -29,7 +29,7 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Omens (floor twists) | **4**: Cold Draught, Tallow Moon, Long Night, Smoky Halls | `world.OMENS` |
 | Achievements | **54** (13 hidden), shown in the game | `Achievements.LIST` |
 | Save slots | **3**, each with its own difficulty level, records, Journal, unlocks, achievements and saved run; settings are shared | `Game.SLOTS` |
-| Difficulty levels | **4**: 1 Gentle (melt x0.75, foe damage x0.5, foe health x0.85, drip wax x1.25); 2 Midnight (the game as it was made); 3 Witching Hour (melt x1.1, foe damage x1.2, foe health x1.15, marked foes x1.5); 4 Two O'Clock (melt x1.2, foe damage x1.4, foe health x1.3, marked foes x2, drip wax x0.8). Tonight's Candle always plays level 2 | `world.LEVELS` |
+| Difficulty levels | **4**: 1 Gentle (melt x0.75, foe damage x0.5, foe health x0.85, drip wax x1.25); 2 Midnight (the game as it was made); 3 Witching Hour (melt x1.1, foe damage x1.2, foe health x1.15, marked foes x1.5); 4 Two O'Clock (melt x1.15, foe damage x1.35, foe health x1.3, marked foes x2, drip wax x0.85). Tonight's Candle always plays level 2 | `world.LEVELS` |
 | Music | 13 tracks + 2 original jingles | `assets/licenses/CREDITS_music.txt` |
 | Sound effect files | 74 | `assets/audio/sfx/` |
 | Builds | Android, Windows Desktop, Linux, Android Play | `export_presets.cfg` |

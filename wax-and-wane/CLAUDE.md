@@ -93,7 +93,8 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
 - Difficulty (v2.1): `world.LEVELS`, one level per save slot (1 Gentle, 2 Midnight = every number above,
   3 Witching Hour, 4 Two O'Clock); `world.difficulty()` feeds the melt, foe damage, foe health, marked foes and
   drip wax. Tonight's Candle is always 2. Judge a level on a fresh profile with `--difficulty=N`
-  (`docs/streams/v21_slots.md`).
+  (`docs/streams/v21_slots.md`). 2.1.0 bot wins (8 runs each): 8 / 6 / 3 / 2. Level 4's foe damage x1.4 is a
+  cliff for the bot (0 of 20); it ships at x1.35.
 
 ## Installed skills (repo-level, `/.claude/skills`; sources pinned in `/skills-lock.json`)
 - Game: godot-export, godot-animation, godot-nodes-scenes, godot-ui-control, game-feel, game-audio,
@@ -108,8 +109,14 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
 - **Queue after v2.1 + Long Night batch 1:** `docs/design/ROADMAP_V2.md` (special moves -> Challenge Nights ->
   diary pages -> translations -> Boss Rush; Long Night batch 2 as a side track). Design of the long night:
   `docs/design/LONG_NIGHT.md`.
-- Latest build: **2.0.0** (versionCode 9), the release candidate: APK, Play AAB (PLAY-READY), Windows and Linux
-  zips, sent to the owner. Everything is merged on `ccr-37a74654-pp10xa`.
+- Latest build: **2.1.0** (versionCode 10), APK only, sent to the owner: three save slots with difficulty 1-4
+  (a 2.0 save moves into Slot 1), the Black Taper as a sidegrade, four new guardians (Coal Furnace, Ossuary,
+  Organist, Weathercock), bigger self-lit enemy shots (Enemy shots: Normal / Large, Large on phones). The
+  Kitchen, Library and Attic are in the code but only reachable with `--area` until the night stream lands.
+  The store files (AAB, desktop zips, press kit) are still **2.0.0**: rebuild them all for the next store release.
+- Running (worktrees under `.claude/worktrees/agent-*`): `v22/night` (the night-length slider, 4-7 floors,
+  `LONG_NIGHT.md`) and `v23/moves` (special moves + ability button + the `L` strings autoload, ROADMAP step 1).
+  Merge night first, then moves; then build 2.2/2.3.
 - A four-reviewer studio review (critic, QA, mobile UX, release manager; all findings in
   `docs/streams/fix_*.md`) scored 1.9.3 at 6.5/10; its blockers and majors are fixed in 2.0.0.
 - Balance on 2.0.0 (12 fresh-seed bot runs): 7 wins, normal wins finish around 1:08 AM, 2 of 7 wins reach the
