@@ -22,8 +22,117 @@ static func run(at: Node) -> int:
 		at.get_tree().root.size = Vector2i(1536, 864)   # a 384x216 screen (the narrowest the game supports)
 	print("[qa] screen %s" % at.get_viewport().get_visible_rect().size)
 	await _banner_swap(at)
+	await _back_matrix(at)
 	print("[qa] %d failed -> %s" % [fails, "PASS" if fails == 0 else "FAIL"])
 	return fails
+
+
+## Android's back gesture (the system sends main a go-back request): one press closes the top menu, else pauses
+## or resumes. It never opens the map and never leaves the game stuck.
+static func _back(at: Node) -> void:
+	at.main.notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+
+
+## n frames and at least n x 0.05 s (a closing card fades for 0.12 s; headless frames are very short).
+static func _frames(tree: SceneTree, n: int) -> void:
+	for i in n:
+		await tree.process_frame
+	await tree.create_timer(0.05 * n, true, false, true).timeout
+
+
+static func _top(w: Node) -> String:
+	var r: Node = w.hud.root
+	var top: Node = r.get_child(r.get_child_count() - 1)
+	return "%s%s" % [top.get_class(), " modal" if top.get_meta("modal", false) else ""]
+
+
+static func _back_matrix(at: Node) -> void:
+	var tree: SceneTree = at.get_tree()
+	var w: Node = await _new_run(at, {"seed": 4242})
+	var hud: Node = w.hud
+	# in play: pause; again: resume
+	_back(at)
+	await _frames(tree, 3)
+	var paused1: bool = w.paused and hud.pause_layer != null and not is_instance_valid(hud.map_layer)
+	_back(at)
+	await _frames(tree, 3)
+	_say("Back in play: pauses, again resumes", paused1 and not w.paused and not tree.paused,
+		"paused %s, then paused %s / tree %s" % [paused1, w.paused, tree.paused])
+	# the full map: closes it (the pause menu under it stays), then resumes
+	w.open_map()
+	await _frames(tree, 3)
+	var map_open: bool = is_instance_valid(hud.map_layer)
+	_back(at)
+	await _frames(tree, 3)
+	var map_shut: bool = not is_instance_valid(hud.map_layer) and w.paused and hud.pause_layer != null
+	_back(at)
+	await _frames(tree, 3)
+	_say("Back over the full map: closes it, then resumes", map_open and map_shut and not w.paused,
+		"open %s, closed to the pause menu %s, resumed %s" % [map_open, map_shut, not w.paused])
+	# Settings > Achievements over the pause menu: one layer per press
+	w.toggle_pause()
+	SettingsPanel.open(hud.root)
+	await _frames(tree, 2)
+	Achievements.open_list(hud.root)
+	await _frames(tree, 2)
+	var steps: Array = []
+	for i in 3:
+		_back(at)
+		await _frames(tree, 3)
+		steps.append("%s/%s" % [_top(w), "paused" if w.paused else "playing"])
+	_say("Back: Achievements, Settings, then the game", not w.paused and hud.pause_layer == null, ", ".join(steps))
+	# the guardian's versus card and its entrance: Back pauses over them, Back resumes, the fight starts
+	at.args.erase("nocard")
+	var bc: Vector2i = w.layout["boss"]
+	w.player.wax = 100.0
+	at._jump(w, bc)
+	var waited := 0
+	while waited < 120 and not Juice.holding(w):
+		await tree.process_frame
+		waited += 1
+	var card_up := Juice.holding(w)
+	_back(at)
+	await _frames(tree, 3)
+	var card_paused: bool = w.paused and hud.pause_layer != null
+	_back(at)
+	await _frames(tree, 3)
+	waited = 0
+	while waited < 600 and BossIntro.live == null:
+		await tree.process_frame
+		waited += 1
+	var intro_up: bool = BossIntro.live != null and is_instance_valid(BossIntro.live)
+	_back(at)
+	await _frames(tree, 3)
+	var intro_paused: bool = w.paused and hud.pause_layer != null
+	_back(at)
+	waited = 0
+	while waited < 900 and not (w.boss != null and is_instance_valid(w.boss) and w.boss.active and not tree.paused):
+		await tree.process_frame
+		waited += 1
+	var fighting: bool = w.boss != null and is_instance_valid(w.boss) and w.boss.active and not tree.paused and not w.paused
+	_say("Back over the versus card and the entrance", card_up and card_paused and intro_up and intro_paused and fighting,
+		"card %s paused %s, entrance %s paused %s, then the fight %s" % [card_up, card_paused, intro_up, intro_paused, fighting])
+	# a diary page's reading card: Back closes it and the house goes on
+	for e in w.enemies:
+		if is_instance_valid(e):
+			e.queue_free()
+	w.enemies.clear()
+	w.boss = null
+	w.hud.set_boss("", false)
+	w.room.data["cleared"] = true
+	at.args["diary"] = true   # the card stays open until Back closes it
+	var d := Diary.of(w)
+	d.queue.append("family")
+	waited = 0
+	while waited < 600 and not (d.card != null and is_instance_valid(d.card)):
+		await tree.process_frame
+		waited += 1
+	var read_up: bool = d.card != null and is_instance_valid(d.card) and w.paused
+	_back(at)
+	await _frames(tree, 6)
+	at.args.erase("diary")
+	_say("Back closes a diary page's reading card", read_up and d.card == null and not w.paused and not tree.paused,
+		"card open %s, then card %s paused %s / tree %s" % [read_up, d.card, w.paused, tree.paused])
 
 
 ## A screenshot for --shots=/abs/dir (with a window: xvfb-run ... --resolution 1536x864 for 384x216).
