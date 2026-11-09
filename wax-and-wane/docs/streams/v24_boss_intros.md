@@ -82,3 +82,6 @@ leave it alone, and a bomb that sets `active` is undone the next frame (and its 
 - No new sounds: the Weathercock's crow is the guardian roar pitched up, the Organist's scale and chord are the
   hand bell its pipe warnings already use.
 - Special rooms' champions (mini-bosses) have no entrance: they are not guardians and start as before.
+- Older tours that shoot a guardian at a fixed time after entering its room (`--tour --bosses`, `--artjudge`) can
+  now catch the last 0.1-0.3 s of the slower entrances (Organist, Pendulum, Ossuary, Warden), which end in their
+  idle pose; the other tours wait for the fight (`active`) or long enough.
