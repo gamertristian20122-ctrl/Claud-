@@ -156,7 +156,7 @@ the card's scene keeps moving), then the ending goes on:
 | `--diarycheck --speed=4` | 42 checks, 0 failed (unchanged: no scene opens under a test) |
 | `stdbuf -o0 godot --headless --path . -- --autotest --playtest --speed=4 --runs=1 --god` (fresh profile) | WIN floor 4/4 (Belfry) at 12:25 AM, 0 SCRIPT ERRORs; every guardian logged `[talk] meet / fall <kind>: no scene (bot / test)` (Furnace, Gaoler, Choir, Pendulum): the bot never waited on a scene |
 | `--tour --talk --fit` at 1600x720 (480x216) and 1152x648 (384x216) | 28 shots each, 0 fit flags; the opening measured 37.9 s |
-| `--tour --talk=all --fit` at 1600x720 | every guardian's first two lines and every candle's portrait, 0 fit flags |
+| `--tour --talk=all --fit` at 1600x720 | every guardian's first two lines (32 shots) and every candle's talk portrait (6 shots; `--talk=candles` shoots just those), 0 fit flags, 0 SCRIPT ERRORs |
 | `python3 tools/extract_strings.py --strict` on the five new scripts | PASS (en.json 696 keys) |
 | `python3 tools/art_talk.py` | palette check PASS (15 files); zoomed review sheets with `--review=DIR` |
 

@@ -11,6 +11,8 @@ extends RefCounted
 ##   --autotest --tour --talk --shots=/abs/dir [--fit]   the opening's panels, four guardian conversations, a later
 ##                                               meeting's one line, a fall with Martha's memory, the Settings row, the
 ##                                               Journal's Watch the beginning, an ending's closing beat
+##     --talk=all                                every guardian's first two lines, then every candle's talk portrait
+##     --talk=candles                            only the candles' portraits
 ## Every test plays on a throwaway profile in memory (Game.no_save): nothing reaches the real save slots.
 
 static var fails := 0
@@ -105,11 +107,12 @@ static func tour(bot: Node) -> void:
 	_fresh()
 	Talk.force = true
 	bot.args["nocard"] = true
-	if str(bot.args.get("talk", "")) != "all":
+	var only := str(bot.args.get("talk", "")) if bot.args.get("talk") is String else ""
+	if only == "":
 		await _opening_shots(bot)
 	var w: Node = await _world(bot)
-	if str(bot.args.get("talk", "")) == "all":   # --tour --talk=all: every guardian's first two lines (portraits, crops)
-		for item in BossIntro.TOUR:
+	if only == "all" or only == "candles":   # --talk=all: every guardian's first two lines and every candle's portrait
+		for item in (BossIntro.TOUR if only == "all" else []):
 			await _meet(bot, w, str(item[0]))
 			if Talk.live == null:
 				print("[talk] tour: no scene for ", item[0])
@@ -123,7 +126,9 @@ static func tour(bot: Node) -> void:
 			Talk.live.skip()
 			await _until_closed(bot)
 			BossIntro._tour_clear(w)
-		# every candle of the house speaks with its own face, colours and name (the speaker "me" is the candle played)
+		# every candle of the house speaks with its own face, colours and name (the speaker "me" is the candle played);
+		# opened directly here, so the HUD steps aside by hand, as Talk._hold does for a scene in a run
+		w.hud.visible = false
 		for cid in Candles.ORDER:
 			var t := Talk.open(Talk._layer(w), [{"who": "me", "face": "brave", "text": "(the tour) Going up. Don't wait for me."},
 				{"who": "martha", "face": "smile", "text": "..."}], {"candle": cid})
@@ -131,6 +136,7 @@ static func tour(bot: Node) -> void:
 			await bot._shot("candle_%s" % cid)
 			t.skip()
 			await _until_closed(bot)
+		w.hud.visible = true
 		Talk.force = false
 		print("[talk] tour done")
 		return

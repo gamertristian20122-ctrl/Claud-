@@ -202,7 +202,7 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
                               tab, every ending's cards, the results line (docs/streams/v25_story.md)
     ... --tour --talk         v2.7: the story's opening (8 shots), four guardian conversations, a fall with Martha's
                               memory, a later one-liner, the Story scenes row, Watch the beginning, an ending's beat
-                              (--talk=all: every guardian's first two lines; docs/streams/v27_dialogue.md)
+                              (--talk=all: every guardian's first two lines and every candle's portrait; --talk=candles: just those)
     ... --tour --feel         v2.6: the pickup magnet mid-sweep, a hit's mark, Aim: Auto, the full map, the pause menu,
                               Restart, the Aim and Pickup magnet rows (docs/streams/v26_feel.md)
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
