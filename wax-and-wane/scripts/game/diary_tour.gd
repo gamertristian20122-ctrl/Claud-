@@ -36,6 +36,15 @@ static func _fresh(pages: Array = []) -> void:
 		Diary.found()[id] = 1
 
 
+## main.goto, once the screen before it has finished its own fade (a goto during one is dropped).
+static func _goto(bot: Node, screen: String, params := {}) -> void:
+	var main: Node = bot.main
+	while main._busy:
+		await bot._wait(0.05)
+	main.goto(screen, params)
+	await bot._wait(0.05)
+
+
 static func _world(bot: Node) -> Node:
 	var main: Node = bot.main
 	var waited := 0.0
@@ -91,7 +100,7 @@ static func check(bot: Node) -> void:
 	_fresh()
 	_static_checks()
 	var main: Node = bot.main
-	main.goto("game", {"seed": 5, "floors": 7})
+	await _goto(bot, "game", {"seed": 5, "floors": 7})
 	var w: Node = await _world(bot)
 	var d := Diary.of(w)
 	# ---- seeded, and apart from the run's own generators
@@ -442,7 +451,7 @@ static func stage_ending(bot: Node, id: String) -> void:
 		need = Diary.PAGES.map(func(pg): return str(pg["id"]))
 	_fresh(need)
 	var main: Node = bot.main
-	main.goto("game", {"seed": 7, "floors": Diary.LONG_NIGHT if id == "windows" else 4})
+	await _goto(bot, "game", {"seed": 7, "floors": Diary.LONG_NIGHT if id == "windows" else 4})
 	var w: Node = await _world(bot)
 	print("[ending] staging %s with %d pages" % [id, Diary.count()])
 	if id == "true" or id == "whole_story":
@@ -489,7 +498,7 @@ static func tour(bot: Node) -> void:
 	var main: Node = bot.main
 	bot.args["diary"] = true   # reading cards stay open for the shots
 	_fresh(["first_night", "rounds", "the_rule", "under_stairs", "crypt_keys", "merchant", "pennock"])
-	main.goto("game", {"seed": 3})
+	await _goto(bot, "game", {"seed": 3})
 	var w: Node = await _world(bot)
 	var d := Diary.of(w)
 	# ---- a page lying in the cellar, fluttering
@@ -521,7 +530,7 @@ static func tour(bot: Node) -> void:
 		d.card.close()
 	await bot._wait(0.4)
 	# ---- the Journal's Diary tab (from the title, touch)
-	main.goto("title")
+	await _goto(bot, "title")
 	await bot._wait(3.4)
 	var title: Node = main.current
 	var j := Journal.open(title.root)
@@ -552,9 +561,10 @@ static func tour(bot: Node) -> void:
 	# ---- the endings: each one's first card, and the new scenes
 	var shots := {"true": [1], "housekeeper": [1, 2, 3, 4], "windows": [1, 2, 3, 4], "whole_story": [1, 2, 3, 4]}
 	for id in ["housekeeper", "windows", "whole_story", "true"]:
-		main.goto("game", {"seed": 3, "floors": Diary.LONG_NIGHT if id == "windows" else 4})
+		await _goto(bot, "game", {"seed": 3, "floors": Diary.LONG_NIGHT if id == "windows" else 4})
 		w = await _world(bot)
 		w.player.frozen = true
+		w.hud.visible = false   # a run's first hint would sit under the cards (an ending comes at the end of a night)
 		for k in shots[id]:
 			var e := Ending.new()
 			e.ending = id
@@ -566,7 +576,7 @@ static func tour(bot: Node) -> void:
 			e.queue_free()
 			await bot._wait(0.2)
 	# ---- the results line: tonight's pages and the ending's name
-	main.goto("results", {"won": true, "floor": 4, "clock": 66.0, "kills": 140, "rooms": 33, "relics": ["sharp_wick", "bellows"],
+	await _goto(bot, "results", {"won": true, "floor": 4, "clock": 66.0, "kills": 140, "rooms": 33, "relics": ["sharp_wick", "bellows"],
 		"time": 2300.0, "floors": 4, "ending": "housekeeper", "diary_new": ["hammer", "candle_knows"], "diary_unread": ["hammer"]})
 	await bot._wait(2.2)
 	await bot._shot("diary_results_card")
