@@ -748,8 +748,8 @@ func g21_organist(e: Enemy, ddt: float, _to_p: Vector2, _dist: float) -> void:
 		"idle":
 			if e.cd <= 0:
 				e._pattern += 1
-				var opts: Array = [["scale", "pedal", "ring"], ["chord", "pedal", "ring", "scale", "pedal"],
-					["toccata", "pedal", "ring", "chord", "pedal", "ring"]][e.phase - 1]
+				var opts: Array = [["scale", "pedal", "ring", "pedal"], ["chord", "pedal", "ring", "pedal", "scale", "pedal"],
+					["toccata", "pedal", "ring", "pedal", "chord", "pedal", "ring"]][e.phase - 1]
 				match opts[(e._pattern - 1) % opts.size()]:
 					"scale":
 						var order: Array = range(7) if e.mem["up"] else range(6, -1, -1)
@@ -823,8 +823,11 @@ static func _pipe_tell(e: Enemy, i: int, lead: float) -> void:
 static func _pipe_fire(e: Enemy, i: int, n: int) -> void:
 	var at := _pipe_at(e, i)
 	var v := Vector2.from_angle(_pipe_angle(e, i)) * 94.0
+	var side := v.normalized().orthogonal() * 3.0
 	for j in n:
-		e.later(0.07 * j, func(): e.world.enemy_shot(at, v, "bullet_water"))
+		e.later(0.07 * j, func():
+			e.world.enemy_shot(at - side, v, "bullet_water")
+			e.world.enemy_shot(at + side, v, "bullet_water"))
 	Audio.play("enemy_shoot", -4.0, 0.05, 0.6 + 0.1 * i)
 
 
