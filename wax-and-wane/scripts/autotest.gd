@@ -178,6 +178,7 @@ func _save_cycle() -> void:
 	# compare with the floor-start snapshot (relics picked up since then are not in it, by design)
 	var pd: Dictionary = RunSave.snap.get("player", {})
 	var before: String = "snapshot relics %d wax %.0f" % [pd.get("relics", []).size(), float(pd.get("wax", 0.0))]
+	var house_before := _house_sig(w)   # the Long Night: the same area, night length and rooms must come back
 	RunSave.flush()
 	main.goto("title")
 	await get_tree().create_timer(1.6).timeout
@@ -190,7 +191,23 @@ func _save_cycle() -> void:
 	w = main.current
 	_stress_cell = w.cur_cell   # the restored run must match its snapshot exactly (no stress relic yet)
 	print("[savecycle] floor %d: %s -> %s (floor %d)" % [_cycled, before, "relics %d wax %.0f" % [w.player.relics.size(), w.player.wax], w.floor_num])
+	var house_after := _house_sig(w)
+	print("[savecycle]    house %s -> %s: %s" % [house_before, house_after, "SAME" if house_before == house_after else "DIFFERENT"])
 	_cycling = false
+
+
+## The floor as the seed built it: its area, the night's length and a hash of every cell (type, seed, grid).
+func _house_sig(w: Node) -> String:
+	var parts: Array = []
+	for c in w.layout["cells"].keys():
+		var d: Dictionary = w.layout["cells"][c]
+		var g := ""
+		for row in d["grid"]:
+			g += "".join(row)
+		parts.append("%s:%s:%d:%d" % [c, d["type"], int(d["seed"]), g.hash()])
+	parts.sort()
+	return "%s floor %d/%d rooms %d #%d" % [str(w.fdef().get("area", "?")), int(w.floor_num), int(w.get("night_floors") if w.get("night_floors") != null else 4),
+		parts.size(), ",".join(parts).hash()]
 
 
 func _process(dt: float) -> void:
