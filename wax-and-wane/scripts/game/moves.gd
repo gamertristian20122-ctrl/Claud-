@@ -564,37 +564,49 @@ func _use_blink(dir: Vector2) -> bool:
 static func blink_target(room: Room, from: Vector2, dir: Vector2, dist: float) -> Vector2:
 	var reach := 0.0
 	var run_cells := {}       # solid cells crossed in the current run
-	var last_ok := 0.0        # the furthest free point on the line
+	var run_d := 0.0          # where that run began
+	var stopped := false      # a wall or two tiles of rubble ended the line early
+	var last_ok := 0.0        # the furthest free point on the line (before any stop)
 	var d := 0.0
 	while d <= dist:
 		var at := from + dir * d
 		var lp := at - room.position
 		if lp.x < Room.IN.x + Player.RADIUS or lp.x > Room.IN.x + Room.COLS * Room.TILE - Player.RADIUS \
 				or lp.y < Room.IN.y + 3.0 or lp.y > Room.IN.y + Room.ROWS * Room.TILE - 2.0:
+			stopped = true
 			break   # the wall (and every door in it)
 		var c := room.cell_of(lp)
-		var ch := room.char_at(c)
-		if ch in SOLID_HARD:
+		if room.char_at(c) in SOLID_HARD:
+			if run_cells.is_empty():
+				run_d = d
 			run_cells[c] = true
 			if run_cells.size() >= 2:
-				break   # two solid tiles in a row: a wall of rubble, not a hop
-		elif not room.blocked(at, Player.RADIUS):
+				reach = maxf(0.0, run_d - 2.0)   # two solid tiles in a row: a wall of rubble, stop in front
+				stopped = true
+				break
+		else:
 			run_cells.clear()
 		reach = d
 		if not room.blocked(at, Player.RADIUS):
 			last_ok = d
 		d += 2.0
+	last_ok = minf(last_ok, reach)
 	var goal := from + dir * reach
 	if not room.blocked(goal, Player.RADIUS):
 		return goal
-	# the nearest free spot round the goal (rings of 8 directions), else the furthest free point
+	# the nearest free spot round the goal (rings of 16 directions); never further along the line than
+	# the stop when something stopped it (no sliding round a wall of rubble), else the last free point
+	var want := from + dir * (reach if stopped else dist)
 	for r in [2.0, 4.0, 6.0, 8.0, 10.0, 12.0]:
 		var best := Vector2.INF
 		for k in 16:
 			var q: Vector2 = goal + Vector2.from_angle(TAU * k / 16.0) * float(r)
-			if not room.blocked(q, Player.RADIUS) and q.distance_to(from) <= dist + 4.0:
-				if best == Vector2.INF or q.distance_to(from + dir * dist) < best.distance_to(from + dir * dist):
-					best = q
+			if room.blocked(q, Player.RADIUS) or q.distance_to(from) > dist + 4.0:
+				continue
+			if stopped and (q - from).dot(dir) > reach + 0.5:
+				continue
+			if best == Vector2.INF or q.distance_to(want) < best.distance_to(want):
+				best = q
 		if best != Vector2.INF:
 			return best
 	return from + dir * last_ok

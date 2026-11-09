@@ -18,6 +18,9 @@ extends Node
 ##   -- --autotest --trailer=<scene>                               staged trailer footage (scripts/trailer.gd, tools/make_trailer.sh)
 ##   -- --autotest --playtest --boss=<kind> [--runs=N] [--speed=4]  one guardian's fight with its floor's kit, a line per fight
 ##   -- --autotest --tour --boss=<kind> --shots=/abs/dir           its versus card + two shots per phase (GuardiansV21.tour)
+##   -- --autotest --movescheck                                    v2.3 special moves: numbers, frame timing (MovesTour)
+##   -- --autotest --tour --moves --shots=/abs/dir                 each candle's move mid-action, the HUD button, Keys page
+##        [--nomoves]: playtests without the special moves (balance comparison)
 
 var main: Node
 var args := {}
@@ -54,6 +57,8 @@ func _ready() -> void:
 		mode = "audiotest"
 	if args.has("designcheck"):   # design pass: latency, share text, floor-1 layouts (DesignCheck)
 		mode = "designcheck"
+	if args.has("movescheck"):    # v2.3 special moves: every move's numbers and input timing (MovesTour.check)
+		mode = "movescheck"
 	if args.has("bench"):
 		mode = "bench"
 	if args.has("shots-store") or args.has("keyart") or args.has("trailer"):
@@ -101,6 +106,10 @@ func _ready() -> void:
 	elif mode == "designcheck":
 		await DesignCheck.run(self)
 		get_tree().quit()
+	elif mode == "movescheck":
+		await MovesTour.check(self)
+		Audio.stop_all()
+		get_tree().quit(1 if MovesTour._fails > 0 else 0)
 	elif mode == "bench":
 		_bench()
 	else:
@@ -221,6 +230,7 @@ func _process(dt: float) -> void:
 			results.size(), "WIN" if p["won"] else "LOSS", p["floor"], Game.clock_text(p["clock"]), p["kills"], p["rooms"], p["time"], p["relics"]])
 		print("[playtest]    best streak x%d, hits %d" % [p.get("streak", 0), p.get("hits", 0)])
 		print("[playtest]    level %d, candle %s, seed %d, slot %d" % [int(p.get("level", 2)), p.get("candle", "?"), int(p.get("seed", 0)), Game.slot])
+		print("[playtest]    %s" % MovesBot.report())   # v2.3: special move uses this run
 		if Candles.blows > 0:   # a dark_hit candle (the Black Taper): how many blows landed out in the dark
 			print("[playtest]    blows %d, in the dark %d (%d%%)" % [Candles.blows, Candles.dark_blows, roundi(100.0 * Candles.dark_blows / Candles.blows)])
 		Candles.blows = 0
@@ -265,7 +275,7 @@ func drive(w: Node) -> Array:
 	var td: Array = trailer.drive(w) if trailer != null else []
 	if not td.is_empty():
 		return td
-	if (mode == "tour" or mode == "audiotest" or mode == "designcheck") and not args.has("drive"):
+	if (mode == "tour" or mode == "audiotest" or mode == "designcheck" or mode == "movescheck") and not args.has("drive"):
 		return []
 	if args.has("herosheet"):
 		return [Vector2.ZERO, Vector2.ZERO]   # the in-game hero shot: stand still
@@ -347,6 +357,7 @@ func drive(w: Node) -> Array:
 		if w.boss and is_instance_valid(w.boss) and p.bombs > 0 and _bomb_cd <= 0 and pos.distance_to(w.boss.global_position) < 30:
 			_bomb_cd = 3.0
 			w.place_bomb()
+		MovesBot.think(w, mv, tgt)   # v2.3: dash / blink from shots, slam / sparkler a crowd, flare / snuff a guardian
 		return [mv.normalized(), to.normalized()]
 	# room is clear: pick up what is worth picking up
 	var pick := _best_pickup(w, p) if _room_t < 9.0 else null
@@ -708,6 +719,11 @@ func _tour() -> void:
 	if args.has("tower"):   # the ladder of light, the Clock Tower, the Keeper's phases, the ending
 		await _wait(1.0)
 		await Tower.tour(self)
+		get_tree().quit()
+		return
+	if args.has("moves"):   # v2.3: each candle's special move mid-action, the HUD button, the Keys page
+		await _wait(0.5)
+		await MovesTour.tour(self)
 		get_tree().quit()
 		return
 	if args.has("areas"):   # the Long Night's new areas: rooms, gimmicks, lodgers, guardians (areas.gd)
