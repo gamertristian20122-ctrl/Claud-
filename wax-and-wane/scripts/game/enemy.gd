@@ -134,7 +134,7 @@ const DEFS := {
 		"victory": "THE GREAT PENDULUM IS STILLED", "touch": 0.0, "no_flip": true,
 		"lore": "The heart of the house clock. Every swing takes a minute from someone.", "stain": Color("#c56025")},
 	# ---- v2.1: a third guardian for every floor (scripts/game/guardians_v21.gd)
-	"furnace": {"hp": 100.0, "speed": 13.0, "ai": "g21_furnace", "r": 13.0, "boss": true, "heavy": true, "name": "THE COAL FURNACE",
+	"furnace": {"hp": 106.0, "speed": 13.0, "ai": "g21_furnace", "r": 13.0, "boss": true, "heavy": true, "name": "THE COAL FURNACE",
 		"glow_px": ["#facb3e", "#ee8e2e", "#e46e33", "#fdf7ed"], "title": "It has warmed the house for a hundred winters",
 		"phase_lines": ["", "Full steam!", "It is overheating!"],
 		"lore": "The cellar boiler ate a coal heap every winter and never once felt full. Tonight it smells wax.", "stain": Color("#483b3a")},
@@ -146,7 +146,7 @@ const DEFS := {
 		"no_flip": true, "glow_px": ["#cae6f5"], "title": "It plays for the empty pews",
 		"phase_lines": ["", "It plays in chords...", "Every stop pulled out!"],
 		"lore": "The chapel organ played itself the night its organist was buried. It has not missed a service since.", "stain": Color("#8f4029")},
-	"weathercock": {"hp": 224.0, "speed": 22.0, "ai": "g21_weathercock", "r": 12.0, "boss": true, "heavy": true, "name": "THE WEATHERCOCK",
+	"weathercock": {"hp": 260.0, "speed": 22.0, "ai": "g21_weathercock", "r": 12.0, "boss": true, "heavy": true, "name": "THE WEATHERCOCK",
 		"no_flip": true, "glow_px": ["#facb3e"], "title": "It turns with every wind", "victory": "THE WEATHERCOCK FALLS SILENT",
 		"phase_lines": ["", "The wind changes!", "A storm breaks over the belfry!"],
 		"lore": "The copper rooster on the belfry roof. A hundred years of storms taught it which way to blow.", "stain": Color("#49a790")},

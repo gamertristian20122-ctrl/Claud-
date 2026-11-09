@@ -17,6 +17,8 @@ const PALE := Color("#cae6f5")
 const MIN_PHASE := 3.0
 
 static var _host: GuardiansV21
+## Hazard hits that landed, by kind (the --boss trial prints and resets them).
+static var landed := {}
 
 
 static func ai() -> GuardiansV21:
@@ -75,12 +77,15 @@ static func _fan(e: Enemy, at: Vector2, base: float, n: int, spread: float, spd:
 
 
 ## A guardian's hazard (jet, coal, rolling skull, landing) burns Tallow: blamed on the guardian (death note).
-static func _hit(e: Enemy, dmg: float, from: Vector2) -> void:
+static func _hit(e: Enemy, dmg: float, from: Vector2, what := "hazard") -> void:
 	var p: Player = e.world.player
 	if p.dead or e.world.freeze_t > 0.0:
 		return
 	Records.blame(e)
+	var before: int = e.world.hits_total
 	p.hurt(dmg * e.world.enemy_dmg_mult(), p.global_position - from)
+	if int(e.world.hits_total) > before:
+		landed[what] = int(landed.get(what, 0)) + 1
 
 
 ## How far from `from` along angle `a` before the room's walls.
@@ -189,13 +194,14 @@ static func _furnace_jet_tell(e: Enemy, mouth: Vector2) -> void:
 	Audio.play("fire_crackle", 0.0, 0.05, 0.8)
 
 
-## Coal: the stovepipe coughs lumps that land where the red rings are and smoulder for a while.
+## Coal: the stovepipe coughs lumps that land where the red rings are, round Tallow (never right on him),
+## and smoulder for a while: they close off the floor around him.
 static func _furnace_coal_tell(e: Enemy) -> void:
 	var p: Player = e.world.player
 	var n: int = [0, 2, 3, 4][e.phase]
-	var pts: Array = [p.global_position]
-	for i in n - 1:
-		pts.append(e.free_spot(p.global_position, 26.0, 70.0))
+	var pts: Array = []
+	for i in n:
+		pts.append(e.free_spot(p.global_position, 28.0, 64.0))
 	e.mem["coal"] = pts
 	for q in pts:
 		e.tele().ring(q, 9.0, 1.4, RED)
@@ -295,7 +301,7 @@ class FireJet extends Node2D:
 		var c := p.global_position + Vector2(0, -6)
 		var q := Geometry2D.get_closest_point_to_segment(c, from + dir * tail, from + dir * cur)
 		if c.distance_to(q) < _half(q.distance_to(from)) + 2.0:
-			GuardiansV21._hit(e, 8.0, q)
+			GuardiansV21._hit(e, 8.0, q, "jet")
 
 	func _draw() -> void:
 		var flick := int(age * 24.0)
@@ -392,7 +398,7 @@ class CoalBed extends Node2D:
 		if age < life - 0.25:
 			var d: Vector2 = e.world.player.global_position - global_position
 			if absf(d.x) < 8.0 and absf(d.y) < 5.5:
-				GuardiansV21._hit(e, 6.0, global_position)
+				GuardiansV21._hit(e, 6.0, global_position, "coal")
 
 	func _draw() -> void:
 		var cooling := age > life - 0.9
@@ -637,7 +643,7 @@ class RollSkull extends Node2D:
 				spr.texture = frames[int(roll) % frames.size()]
 		var p: Player = e.world.player
 		if moving and (p.global_position + Vector2(0, -5)).distance_to(global_position + Vector2(0, -5)) < 8.0:
-			GuardiansV21._hit(e, 6.0, global_position)
+			GuardiansV21._hit(e, 6.0, global_position, "skull")
 
 	func _draw() -> void:
 		draw_rect(Rect2(-3, -1, 7, 2), Color(0.13, 0.08, 0.1, 0.45))
@@ -742,8 +748,8 @@ func g21_organist(e: Enemy, ddt: float, _to_p: Vector2, _dist: float) -> void:
 		"idle":
 			if e.cd <= 0:
 				e._pattern += 1
-				var opts: Array = [["scale", "ring", "scale", "ring"], ["chord", "ring", "scale", "chord", "ring"],
-					["toccata", "ring", "chord", "ring"]][e.phase - 1]
+				var opts: Array = [["scale", "pedal", "ring"], ["chord", "pedal", "ring", "scale", "pedal"],
+					["toccata", "pedal", "ring", "chord", "pedal", "ring"]][e.phase - 1]
 				match opts[(e._pattern - 1) % opts.size()]:
 					"scale":
 						var order: Array = range(7) if e.mem["up"] else range(6, -1, -1)
@@ -755,6 +761,8 @@ func g21_organist(e: Enemy, ddt: float, _to_p: Vector2, _dist: float) -> void:
 						_organ_play(e, order2, 0.18, 0.55)
 					"chord":
 						_organ_chords(e)
+					"pedal":
+						_organ_pedal(e)
 					_:
 						_organ_ring(e)
 		"playing":
@@ -818,6 +826,32 @@ static func _pipe_fire(e: Enemy, i: int, n: int) -> void:
 	for j in n:
 		e.later(0.07 * j, func(): e.world.enemy_shot(at, v, "bullet_water"))
 	Audio.play("enemy_shoot", -4.0, 0.05, 0.6 + 0.1 * i)
+
+
+## Pedal notes: the two outer pipes light and the organ flashes (0.55 s), then both fire a run of notes
+## straight at Tallow from either side (3, 4, then 5 each): a crossfire to step out of.
+static func _organ_pedal(e: Enemy) -> void:
+	var seq: int = e.mem.get("seq", 0)
+	e.play_anim("atk", 0.0)
+	e.spr.pause()
+	e.spr.frame = 0
+	e._telegraph(Color(0.85, 0.95, 1.0))
+	for i in [0, 6]:
+		(e.mem["lit"] as Dictionary)[i] = 0.75
+	Audio.play("bell_small", -6.0, 0.0, 0.5)
+	var n: int = [0, 3, 4, 5][e.phase]
+	for k in n:
+		e.later(0.55 + 0.15 * k, func():
+			if int(e.mem.get("seq", 0)) != seq:
+				return
+			e.spr.frame = 1
+			for i in [0, 6]:
+				var at := _pipe_at(e, i)
+				var aim: Vector2 = (e.world.player.global_position + Vector2(0, -6) - at).normalized()
+				e.world.enemy_shot(at, aim * 100.0, "bullet_water")
+			Audio.play("enemy_shoot", -4.0, 0.05, 0.5))
+	e.state = "playing"
+	e.t = 0.55 + 0.15 * n + 0.4
 
 
 ## Chords: three (or four) pipes sound at once, their lanes marked together; then another chord.
@@ -950,7 +984,7 @@ func g21_weathercock(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 			e.spr.flip_h = to_p.x < 0
 			if e.cd <= 0:
 				e._pattern += 1
-				var opts: Array = [["gust", "fan", "spin", "fan", "hop"], ["gust", "fan", "spin", "hop", "gust", "fan", "spin"],
+				var opts: Array = [["gust", "fan", "spin", "fan", "hop", "spin"], ["gust", "fan", "spin", "hop", "fan", "gust", "spin"],
 					["storm", "fan", "spin", "hop", "fan", "spin"]][e.phase - 1]
 				match opts[(e._pattern - 1) % opts.size()]:
 					"gust", "storm":
@@ -1004,7 +1038,7 @@ func g21_weathercock(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 			# an aimed fan of darts flung off the vane (and in phase 2+ a quick three after it)
 			if e.t <= 0:
 				var at3 := e.global_position + W_ARROW
-				_fan(e, at3, (p.global_position + Vector2(0, -6) - at3).angle(), [0, 5, 7, 9][e.phase], 0.2, 92.0, "bolt_bone")
+				_fan(e, at3, (p.global_position + Vector2(0, -6) - at3).angle(), [0, 7, 9, 11][e.phase], 0.18, 96.0, "bolt_bone")
 				Audio.play("enemy_shoot", 0.0, 0.05, 1.0)
 				if e.phase >= 2:
 					var seq: int = e.mem.get("seq", 0)
@@ -1025,7 +1059,7 @@ func g21_weathercock(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				e.mem["volley"] = 0.0
 				Audio.play("burn_whoosh", -2.0, 0.05, 1.3)
 		"spinning":
-			_cock_spray(e, ddt, [0, 3, 3, 4][e.phase], 2.3, 84.0)
+			_cock_spray(e, ddt, [0, 3, 4, 5][e.phase], 2.3, 88.0)
 			if e.t <= 0:
 				e.spr.speed_scale = 1.0
 				e._anim_lock = 0.0
@@ -1046,12 +1080,12 @@ func g21_weathercock(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 			if e.t <= 0:
 				e._jump_h = 0.0
 				var at2: Vector2 = e.mem["hop_b"]
-				e.world.burst(at2 + Vector2(0, -6), [0, 10, 12, 14][e.phase], 66.0, "bullet_purple", randf() * TAU)
+				e.world.burst(at2 + Vector2(0, -6), [0, 12, 14, 16][e.phase], 70.0, "bullet_purple", randf() * TAU)
 				e.world.shake(5.0)
 				e.world.fx_debris(at2, "R")
 				Audio.play("thud_heavy", 0.0, 0.05, 0.8)
 				if (p.global_position).distance_to(at2) < 18.0:
-					_hit(e, 8.0, at2)
+					_hit(e, 8.0, at2, "landing")
 				e.state = "rest"
 				e.t = 0.7
 		"rest":
@@ -1096,7 +1130,7 @@ static func _cock_gust(e: Enemy) -> void:
 	e.mem["wind"] = best
 	e.mem["blow"] = [0.0, 2.2, 2.6, 3.0][e.phase]
 	var warn: float = [0.0, 1.2, 1.0, 1.0][e.phase]
-	Gust.start(e, best, warn, float(e.mem["blow"]), [0.0, 44.0, 48.0, 52.0][e.phase])
+	Gust.start(e, best, warn, float(e.mem["blow"]), [0.0, 50.0, 56.0, 62.0][e.phase])
 	e.state = "gust_tell"
 	e.t = warn
 	e.spr.play("grab")
@@ -1261,6 +1295,7 @@ class Trial extends Node:
 			if b != null and is_instance_valid(b) and (b as Enemy).kind == kind and (b as Enemy).active:
 				started = true
 				hits0 = int(w.hits_total)
+				GuardiansV21.landed = {}
 			return
 		if Juice.holding(w):
 			return
@@ -1273,13 +1308,13 @@ class Trial extends Node:
 		if p.dead:
 			done = true
 			var e: Enemy = b if b != null and is_instance_valid(b) else null
-			print("[boss] %s floor %d: FELL after %.1f s, guardian at %d%% (phase %d), hits %d, phases at %s s" % [
-				kind, floor_n, t, int(100.0 * e.hp / e.max_hp) if e else -1, e.phase if e else 0, int(w.hits_total) - hits0, phases])
+			print("[boss] %s floor %d: FELL after %.1f s, guardian at %d%% (phase %d), hits %d, phases at %s s, hazards %s" % [
+				kind, floor_n, t, int(100.0 * e.hp / e.max_hp) if e else -1, e.phase if e else 0, int(w.hits_total) - hits0, phases, GuardiansV21.landed])
 			return
 		if b == null or not is_instance_valid(b) or not (b as Enemy).alive:
 			done = true
-			print("[boss] %s floor %d: SNUFFED in %.1f s, hits %d, wax left %.0f, phases at %s s" % [
-				kind, floor_n, t, int(w.hits_total) - hits0, p.wax, phases])
+			print("[boss] %s floor %d: SNUFFED in %.1f s, hits %d, wax left %.0f, phases at %s s, hazards %s" % [
+				kind, floor_n, t, int(w.hits_total) - hits0, p.wax, phases, GuardiansV21.landed])
 			w.get_tree().create_timer(0.6).timeout.connect(func():
 				if is_instance_valid(w) and not w.finished:
 					w.finished = true
