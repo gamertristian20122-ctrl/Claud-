@@ -365,11 +365,12 @@ static func _tour_gimmick(bot: Node, w: Node, id: String, cells: Array) -> void:
 				g._t = 8.0   # the first group of stoves is hot, the other one cold
 				await bot._wait(0.6)
 				await bot._shot("area_kitchen_stoves_hot")
-				var pot: Vector2i = g.steam.keys()[0]
-				w.room.damage_obstacle(pot, 1.0)
-				w.room.damage_obstacle(pot, 1.0)
-				await bot._wait(0.5)
-				await bot._shot("area_kitchen_pot_spilt")
+				if not g.steam.is_empty():   # not every stove room has a boiling pot
+					var pot: Vector2i = g.steam.keys()[0]
+					w.room.damage_obstacle(pot, 1.0)
+					w.room.damage_obstacle(pot, 1.0)
+					await bot._wait(0.5)
+					await bot._shot("area_kitchen_pot_spilt")
 			var e: Enemy = w.spawn_enemy("flour_ghost", w.room.center() + Vector2(-40, -10))
 			await bot._wait(1.2)
 			if e and is_instance_valid(e):
