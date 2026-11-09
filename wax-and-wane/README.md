@@ -150,6 +150,7 @@ godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
     --savecycle           Save & quit + Continue at every floor
     --tower [--keeper [--keeperwax=N]]   start in the Clock Tower with a test kit (or at the Keeper)
     --area=kitchen|library|attic|chapel [--areadepth=N] [--areaboss2]   start on a Long Night area (floor 3, a kit); one [area] line per run
+    --floors=4..7         the night's length (the Long Night: 7 floors until 3:30 AM; the [playtest] line says floor=5/7 (area))
     --nospecials          no special rooms or champions (balance baseline)
     --nocard              skip the boss versus card
     --nomoves             no special moves (v2.3 balance: the same candle with and without its move)
@@ -160,6 +161,9 @@ godot --headless --path . -- --autotest --bench [--secs=6] [--seed=N] [--ablate]
 godot --headless --path . -- --autotest --movescheck                  # v2.3 special moves: every move's numbers, the
                                                                       #   key / touch -> move frame timing, rebinding (exit 1 on a FAIL)
 python3 tools/extract_strings.py [--check | --report | --strict FILES]   # lang/en.json from L.t(...) + the data tables
+godot --headless --path . -- --autotest --nightdump --speed=4 [--floors=N] [--dump=/abs/file.txt]
+                          # every floor of 4 seeded nights, a plain one and Tonight's Candle: layouts, guardians, loot,
+                          # lodgers, the floor numbers. At 4 floors it must equal docs/streams/v22_night_baseline.txt
 
 # screenshot tours (look at the pictures!). 1600x720 = a 480x216 phone screen
 xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3 --resolution 1600x720 \
@@ -175,6 +179,8 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
     ... --tour --areas        the Long Night's new areas: rooms, gimmicks, lodgers, guardian cards and fights
     ... --tour --moves        each candle's special move mid-action, the move button (touch, keys, pad, swapped), the
                               Keys and Controls pages, the Candle Box and the Journal's move line
+    ... --tour --night        the Night length picker (Slots, seed keypad), a 7-floor run's HUD next to a 4-floor one,
+                              the Kitchen / Library / Attic banners, long-night results and Journal
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
     ... --tour --slots        the save slots, the level picker, a level 3 run, Level / Delete / Continue (on a copied 2.0
                               profile it checks the move into Slot 1 record by record)

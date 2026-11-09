@@ -265,7 +265,7 @@ func died_area_inkdrop(e: Enemy) -> void:
 ## smaller in the attic's deep dark.
 static func light_reach(w: Node) -> float:
 	var p: Player = w.player
-	return (26.0 + 26.0 * clampf(p.wax / 120.0, 0.0, 1.0)) * AreaGimmicks.light_mult(w)
+	return (26.0 + 26.0 * clampf(p.wax_frac(), 0.0, 1.0)) * AreaGimmicks.light_mult(w)   # follows Player's light (night fraction)
 
 
 static func lit(w: Node, pos: Vector2) -> bool:

@@ -1,0 +1,553 @@
+night seeded 11: floors 4, run seed 11
+f1 The Cellar (theme cellar, music floor_1) guardian furnace omen '' cells 9 start (4, 4) boss (7, 4)
+f1 numbers: melt x1.0 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.03 foe dmg x1.0 touch 5.0 clock@100wax 20.0
+f1 cell (3, 3) secret dist 99 seed 2593103860 grid 3949107587
+f1 cell (3, 4) treasure dist 1 seed 210581026 grid 3949107587
+f1 cell (4, 2) shop dist 2 seed 3852983759 grid 955799143
+f1 cell (4, 3) normal dist 1 seed 3814378905 grid 2623717999 opening
+f1 cell (4, 4) start dist 0 seed 2424218069 grid 898304865
+f1 cell (4, 5) normal dist 1 seed 507231560 grid 3754615035 opening
+f1 cell (5, 4) normal dist 1 seed 910526437 grid 3918023731 opening
+f1 cell (6, 4) normal dist 2 seed 1832587497 grid 2078307695 opening
+f1 cell (7, 4) boss dist 3 seed 3155230352 grid 3586115087
+f1 treasure (3, 4): relic:jet_brooch, keepsake:hand_bell
+f1 shop (4, 2): relic:lamp_oil@12, tonic:flask_big_green@5, wax_big@4
+f1 room (4, 3) lodgers: wax_blob hp 6.0, wax_blob hp 6.0, wax_blob hp 6.0
+f1 guardian furnace hp 106.0
+f2 The Crypt (theme crypt, music floor_2) guardian ogre omen '' cells 11 start (4, 4) boss (1, 5)
+f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
+f2 cell (1, 5) boss dist 4 seed 3297511702 grid 3586115087
+f2 cell (2, 4) normal dist 2 seed 2825348778 grid 1192739801 mini sootling
+f2 cell (2, 5) normal dist 3 seed 325880005 grid 2794911679
+f2 cell (2, 6) shop dist 4 seed 1515284125 grid 955799143
+f2 cell (3, 4) normal dist 1 seed 715269726 grid 2794911679
+f2 cell (4, 2) normal dist 2 seed 3201620836 grid 1653946063
+f2 cell (4, 3) normal dist 1 seed 1675165647 grid 3392470900
+f2 cell (4, 4) start dist 0 seed 2481082994 grid 898304865
+f2 cell (4, 5) treasure dist 1 seed 2656819243 grid 3949107587
+f2 cell (5, 3) secret dist 99 seed 1910472058 grid 3949107587
+f2 cell (5, 4) normal dist 1 seed 177672680 grid 2363263099
+f2 treasure (4, 5): relic:house_deed, relic:stove_door
+f2 shop (2, 6): relic:tin_sconce@14, tonic:flask_blue@5, wax_big@4
+f2 room (2, 4) lodgers: sootling hp 40.5
+f2 guardian ogre hp 104.0
+f3 The Chapel (theme chapel, music floor_3) guardian choir omen '' cells 15 start (4, 4) boss (7, 5)
+f3 numbers: melt x1.3 kindle 3.0 quick 1.0 wax odds 0.75 marked 0.09 foe dmg x1.24 touch 7.0 clock@100wax 20.0
+f3 cell (1, 5) seance dist 4 seed 2848568784 grid 3260657233
+f3 cell (2, 4) normal dist 2 seed 2950081574 grid 2559038751
+f3 cell (2, 5) normal dist 3 seed 4159382861 grid 76862068
+f3 cell (3, 3) secret dist 99 seed 1936778580 grid 3949107587
+f3 cell (3, 4) normal dist 1 seed 68785725 grid 867728813
+f3 cell (4, 3) treasure dist 1 seed 1299397133 grid 3949107587
+f3 cell (4, 4) start dist 0 seed 4204571393 grid 898304865
+f3 cell (4, 5) normal dist 1 seed 854538793 grid 2559038751
+f3 cell (5, 4) normal dist 1 seed 3747185862 grid 3373473127
+f3 cell (6, 2) mirror dist 4 seed 4290351277 grid 3260657233
+f3 cell (6, 3) normal dist 3 seed 1677049577 grid 1875804377
+f3 cell (6, 4) normal dist 2 seed 3784620066 grid 2237741126
+f3 cell (7, 4) normal dist 3 seed 485901276 grid 4219471081 mini wogol
+f3 cell (7, 5) boss dist 4 seed 72116394 grid 3586115087
+f3 cell (8, 4) shop dist 4 seed 3601147232 grid 955799143
+f3 treasure (4, 3): relic:pocket_watch, relic:soft_soles
+f3 shop (8, 4): relic:pantry_key@16, tonic:flask_yellow@5, wax_big@4
+f3 room (2, 4) lodgers: masked_orc hp 37.0, waxwork/ember hp 59.2
+f3 guardian choir hp 158.0
+f4 The Belfry (theme belfry, music floor_4) guardian weathercock omen '' cells 19 start (4, 4) boss (8, 2)
+f4 numbers: melt x1.45 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.12 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f4 cell (2, 4) mirror dist 2 seed 4211649584 grid 3260657233
+f4 cell (3, 4) normal dist 1 seed 3348972210 grid 701353051
+f4 cell (4, 3) normal dist 1 seed 3552292826 grid 2654280134
+f4 cell (4, 4) start dist 0 seed 2011315799 grid 898304865
+f4 cell (4, 5) normal dist 1 seed 1073736217 grid 1478241867
+f4 cell (4, 6) seance dist 2 seed 3974539105 grid 3260657233
+f4 cell (5, 1) shop dist 6 seed 923717592 grid 955799143
+f4 cell (5, 2) normal dist 5 seed 3207848869 grid 1410296345
+f4 cell (5, 4) normal dist 1 seed 3560644422 grid 2327177203
+f4 cell (6, 2) normal dist 4 seed 2824339342 grid 2465589874
+f4 cell (6, 3) normal dist 3 seed 2047036526 grid 1369937861
+f4 cell (6, 4) normal dist 2 seed 314122853 grid 3121211515
+f4 cell (6, 5) treasure dist 3 seed 1783749166 grid 3949107587
+f4 cell (7, 1) musicbox dist 6 seed 1150859546 grid 3260657233
+f4 cell (7, 2) normal dist 5 seed 3873265892 grid 3918023731
+f4 cell (7, 4) normal dist 3 seed 4110788012 grid 2235228113 mini ice_zombie
+f4 cell (7, 5) secret dist 99 seed 129890686 grid 3949107587
+f4 cell (8, 2) boss dist 6 seed 1478897384 grid 3586115087
+f4 cell (8, 4) study dist 4 seed 1441724990 grid 3260657233
+f4 treasure (6, 5): relic:bellows, relic:scalding_wax
+f4 shop (5, 1): relic:lucky_ash@18, tonic:flask_red@5, keepsake:hand_bell@8
+f4 room (3, 4) lodgers: ice_zombie hp 26.4, sootling hp 12.0, deathwatch hp 24.0, wogol/gilded hp 48.0
+f4 guardian weathercock hp 280.0
+f5 The Clock Tower (theme tower, music floor_5) guardian keeper omen '' cells 7 start (4, 4) boss (5, 6)
+f5 numbers: melt x1.2 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.14 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f5 cell (3, 4) normal dist 1 seed 2152872941 grid 963812859
+f5 cell (4, 3) treasure dist 1 seed 3802382085 grid 3949107587
+f5 cell (4, 4) start dist 0 seed 3849508027 grid 898304865
+f5 cell (4, 5) normal dist 1 seed 2579519020 grid 867728813
+f5 cell (4, 6) normal dist 2 seed 3770758781 grid 867728813
+f5 cell (5, 4) normal dist 1 seed 2540654727 grid 4078460037
+f5 cell (5, 6) boss dist 3 seed 1916109183 grid 3586115087
+f5 treasure (4, 3): relic:hot_drip, relic:fire_tongs
+f5 room (3, 4) lodgers: cog_sentry/sooty hp 52.8, cog_sentry hp 33.0, wogol hp 30.0, minute_wraith hp 27.0, minute_wraith hp 27.0, cog_sentry hp 33.0
+f5 guardian keeper hp 380.0
+night seeded 5: floors 4, run seed 5
+f1 The Cellar (theme cellar, music floor_1) guardian big_zombie omen '' cells 10 start (4, 4) boss (3, 7)
+f1 numbers: melt x1.0 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.03 foe dmg x1.0 touch 5.0 clock@100wax 20.0
+f1 cell (3, 4) treasure dist 1 seed 4212459724 grid 3949107587
+f1 cell (3, 7) boss dist 4 seed 509386546 grid 3586115087
+f1 cell (4, 2) font dist 2 seed 3604212791 grid 3260657233
+f1 cell (4, 3) normal dist 1 seed 3757849885 grid 1111465669 opening
+f1 cell (4, 4) start dist 0 seed 3447012836 grid 898304865
+f1 cell (4, 5) normal dist 1 seed 2586360735 grid 3373473127 opening
+f1 cell (4, 6) normal dist 2 seed 2045940605 grid 3373473127 opening
+f1 cell (4, 7) normal dist 3 seed 41405113 grid 3951147549
+f1 cell (5, 4) shop dist 1 seed 4278621937 grid 955799143
+f1 cell (5, 5) secret dist 99 seed 118052390 grid 3949107587
+f1 treasure (3, 4): relic:witching_hour, keepsake:censer
+f1 shop (5, 4): relic:cold_wax@12, tonic:flask_big_green@5, wax_big@4
+f1 room (4, 3) lodgers: tiny_zombie hp 4.0, tiny_slug hp 3.0
+f1 guardian big_zombie hp 78.0
+f2 The Crypt (theme crypt, music floor_2) guardian sexton omen 'draught' cells 13 start (4, 4) boss (5, 2)
+f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
+f2 cell (2, 2) musicbox dist 4 seed 240809535 grid 3260657233
+f2 cell (3, 2) normal dist 3 seed 3045018748 grid 963812859
+f2 cell (3, 4) treasure dist 1 seed 450931131 grid 3949107587
+f2 cell (3, 5) secret dist 99 seed 1351797423 grid 3949107587
+f2 cell (4, 1) seance dist 3 seed 252981958 grid 3260657233
+f2 cell (4, 2) normal dist 2 seed 2979277170 grid 3460936853
+f2 cell (4, 3) normal dist 1 seed 1511090391 grid 2327177203
+f2 cell (4, 4) start dist 0 seed 616155563 grid 898304865
+f2 cell (4, 5) normal dist 1 seed 4011484102 grid 2327177203
+f2 cell (4, 6) shop dist 2 seed 656660671 grid 955799143
+f2 cell (5, 2) boss dist 3 seed 898735560 grid 3586115087
+f2 cell (5, 4) normal dist 1 seed 2697537048 grid 3599952421
+f2 cell (6, 4) normal dist 2 seed 2348190523 grid 2632624899
+f2 treasure (3, 4): relic:scalding_wax, relic:tin_sconce
+f2 shop (4, 6): relic:lucky_ash@14, tonic:flask_yellow@5, keepsake:hand_bell@8
+f2 room (3, 2) lodgers: wax_blob hp 8.1, cinder_rat hp 5.4, wax_blob hp 8.1, moth hp 2.7, moth hp 2.7, goblin hp 6.75, moth hp 2.7, moth hp 2.7, moth hp 2.7, moth hp 2.7
+f2 guardian sexton hp 108.0
+f3 The Chapel (theme chapel, music floor_3) guardian organist omen 'tallow_moon' cells 16 start (4, 4) boss (1, 4)
+f3 numbers: melt x1.3 kindle 3.0 quick 1.0 wax odds 0.75 marked 0.09 foe dmg x1.24 touch 7.0 clock@100wax 20.0
+f3 cell (1, 4) boss dist 3 seed 2098880668 grid 3586115087
+f3 cell (2, 3) normal dist 3 seed 865084738 grid 701353051
+f3 cell (2, 4) normal dist 2 seed 2950937983 grid 2484062547
+f3 cell (2, 5) normal dist 3 seed 3052160041 grid 2623717999
+f3 cell (2, 6) seance dist 4 seed 3630021940 grid 3260657233
+f3 cell (3, 4) normal dist 1 seed 4122503864 grid 3542901444
+f3 cell (3, 5) secret dist 99 seed 587956451 grid 3949107587
+f3 cell (4, 2) shop dist 2 seed 980095503 grid 955799143
+f3 cell (4, 3) normal dist 1 seed 1929868815 grid 3735834413
+f3 cell (4, 4) start dist 0 seed 671791197 grid 898304865
+f3 cell (4, 5) normal dist 1 seed 2098155160 grid 2639755131
+f3 cell (4, 6) treasure dist 2 seed 3184207421 grid 3949107587
+f3 cell (5, 4) normal dist 1 seed 1886159966 grid 761319283
+f3 cell (6, 3) study dist 3 seed 1511801780 grid 3260657233
+f3 cell (6, 4) normal dist 2 seed 3042250442 grid 3392470900 mini wogol
+f3 cell (6, 5) mirror dist 3 seed 2185772766 grid 3260657233
+f3 treasure (4, 6): relic:soft_soles, relic:jet_brooch
+f3 shop (4, 2): relic:old_pipe@16, tonic:flask_blue@5, keepsake:winding_key@8
+f3 room (2, 3) lodgers: sootling/ember hp 18.5, wisp hp 12.95, wisp hp 12.95, wogol hp 18.5
+f3 guardian organist hp 180.0
+f4 The Belfry (theme belfry, music floor_4) guardian pendulum omen '' cells 16 start (4, 4) boss (2, 2)
+f4 numbers: melt x1.45 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.12 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f4 cell (1, 4) normal dist 3 seed 520434202 grid 2235228113
+f4 cell (2, 2) boss dist 4 seed 1243989447 grid 3586115087
+f4 cell (2, 4) normal dist 2 seed 28883345 grid 780702013
+f4 cell (2, 5) normal dist 3 seed 1394366205 grid 3754615035
+f4 cell (3, 2) normal dist 3 seed 350954067 grid 2249998113
+f4 cell (3, 4) normal dist 1 seed 3390147561 grid 701353051
+f4 cell (4, 1) normal dist 3 seed 825746601 grid 3951147549
+f4 cell (4, 2) normal dist 2 seed 2143126359 grid 3951147549
+f4 cell (4, 3) normal dist 1 seed 1867685349 grid 814479133
+f4 cell (4, 4) start dist 0 seed 2688402100 grid 898304865
+f4 cell (4, 5) treasure dist 1 seed 4052692067 grid 3949107587
+f4 cell (5, 2) normal dist 3 seed 4099426304 grid 345324399
+f4 cell (5, 3) secret dist 99 seed 1021125864 grid 3949107587
+f4 cell (5, 4) shop dist 1 seed 392120107 grid 955799143
+f4 cell (6, 2) normal dist 4 seed 4199101767 grid 3348727375
+f4 cell (7, 2) seance dist 5 seed 2243242063 grid 3260657233
+f4 treasure (4, 5): relic:love_letter, relic:lamp_oil
+f4 shop (5, 4): relic:wax_coat@18, tonic:flask_big_green@5, keepsake:flare_match@8
+f4 room (1, 4) lodgers: deathwatch hp 24.0, cinder_rat hp 9.6, skelet/sooty hp 23.04, sootling hp 12.0
+f4 guardian pendulum hp 238.0
+f5 The Clock Tower (theme tower, music floor_5) guardian keeper omen '' cells 7 start (4, 4) boss (7, 4)
+f5 numbers: melt x1.2 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.14 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f5 cell (3, 4) treasure dist 1 seed 1172670394 grid 3949107587
+f5 cell (4, 3) normal dist 1 seed 3920582081 grid 1438008655
+f5 cell (4, 4) start dist 0 seed 1045342066 grid 898304865
+f5 cell (4, 5) normal dist 1 seed 1123221834 grid 2078307695
+f5 cell (5, 4) normal dist 1 seed 2874702283 grid 3049728310
+f5 cell (6, 4) normal dist 2 seed 533154044 grid 1041459571
+f5 cell (7, 4) boss dist 3 seed 3526155509 grid 3586115087
+f5 treasure (3, 4): relic:matchbook, relic:spare_wick
+f5 room (4, 3) lodgers: deathwatch hp 30.0, sootling hp 15.0, wogol/ember hp 60.0, waxwork hp 48.0, skelet hp 18.0
+f5 guardian keeper hp 380.0
+night seeded 7: floors 4, run seed 7
+f1 The Cellar (theme cellar, music floor_1) guardian wax_mother omen '' cells 11 start (4, 4) boss (4, 7)
+f1 numbers: melt x1.0 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.03 foe dmg x1.0 touch 5.0 clock@100wax 20.0
+f1 cell (3, 4) normal dist 1 seed 2870715695 grid 1743854951 opening
+f1 cell (3, 6) font dist 3 seed 1566185255 grid 3260657233
+f1 cell (4, 3) treasure dist 1 seed 295352536 grid 3949107587
+f1 cell (4, 4) start dist 0 seed 3526971376 grid 898304865
+f1 cell (4, 5) normal dist 1 seed 2465458863 grid 3918023731 opening
+f1 cell (4, 6) normal dist 2 seed 904564870 grid 1111465669 opening
+f1 cell (4, 7) boss dist 3 seed 625865609 grid 3586115087
+f1 cell (5, 3) secret dist 99 seed 3612035514 grid 3949107587
+f1 cell (5, 4) normal dist 1 seed 3809713454 grid 1111465669 opening
+f1 cell (5, 6) shop dist 3 seed 2616459833 grid 955799143
+f1 cell (6, 4) musicbox dist 2 seed 2172416166 grid 3260657233
+f1 treasure (4, 3): relic:stove_door, keepsake:oil_jug
+f1 shop (5, 6): relic:beeswax@12, tonic:flask_green@5, wax_big@4
+f1 room (3, 4) lodgers: wax_blob hp 6.0, wax_blob hp 6.0, tiny_slug hp 3.0
+f1 guardian wax_mother hp 92.0
+f2 The Crypt (theme crypt, music floor_2) guardian ossuary omen 'smoky_halls' cells 12 start (4, 4) boss (7, 4)
+f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
+f2 cell (3, 2) normal dist 3 seed 3256616704 grid 1005421885
+f2 cell (3, 3) secret dist 99 seed 1429016497 grid 3949107587
+f2 cell (3, 4) normal dist 1 seed 1424847661 grid 3392470900
+f2 cell (4, 2) normal dist 2 seed 34759083 grid 1102921121 mini sootling
+f2 cell (4, 3) normal dist 1 seed 409680120 grid 1214905533
+f2 cell (4, 4) start dist 0 seed 4138848831 grid 898304865
+f2 cell (4, 5) shop dist 1 seed 354483588 grid 955799143
+f2 cell (5, 2) study dist 3 seed 775516341 grid 3260657233
+f2 cell (5, 4) normal dist 1 seed 3782935480 grid 1773089508
+f2 cell (6, 4) normal dist 2 seed 3566326875 grid 2109553094
+f2 cell (6, 5) treasure dist 3 seed 3045838802 grid 3949107587
+f2 cell (7, 4) boss dist 3 seed 1565678890 grid 3586115087
+f2 treasure (6, 5): relic:matchling, relic:thimble
+f2 shop (4, 5): relic:old_pipe@14, tonic:flask_green@5, wax_big@4
+f2 room (3, 2) lodgers: sootling hp 6.75, skelet hp 8.1, pumpkin_dude hp 13.5, wax_blob hp 8.1, swampy hp 10.8
+f2 guardian ossuary hp 106.0
+f3 The Chapel (theme chapel, music floor_3) guardian necro_boss omen '' cells 15 start (4, 4) boss (5, 7)
+f3 numbers: melt x1.3 kindle 3.0 quick 1.0 wax odds 0.75 marked 0.09 foe dmg x1.24 touch 7.0 clock@100wax 20.0
+f3 cell (3, 3) secret dist 99 seed 2157562359 grid 3949107587
+f3 cell (3, 4) treasure dist 1 seed 3524051202 grid 3949107587
+f3 cell (3, 6) study dist 3 seed 605407809 grid 3260657233
+f3 cell (4, 1) shop dist 3 seed 3729136634 grid 955799143
+f3 cell (4, 2) normal dist 2 seed 1698688060 grid 1099236201
+f3 cell (4, 3) normal dist 1 seed 3929070950 grid 76862068
+f3 cell (4, 4) start dist 0 seed 2619848285 grid 898304865
+f3 cell (4, 5) normal dist 1 seed 2429734023 grid 76862068
+f3 cell (4, 6) normal dist 2 seed 3737376505 grid 2913813113
+f3 cell (5, 2) normal dist 3 seed 244335549 grid 2608232509
+f3 cell (5, 4) normal dist 1 seed 2418906017 grid 2327177203
+f3 cell (5, 6) normal dist 3 seed 3492968518 grid 1192739801
+f3 cell (5, 7) boss dist 4 seed 1268871829 grid 3586115087
+f3 cell (6, 2) musicbox dist 4 seed 778211559 grid 3260657233
+f3 cell (6, 4) normal dist 2 seed 1679172505 grid 1005421885
+f3 treasure (3, 4): relic:matchbook, relic:hot_drip
+f3 shop (4, 1): relic:scalding_wax@16, tonic:flask_red@5, wax_big@4
+f3 room (4, 2) lodgers: sootling hp 9.25, skelet hp 11.1, wisp hp 12.95, wogol hp 18.5
+f3 guardian necro_boss hp 148.0
+f4 The Belfry (theme belfry, music floor_4) guardian big_demon omen '' cells 18 start (4, 4) boss (5, 7)
+f4 numbers: melt x1.45 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.12 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f4 cell (0, 4) normal dist 4 seed 792004915 grid 2592861911
+f4 cell (1, 4) normal dist 3 seed 1961536363 grid 1005421885
+f4 cell (1, 5) seance dist 4 seed 982853600 grid 3260657233
+f4 cell (2, 2) shop dist 4 seed 248208039 grid 955799143
+f4 cell (2, 3) normal dist 3 seed 1558155950 grid 3918023731
+f4 cell (2, 4) normal dist 2 seed 811535925 grid 76862068
+f4 cell (3, 3) secret dist 99 seed 2346631785 grid 3949107587
+f4 cell (3, 4) normal dist 1 seed 3242678984 grid 1740195008
+f4 cell (3, 6) study dist 3 seed 301526440 grid 3260657233
+f4 cell (4, 2) normal dist 2 seed 3036412795 grid 3724440029
+f4 cell (4, 3) normal dist 1 seed 2994366724 grid 76862068
+f4 cell (4, 4) start dist 0 seed 3188465307 grid 898304865
+f4 cell (4, 5) normal dist 1 seed 2587476913 grid 1478241867
+f4 cell (4, 6) normal dist 2 seed 2813606395 grid 2051326098
+f4 cell (4, 7) normal dist 3 seed 4128630253 grid 3373473127
+f4 cell (5, 2) mirror dist 3 seed 2044398366 grid 3260657233
+f4 cell (5, 4) treasure dist 1 seed 632350443 grid 3949107587
+f4 cell (5, 7) boss dist 4 seed 2542259708 grid 3586115087
+f4 treasure (5, 4): relic:iron_stick, relic:hourglass
+f4 shop (2, 2): relic:fire_tongs@18, tonic:flask_red@5, wax_big@4
+f4 room (0, 4) lodgers: ice_zombie hp 26.4, deathwatch hp 24.0, clapper_bat hp 14.4, imp/chilled hp 19.2
+f4 guardian big_demon hp 230.0
+f5 The Clock Tower (theme tower, music floor_5) guardian keeper omen '' cells 7 start (4, 4) boss (4, 7)
+f5 numbers: melt x1.2 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.14 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f5 cell (3, 4) normal dist 1 seed 1033643187 grid 2632624899
+f5 cell (4, 3) treasure dist 1 seed 400350318 grid 3949107587
+f5 cell (4, 4) start dist 0 seed 1928911284 grid 898304865
+f5 cell (4, 5) normal dist 1 seed 496166427 grid 117968215
+f5 cell (4, 6) normal dist 2 seed 3870417209 grid 3925576547
+f5 cell (4, 7) boss dist 3 seed 2135162086 grid 3586115087
+f5 cell (5, 4) normal dist 1 seed 1827568873 grid 1102921121
+f5 treasure (4, 3): relic:witching_hour, relic:candelabra
+f5 room (3, 4) lodgers: deathwatch hp 30.0, skelet hp 18.0, cog_sentry hp 33.0, skelet hp 18.0
+f5 guardian keeper hp 380.0
+night seeded 2024: floors 4, run seed 2024
+f1 The Cellar (theme cellar, music floor_1) guardian furnace omen '' cells 10 start (4, 4) boss (5, 2)
+f1 numbers: melt x1.0 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.03 foe dmg x1.0 touch 5.0 clock@100wax 20.0
+f1 cell (3, 3) secret dist 99 seed 877401277 grid 3949107587
+f1 cell (3, 4) treasure dist 1 seed 1635401989 grid 3949107587
+f1 cell (4, 2) normal dist 2 seed 149703222 grid 2623717999 opening
+f1 cell (4, 3) normal dist 1 seed 3371199082 grid 3918023731 opening
+f1 cell (4, 4) start dist 0 seed 1949709831 grid 898304865
+f1 cell (4, 5) normal dist 1 seed 3834611187 grid 2559038751 opening
+f1 cell (4, 6) musicbox dist 2 seed 2311603936 grid 3260657233
+f1 cell (5, 2) boss dist 3 seed 1419435996 grid 3586115087
+f1 cell (5, 4) normal dist 1 seed 1928613170 grid 3373473127 opening
+f1 cell (6, 4) shop dist 2 seed 3350324997 grid 955799143
+f1 treasure (3, 4): relic:lodestone, keepsake:flare_match
+f1 shop (6, 4): relic:powder_tin@12, tonic:flask_blue@5, wax_big@4
+f1 room (4, 2) lodgers: slug hp 8.0, wax_blob hp 6.0, tiny_zombie hp 4.0
+f1 guardian furnace hp 106.0
+f2 The Crypt (theme crypt, music floor_2) guardian ogre omen '' cells 14 start (4, 4) boss (2, 1)
+f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
+f2 cell (2, 1) boss dist 5 seed 2599812506 grid 3586115087
+f2 cell (2, 4) study dist 2 seed 1591420432 grid 3260657233
+f2 cell (3, 1) normal dist 4 seed 3997351184 grid 1600855694
+f2 cell (3, 2) secret dist 99 seed 60135416 grid 3949107587
+f2 cell (3, 4) normal dist 1 seed 1309616150 grid 3489968597
+f2 cell (4, 0) shop dist 4 seed 2700105750 grid 955799143
+f2 cell (4, 1) normal dist 3 seed 818075965 grid 867728813
+f2 cell (4, 2) normal dist 2 seed 1515557609 grid 3392470900 mini skelet
+f2 cell (4, 3) normal dist 1 seed 775201929 grid 2623717999
+f2 cell (4, 4) start dist 0 seed 33379019 grid 898304865
+f2 cell (4, 5) normal dist 1 seed 3438512045 grid 3724440029
+f2 cell (4, 6) seance dist 2 seed 1810007410 grid 3260657233
+f2 cell (5, 1) musicbox dist 4 seed 652117720 grid 3260657233
+f2 cell (5, 4) treasure dist 1 seed 1069669570 grid 3949107587
+f2 treasure (5, 4): relic:witching_hour, relic:lamp_oil
+f2 shop (4, 0): relic:lucky_ash@14, tonic:flask_blue@5, keepsake:winding_key@8
+f2 room (3, 1) lodgers: cinder_rat hp 5.4, sootling hp 6.75, tiny_zombie hp 5.4, grave_hand hp 10.8, swampy/ember hp 21.6
+f2 guardian ogre hp 104.0
+f3 The Chapel (theme chapel, music floor_3) guardian choir omen '' cells 15 start (4, 4) boss (2, 3)
+f3 numbers: melt x1.3 kindle 3.0 quick 1.0 wax odds 0.75 marked 0.09 foe dmg x1.24 touch 7.0 clock@100wax 20.0
+f3 cell (2, 3) boss dist 3 seed 1457059384 grid 3586115087
+f3 cell (2, 4) normal dist 2 seed 1160466998 grid 3489968597
+f3 cell (2, 5) normal dist 3 seed 4185223260 grid 2504792645
+f3 cell (3, 4) normal dist 1 seed 1599983845 grid 780702013
+f3 cell (3, 5) secret dist 99 seed 2486073917 grid 3949107587
+f3 cell (4, 1) normal dist 3 seed 387315444 grid 1410296345
+f3 cell (4, 2) normal dist 2 seed 4123589862 grid 3057422739
+f3 cell (4, 3) normal dist 1 seed 1791482346 grid 780702013
+f3 cell (4, 4) start dist 0 seed 2088704096 grid 898304865
+f3 cell (4, 5) shop dist 1 seed 2190655702 grid 955799143
+f3 cell (5, 1) seance dist 4 seed 4201334086 grid 3260657233
+f3 cell (5, 4) normal dist 1 seed 129918010 grid 2559038751
+f3 cell (6, 3) musicbox dist 3 seed 3383479543 grid 3260657233
+f3 cell (6, 4) normal dist 2 seed 3299764129 grid 3599952421
+f3 cell (6, 5) treasure dist 3 seed 1227516493 grid 3949107587
+f3 treasure (6, 5): relic:hourglass, relic:wick_trimmer
+f3 shop (4, 5): relic:tallow_heart@16, tonic:flask_big_green@5, wax_big@4
+f3 room (2, 4) lodgers: sootling hp 9.25, wogol hp 18.5, wisp hp 12.95, moth hp 3.7, moth hp 3.7, moth hp 3.7
+f3 guardian choir hp 158.0
+f4 The Belfry (theme belfry, music floor_4) guardian weathercock omen '' cells 18 start (4, 4) boss (2, 2)
+f4 numbers: melt x1.45 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.12 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f4 cell (2, 2) boss dist 4 seed 3815252917 grid 3586115087
+f4 cell (2, 4) musicbox dist 2 seed 2253823839 grid 3260657233
+f4 cell (2, 6) study dist 4 seed 4130253742 grid 3260657233
+f4 cell (3, 2) normal dist 3 seed 1201130757 grid 2249998113
+f4 cell (3, 4) normal dist 1 seed 3510251715 grid 3107391309
+f4 cell (3, 6) normal dist 3 seed 4010654383 grid 1743854951
+f4 cell (3, 7) secret dist 99 seed 2483219027 grid 3949107587
+f4 cell (4, 0) treasure dist 4 seed 3425130023 grid 3949107587
+f4 cell (4, 1) normal dist 3 seed 979431286 grid 4018984664
+f4 cell (4, 2) normal dist 2 seed 3893221519 grid 528556259
+f4 cell (4, 3) normal dist 1 seed 1182694977 grid 3392470900
+f4 cell (4, 4) start dist 0 seed 1898024832 grid 898304865
+f4 cell (4, 5) normal dist 1 seed 644121589 grid 2727284601
+f4 cell (4, 6) normal dist 2 seed 1823224811 grid 1192739801 mini ice_zombie
+f4 cell (4, 7) normal dist 3 seed 2339858529 grid 2623717999
+f4 cell (5, 2) seance dist 3 seed 2041005984 grid 3260657233
+f4 cell (5, 4) shop dist 1 seed 137892557 grid 955799143
+f4 cell (5, 6) normal dist 3 seed 931686020 grid 40453871
+f4 treasure (4, 0): relic:warming_pan, relic:matchling
+f4 shop (5, 4): relic:beeswax@18, tonic:flask_big_red@5, keepsake:censer@8
+f4 room (3, 2) lodgers: wogol/ember hp 48.0, sootling hp 12.0, ice_zombie hp 26.4, cinder_rat hp 9.6, deathwatch hp 24.0, sootling hp 12.0
+f4 guardian weathercock hp 280.0
+f5 The Clock Tower (theme tower, music floor_5) guardian keeper omen '' cells 7 start (4, 4) boss (4, 7)
+f5 numbers: melt x1.2 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.14 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f5 cell (3, 4) normal dist 1 seed 2943384694 grid 963812859
+f5 cell (4, 3) normal dist 1 seed 1566929965 grid 3057422739
+f5 cell (4, 4) start dist 0 seed 3970662121 grid 898304865
+f5 cell (4, 5) normal dist 1 seed 691903179 grid 3057422739
+f5 cell (4, 6) normal dist 2 seed 545445940 grid 2913813113
+f5 cell (4, 7) boss dist 3 seed 3181303697 grid 3586115087
+f5 cell (5, 4) treasure dist 1 seed 897150297 grid 3949107587
+f5 treasure (5, 4): relic:jet_brooch, relic:scalding_wax
+f5 room (3, 4) lodgers: cog_sentry hp 33.0, cog_sentry hp 33.0, skelet hp 18.0, angel hp 21.0, minute_wraith hp 27.0, chort/ember hp 54.0
+f5 guardian keeper hp 380.0
+night plain 777777: floors 4, run seed 777777
+f1 The Cellar (theme cellar, music floor_1) guardian furnace omen '' cells 10 start (4, 4) boss (6, 5)
+f1 numbers: melt x1.0 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.03 foe dmg x1.0 touch 5.0 clock@100wax 20.0
+f1 cell (2, 4) shop dist 2 seed 3727843892 grid 955799143
+f1 cell (3, 4) normal dist 1 seed 3949861022 grid 3754615035 opening
+f1 cell (4, 3) treasure dist 1 seed 3427843775 grid 3949107587
+f1 cell (4, 4) start dist 0 seed 4091303549 grid 898304865
+f1 cell (4, 5) normal dist 1 seed 998392851 grid 3918023731 opening
+f1 cell (4, 6) seance dist 2 seed 497842333 grid 3260657233
+f1 cell (5, 3) secret dist 99 seed 1967088226 grid 3949107587
+f1 cell (5, 4) normal dist 1 seed 308220178 grid 1743854951 opening
+f1 cell (6, 4) normal dist 2 seed 64292604 grid 3918023731 opening
+f1 cell (6, 5) boss dist 3 seed 3129631143 grid 3586115087
+f1 treasure (4, 3): relic:thimble, keepsake:flare_match
+f1 shop (2, 4): relic:lamp_oil@12, tonic:flask_blue@5, wax_big@4
+f1 room (3, 4) lodgers: wax_blob hp 6.0, slug hp 8.0
+f1 guardian furnace hp 106.0
+f2 The Crypt (theme crypt, music floor_2) guardian ogre omen 'draught' cells 12 start (4, 4) boss (3, 6)
+f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
+f2 cell (2, 3) musicbox dist 3 seed 1922737474 grid 3260657233
+f2 cell (2, 4) normal dist 2 seed 732863992 grid 2086226427
+f2 cell (3, 4) normal dist 1 seed 1390410192 grid 3362503822
+f2 cell (3, 6) boss dist 3 seed 3435041706 grid 3586115087
+f2 cell (4, 2) shop dist 2 seed 3255671375 grid 955799143
+f2 cell (4, 3) normal dist 1 seed 1751731921 grid 1410296345
+f2 cell (4, 4) start dist 0 seed 3073917395 grid 898304865
+f2 cell (4, 5) normal dist 1 seed 2673082084 grid 3348727375
+f2 cell (4, 6) normal dist 2 seed 2860566796 grid 3735834413
+f2 cell (5, 3) secret dist 99 seed 2396594867 grid 3949107587
+f2 cell (5, 4) treasure dist 1 seed 2614152869 grid 3949107587
+f2 cell (5, 6) normal dist 3 seed 1788788395 grid 1088200923
+f2 treasure (5, 4): relic:fire_tongs, relic:twin_wick
+f2 shop (4, 2): relic:sharp_wick@14, tonic:flask_big_green@5, keepsake:winding_key@8
+f2 room (2, 4) lodgers: swampy hp 10.8, moth hp 2.7, moth hp 2.7, wax_blob hp 8.1, swampy hp 10.8, sootling hp 6.75, moth hp 2.7, moth hp 2.7, moth hp 2.7, moth hp 2.7
+f2 guardian ogre hp 104.0
+f3 The Chapel (theme chapel, music floor_3) guardian choir omen 'smoky_halls' cells 18 start (4, 4) boss (5, 2)
+f3 numbers: melt x1.3 kindle 3.0 quick 1.0 wax odds 0.75 marked 0.09 foe dmg x1.24 touch 7.0 clock@100wax 20.0
+f3 cell (2, 4) mirror dist 2 seed 4241802087 grid 3260657233
+f3 cell (3, 2) study dist 3 seed 239649475 grid 3260657233
+f3 cell (3, 4) normal dist 1 seed 985000269 grid 1111465669
+f3 cell (4, 1) shop dist 3 seed 1598783628 grid 955799143
+f3 cell (4, 2) normal dist 2 seed 2308198433 grid 528556259
+f3 cell (4, 3) normal dist 1 seed 4117315314 grid 117968215
+f3 cell (4, 4) start dist 0 seed 3286028566 grid 898304865
+f3 cell (4, 5) normal dist 1 seed 1022048443 grid 2570070787
+f3 cell (4, 6) treasure dist 2 seed 4242390 grid 3949107587
+f3 cell (5, 2) boss dist 3 seed 1236180516 grid 3586115087
+f3 cell (5, 4) normal dist 1 seed 3931254409 grid 1214905533
+f3 cell (5, 5) secret dist 99 seed 3563317310 grid 3949107587
+f3 cell (6, 3) normal dist 3 seed 791376941 grid 1102921121
+f3 cell (6, 4) normal dist 2 seed 2713193562 grid 2779425599
+f3 cell (6, 5) normal dist 3 seed 1714557075 grid 2570070787
+f3 cell (6, 6) seance dist 4 seed 1432606533 grid 3260657233
+f3 cell (7, 3) musicbox dist 4 seed 2101852104 grid 3260657233
+f3 cell (7, 5) font dist 4 seed 474132907 grid 3260657233
+f3 treasure (4, 6): relic:hot_drip, relic:love_letter
+f3 shop (4, 1): relic:house_deed@16, tonic:flask_big_yellow@5, wax_big@4
+f3 room (3, 4) lodgers: wogol hp 18.5, sootling hp 9.25
+f3 guardian choir hp 158.0
+f4 The Belfry (theme belfry, music floor_4) guardian pendulum omen 'tallow_moon' cells 17 start (4, 4) boss (0, 5)
+f4 numbers: melt x1.45 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.12 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f4 cell (0, 5) boss dist 5 seed 2101787659 grid 3586115087
+f4 cell (1, 5) normal dist 4 seed 2673734818 grid 3724440029
+f4 cell (2, 4) normal dist 2 seed 1054305908 grid 2327177203
+f4 cell (2, 5) normal dist 3 seed 3906132592 grid 4018984664
+f4 cell (2, 6) normal dist 4 seed 3733925724 grid 2632624899
+f4 cell (2, 7) musicbox dist 5 seed 2793903384 grid 3260657233
+f4 cell (3, 4) normal dist 1 seed 3441245159 grid 1111465669
+f4 cell (4, 3) treasure dist 1 seed 396189020 grid 3949107587
+f4 cell (4, 4) start dist 0 seed 2415423125 grid 898304865
+f4 cell (4, 5) normal dist 1 seed 468046210 grid 4047836205
+f4 cell (4, 6) normal dist 2 seed 4272609690 grid 3724440029
+f4 cell (4, 7) shop dist 3 seed 4073038443 grid 955799143
+f4 cell (5, 3) secret dist 99 seed 4149350750 grid 3949107587
+f4 cell (5, 4) normal dist 1 seed 3954664223 grid 3534332847
+f4 cell (5, 6) normal dist 3 seed 839640946 grid 2794911679
+f4 cell (6, 4) mirror dist 2 seed 3362087515 grid 3260657233
+f4 cell (6, 6) normal dist 4 seed 2057082365 grid 3246150919
+f4 treasure (4, 3): relic:lace_fan, relic:bell_rope
+f4 shop (4, 7): relic:spare_wick@18, tonic:flask_big_blue@5, wax_big@4
+f4 room (1, 5) lodgers: ice_zombie hp 26.4, wogol/chilled hp 48.0, necromancer hp 33.6, ice_zombie/sooty hp 42.24, skelet hp 14.4, deathwatch hp 24.0
+f4 guardian pendulum hp 238.0
+f5 The Clock Tower (theme tower, music floor_5) guardian keeper omen '' cells 7 start (4, 4) boss (5, 6)
+f5 numbers: melt x1.2 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.14 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f5 cell (3, 4) normal dist 1 seed 1258514609 grid 2235228113
+f5 cell (4, 3) normal dist 1 seed 3465017223 grid 1192739801
+f5 cell (4, 4) start dist 0 seed 1890726994 grid 898304865
+f5 cell (4, 5) normal dist 1 seed 1690981222 grid 2237741126
+f5 cell (4, 6) normal dist 2 seed 142280847 grid 2092138447
+f5 cell (5, 4) treasure dist 1 seed 3331210257 grid 3949107587
+f5 cell (5, 6) boss dist 3 seed 2032307820 grid 3586115087
+f5 treasure (5, 4): relic:wick_trimmer, relic:warming_pan
+f5 room (3, 4) lodgers: sootling/gilded hp 30.0, deathwatch hp 30.0, cog_sentry hp 33.0, sootling hp 15.0
+f5 guardian keeper hp 380.0
+night tonight 2026-11-09: floors 4, run seed 1486572757
+f1 The Cellar (theme cellar, music floor_1) guardian wax_mother omen '' cells 10 start (4, 4) boss (6, 5)
+f1 numbers: melt x1.0 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.03 foe dmg x1.0 touch 5.0 clock@100wax 20.0
+f1 cell (2, 4) musicbox dist 2 seed 4263189329 grid 3260657233
+f1 cell (3, 4) normal dist 1 seed 3105326476 grid 2646904244 opening
+f1 cell (4, 3) shop dist 1 seed 2389370361 grid 955799143
+f1 cell (4, 4) start dist 0 seed 621518979 grid 898304865
+f1 cell (4, 5) treasure dist 1 seed 1493600754 grid 3949107587
+f1 cell (5, 3) secret dist 99 seed 3340522647 grid 3949107587
+f1 cell (5, 4) normal dist 1 seed 3761029711 grid 2646904244 opening
+f1 cell (6, 3) normal dist 3 seed 4195954266 grid 2669763513
+f1 cell (6, 4) normal dist 2 seed 1850491949 grid 3918023731 opening
+f1 cell (6, 5) boss dist 3 seed 3093571512 grid 3586115087
+f1 treasure (4, 5): relic:pocket_watch, keepsake:oil_jug
+f1 shop (4, 3): relic:tin_sconce@12, tonic:flask_red@5, wax_big@4
+f1 room (3, 4) lodgers: wax_blob hp 6.0, tiny_slug hp 3.0, tiny_slug hp 3.0
+f1 guardian wax_mother hp 92.0
+f2 The Crypt (theme crypt, music floor_2) guardian ossuary omen '' cells 12 start (4, 4) boss (5, 6)
+f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
+f2 cell (2, 4) normal dist 2 seed 200342531 grid 2632624899
+f2 cell (3, 3) secret dist 99 seed 3499045680 grid 3949107587
+f2 cell (3, 4) normal dist 1 seed 2489986694 grid 3057422739
+f2 cell (3, 6) treasure dist 3 seed 1101071756 grid 3949107587
+f2 cell (4, 1) seance dist 3 seed 1535995953 grid 3260657233
+f2 cell (4, 2) normal dist 2 seed 1742208582 grid 979539709
+f2 cell (4, 3) normal dist 1 seed 251964843 grid 2913813113
+f2 cell (4, 4) start dist 0 seed 1573959507 grid 898304865
+f2 cell (4, 5) normal dist 1 seed 4205781812 grid 2237741126
+f2 cell (4, 6) normal dist 2 seed 3904830344 grid 867728813
+f2 cell (5, 4) shop dist 1 seed 2570095138 grid 955799143
+f2 cell (5, 6) boss dist 3 seed 2318891811 grid 3586115087
+f2 treasure (3, 6): relic:candelabra, relic:hot_drip
+f2 shop (5, 4): relic:lace_fan@14, tonic:flask_blue@5, wax_big@4
+f2 room (2, 4) lodgers: swampy hp 10.8, skelet hp 8.1, skelet hp 8.1, goblin hp 6.75
+f2 guardian ossuary hp 106.0
+f3 The Chapel (theme chapel, music floor_3) guardian necro_boss omen '' cells 14 start (4, 4) boss (7, 6)
+f3 numbers: melt x1.3 kindle 3.0 quick 1.0 wax odds 0.75 marked 0.09 foe dmg x1.24 touch 7.0 clock@100wax 20.0
+f3 cell (2, 6) font dist 4 seed 632128839 grid 3260657233
+f3 cell (3, 4) shop dist 1 seed 2324141663 grid 955799143
+f3 cell (3, 6) normal dist 3 seed 2118317439 grid 528556259
+f3 cell (4, 3) normal dist 1 seed 3790545396 grid 2623717999
+f3 cell (4, 4) start dist 0 seed 489150116 grid 898304865
+f3 cell (4, 5) normal dist 1 seed 1752367750 grid 2623717999
+f3 cell (4, 6) normal dist 2 seed 2373180699 grid 4192659957 mini chort
+f3 cell (4, 7) normal dist 3 seed 1231547560 grid 2632624899
+f3 cell (5, 4) treasure dist 1 seed 1766764270 grid 3949107587
+f3 cell (5, 6) normal dist 3 seed 3431908530 grid 2727284601
+f3 cell (5, 7) secret dist 99 seed 394829762 grid 3949107587
+f3 cell (6, 6) normal dist 4 seed 503200120 grid 2504792645
+f3 cell (6, 7) normal dist 5 seed 3822572461 grid 831574733
+f3 cell (7, 6) boss dist 5 seed 2765236037 grid 3586115087
+f3 treasure (5, 4): relic:paper_lantern, relic:spare_wick
+f3 shop (3, 4): relic:pantry_key@16, tonic:flask_green@5, wax_big@4
+f3 room (3, 6) lodgers: sootling hp 9.25, skelet hp 11.1, chort hp 16.65, chort hp 16.65
+f3 guardian necro_boss hp 148.0
+f4 The Belfry (theme belfry, music floor_4) guardian big_demon omen '' cells 16 start (4, 4) boss (2, 2)
+f4 numbers: melt x1.45 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.12 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f4 cell (1, 4) shop dist 3 seed 3733107074 grid 955799143
+f4 cell (2, 2) boss dist 4 seed 3552093325 grid 3586115087
+f4 cell (2, 4) normal dist 2 seed 2307893926 grid 4018984664
+f4 cell (3, 2) normal dist 3 seed 2002639227 grid 3616115182
+f4 cell (3, 4) normal dist 1 seed 3708353958 grid 1801387933
+f4 cell (3, 5) secret dist 99 seed 2237077341 grid 3949107587
+f4 cell (4, 1) normal dist 3 seed 3821949735 grid 778306162
+f4 cell (4, 2) normal dist 2 seed 274762559 grid 3392470900
+f4 cell (4, 3) normal dist 1 seed 615381591 grid 4078460037
+f4 cell (4, 4) start dist 0 seed 2336844266 grid 898304865
+f4 cell (4, 5) normal dist 1 seed 2910951492 grid 3489968597
+f4 cell (4, 6) normal dist 2 seed 4095896131 grid 2121305301
+f4 cell (4, 7) normal dist 3 seed 4141220947 grid 1410296345
+f4 cell (5, 4) treasure dist 1 seed 3718715714 grid 3949107587
+f4 cell (5, 6) normal dist 3 seed 4168429052 grid 2484062547
+f4 cell (6, 6) mirror dist 4 seed 4160545561 grid 3260657233
+f4 treasure (5, 4): relic:warming_pan, relic:hourglass
+f4 shop (1, 4): relic:lamp_oil@18, tonic:flask_blue@5, keepsake:censer@8
+f4 room (2, 4) lodgers: gutterspout hp 43.2, chort hp 21.6, cinder_rat hp 9.6, cinder_rat hp 9.6
+f4 guardian big_demon hp 230.0
+f5 The Clock Tower (theme tower, music floor_5) guardian keeper omen '' cells 7 start (4, 4) boss (1, 4)
+f5 numbers: melt x1.2 kindle 2.0 quick 1.0 wax odds 0.65 marked 0.14 foe dmg x1.36 touch 7.0 clock@100wax 20.0
+f5 cell (1, 4) boss dist 3 seed 2837702125 grid 3586115087
+f5 cell (2, 4) normal dist 2 seed 4071154161 grid 76862068
+f5 cell (3, 4) normal dist 1 seed 372957618 grid 1206089440
+f5 cell (4, 3) normal dist 1 seed 2269152168 grid 3918023731
+f5 cell (4, 4) start dist 0 seed 239281109 grid 898304865
+f5 cell (4, 5) normal dist 1 seed 1434929217 grid 3392610291
+f5 cell (5, 4) treasure dist 1 seed 2671304861 grid 3949107587
+f5 treasure (5, 4): relic:thimble, relic:fire_tongs
+f5 room (2, 4) lodgers: snuffer/ember hp 72.0, skelet hp 18.0, deathwatch hp 30.0, deathwatch hp 30.0
+f5 guardian keeper hp 380.0

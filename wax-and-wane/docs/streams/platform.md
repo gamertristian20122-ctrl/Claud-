@@ -152,6 +152,7 @@ Steamworks with **exactly these API names**:
 | move_blink | Moon Hop | Blink over 3 pits in one room. | |
 | move_flare | Burning Bright | Snuff 3 creatures during one Flare Up. | |
 | move_snuff | Through and Through | Run one black flame through 3 foes. | |
+| small_hours | The Small Hours | Win a night of seven floors or more. | |
 
 Bosses are matched by floor, not by boss kind, so a new boss line-up (bestiary stream) keeps working.
 The medal icons (`icon_medal.png` / `icon_medal_off.png`) are 9x9; Steam needs 64x64 JPG/PNG icons per

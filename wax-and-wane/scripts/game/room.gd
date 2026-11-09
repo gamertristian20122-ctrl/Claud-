@@ -808,7 +808,7 @@ func _oil_blast(c: Vector2i) -> void:
 	for e in world.enemies:
 		if is_instance_valid(e) and e.alive and e.global_position.distance_to(wp) < OIL_R + e.radius:
 			e.active = true
-			e.take_hit(4.0 + 1.5 * float(world.floor_num), (e.global_position - wp).normalized() * 130.0)
+			e.take_hit(4.0 + 1.5 * (world.depth() if world.has_method("depth") else float(world.floor_num)), (e.global_position - wp).normalized() * 130.0)
 	var p: Player = world.player
 	if p and not p.dead and p.global_position.distance_to(wp) < OIL_R * 0.8:
 		Records.blame("oil")

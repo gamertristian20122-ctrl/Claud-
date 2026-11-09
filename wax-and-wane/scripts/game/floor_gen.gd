@@ -18,27 +18,59 @@ static func shuffle(a: Array, rng: RandomNumberGenerator) -> void:
 		a[j] = t
 
 
-static func generate(floor_num: int, rng: RandomNumberGenerator, extra := 0, treasures := 1) -> Dictionary:
-	if floor_num == Tower.FLOOR:
+## `night` (world.gen_night): the floor's depth on the 4-floor scale (its size, the hard layouts' gate), its area
+## (the Clock Tower, the room layouts it likes, the crypt's skull piles), `key`, the floor of the 4-floor house
+## it stands in for (special rooms, house champions), and the area's own champions. Empty: floor_num is a floor
+## of the 4-floor house (house_night), as every floor was before the Long Night.
+static func generate(floor_num: int, rng: RandomNumberGenerator, extra := 0, treasures := 1, night := {}) -> Dictionary:
+	if night.is_empty():
+		night = house_night(floor_num)
+	if str(night.get("area", "")) == "tower":
 		return Tower.layout(rng)   # the Clock Tower: short, no shop, no special rooms
-	var target := 6 + floor_num * 2 + extra
+	var target := 6 + roundi(2.0 * float(night["depth"])) + extra
+	var key := int(night["key"])
 	for attempt in 200:
-		var res := _try(floor_num, target, rng, treasures)
+		var res := _try(floor_num, target, rng, treasures, night)
 		if not res.is_empty():
+			if night.get("wild", false):
+				_wild(res, rng, floor_num, night)
 			_add_hollow(res, rng)
-			_add_specials(res, rng, floor_num)
-			_add_mini(res, rng, floor_num)
+			_add_specials(res, rng, key)
+			_add_mini(res, rng, key, night.get("minis", []))
 			return res
-	var fb := _try(floor_num, 4, rng, 1)
+	var fb := _try(floor_num, 4, rng, 1, night)
+	if night.get("wild", false):
+		_wild(fb, rng, floor_num, night)
 	_add_hollow(fb, rng)
-	_add_specials(fb, rng, floor_num)
-	_add_mini(fb, rng, floor_num)
+	_add_specials(fb, rng, key)
+	_add_mini(fb, rng, key, night.get("minis", []))
 	return fb
+
+
+## A longer night's wild floor (world.wild_floor: its new areas): the treasure room and the shop become ordinary
+## rooms. From the floor's own RNG, so a seed still builds the same house.
+static func _wild(res: Dictionary, rng: RandomNumberGenerator, floor_num: int, night: Dictionary) -> void:
+	if res.is_empty():
+		return
+	for c in res["cells"].keys():
+		var d: Dictionary = res["cells"][c]
+		if d["type"] == "treasure" or d["type"] == "shop":
+			d["type"] = "normal"
+			d["cleared"] = false
+			d["grid"] = RoomTemplates.to_grid(RoomTemplates.pick_normal(rng, floor_num, int(d["dist"]), night))
+
+
+## Floor n of the 4-floor house (1 Cellar .. 4 Belfry, 5 the Clock Tower) as a `night` for generate().
+static func house_night(n: int) -> Dictionary:
+	var ids := ["cellar", "crypt", "chapel", "belfry", "tower"]
+	return {"depth": float(n), "area": ids[clampi(n, 1, ids.size()) - 1], "likes": RoomTemplates.FLOOR_LIKES.get(n, {}),
+		"key": n, "minis": []}
 
 
 ## Special rooms: each type rolls its own chance on its floors; it becomes a new dead end hanging off
 ## one ordinary room and touching nothing else (so the hollow, shop, treasure and boss rooms keep
-## their places and walls). Runs after the hollow, from the same floor RNG.
+## their places and walls). Runs after the hollow, from the same floor RNG. `floor_num`: the floor of the
+## 4-floor house this one stands in for (Specials.INFO floors; a longer night's middle floors are 2-3).
 static func _add_specials(res: Dictionary, rng: RandomNumberGenerator, floor_num: int) -> void:
 	if res.is_empty() or "--nospecials" in OS.get_cmdline_user_args():   # balance baseline for the bot
 		return
@@ -67,8 +99,9 @@ static func _add_specials(res: Dictionary, rng: RandomNumberGenerator, floor_num
 
 
 ## Floors 2-4: one ordinary room away from the start may hold a mini-boss. Its layout becomes an
-## open one so the champion has room to move.
-static func _add_mini(res: Dictionary, rng: RandomNumberGenerator, floor_num: int) -> void:
+## open one so the champion has room to move. `floor_num`: the 4-floor house's floor this one stands in for
+## (every floor of a longer night but the first and the tower); `area_minis`: a new area's own champions.
+static func _add_mini(res: Dictionary, rng: RandomNumberGenerator, floor_num: int, area_minis := []) -> void:
 	if res.is_empty() or floor_num < 2 or floor_num > 4 or "--nospecials" in OS.get_cmdline_user_args():
 		return
 	if rng.randf() >= Specials.MINI_CHANCE:
@@ -78,7 +111,7 @@ static func _add_mini(res: Dictionary, rng: RandomNumberGenerator, floor_num: in
 		var d: Dictionary = res["cells"][c]
 		if d["type"] == "normal" and int(d["dist"]) >= 2:
 			cand.append(c)
-	var kinds := Specials.minis_for(floor_num)
+	var kinds: Array = area_minis if not area_minis.is_empty() else Specials.minis_for(floor_num)
 	if cand.is_empty() or kinds.is_empty():
 		return
 	var c: Vector2i = cand[rng.randi() % cand.size()]
@@ -184,7 +217,7 @@ static func _neighbours(cells: Dictionary, c: Vector2i) -> int:
 	return n
 
 
-static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasures := 1) -> Dictionary:
+static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasures := 1, night := {}) -> Dictionary:
 	var start := Vector2i(4, 4)
 	var cells := {start: true}
 	var queue: Array[Vector2i] = [start]
@@ -262,7 +295,7 @@ static func _try(floor_num: int, target: int, rng: RandomNumberGenerator, treasu
 					easy = _pick_easy(rng)
 					tpl = easy["rows"]
 				else:
-					tpl = RoomTemplates.pick_normal(rng, floor_num, dist[c])
+					tpl = RoomTemplates.pick_normal(rng, floor_num, dist[c], night)
 		out[c] = {
 			"type": type,
 			"grid": RoomTemplates.to_grid(tpl),

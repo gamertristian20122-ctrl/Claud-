@@ -1,18 +1,23 @@
 class_name Tower
 extends Node
-## THE CLOCK TOWER: the secret fifth floor and the true ending.
-## Snuff the Belfry's guardian with the clock at or before 1:00 AM and, instead of the normal victory, a
-## ladder of light climbs past the bells to floor 5: a short floor (6-8 rooms, one treasure room, no shop,
-## the Keeper of Hours at the end). The wax keeps burning up there and two o'clock still ends the run.
+## THE CLOCK TOWER: the secret floor above the bells and the true ending.
+## Snuff the Belfry's guardian with at least half the night left (1:00 AM on a 4-floor night, 1:45 AM on a
+## 7-floor one, 2:30 AM on a 10-floor one: unlock_clock) and, instead of the normal victory, a ladder of light
+## climbs past the bells to the floor above the night's last (floor_of: floor 5 of a 4-floor night): a short
+## floor (6-8 rooms, one treasure room, no shop, the Keeper of Hours at the end). The wax keeps burning up there
+## and the end of the night (two o'clock on a 4-floor night) still ends the run.
 ## Beat the Keeper for the true ending (scripts/ui/ending.gd), Moonwick and the tower achievements.
 ##
 ## Hooks (one line each): world._start_floor -> on_floor_start, world._build_room -> on_build,
 ## world._boss_down -> on_last_boss_down, world.save_extra/load_extra -> "tower", FloorGen.generate ->
 ## layout, RoomDecor.setup -> dress, results.gd -> on_results, autotest -> test_start / tour.
 
+## The Clock Tower's entry in the 4-floor tables (its layout, FLOOR_LIKES[5], Enemy.FLOOR_HP[4] ...). It is the
+## floor above the night's last floor: floor 5 of a 4-floor night, floor 8 of a 7-floor one (floor_of).
 const FLOOR := 5
-## The Belfry's guardian must fall at or before this clock minute (1:00 AM, as the clock shows it) for the
-## ladder to appear, and only once the player has won a night before (ladder_open).
+## On a 4-floor night the Belfry's guardian must fall at or before this clock minute (1:00 AM, as the clock
+## shows it) for the ladder to appear, and only once the player has won a night before (ladder_open). Any night:
+## half the night (unlock_clock).
 const UNLOCK_CLOCK := 60.0
 const HINT := "Something ticks above the belfry... next night, be done by one."
 const MOON := Color(0.55, 0.68, 1.0)
@@ -68,14 +73,38 @@ static func _shopless(res: Dictionary, rng: RandomNumberGenerator) -> void:
 			d["grid"] = RoomTemplates.to_grid(RoomTemplates.pick_normal(rng, FLOOR, int(d["dist"])))
 
 
+## The tower's floor number tonight: the one above the night's last floor (5 on a 4-floor night).
+static func floor_of(w: Node) -> int:
+	return int(w.night_floors) + 1 if w.get("night_floors") != null else FLOOR
+
+
+## The latest clock minute the Belfry may fall at for the ladder: half the night (UNLOCK_CLOCK = 1:00 AM on a
+## 4-floor night, 1:45 AM on a 7-floor one, 2:30 AM on a 10-floor one).
+static func unlock_clock(w: Node) -> float:
+	return float(w.night_minutes()) / 2.0 if w.has_method("night_minutes") else UNLOCK_CLOCK
+
+
+## The results' hint after a win while the tower is still a secret ("... next night, be done by one.").
+static func hint_for(floors: int) -> String:
+	if floors <= 4:
+		return HINT
+	return "Something ticks above the belfry... next night, be done by %s." % Records.hour_words(Game.night_minutes(floors) / 2.0)
+
+
+## "Two o'clock" / "Half past three": the end of the night, for the tower's own lines.
+static func end_words(w: Node) -> String:
+	var end: float = float(w.night_minutes()) if w.has_method("night_minutes") else Game.END_MINUTES
+	return Records.hour_words(end, true) + (" o'clock" if roundi(end) % 60 == 0 else "")
+
+
 ## world._start_floor hook (after the floor banner).
 static func on_floor_start(w: Node) -> void:
-	if int(w.floor_num) != FLOOR:
+	if int(w.floor_num) != floor_of(w):
 		return
 	# the ladder's light runs down the wick: a reward for being done by one (saved in the floor snapshot)
 	w.player.heal(ARRIVAL_WAX)
 	w.hud.show_banner("THE CLOCK TOWER", "Above the bells   -   %s" % Game.clock_text(w.clock_minutes()), 3.0)
-	w.hud.show_hint("The ladder's light ran down your wick: +%d min. Two o'clock still comes." % int(ARRIVAL_WAX), 5.0)
+	w.hud.show_hint("The ladder's light ran down your wick: +%d min. %s still comes." % [int(ARRIVAL_WAX), end_words(w)], 5.0)
 	Game.records["tower_seen"] = true
 	Game.save()
 	Achievements.unlock("tower")
@@ -86,7 +115,7 @@ static func on_build(w: Node, r: Room) -> void:
 	for o in r.objects.get_children():
 		if o is Pickup and o.record and o.record.get("ladder", false):
 			_dress_ladder(o)
-	if int(w.floor_num) != FLOOR:
+	if int(w.floor_num) != floor_of(w):
 		return
 	if r.data["type"] == "boss" and Art.has("tower/room_keeper"):
 		for ch in r.get_children():
@@ -206,20 +235,20 @@ static func dress(d: RoomDecor, free_top: Array, budget: int) -> int:
 
 ## world._boss_down hook, last floor(s): true when the tower handles it (ladder or true ending).
 static func on_last_boss_down(w: Node) -> bool:
-	if int(w.floor_num) == FLOOR:
+	if int(w.floor_num) == floor_of(w):
 		of(w).true_end()
 		return true
-	if int(w.floor_num) == FLOOR - 1 and ladder_open(w):
+	if int(w.floor_num) == floor_of(w) - 1 and ladder_open(w):
 		of(w).open_ladder()
 		return true
 	return false
 
 
-## The ladder rises for a Belfry win done by 1:00 AM as the clock shows it ("1:00 AM" counts: QA-14),
-## and only for a player who has already won a night: the first win always ends with the normal
-## victory, so the credits never roll on a first night (C2).
+## The ladder rises for a Belfry win done with half the night left as the clock shows it (1:00 AM on a
+## 4-floor night; "1:00 AM" counts: QA-14), and only for a player who has already won a night: the first win
+## always ends with the normal victory, so the credits never roll on a first night (C2).
 static func ladder_open(w: Node) -> bool:
-	return int(Game.records.get("wins", 0)) >= 1 and Game.shown_minute(w.clock_minutes()) <= int(UNLOCK_CLOCK)
+	return int(Game.records.get("wins", 0)) >= 1 and Game.shown_minute(w.clock_minutes()) <= int(unlock_clock(w))
 
 
 ## The Belfry fell before one: the bells are not done with you.
@@ -254,7 +283,7 @@ func open_ladder() -> void:
 
 ## world.descend hook: the ladder of light is climbed, not fallen down (true = handled here).
 static func on_descend(w: Node) -> bool:
-	if int(w.floor_num) != FLOOR - 1 or of(w).belfry_clock < 0.0 or w.room == null or w.room.data["type"] != "boss":
+	if int(w.floor_num) != floor_of(w) - 1 or of(w).belfry_clock < 0.0 or w.room == null or w.room.data["type"] != "boss":
 		return false
 	if w.altar_floor == w.floor_num and w.pact != "smoke":
 		w.declined_smoke = true
@@ -271,7 +300,7 @@ static func on_descend(w: Node) -> bool:
 	tw.parallel().tween_property(fade, "color:a", 1.0, 0.8)
 	tw.tween_callback(func():
 		w.player.modulate.a = 1.0
-		w._start_floor(FLOOR)
+		w._start_floor(floor_of(w))
 		w.player.frozen = false
 		w.transitioning = false)
 	tw.tween_property(fade, "color:a", 0.0, 0.9)
@@ -289,16 +318,11 @@ func _count_belfry_win() -> void:
 	var t: float = w.clock_minutes()
 	Game.unlock("black_taper")
 	Game.records["wins"] = int(Game.records["wins"]) + 1
-	var key := "best_finish" if w.candle_id == "tallow" else "best_finish_" + str(w.candle_id)
-	var best := float(Game.records.get(key, 0.0))
-	if best == 0.0 or t < best:
-		Game.records[key] = t if t != 0.0 else 0.001
+	Records.note_finish(str(w.candle_id), int(w.night_floors), t)   # kept per night length
 	Game.save()
-	Achievements.unlock("win")
+	Achievements.on_win(w, t)   # Before Two, Early to Bed, The Small Hours ... (true to their words on any night)
 	if w.candle_id != "tallow":
 		Achievements.unlock("win_" + str(w.candle_id))
-	if Game.shown_minute(t) < 60:   # "Win before 1:00 AM": a clock showing 12:59 AM or earlier
-		Achievements.unlock("win_early")
 	if w.daily:
 		Achievements.unlock("tonight_win")
 	if (w.player.relics as Array).size() <= 4:
@@ -326,9 +350,7 @@ func true_end() -> void:
 	if keeper_clock < 90.0:
 		Achievements.unlock("true_early")
 	Game.records["true_endings"] = int(Game.records.get("true_endings", 0)) + 1
-	var best := float(Game.records.get("true_best", 0.0))
-	if best == 0.0 or keeper_clock < best:
-		Game.records["true_best"] = keeper_clock if keeper_clock != 0.0 else 0.001
+	Records.note_true_end(int(w.night_floors), keeper_clock)   # true_best per night length
 	Game.save()
 	var tw := create_tween()
 	tw.tween_interval(3.2)
@@ -353,14 +375,15 @@ static func on_results(res: Control, v: Container, params: Dictionary) -> void:
 	var won: bool = params.get("won", false)
 	var labels: Array = []
 	_labels(v, labels)
-	if f == FLOOR:
+	var top := int(params.get("floors", 4)) + 1   # the tower: the floor above the night's last
+	if f == top:
 		for ch in res.get_children():
 			if ch is TextureRect and ch.texture and str(ch.texture.resource_path).contains("rooms/room_"):
 				ch.texture = Art.tex("rooms/room_tower")
 				break
 		for l in labels:
 			l.text = l.text.replace("The Belfry", "The Clock Tower")
-	if won and f == FLOOR:
+	if won and f == top:
 		for l in labels:
 			if l.text.begins_with("DONE BY"):
 				var at := v.get_children().find(l)
@@ -370,14 +393,14 @@ static func on_results(res: Control, v: Container, params: Dictionary) -> void:
 				v.move_child(done, at + 1)
 			elif l.text.begins_with("The house is quiet"):
 				l.text = "The bells are done with you. Sleep well."
-	elif not won and f == FLOOR:
+	elif not won and f == top:
 		for l in labels:
 			if l.text.begins_with("Your flame went out") or l.text.begins_with("The clock struck"):
 				l.text += "  The Keeper kept you."
 	elif won and not Game.records.get("tower_seen", false):
 		for l in labels:
 			if l.text.begins_with("The house is quiet"):
-				var hint := UI.label(HINT, 8, Color("#b6cbcf"), HORIZONTAL_ALIGNMENT_CENTER)
+				var hint := UI.label(hint_for(int(params.get("floors", 4))), 8, Color("#b6cbcf"), HORIZONTAL_ALIGNMENT_CENTER)
 				v.add_child(hint)
 				v.move_child(hint, v.get_children().find(l) + 1)
 				break
@@ -417,7 +440,7 @@ static func test_start(w: Node) -> void:
 	w.player.bombs = 3
 	w.player.coins = 12
 	of(w).belfry_clock = 48.0
-	w._start_floor(FLOOR)
+	w._start_floor(floor_of(w))
 	print("[tower] test start: floor %d, %s, relics %s" % [w.floor_num, Game.clock_text(w.clock_minutes()), w.player.relics])
 	if "--keeper" in OS.get_cmdline_user_args():   # --tower --keeper: straight to the Keeper (boss balance)
 		var wax := 60.0

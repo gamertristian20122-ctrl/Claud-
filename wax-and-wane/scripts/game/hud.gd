@@ -48,6 +48,7 @@ var _banner_scope := []
 
 var shown_wax := 120.0
 var ghost_wax := 120.0
+var _wax_seen := false   # the bar starts at the candle's own wax (a longer night's candle holds more)
 var _ghost_hold := 0.0
 var boss_frac := 1.0
 var _flame_t := 0.0
@@ -493,6 +494,10 @@ func _process(dt: float) -> void:
 	var p: Player = world.player
 	if p == null:
 		return
+	if not _wax_seen:
+		_wax_seen = true
+		shown_wax = p.wax
+		ghost_wax = p.wax
 	shown_wax = move_toward(shown_wax, p.wax, maxf(30.0, absf(p.wax - shown_wax) * 6.0) * dt)
 	if p.wax > ghost_wax:
 		ghost_wax = p.wax
@@ -585,15 +590,18 @@ func _draw_bar() -> void:
 			i += 2
 	if _cost_t > 0.0:
 		_draw_cost(x0, y0, h, inner, total, wpx)
-	# quarter-hour notches; the 1:00 AM notch is wider
+	# notches every eighth of the night (quarter hours on a 4-floor night), so a longer night's bar looks the
+	# same at the same fraction; the wider one is half the night (1:00 AM on a 4-floor night: the tower's line)
 	var mins := total
-	var k := 15.0
-	while k < mins:
+	var night: float = world.night_minutes() if world.has_method("night_minutes") else 120.0
+	var step := night / 8.0
+	var k := step
+	while k < mins - 0.01:
 		var nx := x0 + roundf(inner * k / mins)
-		var ww := 2.0 if is_equal_approx(k, 60.0) else 1.0
+		var ww := 2.0 if is_equal_approx(k, night / 2.0) else 1.0
 		var col := Color("#8a503e") if nx < x0 + wpx - 1 else Color("#775c55")
 		bar.draw_rect(Rect2(nx, y0 + 3, ww, h - 6), col)
-		k += 15.0
+		k += step
 	if Art.has("ui/bar_frame_left"):
 		bar.draw_texture(left, Vector2(0, y0 + (h - left.get_height()) / 2.0))
 	if Art.has("ui/bar_frame_right"):

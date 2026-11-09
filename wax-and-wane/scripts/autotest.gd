@@ -21,6 +21,9 @@ extends Node
 ##   -- --autotest --movescheck                                    v2.3 special moves: numbers, frame timing (MovesTour)
 ##   -- --autotest --tour --moves --shots=/abs/dir                 each candle's move mid-action, the HUD button, Keys page
 ##        [--nomoves]: playtests without the special moves (balance comparison)
+##   -- --autotest --tour --night --shots=/abs/dir [--fit]       the night length picker, a 7-floor run's HUD, banners, results
+##   -- --autotest --nightdump --speed=4 [--floors=N] [--dump=/abs/file]  every floor of a few seeded nights: layouts,
+##        guardians, loot, lodgers and the floor numbers (scripts/night_check.gd; the 4-floor baseline must not change)
 
 var main: Node
 var args := {}
@@ -65,6 +68,8 @@ func _ready() -> void:
 		mode = "tour"   # store art: the bot only plays when the staging asks it to
 	if args.has("lightjudge"):
 		mode = "tour"   # light pass judge images (scripts/game/light_judge.gd, tools/light_judge.py)
+	if args.has("nightdump"):
+		mode = "tour"   # the Long Night's determinism dump (scripts/night_check.gd): Tallow is never driven
 	runs_left = int(args.get("runs", "1"))
 	# save slots (v2.1): --slot=N plays in that slot, --difficulty=N (1-4) sets its level first
 	if args.has("slot"):
@@ -86,6 +91,9 @@ func _ready() -> void:
 		_hero_sheet()
 	elif args.has("lightjudge"):
 		await LightJudge.run(self)
+		get_tree().quit()
+	elif args.has("nightdump"):   # v2.2 night: every floor of a few seeded nights (determinism baseline)
+		await load("res://scripts/night_check.gd").run(self)
 		get_tree().quit()
 	elif args.has("shots-store") or args.has("keyart"):
 		await load("res://scripts/store_shots.gd").run(self)
@@ -129,6 +137,8 @@ func _next_run() -> void:
 			(Game.records["unlocked"] as Array).append(params["candle"])
 	if args.has("seed"):
 		params["seed"] = int(args["seed"]) + results.size()
+	if args.has("floors"):   # --floors=N: the night's length (4 .. Areas.max_floors())
+		params["floors"] = int(args["floors"])
 	_cycled = -1
 	main.goto("game", params)
 	if args.has("relics") or args.has("keepsake"):
@@ -177,6 +187,7 @@ func _save_cycle() -> void:
 	# compare with the floor-start snapshot (relics picked up since then are not in it, by design)
 	var pd: Dictionary = RunSave.snap.get("player", {})
 	var before: String = "snapshot relics %d wax %.0f" % [pd.get("relics", []).size(), float(pd.get("wax", 0.0))]
+	var house_before := _house_sig(w)   # the Long Night: the same area, night length and rooms must come back
 	RunSave.flush()
 	main.goto("title")
 	await get_tree().create_timer(1.6).timeout
@@ -189,7 +200,23 @@ func _save_cycle() -> void:
 	w = main.current
 	_stress_cell = w.cur_cell   # the restored run must match its snapshot exactly (no stress relic yet)
 	print("[savecycle] floor %d: %s -> %s (floor %d)" % [_cycled, before, "relics %d wax %.0f" % [w.player.relics.size(), w.player.wax], w.floor_num])
+	var house_after := _house_sig(w)
+	print("[savecycle]    house %s -> %s: %s" % [house_before, house_after, "SAME" if house_before == house_after else "DIFFERENT"])
 	_cycling = false
+
+
+## The floor as the seed built it: its area, the night's length and a hash of every cell (type, seed, grid).
+func _house_sig(w: Node) -> String:
+	var parts: Array = []
+	for c in w.layout["cells"].keys():
+		var d: Dictionary = w.layout["cells"][c]
+		var g := ""
+		for row in d["grid"]:
+			g += "".join(row)
+		parts.append("%s:%s:%d:%d" % [c, d["type"], int(d["seed"]), g.hash()])
+	parts.sort()
+	return "%s floor %d/%d rooms %d #%d" % [str(w.fdef().get("area", "?")), int(w.floor_num), int(w.get("night_floors") if w.get("night_floors") != null else 4),
+		parts.size(), ",".join(parts).hash()]
 
 
 func _process(dt: float) -> void:
@@ -226,8 +253,9 @@ func _process(dt: float) -> void:
 		cur.set_meta("logged", true)
 		var p: Dictionary = cur.params
 		results.append(p)
-		print("[playtest] run %d: %s floor=%d clock=%s kills=%d rooms=%d time=%.0fs relics=%s" % [
-			results.size(), "WIN" if p["won"] else "LOSS", p["floor"], Game.clock_text(p["clock"]), p["kills"], p["rooms"], p["time"], p["relics"]])
+		print("[playtest] run %d: %s floor=%d/%d (%s) clock=%s kills=%d rooms=%d time=%.0fs relics=%s" % [
+			results.size(), "WIN" if p["won"] else "LOSS", p["floor"], int(p.get("floors", 4)), str(p.get("area", "")), Game.clock_text(p["clock"]),
+			p["kills"], p["rooms"], p["time"], p["relics"]])
 		print("[playtest]    best streak x%d, hits %d" % [p.get("streak", 0), p.get("hits", 0)])
 		print("[playtest]    level %d, candle %s, seed %d, slot %d" % [int(p.get("level", 2)), p.get("candle", "?"), int(p.get("seed", 0)), Game.slot])
 		print("[playtest]    %s" % MovesBot.report())   # v2.3: special move uses this run
@@ -724,6 +752,11 @@ func _tour() -> void:
 	if args.has("moves"):   # v2.3: each candle's special move mid-action, the HUD button, the Keys page
 		await _wait(0.5)
 		await MovesTour.tour(self)
+		get_tree().quit()
+		return
+	if args.has("night"):   # the Long Night: the night length picker, a 7-floor run's HUD and banners, results, Journal
+		await _wait(0.5)
+		await load("res://scripts/night_check.gd").tour(self)
 		get_tree().quit()
 		return
 	if args.has("areas"):   # the Long Night's new areas: rooms, gimmicks, lodgers, guardians (areas.gd)

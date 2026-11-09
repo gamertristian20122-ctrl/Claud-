@@ -75,9 +75,12 @@ const LIST := [
 	# difficulty levels (v2.1 save slots): a win on a higher level counts for the lower one too
 	{"id": "win_level3", "name": "Spellbound", "desc": "Win a night on level 3 (Witching Hour) or higher."},
 	{"id": "win_level4", "name": "Dead of Night", "desc": "Win a night on level 4 (Two O'Clock)."},
+	# the Long Night (v2.2 night stream): a night of seven floors or more, won
+	{"id": "small_hours", "name": "The Small Hours", "desc": "Win a night of seven floors or more."},
 ]
-const BOSS_IDS := {1: "boss_cellar", 2: "boss_crypt", 3: "boss_chapel"}
-const FLOOR_IDS := {2: "floor_crypt", 3: "floor_chapel", 4: "floor_belfry"}
+## Guardians and floors by area (a longer night puts them on other floor numbers).
+const BOSS_IDS := {"cellar": "boss_cellar", "crypt": "boss_crypt", "chapel": "boss_chapel"}
+const FLOOR_IDS := {"crypt": "floor_crypt", "chapel": "floor_chapel", "belfry": "floor_belfry"}
 const TOAST_TIME := 2.0
 const TOAST_GAP := 0.4     # s between two toasts, and after whatever held them
 const TOAST_TEXT_W := 180  # px: longer lines wrap, so a toast fits between the wax bar and the minimap
@@ -94,6 +97,7 @@ var _toast_ms := 0                   # when it came up
 var _steam: Object
 # what the watcher saw last frame in the current run
 var _w: Node
+var _area_floor := {}   # tonight: area -> its floor number (FLOOR_IDS), worked out once per run
 var _coins := 0
 var _ks := ""
 var _ks_full := false
@@ -172,6 +176,7 @@ func _process(dt: float) -> void:
 	var p: Node = w.player
 	if w != _w:
 		_w = w
+		_area_floor = {}
 		_coins = int(p.coins)
 		_ks = str(p.keepsake)
 		_ks_full = bool(w.keepsake_full())
@@ -189,15 +194,20 @@ func _watch(w: Node, p: Node) -> void:
 	if total >= 1000:
 		unlock("chimney_sweep")
 	var f := int(w.floor_num)
-	for k in FLOOR_IDS:
-		if f >= k:
-			unlock(FLOOR_IDS[k])
+	if _area_floor.is_empty():
+		var nf := int(w.get("night_floors")) if w.get("night_floors") != null else 4
+		for a in FLOOR_IDS:
+			_area_floor[a] = Areas.depth_in(a, nf)
+	for a in FLOOR_IDS:
+		if f >= int(_area_floor[a]):   # reached that area (or past it) tonight
+			unlock(FLOOR_IDS[a])
 	if w.daily:
 		unlock("tonight")
 	var b: Variant = w.boss
 	if b != null and is_instance_valid(b) and not b.alive:
-		if BOSS_IDS.has(f):
-			unlock(BOSS_IDS[f])
+		var area := str(w.fdef().get("area", "")) if w.has_method("fdef") else ""
+		if BOSS_IDS.has(area):
+			unlock(BOSS_IDS[area])
 		if int(w.room_hits) == 0:
 			unlock("boss_untouched")
 	if int(w.best_streak) >= 8:
@@ -247,12 +257,10 @@ func _run_over(w: Node, p: Node) -> void:
 		if float(w.clock_minutes()) >= 119.5 and float(p.invuln) <= 0.0:
 			unlock("two_oclock")
 		return
-	unlock("win")
+	on_win(w, float(w.clock_minutes()))
 	var cid := str(w.candle_id)
 	if cid != "tallow":
 		unlock("win_" + cid)
-	if float(w.clock_minutes()) < 60.0:
-		unlock("win_early")
 	if w.daily:
 		unlock("tonight_win")
 	if (p.relics as Array).size() <= 4:
@@ -262,6 +270,18 @@ func _run_over(w: Node, p: Node) -> void:
 		unlock("win_level3")
 	if lv >= 4:
 		unlock("win_level4")
+
+
+## A night won at clock minute `t` (the Belfry's guardian fell): the time-based achievements say what they
+## mean on any night length. Before Two: the clock still before 2:00 AM (every 4-floor win; a longer night only
+## if it was that quick). Early to Bed: before 1:00 AM. The Long Night: a night of seven floors or more.
+func on_win(w: Node, t: float) -> void:
+	if Game.shown_minute(t) < int(Game.END_MINUTES):
+		unlock("win")
+	if Game.shown_minute(t) < 60:   # "Win before 1:00 AM": a clock showing 12:59 AM or earlier
+		unlock("win_early")
+	if w.get("night_floors") != null and int(w.night_floors) >= 7:
+		unlock("small_hours")
 
 
 func _check_candles() -> void:

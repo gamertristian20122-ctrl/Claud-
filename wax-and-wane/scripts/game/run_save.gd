@@ -2,7 +2,8 @@ extends Node
 ## Save & Continue (autoload "RunSave").
 ##
 ## At the start of every floor the run is snapshotted to the save slot's own file, user://run<N>.cfg
-## (Game.run_path; atomic write, like Game.save): the run seed, floor, candle, level, daily flag, the
+## (Game.run_path; atomic write, like Game.save): the run seed, floor, the night's length (v2.2: a continued run
+## rebuilds the same house; a snapshot from before it is a 4-floor night), candle, level, daily flag, the
 ## omens so far, the relic pool, every plain player stat (final values, so relic effects come back
 ## exactly), relics, rites, keepsake + charge, coins, bombs, wax, wax_max, guttering and the run
 ## counters. `snap` is the snapshot of the slot in use (Game.slot); peek(n) reads another slot's.
@@ -57,6 +58,9 @@ static func summary_of(s: Dictionary) -> String:
 	if s.is_empty():
 		return ""
 	var r: Dictionary = s["run"]
+	var nf := int(r.get("floors", 4))
+	if nf > 4:   # a longer night says how long ("Floor 5/7 - 1:41 AM")
+		return "Floor %d/%d - %s" % [int(r["floor"]), nf, Game.clock_text(float(r["clock"]))]
 	return "Floor %d - %s" % [int(r["floor"]), Game.clock_text(float(r["clock"]))]
 
 
@@ -77,7 +81,8 @@ func continue_run(main: Node) -> void:
 	var old: Dictionary = (snap["world"].get("__extra", {}) as Dictionary).get("records", {})
 	var params := {"seed": int(r["run_seed"]), "candle": str(r["candle"]), "daily": bool(r["daily"]),
 		"seeded": bool(r.get("seeded", old.get("seeded", false))), "continued": true,
-		"level": int(r.get("level", Game.level))}   # the level it was lit at (2.0 runs: the slot's)
+		"level": int(r.get("level", Game.level)),   # the level it was lit at (2.0 runs: the slot's)
+		"floors": int(r.get("floors", 4))}          # the night's length it was lit with (before 2.2: 4)
 	if r.has("date"):
 		params["date"] = str(r["date"])   # Tonight's Candle keeps the night it was lit
 	main.goto("game", params)
@@ -93,7 +98,8 @@ func begin(w: Node) -> int:
 	if not go or snap.is_empty():
 		return 1
 	var r: Dictionary = snap["run"]
-	if int(r["run_seed"]) != int(w.run_seed) or str(r["candle"]) != str(w.candle_id):
+	if int(r["run_seed"]) != int(w.run_seed) or str(r["candle"]) != str(w.candle_id) \
+			or int(r.get("floors", 4)) != int(w.get("night_floors") if w.get("night_floors") != null else 4):
 		return 1
 	# the same run goes on: it was counted when it was first lit
 	Game.records["runs"] = maxi(0, int(Game.records["runs"]) - 1)
@@ -217,6 +223,7 @@ func _capture(w: Node) -> Dictionary:
 		"version": Game.VERSION,
 		"run_seed": int(w.run_seed),
 		"floor": int(w.floor_num),
+		"floors": int(w.night_floors),
 		"candle": str(w.candle_id),
 		"level": int(w.level),
 		"daily": bool(w.daily),

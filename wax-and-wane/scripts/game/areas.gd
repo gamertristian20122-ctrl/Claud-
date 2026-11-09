@@ -7,39 +7,40 @@ extends RefCounted
 ## same e / h / f slots as world.POOLS), two guardians (bosses[0] its own, bosses[1] an older one that fits), its
 ## gimmick (scripts/game/area_gimmicks.gd) and the room-layout tags it likes (RoomTemplates tags, like FLOOR_LIKES).
 ##
-## The five floors of the 2.0 house are described here as read-only copies of world.gd FLOORS / POOLS and
-## room_templates.gd FLOOR_LIKES (world.gd still builds them from its own tables until the night stream wires
-## Areas in). Batch 2 (conservatory, ballroom, gallery) is listed in the order but not built yet: `built` is false
-## and max_floors() stops the night before them.
+## The five floors of the 2.0 house are described here as copies of world.gd FLOORS / POOLS and room_templates.gd
+## FLOOR_LIKES (the same guardians in the same order, so a 4-floor night is the house as it was, seed for seed).
+## Batch 2 (conservatory, ballroom, gallery) is listed in the order but not built yet: `built` is false and
+## max_floors() stops the night before them. `minis`: the house champions a new area's floor may hold (the
+## older floors keep Specials.MINIS by depth).
 ##
-## Hooks for the night stream (docs/streams/v22_areas.md): world.gd builds floor n of an N-floor night from
-## `Areas.sequence(N)[n - 1]` through `world.fdef(n)` / `world.fpool(n)` (today they read `world.floor_areas`,
-## which only `--area=<id>` fills), `Audio.set_space(Areas.def(id)["space"])`, and RoomTemplates' likes from
-## `Areas.def(id)["likes"]`.
+## How a night is built (v2.2 night stream, docs/streams/v22_night.md): world.gd fills `world.floor_areas` from
+## `Areas.sequence(world.night_floors)` (floor n -> area id, the Clock Tower on the floor above the last) and
+## reads every floor through `world.fdef(n)` / `world.fpool(n)`, `Audio.set_space(fdef["space"])`, and FloorGen's
+## room-layout likes from `Areas.def(id)["likes"]` (world.gen_night).
 
 const LIST := {
 	# ---- the house as it was (2.0): copies of world.FLOORS / POOLS and RoomTemplates.FLOOR_LIKES
 	"cellar": {"name": "The Cellar", "theme": "cellar", "dark": Color(0.32, 0.26, 0.27), "music": "floor_1", "space": 1,
-		"bosses": ["big_zombie", "wax_mother"], "gimmick": "", "built": true,
+		"bosses": ["big_zombie", "wax_mother", "furnace"], "gimmick": "", "built": true,
 		"pool": {"e": ["tiny_zombie", "goblin", "tiny_slug", "cinder_rat", "wax_blob", "tiny_zombie", "goblin"],
 			"h": ["muddy", "slug", "skelet", "wax_blob", "zombie"], "f": ["imp", "moth"]},
 		"likes": {"webs": 2.0, "furniture": 1.6, "oil": 1.6, "fire": 1.2, "pits": 0.6, "bones": 0.5, "hard": 0.4}},
 	"crypt": {"name": "The Crypt", "theme": "crypt", "dark": Color(0.25, 0.27, 0.34), "music": "floor_2", "space": 2,
-		"bosses": ["ogre", "sexton"], "gimmick": "", "built": true,
+		"bosses": ["ogre", "sexton", "ossuary"], "gimmick": "", "built": true,
 		"pool": {"e": ["goblin", "skelet", "swampy", "cinder_rat", "sootling", "tiny_zombie", "wax_blob"],
 			"h": ["pumpkin_dude", "doc", "grave_hand", "snuffer", "zombie", "muddy"], "f": ["imp", "moth", "wisp"]},
 		"likes": {"pits": 2.0, "bones": 2.6, "furniture": 1.3, "webs": 1.4, "oil": 0.7}},
 	"chapel": {"name": "The Chapel", "theme": "chapel", "dark": Color(0.28, 0.24, 0.34), "music": "floor_3", "space": 3,
-		"bosses": ["necro_boss", "choir"], "gimmick": "", "built": true,
+		"bosses": ["necro_boss", "choir", "organist"], "gimmick": "", "built": true,
 		"pool": {"e": ["skelet", "chort", "wogol", "sootling", "wisp", "swampy"],
 			"h": ["orc_shaman", "necromancer", "psalter", "waxwork", "masked_orc", "grave_hand"], "f": ["angel", "moth", "psalter", "wisp"]},
 		"likes": {"furniture": 2.2, "fire": 1.8, "cover": 1.3, "bones": 0.7, "webs": 0.6}},
 	"belfry": {"name": "The Belfry", "theme": "belfry", "dark": Color(0.33, 0.23, 0.22), "music": "floor_4", "space": 4,
-		"bosses": ["pendulum", "big_demon"], "gimmick": "", "built": true,
+		"bosses": ["pendulum", "big_demon", "weathercock"], "gimmick": "", "built": true,
 		"pool": {"e": ["chort", "wogol", "ice_zombie", "deathwatch", "cinder_rat", "skelet", "sootling"],
 			"h": ["gutterspout", "orc_warrior", "snuffer", "waxwork", "necromancer", "doc"], "f": ["clapper_bat", "imp", "angel", "clapper_bat"]},
 		"likes": {"spikes": 1.8, "pits": 1.5, "hard": 1.6, "fire": 1.3, "choke": 1.4, "webs": 1.2}},
-	"tower": {"name": "The Clock Tower", "theme": "tower", "dark": Color(0.27, 0.29, 0.40), "music": "floor_5", "space": 4,
+	"tower": {"name": "The Clock Tower", "theme": "tower", "dark": Color(0.27, 0.29, 0.40), "music": "floor_5", "space": 5,
 		"bosses": ["keeper"], "gimmick": "", "built": true, "secret": true,
 		"pool": {"e": ["cog_sentry", "deathwatch", "chort", "wogol", "cog_sentry", "sootling", "skelet"],
 			"h": ["gutterspout", "orc_warrior", "waxwork", "snuffer", "cog_sentry", "necromancer"], "f": ["minute_wraith", "minute_wraith", "clapper_bat", "angel"]},
@@ -48,18 +49,21 @@ const LIST := {
 	"kitchen": {"name": "The Kitchen", "theme": "kitchen", "dark": Color(0.34, 0.25, 0.21), "music": "area_kitchen", "space": 1,
 		"bosses": ["stockpot", "wax_mother"], "gimmick": "stoves", "built": true,
 		"blurb": "Copper pots, a black range, flour on the flags. Stove tops glow on and off; shoot a boiling pot to spill it",
+		"minis": ["chort", "ice_zombie"],   # the Kitchen Devil, the Icebox Giant
 		"pool": {"e": ["lid_crab", "goblin", "cinder_rat", "goblin", "swampy", "sootling", "chort"],
 			"h": ["ice_zombie", "chort", "slug", "masked_orc", "lid_crab", "doc"], "f": ["flour_ghost", "imp", "moth", "flour_ghost"]},
 		"likes": {"fire": 1.8, "oil": 1.6, "furniture": 1.8, "cover": 1.2, "webs": 0.5, "bones": 0.3, "pits": 0.6}},
 	"library": {"name": "The Library", "theme": "library", "dark": Color(0.23, 0.27, 0.26), "music": "area_library", "space": 1,
 		"bosses": ["librarian", "necro_boss"], "gimmick": "shelves", "built": true,
 		"blurb": "Tall shelves, reading lamps, drifting pages. Bookcases slide on their rails; one shelf may hide a door",
+		"minis": ["deathwatch", "wogol"],   # the Deathwatch Queen, the Rafter King
 		"pool": {"e": ["bookworm", "inkblot", "deathwatch", "wogol", "bookworm", "cinder_rat"],
 			"h": ["orc_shaman", "inkblot", "psalter", "necromancer", "waxwork", "snuffer"], "f": ["psalter", "moth", "angel", "psalter"]},
 		"likes": {"furniture": 2.4, "cover": 1.8, "choke": 1.2, "open": 0.8, "fire": 0.6, "webs": 0.8, "bones": 0.3}},
 	"attic": {"name": "The Attic", "theme": "attic", "dark": Color(0.19, 0.20, 0.28), "music": "area_attic", "space": 4,
 		"bosses": ["dress_form", "ogre"], "gimmick": "dark", "built": true,
 		"blurb": "Rafters, trunks and dust sheets under a round moonlit window. Your light is smaller up here: shoot the lanterns",
+		"minis": ["wogol", "sootling"],   # the Rafter King, the Great Sootling
 		"pool": {"e": ["mannequin", "wogol", "deathwatch", "trunk", "mannequin", "sootling", "cinder_rat"],
 			"h": ["waxwork", "trunk", "snuffer", "gutterspout", "mannequin", "necromancer"], "f": ["clapper_bat", "moth", "moth", "wisp"]},
 		"likes": {"furniture": 2.0, "webs": 2.2, "cover": 1.4, "hard": 1.2, "pits": 0.8, "oil": 0.6}},
@@ -70,6 +74,9 @@ const LIST := {
 }
 
 const MIN_FLOORS := 4
+## The house as it was made: on a longer night these four keep their treasure rooms, shops and guardians' relics;
+## the new areas between them are wilder (world.wild_floor).
+const HOUSE := ["cellar", "crypt", "chapel", "belfry"]
 const MAX_FLOORS := 10
 ## The middle of the house, in the order it fills: [area, the night length it first appears in].
 const BEFORE_CHAPEL := [["kitchen", 5], ["library", 6], ["ballroom", 9], ["gallery", 10]]
@@ -88,6 +95,10 @@ static func def(id: String) -> Dictionary:
 
 static func is_built(id: String) -> bool:
 	return bool(def(id).get("built", false))
+
+
+static func is_house(id: String) -> bool:
+	return id in HOUSE
 
 
 ## The ordered area ids of a night of `n` floors (clamped to MIN_FLOORS .. max_floors()).
@@ -134,6 +145,29 @@ static func _raw_sequence(n: int) -> Array:
 ## Where an area sits in a night of `n` floors (1-based; 0 if it is not in that night).
 static func depth_in(id: String, n: int) -> int:
 	return sequence(n).find(id) + 1
+
+
+## A per-floor table of the 4-floor house (index 0 = floor 1 ... 3 = the Belfry, 4 = the Clock Tower) read at a
+## depth on that scale (world.depth): a whole depth is its own entry, exactly; between two floors (a longer
+## night's middle floors) the two entries are mixed in proportion.
+static func at_depth(tbl: Array, d: float) -> float:
+	var i := clampf(d, 1.0, float(tbl.size())) - 1.0
+	var lo := int(floor(i))
+	if float(lo) == i:
+		return float(tbl[lo])
+	var hi := mini(lo + 1, tbl.size() - 1)
+	return lerpf(float(tbl[lo]), float(tbl[hi]), i - float(lo))
+
+
+## The depth a guardian's health (Enemy.DEFS hp) was tuned for: the floor of the 4-floor house that keeps it
+## (1 Cellar .. 4 Belfry, 5 the Clock Tower), or the depth the new areas' guardians were tuned at (TEST_DEPTH,
+## the Chapel's). Enemy.setup scales its health to the depth it is met at (FLOOR_HP there / FLOOR_HP here).
+static func home_depth(kind: String) -> float:
+	var house := ["cellar", "crypt", "chapel", "belfry", "tower"]
+	for i in house.size():
+		if kind in def(house[i]).get("bosses", []):
+			return float(i + 1)
+	return float(TEST_DEPTH)
 
 
 ## Every built area in the order of the house, the Clock Tower last (the Journal).
@@ -206,6 +240,7 @@ static func test_start(w: Node, id: String, depth := TEST_DEPTH, second := false
 		return
 	depth = clampi(depth, 1, 4)
 	w.floor_areas[depth] = id
+	w.set_meta("area_test", depth)   # test_watch: the floor under test
 	for rid in TEST_KIT:
 		if Items.RELICS.has(rid) and not rid in w.player.relics:
 			Items.apply(rid, w.player, w)
@@ -224,9 +259,9 @@ static func test_start(w: Node, id: String, depth := TEST_DEPTH, second := false
 ## The bot's per-run report for `--area` (called from autotest._process): one line when the area's floor is done,
 ## then the run ends there (the floors above are not what is being tested).
 static func test_watch(bot: Node, cur: Node) -> void:
-	if cur == null or cur.name != "Game" or cur.get("player") == null or cur.finished or cur.floor_areas.is_empty():
+	if cur == null or cur.name != "Game" or cur.get("player") == null or cur.finished or not cur.has_meta("area_test"):
 		return
-	var depth: int = cur.floor_areas.keys()[0]
+	var depth: int = int(cur.get_meta("area_test"))
 	var id: String = cur.floor_areas[depth]
 	var st: Dictionary = bot.get_meta("area_run", {})
 	if cur.floor_num == depth:
