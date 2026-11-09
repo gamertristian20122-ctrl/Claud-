@@ -8,8 +8,8 @@ You are **Tallow**, a small living candle. At midnight the old house wakes up. Y
 candle runs from **12:00 AM** to **2:00 AM** (one minute of wax = one minute on the clock; a full,
 unhurt candle lasts about 8 real minutes). Burn down through four floors and snuff the Belfry's
 guardian before the clock strikes two. The lower your wax, the shorter you get and the smaller your
-circle of light. Be done by **1:00 AM** and a ladder of light opens to a secret fifth floor, the
-**Clock Tower**, and the true ending.
+circle of light. Once you have won a night, be done by **1:00 AM** and a ladder of light opens to a
+secret fifth floor, the **Clock Tower**, and the true ending.
 
 ## How to play
 The game picks up whatever you touch last (screen, keys, mouse or pad) and changes the on-screen
@@ -54,7 +54,7 @@ hints, the chalk drawings in the first room and the button labels to match.
 | Unlocks and achievements | 18 of the new relics and 2 keepsakes move into the house as you earn achievements. 52 achievements (13 hidden), shown as toasts and listed in Settings; sent to Steam when GodotSteam is present |
 | Results | A death note (what snuffed you, with its portrait), the run's relics, anything that moved in, and the run's seed to share |
 | Tonight's Candle and seeds | **Tonight's Candle**: one seeded house a night, the same for everyone, scored on your first try. **Seed**: type in a friend's seed on the title keypad. Both use the full relic pool, so a seed is the same run for everyone |
-| True ending | Beat the Belfry's guardian by 1:00 AM, climb the ladder of light (+12 min), cross the Clock Tower and still the Keeper of Hours: four ending scenes, a credits roll and a results screen marked TRUE ENDING |
+| True ending | After a first win, beat the Belfry's guardian by 1:00 AM (as the clock shows it), climb the ladder of light (+5 min), cross the Clock Tower and still the Keeper of Hours: four ending scenes, a credits roll and a results screen marked TRUE ENDING |
 
 ## Project layout
 ```

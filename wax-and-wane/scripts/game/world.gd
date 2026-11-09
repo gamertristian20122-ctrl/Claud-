@@ -35,6 +35,21 @@ const OMENS := {
 }
 ## Base melt: a full candle (120 wax) lasts 8 minutes if you never get hit; kills, clears and drips buy time back.
 const DRAIN_PER_SEC := 120.0 / (8.0 * 60.0)
+## The night speeds up as you climb: the melt per floor (x DRAIN_PER_SEC; [4] = the Clock Tower), and the
+## deeper floors pay fewer minutes back, so a winning run still feels the clock (C1: wins used to end at
+## 12:15 AM with a full candle). The Cellar stays as gentle as it was. Tables are indexed by floor - 1.
+const FLOOR_DRAIN := [1.0, 1.1, 1.3, 1.45, 1.2]
+## The most minutes Kindling can pour back in one room, per floor.
+const KINDLE_CAP := [4.0, 4.0, 3.0, 2.0, 2.0]
+## The QUICK clear bonus in minutes, per floor (CLEAN stays +1).
+const QUICK_WAX := [2.0, 2.0, 1.0, 1.0, 1.0]
+## Odds of wax in a cleared room's reward, a chest, an urn and a plain kill's drop (x the Cellar's), per floor.
+const WAX_ODDS := [1.0, 1.0, 0.75, 0.65, 0.65]
+## A low wick steadies on reaching the Chapel or the Belfry: below STEADY_BELOW wax it gets up to STEADY_ADD
+## minutes back (so a run that limps out of the Crypt is not doomed on arrival; a strong run gets nothing).
+const STEADY_FLOORS := [3, 4]
+const STEADY_BELOW := 40.0
+const STEADY_ADD := 15.0
 
 var main: Node
 var floor_num := 1
@@ -224,6 +239,11 @@ func wax_bonus() -> float:
 	return 1.5 if omen == "draught" else 1.0
 
 
+## This floor's entry of a per-floor table (FLOOR_DRAIN, KINDLE_CAP, QUICK_WAX, WAX_ODDS).
+func floor_k(tbl: Array) -> float:
+	return float(tbl[clampi(floor_num, 1, tbl.size()) - 1])
+
+
 func _start_floor(n: int) -> void:
 	floor_num = n
 	floor_clean = 0
@@ -265,10 +285,19 @@ func _start_floor(n: int) -> void:
 	_on_enter_room()
 	Audio.music(FLOORS[n]["music"])
 	Audio.set_space(n)
+	var steady := 0.0
+	if n in STEADY_FLOORS and player.wax < STEADY_BELOW:
+		steady = minf(STEADY_ADD, STEADY_BELOW - player.wax)
+		player.heal(steady)
+		fx_text(player.global_position + Vector2(0, -30), "YOUR WICK STEADIES  +%d min" % int(steady), UI.GOLD)
 	var omen_txt := ("   -   Omen: %s" % OMENS[omen]["name"]) if omen != "" else ""
 	hud.show_banner(FLOORS[n]["name"].to_upper(), "Floor %d of %d   -   %s%s" % [n, LAST_FLOOR, Game.clock_text(clock_minutes()), omen_txt], 2.6)
-	if omen != "":
+	if steady > 0.0 and Game.tip("steady", 1):
+		hud.show_hint("A new floor steadies a low wick: +%d min" % int(steady), 4.0)
+	elif omen != "":
 		hud.show_hint("%s: %s" % [OMENS[omen]["name"], OMENS[omen]["desc"]], 5.0)
+	elif n in [2, 3, 4] and floor_k(FLOOR_DRAIN) > 1.0 and Game.tip("night_speeds", 1):   # say it once (FLOOR_DRAIN)
+		hud.show_hint("The night speeds up: up here your wick burns faster", 4.0)
 	if n == 1 and (Game.records["seen_intro"] or main.autotest != null) and int(Game.records["runs"]) <= 3:   # later: the chalk on the floor
 		hud.show_hint(Controls.controls_hint(), 7.0)
 	Tower.on_floor_start(self)   # the Clock Tower's own banner on floor 5
@@ -487,9 +516,10 @@ func _clear_room() -> void:
 			player.heal(1.0)
 			fx_text(player.global_position + Vector2(0, -34), "CLEAN  +1 min", UI.GOLD)
 		var par := 8.0 + 2.5 * floor_num
-		if run_time - room_t0 <= par:
-			player.heal(2.0)
-			fx_text(player.global_position + Vector2(0, -44), "QUICK  +2 min", UI.EMBER)
+		var quick := floor_k(QUICK_WAX)
+		if run_time - room_t0 <= par and quick > 0.0:
+			player.heal(quick)
+			fx_text(player.global_position + Vector2(0, -44), "QUICK  +%d min" % int(quick), UI.EMBER)
 	Specials.on_clear(self)   # a finished Seance or a beaten mini-boss pays out
 
 
@@ -499,9 +529,10 @@ func _room_reward(pos: Vector2) -> void:
 	if rng.randf() > 0.6 + player.luck * 0.3:
 		return
 	var roll := rng.randf()
-	if roll < 0.32:
+	var wk := floor_k(WAX_ODDS)   # deeper floors: the wax share of the reward goes to coins
+	if roll < 0.32 * wk:
 		add_pickup("wax_small", pos)
-	elif roll < 0.40:
+	elif roll < 0.40 * wk:
 		add_pickup("wax_big", pos)
 	elif roll < 0.72:
 		for i in rng.randi_range(2, 4):
@@ -628,14 +659,15 @@ func collect_item(id: String, pos: Vector2, rec := {}) -> void:
 
 func open_chest(pos: Vector2) -> void:
 	var n := rng.randi_range(2, 4)
+	var wk := floor_k(WAX_ODDS)   # deeper floors: fewer drips in the chests (the rest are coins)
 	for i in n:
 		var roll := rng.randf()
 		var k := "coin"
-		if roll < 0.25:
+		if roll < 0.25 * wk:
 			k = "wax_small"
-		elif roll < 0.35:
+		elif roll >= 0.25 and roll < 0.35:
 			k = "bomb"
-		elif roll < 0.42:
+		elif roll >= 0.35 and roll < 0.35 + 0.07 * wk:
 			k = "wax_big"
 		add_pickup(k, pos + Vector2(0, 4), "", 0, Vector2.from_angle(rng.randf() * TAU) * 60.0)
 	if rng.randf() < 0.22:
@@ -647,9 +679,9 @@ func roll_obstacle_drop(pos: Vector2) -> void:
 	var r := rng.randf()
 	if r < 0.16 + player.luck * 0.1:
 		add_pickup("coin", pos, "", 0, Vector2.from_angle(rng.randf() * TAU) * 30.0)
-	elif r < 0.25:
+	elif r < 0.25 - 0.09 * (1.0 - floor_k(WAX_ODDS)):   # deeper floors: fewer drips in the urns
 		add_pickup("wax_small", pos)
-	elif r < 0.28:
+	elif r >= 0.25 and r < 0.28:
 		add_pickup("bomb", pos)
 
 
@@ -717,8 +749,8 @@ func _champ_drop(e: Enemy) -> void:
 func _plain_drop(e: Enemy) -> void:
 	var r := rng.randf()
 	var luck := player.luck
-	var need := 0.08 if player.wax < 25.0 else 0.0
-	if r < 0.04 + need + luck * 0.04:
+	var need := 0.08 if player.wax < 25.0 else 0.0   # a nearly spent candle still finds drips
+	if r < (0.04 + luck * 0.04) * floor_k(WAX_ODDS) + need:
 		add_pickup("wax_small", e.global_position)
 	elif r < 0.19 + luck * 0.1:
 		add_pickup("coin", e.global_position, "", 0, Vector2.from_angle(rng.randf() * TAU) * 25.0)
@@ -740,8 +772,9 @@ func _kindle(pos: Vector2) -> void:
 		gain = 2.0
 	elif streak >= 6:
 		gain = 1.0
-	if gain > 0.0 and room_streak_wax < 4.0:
-		gain = minf(gain, 4.0 - room_streak_wax)
+	var cap := floor_k(KINDLE_CAP)
+	if gain > 0.0 and room_streak_wax < cap:
+		gain = minf(gain, cap - room_streak_wax)
 		room_streak_wax += gain
 		player.heal(gain)
 		if Game.tip("kindling"):
@@ -1223,7 +1256,7 @@ func _physics_process(dt: float) -> void:
 		return
 	if not transitioning and not player.dead and not player.frozen:
 		run_time += dt
-		var melt := DRAIN_PER_SEC * player.drain_mult * gentle_mult() * (1.15 if omen == "draught" else 1.0)
+		var melt := DRAIN_PER_SEC * floor_k(FLOOR_DRAIN) * player.drain_mult * gentle_mult() * (1.15 if omen == "draught" else 1.0)
 		if player.wax < 8.0:
 			melt *= 0.6       # the flame clings on when it is nearly out
 		if player.chill_t > 0.0:
