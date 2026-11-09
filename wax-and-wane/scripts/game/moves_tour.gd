@@ -425,12 +425,17 @@ static func tour(at: Node) -> void:
 				await at._wait(1.6)
 				await at._shot("move_snuff_black")
 				Input.parse_input_event(_key("shoot_right", false))
-		# the HUD button: recharging, then ready
+		# the HUD button: recharging (the Pillar's ring part lit), then the moment the Skip is back
 		await at._wait(0.6)
-		if c == "tea_light":
-			await at._shot("hud_button_ready")
 		if c == "pillar":
 			await at._shot("hud_button_recharging")
+		if c == "tea_light":
+			var waited := 0
+			while p.move_cd > 0.0 and waited < 400:
+				await tree.physics_frame
+				waited += 1
+			await at._wait(0.12)
+			await at._shot("hud_button_ready_flash")
 	# Flare Up refused (red ring) and the keyboard look of the button
 	var w2: Node = await _stage(at, "tallow", 77)
 	w2.player.wax = 4.0

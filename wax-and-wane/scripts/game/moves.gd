@@ -492,11 +492,9 @@ func _use_sparkler() -> bool:
 
 
 ## Called by MoveFx when the burst's sparks are done: the shots they popped in total.
-func sparkler_done(popped: int, hits: int) -> void:
+func sparkler_done(popped: int, _hits: int) -> void:
 	if popped >= 3:
 		Achievements.unlock("move_sparkler")
-	if hits >= 2:
-		w.hitstop(0.03, 0.12)
 
 
 # ================================================================ Slam (Altar Pillar)

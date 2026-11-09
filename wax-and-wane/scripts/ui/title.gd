@@ -356,8 +356,9 @@ func _add_move_caption() -> void:
 	move_line = UI.label("", 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	move_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	move_line.max_lines_visible = 2
-	move_line.size = Vector2(150, 20)
-	move_line.position = Vector2(31 - 75, -58)
+	move_line.add_theme_constant_override("line_spacing", 0)
+	move_line.size = Vector2(136, 20)
+	move_line.position = Vector2(31 - 68, -52)
 	move_line.set_meta("fit_group", "candle_box")
 	sel_name.add_child(move_line)
 	sel_name.set_meta("fit_group", "candle_box")

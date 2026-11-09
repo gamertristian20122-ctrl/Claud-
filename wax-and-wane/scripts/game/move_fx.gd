@@ -119,6 +119,8 @@ func _spark_hits(s: Array) -> bool:
 		if (e.global_position + Vector2(0, -e.half_h - e._jump_h)).distance_squared_to(pos) < pow(e.radius + 3.0, 2):
 			e.take_hit(float(s[3]), (s[1] as Vector2) * Moves.SPARK_KNOCK, float(s[4]))
 			hits += 1
+			if hits == 2:
+				w.hitstop(0.03, 0.12)   # the second creature hit: a tiny freeze, the burst lands
 			Juice.of(w).sparks(pos, s[1], 3)
 			return true
 	for sh in w.enemy_shots:
