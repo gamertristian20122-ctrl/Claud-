@@ -1039,7 +1039,7 @@ func _platform_tour() -> void:
 	await _shot("pause_gamepad_" + tag)
 	await _pad(JOY_BUTTON_DPAD_DOWN)
 	var f := get_viewport().gui_get_focus_owner()
-	if not (f is Button and (f as Button).text == "Journal"):   # the row under Resume: Journal | Settings
+	if not (f is Button and (f as Button).text in ["Journal", L.t("Map"), "Settings"]):   # the row under Resume (v2.6: Journal | Map | Settings)
 		fails += 1
 		print("[platform] FAIL d-pad down focus: ", f, " ", f.get("text") if f else "")
 	await _shot("pause_gamepad_down_" + tag)
