@@ -5,8 +5,10 @@ extends RefCounted
 ##                              where it stands open and takes half again as much damage
 ##   THE OSSUARY (Crypt)        skull arcs, bone fans; falls apart into rolling skulls and pulls itself
 ##                              back together somewhere else
-##   THE ORGANIST (Chapel)      pipes that play their lanes in order, sound rings with a marked safe gap, chords
-##   THE WEATHERCOCK (Belfry)   wind gusts (streaks and arrows show the way first), spinning dart volleys, hops
+##   THE ORGANIST (Chapel)      pipes that play their lanes in order, pedal crossfires, sound rings with a marked
+##                              safe gap, chords that shake hymn books (Restless Psalters) off its stand
+##   THE WEATHERCOCK (Belfry)   gales (streaks and arrows show the way first), dart fans, spinning dart streams, hops
+## Balance against each floor's other two guardians: docs/streams/v21_bosses.md (--boss=<kind> trials).
 ## Same contract as BossAI: three phases (66% / 33%) with a roar and a banner line (Enemy.on_new_phase), only
 ## telegraphed attacks, the existing enemy shot kinds. Phase gate: Enemy._damage clamps every hit to
 ## mem.hp_floor, so a burst never skips a phase or its banner, and a phase lasts at least MIN_PHASE seconds.
@@ -1103,6 +1105,8 @@ func g21_weathercock(e: Enemy, ddt: float, to_p: Vector2, dist: float) -> void:
 				Audio.play("thud_heavy", 0.0, 0.05, 0.8)
 				if (p.global_position).distance_to(at2) < 18.0:
 					_hit(e, 8.0, at2, "landing")
+				if e.room_stuck():   # landed half in a pillar: step out to the nearest open floor
+					e.global_position = e.world.free_spot_near(e.global_position, e.radius)
 				e.state = "rest"
 				e.t = 0.7
 		"rest":

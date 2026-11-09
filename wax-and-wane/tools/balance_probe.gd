@@ -174,7 +174,8 @@ func _check_guardians() -> void:
 		var d1: Node = await _light({"seed": seed, "daily": true})
 		var b1: String = await _boss_at(d1, 4)
 		_ok(b0 == b1, "daily seed %d: %s / %s" % [seed, b0, b1])
-	_ok(seen.size() == 2, "seeded Belfry guardians cover both (%s)" % [seen.keys()])
+	var opts: Array = load("res://scripts/game/world.gd").FLOORS[4]["bosses"]
+	_ok(seen.size() == opts.size(), "seeded Belfry guardians cover all %d (%s)" % [opts.size(), seen.keys()])
 	game.records["wins"] = 0
 	var firsts := {}
 	for i in 6:
@@ -183,10 +184,10 @@ func _check_guardians() -> void:
 	_ok(firsts.keys() == ["pendulum"], "a new player's random runs: Belfry guardian %s" % [firsts.keys()])
 	game.records["wins"] = 2
 	var later := {}
-	for i in 10:
+	for i in 14:
 		var w: Node = await _light({})
 		later[await _boss_at(w, 4)] = true
-	_ok(later.has("big_demon"), "after a win the Hour Fiend is in the rotation (%s)" % [later.keys()])
+	_ok(later.has("big_demon") and later.has("weathercock"), "after a win the Hour Fiend and the Weathercock are in the rotation (%s)" % [later.keys()])
 	game.records["wins"] = 0
 
 

@@ -22,6 +22,20 @@ Furnace: fire jets and coal are its own hazards (drawn unlit, dark-rimmed), cind
 Ossuary: `bolt_bone` (bone white) and its rolling skulls (11x11 sprites, unlit); Organist: `bullet_water`
 (notes) and `bolt_ring` (sound rings); Weathercock: `bolt_bone` (darts) and `bullet_purple` (landing).
 
+Health (`DEFS[kind]["hp"]`): Coal Furnace 106 (Old Rot 78, Wax Mother 92; its vent-stall takes +50%), Ossuary 106
+(Gaoler 104, Sexton 108), Organist 180 (Warden 148, Choir 158; it is a big target that hardly moves), Weathercock
+280 (Hour Fiend 230, Pendulum 238; it keeps its distance and hops away). Contact damage is the guardian default (8).
+
+### Art (`tools/art_monsters_bosses.py`, `python3 tools/art_monsters.py --review DIR` for contact sheets)
+| Guardian | Size | Anims (frames) | Unlit `glow_px` |
+|---|---|---|---|
+| furnace | 40x40 | idle 4, run 4 (waddle), atk 2 (door flung open, arms up), mound 2 (= the vent-stall) | coals and eye-slits: #facb3e #ee8e2e #e46e33 #fdf7ed |
+| ossuary | 44x40 | idle 4, run 4, atk 2 (skull swung up, thrown), mound 2 (fallen apart), rise 3; + `ossuary_roll_f0-3` (11x11 rolling skull) | eyes: #72d6ce #49a790 |
+| organist | 48x50 | idle 4, run 4, atk 2 (hands up, then down: mouths lit), sing 2 (= the chord) | stop-knob eyes: #cae6f5 |
+| weathercock | 44x52 | idle 4, run 4 (wing-beat), atk 2 (wings wide, crowing), grab 4 (= the spin: side, front, other side, back) | its eye: #facb3e |
+Checked as contact sheets at 1x and x3 next to the other house guardians, then in game (gallery, versus card,
+fights). `ORGAN_PIPES` (art) and `PIPES_X` / `PIPE_Y` (AI) must agree if the organ is ever redrawn.
+
 ### Fair on a phone
 - Every hazard is seen before it hurts: lanes blink 0.6-1.0 s, rings 0.75-1.4 s, the gale's arrows 1.0-1.2 s.
 - Hazards hurt like the guardians' bodies (8, coal and skulls 6, x the floor's `enemy_dmg_mult`) and are
@@ -109,7 +123,10 @@ NORMAL_PLACEHOLDER
 - `enemy.gd`: four `DEFS` entries (before the Keeper) and the AI dispatch line (`g21_*` -> `GuardiansV21.ai()`).
 - `world.gd`: the third entry in each `FLOORS[n]["bosses"]` (+ the comment above the Belfry).
 - `autotest.gd`: `--boss=<kind>` in `_next_run` (trial) and in the tour dispatch (tour), 2 header lines.
-- `achievements.gd` (Night Watch text), `journal.gd` (the locked Weathercock's hint), `gallery.gd` (a comment).
+- `achievements.gd` (Night Watch text), `journal.gd` (the locked Weathercock's hint), `gallery.gd` (the guardian
+  sheet: 13 at 1x in two rows of seven, then x2 sheets of five; it was 4 columns at x2 for 8).
+- `tools/balance_probe.gd --check=guardians`: seeded Belfry picks must cover all three options, and after a win
+  both the Hour Fiend and the Weathercock must turn up (14 random runs).
 
 ## For the other v2.1 streams
 - **Slots / difficulty**: the guardians' health is `DEFS[kind]["hp"]` like the others, read in
