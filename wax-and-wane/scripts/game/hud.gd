@@ -989,8 +989,8 @@ func _input(event: InputEvent) -> void:
 			world.use_keepsake()
 			get_viewport().set_input_as_handled()
 			return
-		if event.pressed and Rect2(minimap.position, minimap.size).has_point(event.position):
-			_mouse_block = true   # v2.6: a click on the minimap opens the full map
+		if event.pressed and Rect2(minimap.position, minimap.size).has_point(event.position) and world.count_enemies() == 0:
+			_mouse_block = true   # v2.6: a click on the minimap opens the full map (in a quiet room; v2.7 QA)
 			world.open_map()
 			get_viewport().set_input_as_handled()
 			return
@@ -1038,8 +1038,10 @@ func _input(event: InputEvent) -> void:
 				world.toggle_pause()
 				get_viewport().set_input_as_handled()
 				return
-			if Rect2(minimap.position, minimap.size).has_point(pos):
-				world.open_map()   # v2.6: tap the minimap for the whole floor
+			# v2.6: tap the minimap for the whole floor - only in a quiet room (v2.7 QA: a thumb resting on it in a
+			# fight, the move thumb's side with Swap sticks, paused the game); in a fight the touch is a stick touch
+			if Rect2(minimap.position, minimap.size).has_point(pos) and world.count_enemies() == 0:
+				world.open_map()
 				get_viewport().set_input_as_handled()
 				return
 			if keep_btn.visible and Rect2(keep_btn.position, keep_btn.size).grow(4).has_point(pos) and _keep_idx < 0:
