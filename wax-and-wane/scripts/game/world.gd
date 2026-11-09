@@ -586,6 +586,12 @@ func _start_boss() -> void:
 		BossIntro.play(self, boss))   # its entrance (1.4-2.0 s, any tap skips); it shakes on its own beats
 
 
+## v2.6 (feel): how long a room change and a trapdoor take without control (were 0.34 s and 0.45 + 0.5 s fades).
+const PAN_TIME := 0.27
+const DROP_OUT := 0.32
+const DROP_IN := 0.4
+
+
 func go_through(dir: Vector2i) -> void:
 	if transitioning:
 		return
@@ -602,7 +608,7 @@ func go_through(dir: Vector2i) -> void:
 	player.position = nr.entry_point(-dir)
 	player.vel = Vector2.ZERO
 	var tw := create_tween()
-	tw.tween_property(cam, "position", _cam_target(nr), 0.34).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(cam, "position", _cam_target(nr), PAN_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_callback(func():
 		old.dispose()
 		transitioning = false
@@ -620,14 +626,14 @@ func descend() -> void:
 	Audio.play("trapdoor")
 	Juice.of(self).descended()
 	var tw := create_tween()
-	tw.tween_property(player, "scale", Vector2(0.2, 0.2), 0.35)
-	tw.parallel().tween_property(_fade, "color:a", 1.0, 0.45)
+	tw.tween_property(player, "scale", Vector2(0.2, 0.2), DROP_OUT - 0.04)
+	tw.parallel().tween_property(_fade, "color:a", 1.0, DROP_OUT)
 	tw.tween_callback(func():
 		player.scale = Vector2.ONE
 		_start_floor(floor_num + 1)
 		player.frozen = false
 		transitioning = false)
-	tw.tween_property(_fade, "color:a", 0.0, 0.5)
+	tw.tween_property(_fade, "color:a", 0.0, DROP_IN)
 
 
 func _clear_room() -> void:

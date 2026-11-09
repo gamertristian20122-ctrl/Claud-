@@ -356,6 +356,14 @@ func geo() -> Dictionary:
 func _physics_process(dt: float) -> void:
 	if dead or frozen or _hold_t > 0.0 or Juice.holding(world):
 		vel = vel.move_toward(Vector2.ZERO, 600 * dt)
+		if not dead:
+			# v2.6 (feel): control is away for a moment (a room pan, a trapdoor, a relic held aloft): the flame
+			# keeps recharging, and a fire tap in the last FIRE_BUFFER before control returns is kept, not eaten
+			fire_cd -= dt
+			_fire_buf -= dt
+			if aim_input.length() > 0.3:
+				_fire_buf = FIRE_BUFFER
+				_buf_dir = aim_input.normalized()
 		return
 	move_cd = maxf(0.0, move_cd - dt)   # the move recharges only in play (not held aloft, carded, melting or paused)
 	var target := move_input.limit_length(1.0) * speed * Moves.speed_k(self)

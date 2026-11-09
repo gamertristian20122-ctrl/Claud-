@@ -275,6 +275,11 @@ func busy() -> bool:
 	return _dash_left > 0.0 or _slam_t >= 0.0
 
 
+## A room pan, a trapdoor, a relic held aloft: control comes back in a moment (not a pause, a death or the end).
+func _held_up() -> bool:
+	return _live and not p.dead and not w.paused and not w.finished and (p.frozen or p._hold_t > 0.0 or w.transitioning)
+
+
 func _can_act() -> bool:
 	if not _live or p.dead or p.frozen or p._hold_t > 0.0 or Juice.holding(w):
 		return false
@@ -283,7 +288,12 @@ func _can_act() -> bool:
 
 func _use(dir: Vector2) -> bool:
 	var id := move_id()
-	if id == "" or not enabled or not _can_act() or busy():
+	if id == "" or not enabled or busy():
+		return false
+	if not _can_act():
+		if _held_up():   # v2.6 (feel): a press while control is away for a moment is kept for when it returns
+			_buf_t = BUFFER
+			_buf_dir = dir
 		return false
 	if p.move_cd > 0.0:
 		if p.move_cd <= BUFFER:   # a press just before it is back is kept, not eaten (like the fire buffer)
@@ -346,6 +356,7 @@ func _physics_process(dt: float) -> void:
 		return
 	if p._hold_t > 0.0 or Juice.holding(w):
 		_dash_left = 0.0
+		_buf_t = maxf(0.0, _buf_t - dt)   # a kept press only lasts BUFFER, held aloft or not
 		return
 	if w.cur_cell != _cell:
 		_cell = w.cur_cell
@@ -362,7 +373,7 @@ func _physics_process(dt: float) -> void:
 	denied = maxf(0.0, denied - dt)
 	if _buf_t > 0.0:
 		_buf_t -= dt
-		if p.move_cd <= 0.0:
+		if p.move_cd <= 0.0 and _can_act():
 			_buf_t = 0.0
 			_use(_buf_dir)
 	if _dash_left > 0.0:
