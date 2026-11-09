@@ -7,7 +7,7 @@ lang/<code>.json maps that key to the translated text ({name} placeholders are k
 What it does
   1. Collects every key: each L.t("...") literal in scripts/**/*.gd, plus the visible fields of the
      data tables the game shows by name (Candles.LIST, Moves.LIST, Achievements.LIST, Items.RELICS /
-     KEEPSAKES / RITES). Those tables are wrapped where new code shows them (e.g. the move cards).
+     KEEPSAKES / RITES, Diary.PAGES / ENDINGS). Those tables are wrapped where new code shows them (e.g. the move cards).
   2. Writes lang/en.json: {"@meta": ..., "<key>": "<key>", ...} sorted, stable, UTF-8.
   3. Lists visible strings in old code that do not go through L.t yet (UI.label / UI.button / toggles,
      hints, banners, floating texts, `.text = "..."`): a report only, step 4b wraps them.
@@ -40,6 +40,8 @@ TABLES = [
     ("scripts/game/items.gd", "RELICS", ["name", "desc"]),
     ("scripts/game/items.gd", "KEEPSAKES", ["name", "desc"]),
     ("scripts/game/items.gd", "RITES", ["name", "desc"]),
+    ("scripts/game/diary.gd", "PAGES", ["title", "text"]),     # v2.5: Martha's diary
+    ("scripts/game/diary.gd", "ENDINGS", ["name", "line"]),    # v2.5: the endings' names and results lines
 ]
 # call sites whose string arguments land on screen
 VISIBLE_CALLS = re.compile(

@@ -23,6 +23,10 @@ extends Node
 ##   -- --autotest --tour --moves --shots=/abs/dir                 each candle's move mid-action, the HUD button, Keys page
 ##        [--nomoves]: playtests without the special moves (balance comparison)
 ##   -- --autotest --tour --night --shots=/abs/dir [--fit]       the night length picker, a 7-floor run's HUD, banners, results
+##   -- --autotest --diarycheck                                   v2.5 story: every diary page's sources proven, no repeats,
+##        no reading card in a fight, the endings' rules (scripts/game/diary_tour.gd; exit 1 on a FAIL)
+##   -- --autotest --ending=<id> [--shots=/abs/dir]               stage an ending: true, housekeeper, windows, whole_story
+##   -- --autotest --tour --diary --shots=/abs/dir [--fit]        a page, its reading card, the Diary tab, the endings' cards
 ##   -- --autotest --nightdump --speed=4 [--floors=N] [--dump=/abs/file]  every floor of a few seeded nights: layouts,
 ##        guardians, loot, lodgers and the floor numbers (scripts/night_check.gd; the 4-floor baseline must not change)
 
@@ -71,6 +75,8 @@ func _ready() -> void:
 		mode = "tour"   # light pass judge images (scripts/game/light_judge.gd, tools/light_judge.py)
 	if args.has("nightdump"):
 		mode = "tour"   # the Long Night's determinism dump (scripts/night_check.gd): Tallow is never driven
+	if args.has("diarycheck") or args.has("ending"):
+		mode = "tour"   # v2.5 story: the diary's judges, a staged ending (scripts/game/diary_tour.gd)
 	runs_left = int(args.get("runs", "1"))
 	# save slots (v2.1): --slot=N plays in that slot, --difficulty=N (1-4) sets its level first
 	if args.has("slot"):
@@ -101,6 +107,14 @@ func _ready() -> void:
 		get_tree().quit()
 	elif args.has("trailer"):
 		await load("res://scripts/trailer.gd").run(self)
+		get_tree().quit()
+	elif args.has("diarycheck"):   # v2.5 story: every page's sources, no repeats, no reading card in a fight
+		await DiaryTour.check(self)
+		Audio.stop_all()
+		get_tree().quit(1 if DiaryTour.fails > 0 else 0)
+	elif args.has("ending"):   # v2.5 story: --ending=<id> stages that ending (cards, credits, results)
+		await DiaryTour.stage_ending(self, str(args["ending"]))
+		Audio.stop_all()
 		get_tree().quit()
 	elif args.has("artjudge"): await ArtJudge.run(self)   # fix/art: scripts/game/art_judge.gd, tools/art_judge.py
 	elif args.has("shotjudge"): await ShotJudge.run(self)   # v2.1 shots: scripts/game/shot_judge.gd, tools/shot_judge.py
@@ -763,6 +777,11 @@ func _tour() -> void:
 	if args.has("intros"):   # v2.4: each guardian's entrance mid-animation (boss_intro.gd); --intros=<kind>: one
 		await _wait(0.5)
 		await BossIntro.tour(self)
+		get_tree().quit()
+		return
+	if args.has("diary"):   # v2.5 story: a page, its reading card, the Diary tab, each ending's cards, the results
+		await _wait(0.5)
+		await DiaryTour.tour(self)
 		get_tree().quit()
 		return
 	if args.has("areas"):   # the Long Night's new areas: rooms, gimmicks, lodgers, guardians (areas.gd)

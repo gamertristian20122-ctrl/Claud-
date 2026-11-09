@@ -392,6 +392,7 @@ static func end_run(w: Node, won: bool, params: Dictionary) -> Dictionary:
 		params["date"] = lit   # the Share text (results.gd) uses it
 		score_night(params, lit)
 	params["new_unlocks"] = Unlocks.take_new()
+	Diary.on_end_run(w, won, params)   # v2.5: the run's diary pages and its ending (results.gd)
 	Game.save()
 	return params
 

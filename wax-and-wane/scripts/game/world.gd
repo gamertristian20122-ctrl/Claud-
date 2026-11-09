@@ -433,6 +433,7 @@ func _start_floor(n: int) -> void:
 	if n == 1 and (Game.records["seen_intro"] or main.autotest != null) and int(Game.records["runs"]) <= 3:   # later: the chalk on the floor
 		hud.show_hint(Controls.controls_hint(), 7.0)
 	Tower.on_floor_start(self)   # the Clock Tower's own banner on the floor above the last
+	Diary.on_floor_start(self)   # v2.5: where this floor keeps its diary pages (scripts/game/diary.gd)
 	RunSave.on_floor_start(self)   # Save & Continue: snapshot the start of this floor
 
 
@@ -656,6 +657,7 @@ func _clear_room() -> void:
 			player.heal(quick)
 			fx_text(player.global_position + Vector2(0, -44), "QUICK  +%d min" % int(quick), UI.EMBER)
 	Specials.on_clear(self)   # a finished Seance or a beaten mini-boss pays out
+	Diary.on_clear(self)      # the Kitchen's, Library's and Attic's page lies in one of their rooms
 
 
 func _room_reward(pos: Vector2) -> void:
@@ -716,6 +718,7 @@ func _stock_hollow() -> void:
 			add_pickup("bomb", c + Vector2(-12 + 24 * i, 0))
 		add_pickup("match", c + Vector2(0, 16))
 		add_pickup("chest", c + Vector2(0, -20))
+	Diary.on_hollow(self, c)   # someone hid a diary page here too, sometimes
 
 
 func _spawn_keeper() -> void:
@@ -847,6 +850,7 @@ func count_enemies() -> int:
 func on_enemy_killed(e: Enemy) -> void:
 	kills += 1
 	Records.on_kill(self, e)   # the Journal: lodgers snuffed, guardians beaten
+	Diary.on_kill(self, e)     # a diary page: a guardian's first fall, a champion, a marked foe
 	RelicFx.on_kill(self, e)
 	Audio.play("enemy_die")
 	fx_poof(e.global_position + Vector2(0, -6), false, 1.4)
@@ -1332,7 +1336,7 @@ func _victory() -> void:
 	hud.show_banner(Enemy.DEFS.get(boss_kind, {}).get("victory", "THE HOUR FIEND IS SNUFFED"), "Done by %s" % Game.clock_text(clock_minutes()), 3.0)
 	var tw := create_tween()
 	tw.tween_interval(3.4)
-	tw.tween_callback(func(): _end_run(true))
+	tw.tween_callback(func(): Diary.win_ending(self, func(): _end_run(true)))   # an ending's cards first, if the night earned one
 
 
 func _end_run(won: bool) -> void:
@@ -1530,7 +1534,7 @@ func toggle_pause() -> void:
 
 
 func on_back() -> void:
-	if is_instance_valid(_intro_root):
+	if is_instance_valid(_intro_root) or Diary.on_back(self):   # Back closes a diary page's reading card first
 		return
 	# close a settings panel first, if one is open over the pause menu
 	var top: Node = hud.root.get_child(hud.root.get_child_count() - 1)

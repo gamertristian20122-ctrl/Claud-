@@ -153,6 +153,12 @@ Steamworks with **exactly these API names**:
 | move_flare | Burning Bright | Snuff 3 creatures during one Flare Up. | |
 | move_snuff | Through and Through | Run one black flame through 3 foes. | |
 | small_hours | The Small Hours | Win a night of seven floors or more. | |
+| diary_first | Dear Diary | Find a page of the housekeeper's diary. | |
+| diary_half | Half the Story | Find 12 diary pages. | |
+| diary_all | Every Last Page | Find all 24 diary pages. | |
+| end_housekeeper | The Housekeeper | Win a night with 12 diary pages found. | |
+| end_windows | A Candle in Every Window | See the ending of a seven-floor night. | yes |
+| end_story | The Whole Story | Still the Keeper of Hours with every diary page found. | yes |
 
 Bosses are matched by floor, not by boss kind, so a new boss line-up (bestiary stream) keeps working.
 The medal icons (`icon_medal.png` / `icon_medal_off.png`) are 9x9; Steam needs 64x64 JPG/PNG icons per

@@ -356,6 +356,7 @@ func true_end() -> void:
 	tw.tween_interval(3.2)
 	tw.tween_callback(func():
 		var e := Ending.new()
+		e.ending = Diary.keeper_ending(w)   # every diary page found: The Whole Story, else the true ending
 		e.setup(keeper_clock, str(w.candle_id), _ending_done)
 		w.add_child(e))
 

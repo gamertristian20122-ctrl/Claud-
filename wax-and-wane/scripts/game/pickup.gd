@@ -4,8 +4,8 @@ extends Node2D
 ## Position = ground point. Collected by touching it.
 
 var world: Node
-var kind := ""        # wax_small wax_big coin bomb relic tonic chest trapdoor
-var item := ""        # relic / tonic id
+var kind := ""        # wax_small wax_big coin bomb relic tonic chest trapdoor page
+var item := ""        # relic / tonic id; a diary page's id (scripts/game/diary.gd)
 var price := 0
 var spr: Node2D
 var vel := Vector2.ZERO
@@ -79,8 +79,16 @@ func _ready() -> void:
 			var s := _sprite("rooms/trapdoor_open" if Art.has("rooms/trapdoor_open") else "0x72/floor_ladder", Vector2(0, 0))
 			s.z_index = -14
 			spr = s
+		"page":   # v2.5: a torn diary page, fluttering a hand's breadth off the floor (tools/art_story.py)
+			var a := AnimatedSprite2D.new()
+			a.sprite_frames = Art.anim("story/page", 6.0)
+			a.play("default")
+			a.frame = randi() % 4
+			a.offset = Vector2(-6, -19)
+			a.centered = false
+			spr = a
 	add_child(spr)
-	if kind in ["coin", "wax_small", "wax_big", "bomb", "wax_warm"]:
+	if kind in ["coin", "wax_small", "wax_big", "bomb", "wax_warm", "page"]:
 		spr.material = Art.unshaded
 	var wax_cost: int = int(record.get("cost_wax", 0)) if record else 0
 	if wax_cost > 0:
@@ -151,6 +159,8 @@ func _physics_process(dt: float) -> void:
 		var bob := 0.0
 		if kind in ["relic", "tonic", "keepsake"]:
 			bob = sin(_t * 3.0) * 1.5
+		elif kind == "page":
+			bob = roundf(sin(_t * 2.4) * 2.0)
 		spr.position.y = -_z + bob
 	if price_label and world.player and world.player.coins != _last_coins:
 		_last_coins = world.player.coins
@@ -174,7 +184,9 @@ func _physics_process(dt: float) -> void:
 			ds += "   [%s]" % rite
 		Records.see(item)   # the Journal: seen
 		world.hud.preview_item(nm, ds)
-	var reach := 9.0 if kind in ["relic", "tonic", "chest", "keepsake"] else 8.0
+	if kind == "page" and d < 26.0:
+		world.hud.preview_item(L.t("A torn page"), L.t("From someone's diary. Walk over it to read it"))
+	var reach := 9.0 if kind in ["relic", "tonic", "chest", "keepsake", "page"] else 8.0
 	if kind == "trapdoor":
 		reach = 7.0
 	if _wait_leave and d > reach + 6.0:
@@ -294,6 +306,9 @@ func _collect(p: Player) -> void:
 		"trapdoor":
 			taken = true
 			world.descend()
+		"page":
+			Diary.collect(world, item, global_position, record if record else {})
+			_take()
 
 
 ## A helper (the Dust Bunny) brings this coin or bomb to Tallow.
