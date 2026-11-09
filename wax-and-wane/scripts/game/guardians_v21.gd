@@ -878,9 +878,22 @@ static func _organ_chords(e: Enemy) -> void:
 				e.spr.frame = 1
 				for i in chord:
 					_pipe_fire(e, i, 4)
-				e.world.shake(2.0))
+				e.world.shake(2.0)
+				if c == chords.size() - 1:
+					_organ_hymnbook(e))
 	e.state = "playing"
 	e.t = 1.1 * chords.size() + 0.4
+
+
+## After a chord a hymn book flaps off the music stand (a Restless Psalter; at most two in the room).
+static func _organ_hymnbook(e: Enemy) -> void:
+	var books := 0
+	for m in e.world.enemies:
+		if is_instance_valid(m) and m.alive and m.kind == "psalter":
+			books += 1
+	if books < 2:
+		e.world.spawn_enemy("psalter", e.global_position + Vector2(randf_range(-20, 20), -6))
+		Audio.play("page_flip", 0.0, 0.05, 0.8)
 
 
 ## A ring of sound with a safe gap: the gap is marked first (two pale lines either side of it on a dotted
