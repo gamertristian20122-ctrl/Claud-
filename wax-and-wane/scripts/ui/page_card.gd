@@ -130,14 +130,14 @@ func _process(dt: float) -> void:
 
 
 func _input(ev: InputEvent) -> void:
+	# nothing under the card sees any input while it is up (releases and drags too: a second finger lifted over
+	# a HUD button, a stick nudging the Journal's focus)
+	get_viewport().set_input_as_handled()
 	if _closing:
 		return
 	var press: bool = (ev is InputEventKey and ev.pressed and not ev.echo) or (ev is InputEventMouseButton and ev.pressed) \
 			or (ev is InputEventScreenTouch and ev.pressed) or (ev is InputEventJoypadButton and ev.pressed)
-	if not press:
-		return
-	get_viewport().set_input_as_handled()   # the game and the menus under the card never see it
-	if _t >= HOLD:
+	if press and _t >= HOLD:
 		close()
 
 
