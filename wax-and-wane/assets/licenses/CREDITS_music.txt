@@ -20,8 +20,8 @@ Ogg Vorbis q4, 44.1 kHz stereo, loop=true.
   area_kitchen.ogg     "14 - Curse" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
   area_library.ogg     "30 - Ruins" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
   area_attic.ogg       "16 - Melancholia" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0)
-  victory_jingle.ogg   original composition, synthesized for this game (tools/make_audio.py)
-  death_jingle.ogg     original composition, synthesized for this game (tools/make_audio.py)
+  victory_jingle.wav   jingle "Success4" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0), the pack file as it is (tools/free_sounds.py)
+  death_jingle.wav     jingle "GameOver3" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0), the pack file as it is (tools/free_sounds.py)
 
 Why each track (measured; see tools/import_audio.py MUSIC):
   title: Darkest of the slow pieces: low register (mean pitch MIDI 61), sparse (2.0 onsets/s) and eerie (diss 0.35, no settled key), opens quietly and swells (11 dB dynamic range); 96 s, so the title never loops audibly. (Manor, Intro and Mystical were busier or brighter / more major.)

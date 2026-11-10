@@ -288,6 +288,8 @@ func _mod_shot(s: Shot, primary: bool) -> void:
 	if has.has("pale_taper"):
 		s.set_meta("ghost", true)
 		_set_frames(s, "items/fx/ghost")
+		if s.spr and not Art.has("items/fx/ghost_f0"):   # v2.10: no ghost picture: the bolt itself, pale and see-through
+			s.spr.modulate = Color(0.78, 0.9, 1.0, 0.72)
 		if s.light:
 			s.light.color = Color(0.75, 0.85, 1.0)
 	if not primary:

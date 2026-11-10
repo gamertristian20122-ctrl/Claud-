@@ -302,13 +302,12 @@ func _blip(who: String) -> void:
 	var v: Array = TalkLines.voice(who)
 	var sname := str(v[0])
 	if not _streams.has(sname):
-		var path := "res://assets/audio/sfx/%s.ogg" % sname
-		_streams[sname] = load(path) if ResourceLoader.exists(path) else null
+		_streams[sname] = Audio.stream_of(sname)
 	if _streams[sname] == null:
 		return
 	_voice.stream = _streams[sname]
-	_voice.pitch_scale = float((v[1] as Array)[0]) * randf_range(0.97, 1.03)
-	_voice.volume_db = float(v[2])
+	_voice.pitch_scale = float((v[1] as Array)[0]) * randf_range(0.97, 1.03) * Audio.take_pitch(_voice.stream)
+	_voice.volume_db = float(v[2]) + Audio.take_gain(_voice.stream)
 	_voice.play()
 
 

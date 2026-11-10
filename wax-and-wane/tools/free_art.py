@@ -296,6 +296,7 @@ def effects():
         "moves/icon_skip": NA_ITEM % "Scroll/ScrollThunder",
         "moves/icon_slam": NA_ITEM % "Tool/Hammer",
         "moves/icon_snuff": NA_ITEM % "Resource/Water",
+        "items/fx/jug": NA_ITEM % "Potion/WaterPot",   # the jug a relic throws
     }
 
 
@@ -530,6 +531,8 @@ EXCLUSIVE = ["rooms", "decor", "specials", "areas", "chalk", "primer", "talk", "
 
 # single pictures a script drew that the game now does without (globs under assets/art)
 GONE = ["fx/*_lg_f*.png", "fx/gib_*.png", "fx/splat_*.png", "fx/scorch.png", "fx/light/soft_light.png",
+        # two relic shots had their own drawn frames: they are the candle's bolt now (the ghost one pale, relic_fx.gd)
+        "items/fx/ghost_f*.png", "items/fx/ring_f*.png",
         "tower/end_*.png", "tower/floor_*.png", "tower/window_*.png", "tower/light/*.png",
         # the drawn menu kit: UI._tex_box makes flat boxes in its place
         "ui/kit_*.png", "ui/button_9*.png", "ui/panel_9.png", "ui/focus_*.png", "ui/hud_chip.png", "ui/ui_preview.png",

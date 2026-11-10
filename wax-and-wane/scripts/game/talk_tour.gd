@@ -624,7 +624,7 @@ static func _static_checks() -> void:
 			bad.append("talk/martha_" + k)
 	for who in TalkLines.SPEAKERS:
 		var v: Array = TalkLines.voice(who)
-		if not ResourceLoader.exists("res://assets/audio/sfx/%s.ogg" % str(v[0])):
+		if not Audio.has_sound(str(v[0])):
 			bad.append("voice of %s" % who)
 		var sp: Dictionary = TalkLines.SPEAKERS[who]
 		if sp.has("crop"):

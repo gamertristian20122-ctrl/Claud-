@@ -103,12 +103,11 @@ MUSIC = {
                    "music-box-like and melancholy, uneasy (diss 0.17) with wide swells (12.2 dB), a little denser "
                    "than the Chapel (2.95 onsets/s) on the last climb before the Belfry; 40 s."},
 }
-# victory_jingle / death_jingle stay the original synthesized ones (tools/make_audio.py): they are 3-4 s long to fit
-# the victory banner and the snuff-out sequence, minor/major as needed and built from the game's own bell and music
-# box; the pack's jingles are 1-2 s chiptune stings that would cut off under the banners.
-SYNTH_KEPT = ["victory_jingle", "death_jingle"]
+# victory_jingle / death_jingle: Ninja Adventure's own jingles since 2.10, placed as they are (.wav) by
+# tools/free_sounds.py. (Until 2.9 two pieces a script had synthesized stood here.)
+PACK_JINGLES = {"victory_jingle": "Success4", "death_jingle": "GameOver3"}
 
-# Ninja Adventure SFX used by tools/make_audio.py (fetched to the cache by `fetch`)
+# Ninja Adventure SFX (fetched to the cache by `fetch`; the game's sounds are placed by tools/free_sounds.py)
 NINJA_SFX = [
     "Elemental/Fire.wav", "Elemental/Fire2.wav", "Elemental/Fire3.wav", "Elemental/Fireball.wav",
     "Elemental/Fireball2.wav", "Elemental/Bubble.wav", "Elemental/Bubble2.wav", "Elemental/Water1.wav",
@@ -291,8 +290,9 @@ def write_credits():
     for slot, cfg in MUSIC.items():
         lines.append(f"  {slot + '.ogg':20s} \"{os.path.splitext(os.path.basename(cfg['src']))[0]}\" - Ninja Adventure "
                      "Asset Pack by Pixel-boy & AAA (CC0)")
-    for s in SYNTH_KEPT:
-        lines.append(f"  {s + '.ogg':20s} original composition, synthesized for this game (tools/make_audio.py)")
+    for s, name in PACK_JINGLES.items():
+        lines.append(f"  {s + '.wav':20s} jingle \"{name}\" - Ninja Adventure Asset Pack by Pixel-boy & AAA (CC0), the pack "
+                     "file as it is (tools/free_sounds.py)")
     lines += ["", "Why each track (measured; see tools/import_audio.py MUSIC):"]
     for slot, cfg in MUSIC.items():
         lines.append(f"  {slot}: {cfg['why']}")

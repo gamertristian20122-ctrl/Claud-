@@ -92,7 +92,7 @@ func _run() -> void:
 	await _wait(2.5)
 	w.player.wax = 9.0
 	await _wait(0.3)
-	_check(Audio.low_wax, "low wax turns the heartbeat layer on")
+	_check(Audio.low_wax and Audio._heart_on and Audio.has_sound("low_wax_tick"), "low wax starts the clock's ticking layer")
 	_mark("lowwax")
 	await _wait(3.5)
 	w.player.wax = 100.0

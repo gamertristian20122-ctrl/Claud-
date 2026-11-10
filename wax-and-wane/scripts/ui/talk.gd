@@ -317,8 +317,7 @@ func _blip() -> void:
 	var v: Array = TalkLines.voice(_speaker())
 	var sname := str(v[0])
 	if not _streams.has(sname):
-		var path := "res://assets/audio/sfx/%s.ogg" % sname
-		_streams[sname] = load(path) if ResourceLoader.exists(path) else null
+		_streams[sname] = Audio.stream_of(sname)
 	var st: AudioStream = _streams[sname]
 	if st == null:
 		return
@@ -326,9 +325,9 @@ func _blip() -> void:
 	var p: AudioStreamPlayer = _voice[_voice_i % _voice.size()]
 	_voice_i += 1
 	p.stream = st
-	p.pitch_scale = float(pitches[(_blips / 2) % pitches.size()]) * randf_range(0.97, 1.03)
+	p.pitch_scale = float(pitches[(_blips / 2) % pitches.size()]) * randf_range(0.97, 1.03) * Audio.take_pitch(st)
 	var whisper := _text.text.begins_with("(")
-	p.volume_db = float(v[2]) - (6.0 if whisper else 0.0)
+	p.volume_db = float(v[2]) - (6.0 if whisper else 0.0) + Audio.take_gain(st)
 	p.play()
 
 

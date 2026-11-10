@@ -6432,6 +6432,7 @@ assets/art/items/fam_matchling_f1.png  <-  2D/top-down-rpg/Actor/Monster/Spirit2
 assets/art/items/fam_mouse_f0.png  <-  2D/top-down-rpg/Actor/Monster/Mouse/SpriteSheet.png  [0, 0, 16, 16]
 assets/art/items/fam_mouse_f1.png  <-  2D/top-down-rpg/Actor/Monster/Mouse/SpriteSheet.png  [0, 16, 16, 16]
 assets/art/items/fire_tongs.png  <-  2D/top-down-rpg/Items/Weapons/Fork/Sprite.png  (whole)
+assets/art/items/fx/jug.png  <-  2D/top-down-rpg/Items/Potion/WaterPot.png  (whole)
 assets/art/items/glass_chimney.png  <-  2D/top-down-rpg/Items/Potion/EmptyPot.png  (whole)
 assets/art/items/hot_drip.png  <-  2D/top-down-rpg/Items/Scroll/ScrollFire.png  (whole)
 assets/art/items/hourglass.png  <-  2D/top-down-rpg/Items/Object/Hourglass.png  (whole)

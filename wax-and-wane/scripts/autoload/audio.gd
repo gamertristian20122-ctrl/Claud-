@@ -14,7 +14,7 @@ extends Node
 ##   enter_room(type, cleared)                   shop music in shops, calm mix in cleared rooms, full mix in fights
 ##   set_intensity(x) / set_paused(on)           1 = fight, 0.5 = cleared (gentle low-pass), paused = strong low-pass
 ##   duck(db, secs)                              dip the music for a big moment (big sounds also duck on their own)
-##   set_low_wax(on, frac)                       heartbeat + ticking layer while the candle is nearly out
+##   set_low_wax(on, frac)                       the clock ticks (faster and faster) while the candle is nearly out
 ##   set_space(floor_num)                        per-floor reverb on world sounds (0 = none)
 ##   loop_start(name, follow, volume_db, pitch) -> id, loop_stop(id, fade)   looping sounds (beam_loop ...)
 ##   stop_all()                                  silence everything (e.g. before quitting)
@@ -32,7 +32,8 @@ const THROTTLE := {
 	"wax_bubble": 0.15, "web": 0.08, "page_flip": 0.06, "clock_tick_fast": 0.1, "dodge": 0.08,
 	"boss_sting": 2.0,
 }
-## Level trim per sound, in dB (the files are loudness-matched by tools/make_audio.py; this sets the mix).
+## Level trim per sound, in dB: the mix. (Each pack file is first brought to the level this table was made
+## for: SfxPack.GAIN, measured by tools/free_sounds.py.)
 const VOLUME := {
 	"shoot": -9.0, "hit_wall": -12.0, "hit_enemy": -7.0, "enemy_die": -5.0, "enemy_shoot": -9.0,
 	"step": -16.0, "tick": -8.0, "ui_click": -6.0, "ui_back": -6.0, "ui_open": -6.0,
@@ -86,6 +87,8 @@ const INTENSITY_POINTS := [[0.0, 420.0, -7.0], [0.5, 4800.0, -2.0], [1.0, 20500.
 const LOW_WAX_CUTOFF := 7500.0
 const LOW_WAX_MUSIC_DB := -3.0
 const HEART_DB := -3.0
+const TICK_SLOW := 0.62        # s between the low-wax ticks when the warning starts ...
+const TICK_FAST := 0.3         # ... and when the candle is all but out
 
 var current_music := ""
 var music_intensity := 1.0
@@ -114,6 +117,9 @@ var _low_frac := 1.0
 var _low_seen := 0.0
 var _heart: AudioStreamPlayer
 var _heart_db := -60.0
+var _heart_on := false
+var _heart_next := 0.0
+var _heart_tock := false
 var _loops := {}            # id -> [AudioStreamPlayer, WeakRef or null]
 var _next_loop := 1
 var _clock := 0.0          # seconds of unscaled time (ignores pause and Engine.time_scale)
@@ -245,6 +251,22 @@ func _pick_take(n: String, list: Array) -> AudioStream:
 	return list[i]
 
 
+## v2.10: every sound is one pack file, as it is (tools/free_sounds.py). SfxPack holds, per file, the dB that
+## brings it to the level this mix was made for and the speed it plays at; both are applied here, at play time.
+func take_gain(s: AudioStream) -> float:
+	return float(SfxPack.GAIN.get(s.resource_path.get_file().get_basename(), 0.0)) if s != null else 0.0
+
+
+func take_pitch(s: AudioStream) -> float:
+	return float(SfxPack.PITCH.get(s.resource_path.get_file().get_basename(), 1.0)) if s != null else 1.0
+
+
+## The first take of a sound, for a player of the caller's own (the talking voices): null if there is none.
+func stream_of(n: String) -> AudioStream:
+	var list := _get_takes(n)
+	return null if list.is_empty() else list[0] as AudioStream
+
+
 func _now() -> float:
 	return _clock
 
@@ -280,7 +302,7 @@ func play(n: String, volume_db := 0.0, pitch_jitter := 0.06, pitch := 1.0) -> vo
 	if list.is_empty():
 		return
 	if n == "low_wax" and low_wax:
-		return   # the low-wax layer already carries the heartbeat
+		return   # the low-wax layer already carries the warning
 	var now := _now()
 	if THROTTLE.has(n) and now - float(_last_play.get(n, -1.0)) < THROTTLE[n]:
 		return
@@ -294,8 +316,8 @@ func play(n: String, volume_db := 0.0, pitch_jitter := 0.06, pitch := 1.0) -> vo
 	p.stream = _pick_take(n, list)
 	p.bus = "SFX" if DRY.has(n) else "Room"
 	var jit: float = LEVEL_JITTER.get(n, 0.0)
-	p.volume_db = volume_db + float(VOLUME.get(n, 0.0)) + _rng.randf_range(-jit, jit)
-	p.pitch_scale = maxf(0.2, pitch + _rng.randf_range(-pitch_jitter, pitch_jitter))
+	p.volume_db = volume_db + float(VOLUME.get(n, 0.0)) + take_gain(p.stream) + _rng.randf_range(-jit, jit)
+	p.pitch_scale = maxf(0.2, (pitch + _rng.randf_range(-pitch_jitter, pitch_jitter)) * take_pitch(p.stream))
 	p.play()
 	_pool_name[v] = n
 	_pool_prio[v] = prio
@@ -318,8 +340,8 @@ func loop_start(n: String, follow: Node = null, volume_db := 0.0, pitch := 1.0) 
 	var p := AudioStreamPlayer.new()
 	p.bus = "SFX" if DRY.has(n) else "Room"
 	p.stream = s
-	p.volume_db = volume_db + float(VOLUME.get(n, 0.0))
-	p.pitch_scale = maxf(0.2, pitch)
+	p.volume_db = volume_db + float(VOLUME.get(n, 0.0)) + take_gain(list[0])
+	p.pitch_scale = maxf(0.2, pitch * take_pitch(list[0]))
 	add_child(p)
 	p.play()
 	var id := _next_loop
@@ -352,6 +374,7 @@ func stop_all() -> void:
 	for m in _music:
 		m.stop()
 	_heart.stop()
+	_heart_on = false
 	for id in _loops.keys():
 		var lp: AudioStreamPlayer = _loops[id][0]
 		if is_instance_valid(lp):
@@ -408,7 +431,7 @@ func music(n: String, fade := 1.2) -> void:
 		var length := stream.get_length()
 		from = fmod(float(_positions[n]), length) if length > 0.0 else 0.0
 	nw.play(from)
-	_fade_player(_active, 0.0, fade * 0.8, false)
+	_fade_player(_active, take_gain(stream), fade * 0.8, false)   # (a pack jingle is brought up to the old one's level)
 
 
 func _fade_player(i: int, to_db: float, secs: float, stop_after: bool) -> void:
@@ -452,7 +475,7 @@ func duck(db: float, secs: float) -> void:
 	_ducks.append([minf(db, 0.0), _now() + maxf(secs, 0.0), 0.5])
 
 
-## The candle is nearly out: a heartbeat + fast ticking layer that speeds up as `frac` (wax left / threshold) falls,
+## The candle is nearly out: the clock ticks, faster as `frac` (wax left / threshold) falls,
 ## with the music pulled back a little. Call every frame while it applies; it fades out on its own when not refreshed.
 func set_low_wax(on: bool, frac := 1.0) -> void:
 	_low_seen = _now()
@@ -460,16 +483,16 @@ func set_low_wax(on: bool, frac := 1.0) -> void:
 	if on == low_wax:
 		return
 	low_wax = on
-	if on and not _heart.playing:
-		var s := _load(SFX_DIR + "low_wax_loop")
+	if on and not _heart_on:
+		# v2.10: the layer is the clock itself, one found tick (low_wax_tick) struck again and again by _process,
+		# faster as the wax runs out. (Until 2.9 it was a synthesized heartbeat loop.)
+		var s := stream_of("low_wax_tick")
 		if s == null:
 			return
-		if s is AudioStreamOggVorbis:
-			(s as AudioStreamOggVorbis).loop = true
 		_heart.stream = s
+		_heart_on = true
 		_heart_db = -40.0
-		_heart.volume_db = _heart_db
-		_heart.play()
+		_heart_next = 0.0
 
 
 ## Per-floor acoustics for world sounds (1 Cellar ... 4 Belfry; 0 or unknown = no reverb).
@@ -558,15 +581,21 @@ func _process(delta: float) -> void:
 	var room_t := -4.0 if now < _room_duck_until else 0.0
 	_room_db = lerpf(_room_db, room_t, 1.0 - exp(-dt / (0.03 if room_t < _room_db else 0.2)))
 	AudioServer.set_bus_volume_db(_bus_room, _room_db)
-	# low-wax layer: louder and faster as the wax runs out
-	if _heart.playing:
+	# low-wax layer: the clock ticks, louder and faster as the wax runs out
+	if _heart_on:
 		var h_t := HEART_DB + 3.0 * (1.0 - _low_frac) if low_wax else -60.0
 		if music_paused:
 			h_t -= 12.0
 		_heart_db = lerpf(_heart_db, h_t, 1.0 - exp(-dt / (0.4 if h_t > _heart_db else 0.6)))
-		_heart.volume_db = _heart_db
-		_heart.pitch_scale = lerpf(1.0, 1.3, 1.0 - _low_frac)
+		_heart_next -= dt
+		if _heart_next <= 0.0 and not tree.paused:
+			_heart_next = lerpf(TICK_FAST, TICK_SLOW, _low_frac)
+			_heart_tock = not _heart_tock
+			_heart.volume_db = _heart_db + take_gain(_heart.stream)
+			_heart.pitch_scale = (0.84 if _heart_tock else 1.0) * take_pitch(_heart.stream)   # tick, tock
+			_heart.play()
 		if not low_wax and _heart_db < -55.0:
+			_heart_on = false
 			_heart.stop()
 	# loops whose owner is gone
 	for id in _loops.keys():
