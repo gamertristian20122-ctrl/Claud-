@@ -28,6 +28,11 @@ extends Node
 ## (ending id -> times); the Journal's gold dot is Records' "d:<id>".
 
 const TOTAL := 24
+## v2.10: the owner took the diary pages out of the game (they were written text; the talk scenes stay). Nothing
+## places, drops or counts a page while this is false, and the two endings that needed pages (The Housekeeper at
+## 12, The Whole Story at 24) cannot come up; the long night's ending and the true ending are as they were.
+## The pages' data and code stay here, switched off, so a save that has pages loses nothing.
+const PAGES_ON := false
 ## The Housekeeper's ending wants this many pages (and a won night).
 const HALF := 12
 ## A night this long (or longer) won plays A Candle in Every Window.
@@ -259,6 +264,8 @@ static func area_of(w: Node) -> String:
 ## world._start_floor: roll where this floor keeps its pages (the diary's own seeded generator) and, in the
 ## Clock Tower, leave the Keeper's page by the top of the ladder.
 static func on_floor_start(w: Node) -> void:
+	if not PAGES_ON:
+		return
 	of(w)._plan_floor()
 
 
@@ -331,6 +338,8 @@ func _drop(id: String, pos: Vector2, pop := Vector2.ZERO, src := "") -> Pickup:
 
 ## world._stock_hollow: a hollow may keep a page (someone hid it from the dark).
 static func on_hollow(w: Node, c: Vector2) -> void:
+	if not PAGES_ON:
+		return
 	var d := of(w)
 	if d.plan.get("hollow", false):
 		d.plan["hollow"] = false
@@ -341,6 +350,8 @@ static func on_hollow(w: Node, c: Vector2) -> void:
 
 ## Specials._stock("study"): a page on the floor by the lectern (never one of the three that crumble).
 static func on_study(w: Node, c: Vector2) -> void:
+	if not PAGES_ON:
+		return
 	var d := of(w)
 	if d.plan.get("study", false):
 		d.plan["study"] = false
@@ -351,6 +362,8 @@ static func on_study(w: Node, c: Vector2) -> void:
 
 ## world.on_enemy_killed: a guardian's first fall, a house champion, the floor's first marked foe.
 static func on_kill(w: Node, e: Node) -> void:
+	if not PAGES_ON:
+		return
 	of(w)._killed(e)
 
 
@@ -381,6 +394,8 @@ func _killed(e: Node) -> void:
 
 ## world._clear_room: the new areas' page lies in its room once that room is cleared.
 static func on_clear(w: Node) -> void:
+	if not PAGES_ON:
+		return
 	var d := of(w)
 	if w.cur_cell != d.area_cell or d.area_cell == Vector2i(-99, -99):
 		return
@@ -394,6 +409,8 @@ static func on_clear(w: Node) -> void:
 
 ## Pickup._collect ("page"): the page is found (saved at once); its reading card waits for a calm room.
 static func collect(w: Node, id: String, pos: Vector2, rec := {}) -> void:
+	if not PAGES_ON:
+		return
 	of(w)._collect(id, pos, rec, false)
 
 
@@ -507,7 +524,7 @@ static func ending_for_win(floors: int, pages: int, seen := {}) -> String:
 static func win_ending(w: Node, done: Callable) -> void:
 	var d := of(w)
 	d._gather()
-	var id := ending_for_win(int(w.get("night_floors")) if w.get("night_floors") != null else 4, count(), _rec("endings_seen"))
+	var id := ending_for_win(int(w.get("night_floors")) if w.get("night_floors") != null else 4, count() if PAGES_ON else 0, _rec("endings_seen"))
 	if id == "":
 		done.call()
 		return
@@ -522,7 +539,7 @@ static func win_ending(w: Node, done: Callable) -> void:
 static func keeper_ending(w: Node) -> String:
 	var d := of(w)
 	d._gather()
-	var id := "whole_story" if count() >= TOTAL else "true"
+	var id := "whole_story" if PAGES_ON and count() >= TOTAL else "true"
 	d._start_ending(id)
 	return id
 

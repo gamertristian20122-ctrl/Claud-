@@ -128,6 +128,10 @@ func _ready() -> void:
 		await load("res://scripts/trailer.gd").run(self)
 		get_tree().quit()
 	elif args.has("diarycheck"):   # v2.5 story: every page's sources, no repeats, no reading card in a fight
+		if not Diary.PAGES_ON:   # v2.10: the pages are switched off, so there is nothing to prove
+			print("[diarycheck] the diary pages are switched off (Diary.PAGES_ON): nothing to check -> PASS")
+			get_tree().quit(0)
+			return
 		await DiaryTour.check(self)
 		Audio.stop_all()
 		get_tree().quit(1 if DiaryTour.fails > 0 else 0)

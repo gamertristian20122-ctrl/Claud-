@@ -13,7 +13,7 @@ extends Control
 ## Data: Game.records via Records (scripts/game/records.gd) and Unlocks (scripts/game/unlocks.gd).
 
 const TABS := ["relics", "lodgers", "guardians", "rooms", "candles", "records", "diary"]
-const TAB_NAMES := ["Relics", "Lodgers", "Guardians", "Rooms", "Candles", "Records", "Diary"]
+const TAB_NAMES := ["Relics", "Lodgers", "Guardians", "Rooms", "Candles", "Records", "Story"]   # v2.10: the pages are out; the tab keeps the opening and the endings
 ## cols, rows, slot size (the left panel's inside is 158 x 142)
 const LAYOUT := {
 	"relics": [8, 7, Vector2(18, 18)],
@@ -377,7 +377,7 @@ func _entries(t: String) -> Array:
 			for h in hist:
 				out.append({"kind": "run", "id": "", "known": true, "run": h})
 		"diary":
-			for pg in Diary.PAGES:
+			for pg in (Diary.PAGES if Diary.PAGES_ON else []):
 				out.append({"kind": "page", "id": str(pg["id"]), "known": Diary.is_found(str(pg["id"])), "new_key": "d:" + str(pg["id"])})
 	return out
 
@@ -415,6 +415,14 @@ func _counts(t: String) -> String:
 			for k in Diary.ENDINGS:
 				if Diary.ending_seen(k) > 0:
 					ends += 1
+			if not Diary.PAGES_ON:   # two of the endings needed pages
+				var open_ends := 0
+				var seen_ends := 0
+				for k in Diary.ENDINGS:
+					if not (k in ["housekeeper", "whole_story"]):
+						open_ends += 1
+						seen_ends += 1 if Diary.ending_seen(k) > 0 else 0
+				return L.t("Endings {e} / {all}", {"e": seen_ends, "all": open_ends})
 			return L.t("Pages {n} / {total}   Endings {e} / {all}", {"n": known, "total": entries.size(), "e": ends, "all": Diary.ENDINGS.size()})
 	return ""
 
