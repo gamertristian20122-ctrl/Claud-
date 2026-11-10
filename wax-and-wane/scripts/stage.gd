@@ -28,11 +28,12 @@ extends Node
 signal changed
 
 const BASE := Vector2i(384, 216)
-## The visible room, wall to wall and from the top door's arch to the bottom wall (measured from the art:
-## Room is 272x192, its dark margins are not worth screen). Rows and columns of the world the screen must show.
+## The world the screen must always show, in art pixels. Measured from the room art: Room is a 272x192 box, its
+## walls span x 11..261 (250 px) and y 12..192 (180 px, top of the top wall to the foot of the bottom wall); only
+## the arch of a top door pokes into the 12 rows above. 180 is also the height every common screen divides by
+## (720, 1080, 1440, 2160), so the walls meet the screen's top and bottom edges exactly there.
 const VIS := Vector2i(256, 180)
-## The room's visible art is not centred in its 272x192 box: the view's centre sits this far from the box's.
-const VIS_SHIFT := Vector2(0, 0)
+const WALLS := Rect2(11, 12, 250, 180)
 ## 2D rendering layer of a run's world (CanvasItem.visibility_layer bit 20).
 const WORLD_BIT := 1 << 19
 
@@ -133,8 +134,14 @@ func _apply(want_big: bool) -> void:
 		Achievements.stage_changed()
 	Controls.stage_changed()
 	changed.emit()
+	_report()
+
+
+func _report() -> void:
+	var root := get_tree().root
+	var view := Vector2(world_vp.size) if big and world_vp != null else ui_size()
 	print("[stage] %s: screen %dx%d, ui %dx%d x%d, world %dx%d x%d" % ["big" if big else "classic", root.size.x, root.size.y,
-		int(ui_size().x), int(ui_size().y), ku, int(view_size().x), int(view_size().y), kw])
+		int(ui_size().x), int(ui_size().y), ku, int(view.x), int(view.y), kw])
 
 
 func _make_boxes() -> void:
@@ -253,8 +260,14 @@ func _view_xform() -> Transform2D:
 	if cam == null:
 		return Transform2D(0.0, half)
 	var z := cam.zoom
-	var centre := cam.get_screen_center_position() + VIS_SHIFT
+	var centre := cam.get_screen_center_position() + _shift()
 	return Transform2D(Vector2(z.x, 0.0), Vector2(0.0, z.y), half - centre * z)
+
+
+## A view shorter than the room's box keeps the bottom wall on the bottom edge (the dark rows above the top wall
+## go first): the camera's centre moves down by half the rows that do not fit.
+func _shift() -> Vector2:
+	return Vector2(0.0, maxf(0.0, (Room.H - world_vp.size.y) * 0.5))
 
 
 func _sync() -> void:
@@ -281,9 +294,9 @@ static func ui_size() -> Vector2:
 	return inst.get_tree().root.get_visible_rect().size if inst != null else Vector2(BASE)
 
 
-## The part of the world on screen, in world pixels.
+## The buffer a run's world is drawn in, in world pixels (the UI's own size while no run is on, and in Classic).
 static func view_size() -> Vector2:
-	if big and world_vp != null:
+	if big and world_vp != null and inst != null and inst._world != null:
 		return Vector2(world_vp.size)
 	return ui_size()
 
@@ -302,13 +315,13 @@ static func to_ui(n: CanvasItem) -> Vector2:
 	return n.get_global_transform_with_canvas().origin
 
 
-## The room's visible box (VIS, centred on the run's camera) on the UI's canvas: what the HUD keeps clear of.
+## The room's walls (WALLS, with the camera at rest on the room) on the UI's canvas: what the HUD lays out around.
 static func room_rect_ui() -> Rect2:
-	var s := Vector2(VIS) * float(kw) / float(ku)
-	var c := ui_size() * 0.5
-	if big and world_vp != null:
-		c = Vector2(world_vp.size) * 0.5 * float(kw) / float(ku)
-	return Rect2(c - s * 0.5, s)
+	var view := view_size()
+	var k := float(kw) / float(ku)
+	var shift := inst._shift().y if big and inst != null and world_vp != null else 0.0
+	var origin := Vector2(view.x * 0.5 - Room.W * 0.5, view.y * 0.5 - Room.H * 0.5 - shift)   # the room box's corner
+	return Rect2((origin + WALLS.position) * k, WALLS.size * k)
 
 
 ## The display's safe area as insets in UI pixels: [left, top, right, bottom] (notches, rounded corners).

@@ -922,7 +922,8 @@ func _mouse_aim(p: Player) -> Vector2:
 		return Vector2.ZERO
 	if Input.emulate_touch_from_mouse or not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		return Vector2.ZERO
-	var from := p.get_global_transform_with_canvas().origin + Vector2(0, -6)
+	# v2.8: where Tallow is on the HUD's canvas (Screen: Big draws the world at its own scale, scripts/stage.gd)
+	var from := Stage.to_ui(p) + Vector2(0, -6) * float(Stage.kw) / float(Stage.ku)
 	var d := get_viewport().get_mouse_position() - from
 	return d.normalized() if d.length() > 3.0 else Vector2.ZERO
 
