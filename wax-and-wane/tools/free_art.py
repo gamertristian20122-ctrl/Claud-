@@ -33,8 +33,10 @@ PACKS = {
     "ninja-adventure": ("Ninja Adventure Asset Pack", "Pixel-boy and AAA", "CC0",
                         "https://pixel-boy.itch.io/ninja-adventure-asset-pack"),
     "0x72": ("16x16 DungeonTileset II", "0x72", "CC0", "https://0x72.itch.io/dungeontileset-ii"),
+    "16x16-rpg-item-pack": ("16x16 RPG Item Pack", "Alex's Assets", "CC0",
+                            "https://alexs-assets.itch.io/16x16-rpg-item-pack"),
     "foozle-lucifer-skeleton-ancient": ("Lucifer: Ancient Skeleton", "Foozle (drawn by Baldur)", "CC0",
-                                        "https://foozlecc.itch.io/"),
+                                        "https://foozlecc.itch.io/lucifer-skeleton-ancient-boss"),
 }
 
 NA_MON = "ninja-adventure/2D/top-down-rpg/Actor/Monster/%s/%s.png"
@@ -140,6 +142,109 @@ def guardians():
     }
 
 
+NA_ANIMAL = "ninja-adventure/2D/top-down-rpg/Actor/Animal/%s/SpriteSheet.png"
+
+
+def face(name, fname="SpriteSheet"):
+    """One standing frame of a Ninja Adventure monster, as an icon."""
+    return (NA_MON % (name, fname), (0, 0, 16, 16))
+
+
+def pair(path):
+    """Two steps of a small follower."""
+    return {"": [(path, (0, 0, 16, 16)), (path, (0, 16, 16, 16))]}
+
+
+# relic, keepsake and pickup icons: one whole pack file each (the picks are mine, the pictures are theirs)
+ICONS = {
+    "items/beeswax": "ninja-adventure/2D/top-down-rpg/Items/Food/Honey.png",
+    "items/bell_rope": "ninja-adventure/2D/top-down-rpg/Items/Weapons/Whip/Sprite.png",
+    "items/bell_wire": "ninja-adventure/2D/top-down-rpg/Items/Weapons/Ninjaku/Sprite.png",
+    "items/bellows": "ninja-adventure/2D/top-down-rpg/Items/Object/Gourd.png",
+    "items/blowlamp": "16x16-rpg-item-pack/2D/top-down-rpg/Item__23.png",
+    "items/blue_flame": "16x16-rpg-item-pack/2D/top-down-rpg/Item__30.png",
+    "items/both_ends": "ninja-adventure/2D/top-down-rpg/Items/Weapons/Sai/Sprite.png",
+    "items/candelabra": "16x16-rpg-item-pack/2D/top-down-rpg/Item__70.png",
+    "items/cold_wax": "ninja-adventure/2D/top-down-rpg/Items/Scroll/ScrollIce.png",
+    "items/collection_plate": "16x16-rpg-item-pack/2D/top-down-rpg/Item__27.png",
+    "items/cuckoo_clock": "ninja-adventure/2D/top-down-rpg/Items/Treasure/LittleTreasureChest.png",
+    "items/dowsing_rod": "ninja-adventure/2D/top-down-rpg/Items/Resource/Branch.png",
+    "items/dust_bunny": "ninja-adventure/2D/top-down-rpg/Items/Food/Nut.png",
+    "items/ember_heart": "ninja-adventure/2D/top-down-rpg/Items/Resource/GemRed.png",
+    "items/fire_tongs": "ninja-adventure/2D/top-down-rpg/Items/Weapons/Fork/Sprite.png",
+    "items/glass_chimney": "ninja-adventure/2D/top-down-rpg/Items/Potion/EmptyPot.png",
+    "items/honeycomb": "16x16-rpg-item-pack/2D/top-down-rpg/Item__65.png",
+    "items/hot_drip": "ninja-adventure/2D/top-down-rpg/Items/Scroll/ScrollFire.png",
+    "items/hourglass": "ninja-adventure/2D/top-down-rpg/Items/Object/Hourglass.png",
+    "items/house_deed": "16x16-rpg-item-pack/2D/top-down-rpg/Item__38.png",
+    "items/iron_stick": "ninja-adventure/2D/top-down-rpg/Items/Weapons/Stick/Sprite.png",
+    "items/jet_brooch": "16x16-rpg-item-pack/2D/top-down-rpg/Item__34.png",
+    "items/ks_censer": "ninja-adventure/2D/top-down-rpg/Items/Object/MoneyBag.png",
+    "items/ks_flare_match": "ninja-adventure/2D/top-down-rpg/Items/Projectile/Dynamite.png",
+    "items/ks_hand_bell": "ninja-adventure/2D/top-down-rpg/Items/Treasure/GoldCup.png",
+    "items/ks_hand_mirror": "16x16-rpg-item-pack/2D/top-down-rpg/Item__25.png",
+    "items/ks_music_box": "ninja-adventure/2D/top-down-rpg/Items/Treasure/BigTreasureChest.png",
+    "items/ks_oil_jug": "ninja-adventure/2D/top-down-rpg/Items/Potion/LifePot.png",
+    "items/ks_smoke_jar": "16x16-rpg-item-pack/2D/top-down-rpg/Item__31.png",
+    "items/ks_winding_key": "16x16-rpg-item-pack/2D/top-down-rpg/Item__69.png",
+    "items/lace_fan": "ninja-adventure/2D/top-down-rpg/Items/Object/PanFlute.png",
+    "items/lamp_oil": "ninja-adventure/2D/top-down-rpg/Items/Potion/WaterPot.png",
+    "items/lodestone": "ninja-adventure/2D/top-down-rpg/Items/Resource/Rock.png",
+    "items/love_letter": "ninja-adventure/2D/top-down-rpg/Items/Other/Letter.png",
+    "items/lucky_ash": "16x16-rpg-item-pack/2D/top-down-rpg/Item__39.png",
+    "items/magpie_nest": "16x16-rpg-item-pack/2D/top-down-rpg/Item__56.png",
+    "items/matchbook": "ninja-adventure/2D/top-down-rpg/Items/Weapons/Book/Sprite.png",
+    "items/matchling": "16x16-rpg-item-pack/2D/top-down-rpg/Item__28.png",
+    "items/minute_hand": "ninja-adventure/2D/top-down-rpg/Items/Weapons/Lance/Sprite.png",
+    "items/nightshade": "ninja-adventure/2D/top-down-rpg/Items/Resource/Grass.png",
+    "items/old_pipe": "ninja-adventure/2D/top-down-rpg/Items/Weapons/Club/Sprite.png",
+    "items/pale_taper": "ninja-adventure/2D/top-down-rpg/Items/Scroll/Scroll.png",
+    "items/pantry_key": "16x16-rpg-item-pack/2D/top-down-rpg/Item__68.png",
+    "items/pendulum": "16x16-rpg-item-pack/2D/top-down-rpg/Item__33.png",
+    "items/phoenix_feather": "ninja-adventure/2D/top-down-rpg/Items/Resource/feather.png",
+    "items/pocket_watch": "ninja-adventure/2D/top-down-rpg/Items/Treasure/GoldCoin.png",
+    "items/powder_tin": "ninja-adventure/2D/top-down-rpg/Items/Potion/MilkPot.png",
+    "items/salt_line": "ninja-adventure/2D/top-down-rpg/Items/Projectile/Caltrop.png",
+    "items/scalding_wax": "16x16-rpg-item-pack/2D/top-down-rpg/Item__29.png",
+    "items/shadow_puppet": "16x16-rpg-item-pack/2D/top-down-rpg/Item__55.png",
+    "items/sharp_wick": "ninja-adventure/2D/top-down-rpg/Items/Projectile/Kunai.png",
+    "items/slow_burn": "ninja-adventure/2D/top-down-rpg/Items/Tool/WateringCan.png",
+    "items/snuffer_cap": "16x16-rpg-item-pack/2D/top-down-rpg/Item__44.png",
+    "items/soft_soles": "16x16-rpg-item-pack/2D/top-down-rpg/Item__48.png",
+    "items/spare_wick": "16x16-rpg-item-pack/2D/top-down-rpg/Item__37.png",
+    "items/split_wick": "ninja-adventure/2D/top-down-rpg/Items/Weapons/Axe/Sprite.png",
+    "items/stopped_clock": "16x16-rpg-item-pack/2D/top-down-rpg/Item__24.png",
+    "items/stove_door": "ninja-adventure/2D/top-down-rpg/Items/Tool/Anvil.png",
+    "items/sweep_brush": "ninja-adventure/2D/top-down-rpg/Items/Tool/Hoe.png",
+    "items/tallow_heart": "ninja-adventure/2D/top-down-rpg/Items/Potion/Heart.png",
+    "items/thimble": "ninja-adventure/2D/top-down-rpg/Items/Treasure/SilverCup.png",
+    "items/tin_sconce": "16x16-rpg-item-pack/2D/top-down-rpg/Item__71.png",
+    "items/tinderbox": "ninja-adventure/2D/top-down-rpg/Items/Object/CrateEmpty.png",
+    "items/twin_wick": "ninja-adventure/2D/top-down-rpg/Items/Food/SeedBig2.png",
+    "items/warming_pan": "16x16-rpg-item-pack/2D/top-down-rpg/Item__26.png",
+    "items/wax_coat": "16x16-rpg-item-pack/2D/top-down-rpg/Item__57.png",
+    "items/wax_seal": "ninja-adventure/2D/top-down-rpg/Items/Other/Stamp.png",
+    "items/wick_trimmer": "ninja-adventure/2D/top-down-rpg/Items/Tool/Sickle.png",
+    "items/will_o_wisp": "ninja-adventure/2D/top-down-rpg/Items/Resource/GemPurple.png",
+    "items/witching_hour": "16x16-rpg-item-pack/2D/top-down-rpg/Item__52.png",
+    "pickups/bomb_pickup": "ninja-adventure/2D/top-down-rpg/Items/Projectile/Bomb.png",
+    "pickups/match": "ninja-adventure/2D/top-down-rpg/Items/Weapons/MagicWand/Sprite.png",
+    "pickups/wax_big": "ninja-adventure/2D/top-down-rpg/Items/Food/SeedLargeWhite.png",
+    "pickups/wax_small": "ninja-adventure/2D/top-down-rpg/Items/Food/Seed2.png",
+}
+ICONS.update({
+    "items/clockwork_mouse": face("Mouse"),
+    "items/moth_friend": face("ButterflyBlue"),
+    "items/paper_lantern": face("LanternGreen"),
+    "items/fam_mouse": pair(NA_MON % ("Mouse", "SpriteSheet")),
+    "items/fam_lantern": pair(NA_MON % ("LanternGreen", "SpriteSheet")),
+    "items/fam_coal": pair(NA_MON % ("Flam", "SpriteSheet")),
+    "items/fam_matchling": pair(NA_MON % ("Spirit2", "SpriteSheet")),
+    "items/fam_bunny": pair(NA_ANIMAL % "Hamster"),
+    "pickups/pedestal": "0x72/crate",
+})
+
+
 # pictures a script drew that are simply taken away: the game then shows 0x72's own frames for that creature
 # (Enemy.frames_for falls back to assets/0x72/frames; Enemy.DEFS "sprite" names the 0x72 sprite where it differs)
 REMOVED = [
@@ -150,7 +255,7 @@ REMOVED = [
     "areas/attic/trunk",       # -> 0x72 chest_full_open
 ]
 
-SETS = [("creatures", lambda: CREATURES), ("guardians", guardians)]
+SETS = [("creatures", lambda: CREATURES), ("guardians", guardians), ("icons", lambda: ICONS)]
 
 
 def fetch(path):
@@ -175,6 +280,17 @@ def main():
     n = 0
     for _set, table in SETS:
         for target, anims in sorted(table().items()):
+            if not isinstance(anims, dict):   # one picture: a whole pack file, or one crop of it
+                src, box = (anims, None) if isinstance(anims, str) else anims
+                out = target + ".png"
+                credits.setdefault(src.split("/")[0], []).append((out, src, box))
+                if not only_list:
+                    im = Image.open(fetch(src)).convert("RGBA")
+                    if box:
+                        im = im.crop((box[0], box[1], box[0] + box[2], box[1] + box[3]))
+                    im.save(os.path.join(ART, out))
+                    n += 1
+                continue
             if not only_list:
                 clear(target)
             for anim, frames in anims.items():

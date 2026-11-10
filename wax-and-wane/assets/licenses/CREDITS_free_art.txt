@@ -12,8 +12,36 @@ assets/art/monsters/zombie_run_f0.png  <-  zombie_anim_f1  (whole)
 assets/art/monsters/zombie_run_f1.png  <-  zombie_anim_f2  (whole)
 assets/art/monsters/zombie_run_f2.png  <-  zombie_anim_f3  (whole)
 assets/art/monsters/zombie_run_f3.png  <-  zombie_anim_f10  (whole)
+assets/art/pickups/pedestal.png  <-  crate  (whole)
 
-== Lucifer: Ancient Skeleton by Foozle (drawn by Baldur) (CC0) - https://foozlecc.itch.io/
+== 16x16 RPG Item Pack by Alex's Assets (CC0) - https://alexs-assets.itch.io/16x16-rpg-item-pack
+assets/art/items/blowlamp.png  <-  2D/top-down-rpg/Item__23.png  (whole)
+assets/art/items/blue_flame.png  <-  2D/top-down-rpg/Item__30.png  (whole)
+assets/art/items/candelabra.png  <-  2D/top-down-rpg/Item__70.png  (whole)
+assets/art/items/collection_plate.png  <-  2D/top-down-rpg/Item__27.png  (whole)
+assets/art/items/honeycomb.png  <-  2D/top-down-rpg/Item__65.png  (whole)
+assets/art/items/house_deed.png  <-  2D/top-down-rpg/Item__38.png  (whole)
+assets/art/items/jet_brooch.png  <-  2D/top-down-rpg/Item__34.png  (whole)
+assets/art/items/ks_hand_mirror.png  <-  2D/top-down-rpg/Item__25.png  (whole)
+assets/art/items/ks_smoke_jar.png  <-  2D/top-down-rpg/Item__31.png  (whole)
+assets/art/items/ks_winding_key.png  <-  2D/top-down-rpg/Item__69.png  (whole)
+assets/art/items/lucky_ash.png  <-  2D/top-down-rpg/Item__39.png  (whole)
+assets/art/items/magpie_nest.png  <-  2D/top-down-rpg/Item__56.png  (whole)
+assets/art/items/matchling.png  <-  2D/top-down-rpg/Item__28.png  (whole)
+assets/art/items/pantry_key.png  <-  2D/top-down-rpg/Item__68.png  (whole)
+assets/art/items/pendulum.png  <-  2D/top-down-rpg/Item__33.png  (whole)
+assets/art/items/scalding_wax.png  <-  2D/top-down-rpg/Item__29.png  (whole)
+assets/art/items/shadow_puppet.png  <-  2D/top-down-rpg/Item__55.png  (whole)
+assets/art/items/snuffer_cap.png  <-  2D/top-down-rpg/Item__44.png  (whole)
+assets/art/items/soft_soles.png  <-  2D/top-down-rpg/Item__48.png  (whole)
+assets/art/items/spare_wick.png  <-  2D/top-down-rpg/Item__37.png  (whole)
+assets/art/items/stopped_clock.png  <-  2D/top-down-rpg/Item__24.png  (whole)
+assets/art/items/tin_sconce.png  <-  2D/top-down-rpg/Item__71.png  (whole)
+assets/art/items/warming_pan.png  <-  2D/top-down-rpg/Item__26.png  (whole)
+assets/art/items/wax_coat.png  <-  2D/top-down-rpg/Item__57.png  (whole)
+assets/art/items/witching_hour.png  <-  2D/top-down-rpg/Item__52.png  (whole)
+
+== Lucifer: Ancient Skeleton by Foozle (drawn by Baldur) (CC0) - https://foozlecc.itch.io/lucifer-skeleton-ancient-boss
 assets/art/monsters/ossuary_atk_f0.png  <-  2D/characters/Down/Png/AncientSkeletonDownAttack01.png  [0, 0, 80, 80]
 assets/art/monsters/ossuary_atk_f1.png  <-  2D/characters/Down/Png/AncientSkeletonDownAttack01.png  [80, 0, 80, 80]
 assets/art/monsters/ossuary_atk_f2.png  <-  2D/characters/Down/Png/AncientSkeletonDownAttack01.png  [160, 0, 80, 80]
@@ -166,6 +194,64 @@ assets/art/areas/library/librarian_run_f2.png  <-  2D/top-down-rpg/Actor/Boss/Te
 assets/art/areas/library/librarian_run_f3.png  <-  2D/top-down-rpg/Actor/Boss/TenguBlue/Idle.png  [204, 0, 68, 68]
 assets/art/areas/library/librarian_run_f4.png  <-  2D/top-down-rpg/Actor/Boss/TenguBlue/Idle.png  [272, 0, 68, 68]
 assets/art/areas/library/librarian_run_f5.png  <-  2D/top-down-rpg/Actor/Boss/TenguBlue/Idle.png  [340, 0, 68, 68]
+assets/art/items/beeswax.png  <-  2D/top-down-rpg/Items/Food/Honey.png  (whole)
+assets/art/items/bell_rope.png  <-  2D/top-down-rpg/Items/Weapons/Whip/Sprite.png  (whole)
+assets/art/items/bell_wire.png  <-  2D/top-down-rpg/Items/Weapons/Ninjaku/Sprite.png  (whole)
+assets/art/items/bellows.png  <-  2D/top-down-rpg/Items/Object/Gourd.png  (whole)
+assets/art/items/both_ends.png  <-  2D/top-down-rpg/Items/Weapons/Sai/Sprite.png  (whole)
+assets/art/items/clockwork_mouse.png  <-  2D/top-down-rpg/Actor/Monster/Mouse/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/items/cold_wax.png  <-  2D/top-down-rpg/Items/Scroll/ScrollIce.png  (whole)
+assets/art/items/cuckoo_clock.png  <-  2D/top-down-rpg/Items/Treasure/LittleTreasureChest.png  (whole)
+assets/art/items/dowsing_rod.png  <-  2D/top-down-rpg/Items/Resource/Branch.png  (whole)
+assets/art/items/dust_bunny.png  <-  2D/top-down-rpg/Items/Food/Nut.png  (whole)
+assets/art/items/ember_heart.png  <-  2D/top-down-rpg/Items/Resource/GemRed.png  (whole)
+assets/art/items/fam_bunny_f0.png  <-  2D/top-down-rpg/Actor/Animal/Hamster/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/items/fam_bunny_f1.png  <-  2D/top-down-rpg/Actor/Animal/Hamster/SpriteSheet.png  [0, 16, 16, 16]
+assets/art/items/fam_coal_f0.png  <-  2D/top-down-rpg/Actor/Monster/Flam/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/items/fam_coal_f1.png  <-  2D/top-down-rpg/Actor/Monster/Flam/SpriteSheet.png  [0, 16, 16, 16]
+assets/art/items/fam_lantern_f0.png  <-  2D/top-down-rpg/Actor/Monster/LanternGreen/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/items/fam_lantern_f1.png  <-  2D/top-down-rpg/Actor/Monster/LanternGreen/SpriteSheet.png  [0, 16, 16, 16]
+assets/art/items/fam_matchling_f0.png  <-  2D/top-down-rpg/Actor/Monster/Spirit2/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/items/fam_matchling_f1.png  <-  2D/top-down-rpg/Actor/Monster/Spirit2/SpriteSheet.png  [0, 16, 16, 16]
+assets/art/items/fam_mouse_f0.png  <-  2D/top-down-rpg/Actor/Monster/Mouse/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/items/fam_mouse_f1.png  <-  2D/top-down-rpg/Actor/Monster/Mouse/SpriteSheet.png  [0, 16, 16, 16]
+assets/art/items/fire_tongs.png  <-  2D/top-down-rpg/Items/Weapons/Fork/Sprite.png  (whole)
+assets/art/items/glass_chimney.png  <-  2D/top-down-rpg/Items/Potion/EmptyPot.png  (whole)
+assets/art/items/hot_drip.png  <-  2D/top-down-rpg/Items/Scroll/ScrollFire.png  (whole)
+assets/art/items/hourglass.png  <-  2D/top-down-rpg/Items/Object/Hourglass.png  (whole)
+assets/art/items/iron_stick.png  <-  2D/top-down-rpg/Items/Weapons/Stick/Sprite.png  (whole)
+assets/art/items/ks_censer.png  <-  2D/top-down-rpg/Items/Object/MoneyBag.png  (whole)
+assets/art/items/ks_flare_match.png  <-  2D/top-down-rpg/Items/Projectile/Dynamite.png  (whole)
+assets/art/items/ks_hand_bell.png  <-  2D/top-down-rpg/Items/Treasure/GoldCup.png  (whole)
+assets/art/items/ks_music_box.png  <-  2D/top-down-rpg/Items/Treasure/BigTreasureChest.png  (whole)
+assets/art/items/ks_oil_jug.png  <-  2D/top-down-rpg/Items/Potion/LifePot.png  (whole)
+assets/art/items/lace_fan.png  <-  2D/top-down-rpg/Items/Object/PanFlute.png  (whole)
+assets/art/items/lamp_oil.png  <-  2D/top-down-rpg/Items/Potion/WaterPot.png  (whole)
+assets/art/items/lodestone.png  <-  2D/top-down-rpg/Items/Resource/Rock.png  (whole)
+assets/art/items/love_letter.png  <-  2D/top-down-rpg/Items/Other/Letter.png  (whole)
+assets/art/items/matchbook.png  <-  2D/top-down-rpg/Items/Weapons/Book/Sprite.png  (whole)
+assets/art/items/minute_hand.png  <-  2D/top-down-rpg/Items/Weapons/Lance/Sprite.png  (whole)
+assets/art/items/moth_friend.png  <-  2D/top-down-rpg/Actor/Monster/ButterflyBlue/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/items/nightshade.png  <-  2D/top-down-rpg/Items/Resource/Grass.png  (whole)
+assets/art/items/old_pipe.png  <-  2D/top-down-rpg/Items/Weapons/Club/Sprite.png  (whole)
+assets/art/items/pale_taper.png  <-  2D/top-down-rpg/Items/Scroll/Scroll.png  (whole)
+assets/art/items/paper_lantern.png  <-  2D/top-down-rpg/Actor/Monster/LanternGreen/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/items/phoenix_feather.png  <-  2D/top-down-rpg/Items/Resource/feather.png  (whole)
+assets/art/items/pocket_watch.png  <-  2D/top-down-rpg/Items/Treasure/GoldCoin.png  (whole)
+assets/art/items/powder_tin.png  <-  2D/top-down-rpg/Items/Potion/MilkPot.png  (whole)
+assets/art/items/salt_line.png  <-  2D/top-down-rpg/Items/Projectile/Caltrop.png  (whole)
+assets/art/items/sharp_wick.png  <-  2D/top-down-rpg/Items/Projectile/Kunai.png  (whole)
+assets/art/items/slow_burn.png  <-  2D/top-down-rpg/Items/Tool/WateringCan.png  (whole)
+assets/art/items/split_wick.png  <-  2D/top-down-rpg/Items/Weapons/Axe/Sprite.png  (whole)
+assets/art/items/stove_door.png  <-  2D/top-down-rpg/Items/Tool/Anvil.png  (whole)
+assets/art/items/sweep_brush.png  <-  2D/top-down-rpg/Items/Tool/Hoe.png  (whole)
+assets/art/items/tallow_heart.png  <-  2D/top-down-rpg/Items/Potion/Heart.png  (whole)
+assets/art/items/thimble.png  <-  2D/top-down-rpg/Items/Treasure/SilverCup.png  (whole)
+assets/art/items/tinderbox.png  <-  2D/top-down-rpg/Items/Object/CrateEmpty.png  (whole)
+assets/art/items/twin_wick.png  <-  2D/top-down-rpg/Items/Food/SeedBig2.png  (whole)
+assets/art/items/wax_seal.png  <-  2D/top-down-rpg/Items/Other/Stamp.png  (whole)
+assets/art/items/wick_trimmer.png  <-  2D/top-down-rpg/Items/Tool/Sickle.png  (whole)
+assets/art/items/will_o_wisp.png  <-  2D/top-down-rpg/Items/Resource/GemPurple.png  (whole)
 assets/art/monsters/choir_atk_f0.png  <-  2D/top-down-rpg/Actor/Boss/GiantSpirit/Idle.png  [0, 0, 50, 50]
 assets/art/monsters/choir_atk_f1.png  <-  2D/top-down-rpg/Actor/Boss/GiantSpirit/Idle.png  [50, 0, 50, 50]
 assets/art/monsters/choir_atk_f2.png  <-  2D/top-down-rpg/Actor/Boss/GiantSpirit/Idle.png  [100, 0, 50, 50]
@@ -499,5 +585,9 @@ assets/art/monsters/wisp_run_f0.png  <-  2D/top-down-rpg/Actor/Monster/Flam2/Spr
 assets/art/monsters/wisp_run_f1.png  <-  2D/top-down-rpg/Actor/Monster/Flam2/SpriteSheet.png  [0, 16, 16, 16]
 assets/art/monsters/wisp_run_f2.png  <-  2D/top-down-rpg/Actor/Monster/Flam2/SpriteSheet.png  [0, 32, 16, 16]
 assets/art/monsters/wisp_run_f3.png  <-  2D/top-down-rpg/Actor/Monster/Flam2/SpriteSheet.png  [0, 48, 16, 16]
+assets/art/pickups/bomb_pickup.png  <-  2D/top-down-rpg/Items/Projectile/Bomb.png  (whole)
+assets/art/pickups/match.png  <-  2D/top-down-rpg/Items/Weapons/MagicWand/Sprite.png  (whole)
+assets/art/pickups/wax_big.png  <-  2D/top-down-rpg/Items/Food/SeedLargeWhite.png  (whole)
+assets/art/pickups/wax_small.png  <-  2D/top-down-rpg/Items/Food/Seed2.png  (whole)
 
 == Shown as 0x72's own frames again (the redrawn copies were taken out): monsters/tiny_slug, monsters/tiny_zombie, monsters/goblin, monsters/muddy, monsters/snuffer, monsters/waxwork, areas/attic/mannequin, areas/attic/trunk
