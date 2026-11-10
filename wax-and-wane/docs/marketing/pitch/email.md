@@ -1,6 +1,8 @@
 # The emails
 
 Keep them this short. A scout reads the first two lines and clicks one link. Fill in the `[BRACKETS]`.
+**Send nothing until the itch.io page is live:** the email says "you can play it right now", and that has to be
+true.
 Use the publisher's own form or address from `publishers.md`. Send from an address you check every day.
 
 ## Subject lines (pick one)
@@ -17,7 +19,7 @@ Wax & Wane is a twin-stick roguelite where your health bar is a burning candle a
 Every hit melts minutes off the clock, every quick kill pours them back, and anything powerful costs time.
 
 You can play it right now, nothing to install: `[ITCH LINK]`
-(a night is about nine minutes; the opening skips with one press)
+(a winning night takes about ten minutes; the opening skips with one press)
 
 It is finished: 64 relics, 16 guardians, 6 candles, a story with four endings, on Windows, Linux, Steam Deck
 and Android. I am looking for a partner for marketing, testing, translation and console releases. I am not
@@ -26,7 +28,7 @@ one sits closest to."]`
 
 One thing you should know up front: I made it on my own with Claude, an AI assistant. It wrote the code and
 drew the game's own pixel art through small programs under my direction, on top of a free human-made tile set
-and human-made music. If that rules it out for you, no hard feelings, and thank you for reading this far.
+and human-made music. If you do not publish AI-assisted work, tell me and I will not write again.
 
 Deck: `[LINK OR ATTACHED]`   Windows build: `[LINK]`   Video: `[YOUTUBE LINK]`
 

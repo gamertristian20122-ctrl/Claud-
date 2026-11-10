@@ -81,7 +81,7 @@ knows those.
 - **A build they can play once.** Raw Fury: "a reasonable expectation is that we'll only play the build the first
   time you send it". They also suggest "Skippable cutscenes/intro." and "Checkpoints you can load into in
   different parts of the build." (The opening and every scene skip with one press. There are no checkpoints: a
-  night is about 9 minutes, and the Gentle level lets a reviewer see all four floors.)
+  winning night takes about ten minutes, and the Gentle level lets a reviewer see all four floors.)
 - **What you want from them.** Armor Games, Versus Evil and Dear Villagers all ask. Have one clear sentence.
 - **A gameplay video.** Nearly every form has a box for it.
 - **A deck.** Raw Fury's six questions are a good test of any deck: what are you doing, why, who are you, where do

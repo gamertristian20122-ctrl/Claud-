@@ -9,6 +9,7 @@ Everything you need to start writing to publishers. Read this page first. It is 
 | The deck | 12 slides, online: https://claude.ai/artifact/5EfjaS3ebsXf4U64zk4nHR (private until you share it; it downloads as PDF or PowerPoint) |
 | `publishers.md` | Who to write to, how, what each one asks for, and who not to write to |
 | `answers.md` | Ready answers for every box a pitch form has |
+| `one_page.md` | The whole pitch on one page, for when a form asks for a summary document |
 | `email.md` | The first email, the follow-up, and what to say when they reply |
 | `made_with.md` | Exactly what to say about how the game was made. Use it every time |
 | `before_you_sign.md` | Eight things to check in any contract |
@@ -20,7 +21,7 @@ The builds are in the game's `build/` folder: `WaxAndWane_2.8.0_web.zip` (browse
 
 ## Only you can do these
 
-1. **Your name or a studio name**, and **your country**.
+1. **Your name or a studio name**, **your country**, and **one honest sentence on why you made this game**.
 2. **A contact email** you check every day. A new address just for the game is a good idea.
 3. **What you want from a publisher.** The kit says: marketing, testing, translation, consoles and phones, and
    no development money. Change it if that is not what you want.
@@ -31,7 +32,7 @@ The builds are in the game's `build/` folder: `WaxAndWane_2.8.0_web.zip` (browse
 7. **One real run of the Windows build** on your ROG Ally. It has only been started on Linux here.
 
 Put 1 to 5 into `answers.md`, `email.md` and the deck (every blank is in `[SQUARE BRACKETS]`; the deck has them
-on the cover, slide 8, slide 11 and slide 12).
+on the cover and slides 8, 9, 10, 11 and 12).
 
 ## Step by step
 
@@ -49,9 +50,11 @@ on the cover, slide 8, slide 11 and slide 12).
 3. **Fill the blanks** (the list above).
 4. **Share the deck.** Open the deck link, use its Share menu, and either share the link or download the PDF to
    attach.
-5. **Send the first five** in `publishers.md`, one a day. Change one line in each email to say why you chose
+5. **Check before the first send:** the itch.io page is live and plays, the Windows build has run once on a
+   real PC, and every `[BLANK]` is filled.
+6. **Send the first five** in `publishers.md`, one a day. Change one line in each email to say why you chose
    them.
-6. **Write every send in the tracker** at the bottom of `publishers.md`. Follow up once after 10 working days.
+7. **Write every send in the tracker** at the bottom of `publishers.md`. Follow up once after 10 working days.
 
 ## Honest odds, and what improves them
 

@@ -17,7 +17,7 @@ fill in. Every number matches `../facts.md` (game version 2.8.0).
 | Contact | `[YOUR EMAIL]` |
 | Website | `[YOUR ITCH.IO PAGE]` |
 | Stage | Content-complete and playable from start to finish. In polish. Not yet on any store |
-| Built today for | Windows, Linux and Steam Deck, Android, and the browser (the demo) |
+| Built today for | Windows, Linux (laid out for the Steam Deck's screen and controls; not yet run on one), Android, and the browser (the demo) |
 | Would like to reach | Nintendo Switch, PlayStation, Xbox, iPhone |
 | Target release | `[A DATE YOU CAN KEEP, for example "PC in spring 2027"]` |
 | Languages | English. Every line of text already goes through one string table, ready to translate |
@@ -41,7 +41,7 @@ his back is everything: it is his health and it is the clock, burning from 12:00
 Fast kills, clean rooms and drippings buy minutes back. As the wax goes, Tallow gets shorter and his circle of
 light shrinks with him, so you can read how the night is going without looking at a bar.
 
-A night is about nine minutes: four floors (up to seven on a long night), three possible guardians on each,
+A winning night takes about ten minutes: four floors (up to seven on a long night), three possible guardians on each,
 and a secret fifth floor if you beat the Belfry by 1:00 AM. 64 relics stack into builds, and the house keeps
 offering the same trade in different shapes: minutes of your candle for power. Six candles play differently,
 each with its own special move. Between nights there is a Journal to fill, a diary that tells the story of the
@@ -57,8 +57,8 @@ house in 24 pages, four endings, and a seeded run every night that is the same h
    conversations, 5 special rooms, 6 champions, 4 difficulty levels.
 4. **Six candles, six ways to play.** Each has its own special move: a dash, a blink, a ground slam, a burst of
    sparks, a flare that burns your own wax, and a candle that puts itself out to hide.
-5. **Short nights on anything.** About nine minutes a run on phone, PC or Steam Deck, with touch, keyboard and
-   mouse, or a gamepad. It works offline and collects no data.
+5. **Ten-minute runs on a phone or a PC.** Touch, keyboard and mouse, or a gamepad. It works offline and
+   collects no data.
 
 ## What I am looking for from a publisher
 
@@ -76,18 +76,22 @@ to use (CC0) and made by people. Nothing is generated while you play. The full l
 
 ## Games like it
 
+The shape is The Binding of Isaac's (rooms, treasure rooms, shops, relics that change your shots). The three
+below are closer in size and price, and are the ones on the deck's slide 8.
+
 | Game | How Wax & Wane is like it | How it differs |
 |---|---|---|
-| Revita | Pixel twin-stick roguelite, room to room, trading health for power | Health is also the timer; nights are shorter; cosy-spooky, not sombre |
+| Revita | Pixel twin-stick roguelite, room to room, trading health for power | Health is also the timer; runs are shorter; the tone is lighter |
 | Tiny Rogues | One developer, small rooms, lots of builds, a low price | A fixed two-hour night gives every run a clock to beat |
-| The Binding of Isaac | Rooms, treasure rooms, shops, relics that change your shots | One resource for health and time; a gentler tone; a 9-minute run |
+| Archvale | A cosy-looking pixel bullet-hell from a tiny team | Short, self-contained runs instead of one long adventure |
 
 ## Timeline (what is done, what is next)
 
-- Done: the whole game (version 2.8.0), Windows, Linux, Android and browser builds, store texts and art, a press
-  kit, a trailer, a privacy policy.
-- Next, on my own: a public browser demo and a Steam "Coming Soon" page. `[DATES]`
-- With a partner: device testing, translation into five languages, console and phone releases.
+- Done: the whole game (version 2.8.0), a browser demo anyone can play, Windows, Linux and Android builds, store
+  texts and art, a press kit, a privacy policy.
+- Next, on my own: a Steam "Coming Soon" page `[DATE]`, numbers from the demo, the PC release `[DATE]`.
+- With a partner: device testing, translation into five languages, a Switch port, then the other consoles and
+  iPhone.
 
 ## Links (fill these once, reuse everywhere)
 
