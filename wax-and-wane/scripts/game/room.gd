@@ -407,7 +407,9 @@ func light_candles(instant := false) -> void:
 const AREA_TINT := {"cellar": Color(1.0, 0.93, 0.84), "crypt": Color(0.78, 0.88, 1.0), "chapel": Color(0.92, 0.8, 1.0),
 	"belfry": Color(1.0, 0.84, 0.7), "kitchen": Color(1.0, 0.95, 0.78), "library": Color(0.9, 0.82, 0.7),
 	"attic": Color(0.84, 0.86, 0.96), "tower": Color(0.9, 0.92, 0.78)}
-const DOOR_TINT := {"boss": Color(1.0, 0.5, 0.45), "gold": Color(1.0, 0.86, 0.4)}
+const DOOR_TINT := {"boss": Color(1.0, 0.5, 0.45), "gold": Color(1.0, 0.86, 0.4), "seance": Color(0.72, 0.6, 1.0),
+	"mirror": Color(0.6, 0.85, 1.0), "musicbox": Color(1.0, 0.62, 0.85), "study": Color(0.62, 1.0, 0.7),
+	"font": Color(0.55, 1.0, 0.95)}
 
 
 func set_open(open: bool, instant := false) -> void:

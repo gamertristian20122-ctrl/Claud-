@@ -32,6 +32,10 @@ assets/art/monsters/zombie_run_f1.png  <-  zombie_anim_f2  (whole)
 assets/art/monsters/zombie_run_f2.png  <-  zombie_anim_f3  (whole)
 assets/art/monsters/zombie_run_f3.png  <-  zombie_anim_f10  (whole)
 assets/art/pickups/pedestal.png  <-  crate  (whole)
+assets/art/primer/dummy_f0.png  <-  crate  (whole)
+assets/art/primer/dummy_f1.png  <-  crate  (whole)
+assets/art/primer/dummy_f2.png  <-  crate  (whole)
+assets/art/primer/dummy_hit.png  <-  crate  (whole)
 assets/art/rooms/door_bottom_closed.png  <-  wall_hole_1  (whole)
 assets/art/rooms/door_bottom_closed.png  <-  wall_hole_1  (whole)
 assets/art/rooms/door_bottom_open.png  <-  floor_1  (whole)
@@ -5306,6 +5310,249 @@ assets/art/rooms/room_tower_2.png  <-  wall_top_mid  (whole)
 assets/art/rooms/room_tower_2.png  <-  wall_top_mid  (whole)
 assets/art/rooms/room_tower_2.png  <-  wall_top_right  (whole)
 assets/art/rooms/trapdoor_closed.png  <-  floor_stairs  (whole)
+assets/art/specials/font_0.png  <-  wall_fountain_basin_blue_anim_f0  (whole)
+assets/art/specials/font_0.png  <-  wall_fountain_mid_blue_anim_f0  (whole)
+assets/art/specials/font_0.png  <-  wall_fountain_top_1  (whole)
+assets/art/specials/font_1.png  <-  wall_fountain_basin_blue_anim_f0  (whole)
+assets/art/specials/font_1.png  <-  wall_fountain_mid_blue_anim_f0  (whole)
+assets/art/specials/font_1.png  <-  wall_fountain_top_1  (whole)
+assets/art/specials/font_2.png  <-  wall_fountain_basin_blue_anim_f0  (whole)
+assets/art/specials/font_2.png  <-  wall_fountain_mid_blue_anim_f0  (whole)
+assets/art/specials/font_2.png  <-  wall_fountain_top_1  (whole)
+assets/art/specials/font_3.png  <-  wall_fountain_basin_blue_anim_f0  (whole)
+assets/art/specials/font_3.png  <-  wall_fountain_mid_blue_anim_f0  (whole)
+assets/art/specials/font_3.png  <-  wall_fountain_top_1  (whole)
+assets/art/specials/font_4.png  <-  wall_fountain_basin_blue_anim_f0  (whole)
+assets/art/specials/font_4.png  <-  wall_fountain_mid_blue_anim_f0  (whole)
+assets/art/specials/font_4.png  <-  wall_fountain_top_1  (whole)
+assets/art/specials/font_5.png  <-  wall_fountain_basin_blue_anim_f0  (whole)
+assets/art/specials/font_5.png  <-  wall_fountain_mid_blue_anim_f0  (whole)
+assets/art/specials/font_5.png  <-  wall_fountain_top_1  (whole)
+assets/art/specials/font_6.png  <-  wall_fountain_basin_blue_anim_f0  (whole)
+assets/art/specials/font_6.png  <-  wall_fountain_mid_blue_anim_f0  (whole)
+assets/art/specials/font_6.png  <-  wall_fountain_top_1  (whole)
+assets/art/specials/font_spent.png  <-  wall_fountain_basin_red_anim_f0  (whole)
+assets/art/specials/font_spent.png  <-  wall_fountain_mid_red_anim_f0  (whole)
+assets/art/specials/font_spent.png  <-  wall_fountain_top_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_1  (whole)
+assets/art/tower/room_keeper.png  <-  floor_2  (whole)
+assets/art/tower/room_keeper.png  <-  floor_2  (whole)
+assets/art/tower/room_keeper.png  <-  floor_2  (whole)
+assets/art/tower/room_keeper.png  <-  floor_2  (whole)
+assets/art/tower/room_keeper.png  <-  floor_2  (whole)
+assets/art/tower/room_keeper.png  <-  floor_2  (whole)
+assets/art/tower/room_keeper.png  <-  floor_3  (whole)
+assets/art/tower/room_keeper.png  <-  floor_3  (whole)
+assets/art/tower/room_keeper.png  <-  floor_3  (whole)
+assets/art/tower/room_keeper.png  <-  floor_3  (whole)
+assets/art/tower/room_keeper.png  <-  floor_3  (whole)
+assets/art/tower/room_keeper.png  <-  floor_3  (whole)
+assets/art/tower/room_keeper.png  <-  floor_4  (whole)
+assets/art/tower/room_keeper.png  <-  floor_4  (whole)
+assets/art/tower/room_keeper.png  <-  floor_4  (whole)
+assets/art/tower/room_keeper.png  <-  floor_4  (whole)
+assets/art/tower/room_keeper.png  <-  floor_4  (whole)
+assets/art/tower/room_keeper.png  <-  floor_4  (whole)
+assets/art/tower/room_keeper.png  <-  floor_4  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_5  (whole)
+assets/art/tower/room_keeper.png  <-  floor_6  (whole)
+assets/art/tower/room_keeper.png  <-  floor_6  (whole)
+assets/art/tower/room_keeper.png  <-  floor_6  (whole)
+assets/art/tower/room_keeper.png  <-  floor_6  (whole)
+assets/art/tower/room_keeper.png  <-  floor_6  (whole)
+assets/art/tower/room_keeper.png  <-  floor_6  (whole)
+assets/art/tower/room_keeper.png  <-  floor_6  (whole)
+assets/art/tower/room_keeper.png  <-  floor_6  (whole)
+assets/art/tower/room_keeper.png  <-  floor_6  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_7  (whole)
+assets/art/tower/room_keeper.png  <-  floor_8  (whole)
+assets/art/tower/room_keeper.png  <-  floor_8  (whole)
+assets/art/tower/room_keeper.png  <-  floor_8  (whole)
+assets/art/tower/room_keeper.png  <-  floor_8  (whole)
+assets/art/tower/room_keeper.png  <-  floor_8  (whole)
+assets/art/tower/room_keeper.png  <-  wall_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_outer_mid_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_right  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_left  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
+assets/art/tower/room_keeper.png  <-  wall_top_right  (whole)
 
 == 16x16 RPG Item Pack by Alex's Assets (CC0) - https://alexs-assets.itch.io/16x16-rpg-item-pack
 assets/art/items/blowlamp.png  <-  2D/top-down-rpg/Item__23.png  (whole)
@@ -5333,6 +5580,7 @@ assets/art/items/tin_sconce.png  <-  2D/top-down-rpg/Item__71.png  (whole)
 assets/art/items/warming_pan.png  <-  2D/top-down-rpg/Item__26.png  (whole)
 assets/art/items/wax_coat.png  <-  2D/top-down-rpg/Item__57.png  (whole)
 assets/art/items/witching_hour.png  <-  2D/top-down-rpg/Item__52.png  (whole)
+assets/art/specials/offer_veil.png  <-  2D/top-down-rpg/Item__55.png  (whole)
 
 == Lucifer: Ancient Skeleton by Foozle (drawn by Baldur) (CC0) - https://foozlecc.itch.io/lucifer-skeleton-ancient-boss
 assets/art/monsters/ossuary_atk_f0.png  <-  2D/characters/Down/Png/AncientSkeletonDownAttack01.png  [0, 0, 80, 80]
@@ -5363,6 +5611,10 @@ assets/art/monsters/ossuary_run_f6.png  <-  2D/characters/Down/Png/AncientSkelet
 assets/art/monsters/ossuary_run_f7.png  <-  2D/characters/Down/Png/AncientSkeletonDownWalk.png  [560, 0, 80, 80]
 
 == Roguelike Indoors by Kenney (CC0) - https://kenney.nl/assets/roguelike-indoors
+assets/art/areas/attic/lantern_glow.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [272, 102, 16, 16]
+assets/art/areas/attic/lantern_off.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [323, 34, 16, 16]
+assets/art/areas/attic/lantern_on.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [272, 102, 16, 16]
+assets/art/areas/kitchen/stove.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [238, 238, 16, 16]
 assets/art/decor/floor_candle_stubs.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [272, 102, 16, 16]
 assets/art/decor/prop_attic_chair.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [0, 34, 16, 16]
 assets/art/decor/prop_attic_mirror.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 238, 16, 16]
@@ -5441,8 +5693,57 @@ assets/art/rooms/candelabra_lit_f3.png  <-  2D/top-down-rpg/Tilesheets/roguelike
 assets/art/rooms/candelabra_lit_f3.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [340, 85, 16, 16]
 assets/art/rooms/candelabra_unlit.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [340, 0, 16, 16]
 assets/art/rooms/candelabra_unlit.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [340, 85, 16, 16]
+assets/art/specials/lectern_f0.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [85, 85, 16, 16]
+assets/art/specials/lectern_f1.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [85, 85, 16, 16]
+assets/art/specials/mirror_broken.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 272, 16, 16]
+assets/art/specials/mirror_broken.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 289, 16, 16]
+assets/art/specials/mirror_f0.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 238, 16, 16]
+assets/art/specials/mirror_f0.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 255, 16, 16]
+assets/art/specials/mirror_f1.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 238, 16, 16]
+assets/art/specials/mirror_f1.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 255, 16, 16]
+assets/art/specials/mirror_f2.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 238, 16, 16]
+assets/art/specials/mirror_f2.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 255, 16, 16]
+assets/art/specials/mirror_f3.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 238, 16, 16]
+assets/art/specials/mirror_f3.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 255, 16, 16]
+assets/art/specials/mirror_veiled.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 238, 16, 16]
+assets/art/specials/mirror_veiled.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [374, 255, 16, 16]
+assets/art/tower/ladder_f0.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 136, 16, 16]
+assets/art/tower/ladder_f0.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 153, 16, 16]
+assets/art/tower/ladder_f0.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 170, 16, 16]
+assets/art/tower/ladder_f0.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 187, 16, 16]
+assets/art/tower/ladder_f1.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 136, 16, 16]
+assets/art/tower/ladder_f1.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 153, 16, 16]
+assets/art/tower/ladder_f1.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 170, 16, 16]
+assets/art/tower/ladder_f1.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 187, 16, 16]
+assets/art/tower/ladder_f2.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 136, 16, 16]
+assets/art/tower/ladder_f2.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 153, 16, 16]
+assets/art/tower/ladder_f2.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 170, 16, 16]
+assets/art/tower/ladder_f2.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 187, 16, 16]
+assets/art/tower/ladder_f3.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 136, 16, 16]
+assets/art/tower/ladder_f3.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 153, 16, 16]
+assets/art/tower/ladder_f3.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 170, 16, 16]
+assets/art/tower/ladder_f3.png  <-  2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png  [357, 187, 16, 16]
 
 == Tiny Dungeon by Kenney (CC0) - https://kenney.nl/assets/tiny-dungeon
+assets/art/areas/library/rail_l.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [64, 96, 16, 16]
+assets/art/areas/library/rail_m.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [80, 96, 16, 16]
+assets/art/areas/library/rail_r.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [96, 96, 16, 16]
+assets/art/areas/library/shelfdoor_f0.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 80, 16, 16]
+assets/art/areas/library/shelfdoor_f0.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 80, 16, 16]
+assets/art/areas/library/shelfdoor_f0.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 96, 16, 16]
+assets/art/areas/library/shelfdoor_f0.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 96, 16, 16]
+assets/art/areas/library/shelfdoor_f1.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 80, 16, 16]
+assets/art/areas/library/shelfdoor_f1.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 80, 16, 16]
+assets/art/areas/library/shelfdoor_f1.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 96, 16, 16]
+assets/art/areas/library/shelfdoor_f1.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 96, 16, 16]
+assets/art/areas/library/shelfdoor_f2.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 80, 16, 16]
+assets/art/areas/library/shelfdoor_f2.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 80, 16, 16]
+assets/art/areas/library/shelfdoor_f2.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 96, 16, 16]
+assets/art/areas/library/shelfdoor_f2.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 96, 16, 16]
+assets/art/areas/library/shelfdoor_f3.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 80, 16, 16]
+assets/art/areas/library/shelfdoor_f3.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 80, 16, 16]
+assets/art/areas/library/shelfdoor_f3.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 96, 16, 16]
+assets/art/areas/library/shelfdoor_f3.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 96, 16, 16]
 assets/art/decor/prop_attic_wardrobe.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 80, 16, 16]
 assets/art/decor/prop_attic_wardrobe.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [48, 96, 16, 16]
 assets/art/decor/prop_coffin.png  <-  2D/dungeon/Tilemap/tilemap_packed.png  [64, 80, 16, 16]
@@ -5478,6 +5779,10 @@ assets/art/areas/attic/dress_form_run_f6.png  <-  2D/top-down-rpg/Actor/Boss/Gia
 assets/art/areas/attic/dress_form_run_f7.png  <-  2D/top-down-rpg/Actor/Boss/GiantBamboo2/Walk.png  [434, 0, 62, 62]
 assets/art/areas/attic/dress_form_run_f8.png  <-  2D/top-down-rpg/Actor/Boss/GiantBamboo2/Walk.png  [496, 0, 62, 62]
 assets/art/areas/attic/dress_form_run_f9.png  <-  2D/top-down-rpg/Actor/Boss/GiantBamboo2/Walk.png  [558, 0, 62, 62]
+assets/art/areas/kitchen/flour_f0.png  <-  2D/top-down-rpg/FX/Smoke/Smoke/SpriteSheet.png  [32, 0, 32, 32]
+assets/art/areas/kitchen/flour_f1.png  <-  2D/top-down-rpg/FX/Smoke/Smoke/SpriteSheet.png  [64, 0, 32, 32]
+assets/art/areas/kitchen/flour_f2.png  <-  2D/top-down-rpg/FX/Smoke/Smoke/SpriteSheet.png  [96, 0, 32, 32]
+assets/art/areas/kitchen/flour_f3.png  <-  2D/top-down-rpg/FX/Smoke/Smoke/SpriteSheet.png  [128, 0, 32, 32]
 assets/art/areas/kitchen/flour_ghost_atk_f0.png  <-  2D/top-down-rpg/Actor/Monster/Spirit/SpriteSheet.png  [0, 0, 16, 16]
 assets/art/areas/kitchen/flour_ghost_atk_f1.png  <-  2D/top-down-rpg/Actor/Monster/Spirit/SpriteSheet.png  [0, 16, 16, 16]
 assets/art/areas/kitchen/flour_ghost_atk_f2.png  <-  2D/top-down-rpg/Actor/Monster/Spirit/SpriteSheet.png  [0, 32, 16, 16]
@@ -5502,6 +5807,11 @@ assets/art/areas/kitchen/lid_crab_run_f0.png  <-  2D/top-down-rpg/Actor/Monster/
 assets/art/areas/kitchen/lid_crab_run_f1.png  <-  2D/top-down-rpg/Actor/Monster/Mollusc/Mollusc.png  [0, 16, 16, 16]
 assets/art/areas/kitchen/lid_crab_run_f2.png  <-  2D/top-down-rpg/Actor/Monster/Mollusc/Mollusc.png  [0, 32, 16, 16]
 assets/art/areas/kitchen/lid_crab_run_f3.png  <-  2D/top-down-rpg/Actor/Monster/Mollusc/Mollusc.png  [0, 48, 16, 16]
+assets/art/areas/kitchen/pot.png  <-  2D/top-down-rpg/Items/Resource/Water.png  (whole)
+assets/art/areas/kitchen/pot_spilt.png  <-  2D/top-down-rpg/Items/Resource/Water.png  (whole)
+assets/art/areas/kitchen/scald_f0.png  <-  2D/top-down-rpg/FX/Elemental/Water/SpriteSheet.png  [200, 0, 40, 33]
+assets/art/areas/kitchen/scald_f1.png  <-  2D/top-down-rpg/FX/Elemental/Water/SpriteSheet.png  [240, 0, 40, 33]
+assets/art/areas/kitchen/scald_f2.png  <-  2D/top-down-rpg/FX/Elemental/Water/SpriteSheet.png  [280, 0, 40, 33]
 assets/art/areas/kitchen/stockpot_atk_f0.png  <-  2D/top-down-rpg/Actor/Boss/GiantSlime2/Idle.png  [0, 0, 62, 52]
 assets/art/areas/kitchen/stockpot_atk_f1.png  <-  2D/top-down-rpg/Actor/Boss/GiantSlime2/Idle.png  [62, 0, 62, 52]
 assets/art/areas/kitchen/stockpot_atk_f2.png  <-  2D/top-down-rpg/Actor/Boss/GiantSlime2/Idle.png  [124, 0, 62, 52]
@@ -5525,6 +5835,9 @@ assets/art/areas/kitchen/stockpot_run_f6.png  <-  2D/top-down-rpg/Actor/Boss/Gia
 assets/art/areas/kitchen/stockpot_run_f7.png  <-  2D/top-down-rpg/Actor/Boss/GiantSlime2/Jump.png  [434, 0, 62, 52]
 assets/art/areas/kitchen/stockpot_run_f8.png  <-  2D/top-down-rpg/Actor/Boss/GiantSlime2/Jump.png  [496, 0, 62, 52]
 assets/art/areas/kitchen/stockpot_run_f9.png  <-  2D/top-down-rpg/Actor/Boss/GiantSlime2/Jump.png  [558, 0, 62, 52]
+assets/art/areas/kitchen/stove_glow_f0.png  <-  2D/top-down-rpg/FX/Particle/Fire.png  [32, 0, 8, 12]
+assets/art/areas/kitchen/stove_glow_f1.png  <-  2D/top-down-rpg/FX/Particle/Fire.png  [40, 0, 8, 12]
+assets/art/areas/kitchen/stove_glow_f2.png  <-  2D/top-down-rpg/FX/Particle/Fire.png  [48, 0, 8, 12]
 assets/art/areas/library/bookworm_atk_f0.png  <-  2D/top-down-rpg/Actor/Monster/Snake3/Snake3.png  [0, 0, 16, 16]
 assets/art/areas/library/bookworm_atk_f1.png  <-  2D/top-down-rpg/Actor/Monster/Snake3/Snake3.png  [0, 16, 16, 16]
 assets/art/areas/library/bookworm_atk_f2.png  <-  2D/top-down-rpg/Actor/Monster/Snake3/Snake3.png  [0, 32, 16, 16]
@@ -6068,5 +6381,26 @@ assets/art/pickups/wax_big.png  <-  2D/top-down-rpg/Items/Food/SeedLargeWhite.pn
 assets/art/pickups/wax_small.png  <-  2D/top-down-rpg/Items/Food/Seed2.png  (whole)
 assets/art/rooms/urn.png  <-  2D/top-down-rpg/Items/Object/Gourd.png  (whole)
 assets/art/rooms/urn_broken.png  <-  2D/top-down-rpg/FX/Particle/Vase.png  [28, 0, 14, 14]
+assets/art/specials/bell_done.png  <-  2D/top-down-rpg/Items/Treasure/SilverCup.png  (whole)
+assets/art/specials/bell_f0.png  <-  2D/top-down-rpg/Items/Treasure/GoldCup.png  (whole)
+assets/art/specials/bell_f1.png  <-  2D/top-down-rpg/Items/Treasure/GoldCup.png  (whole)
+assets/art/specials/bell_f2.png  <-  2D/top-down-rpg/Items/Treasure/GoldCup.png  (whole)
+assets/art/specials/bell_f3.png  <-  2D/top-down-rpg/Items/Treasure/GoldCup.png  (whole)
+assets/art/specials/musicbox_broken.png  <-  2D/top-down-rpg/Items/Treasure/BigTreasureChest.png  (whole)
+assets/art/specials/musicbox_f0.png  <-  2D/top-down-rpg/Items/Treasure/LittleTreasureChest.png  (whole)
+assets/art/specials/musicbox_f1.png  <-  2D/top-down-rpg/Items/Treasure/LittleTreasureChest.png  (whole)
+assets/art/specials/musicbox_f2.png  <-  2D/top-down-rpg/Items/Treasure/LittleTreasureChest.png  (whole)
+assets/art/specials/musicbox_f3.png  <-  2D/top-down-rpg/Items/Treasure/LittleTreasureChest.png  (whole)
+assets/art/specials/offer_map.png  <-  2D/top-down-rpg/Items/Scroll/Scroll.png  (whole)
+assets/art/specials/offer_tonics.png  <-  2D/top-down-rpg/Items/Potion/LifePot.png  (whole)
+assets/art/talk/martha_blink.png  <-  2D/top-down-rpg/Actor/Character/OldWoman/Faceset.png  [7, 7, 24, 24]
+assets/art/talk/martha_f0.png  <-  2D/top-down-rpg/Actor/Character/OldWoman/Faceset.png  [7, 7, 24, 24]
+assets/art/talk/martha_f1.png  <-  2D/top-down-rpg/Actor/Character/OldWoman/Faceset.png  [7, 7, 24, 24]
+assets/art/talk/martha_light.png  <-  2D/top-down-rpg/Actor/Character/OldWoman/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/talk/martha_match.png  <-  2D/top-down-rpg/Actor/Character/OldWoman/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/talk/martha_smile.png  <-  2D/top-down-rpg/Actor/Character/OldWoman/Faceset.png  [7, 7, 24, 24]
+assets/art/talk/martha_stand.png  <-  2D/top-down-rpg/Actor/Character/OldWoman/SpriteSheet.png  [0, 0, 16, 16]
+assets/art/tower/gear_f0.png  <-  2D/top-down-rpg/FX/Projectile/BigShuriken.png  [0, 0, 23, 23]
+assets/art/tower/gear_f1.png  <-  2D/top-down-rpg/FX/Projectile/BigShuriken.png  [23, 0, 23, 23]
 
 == Shown as 0x72's own frames again (the redrawn copies were taken out): monsters/tiny_slug, monsters/tiny_zombie, monsters/goblin, monsters/muddy, monsters/snuffer, monsters/waxwork, areas/attic/mannequin, areas/attic/trunk

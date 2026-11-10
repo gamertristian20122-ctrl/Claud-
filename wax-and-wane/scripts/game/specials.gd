@@ -128,6 +128,10 @@ static func known(w: Node, d: Dictionary) -> bool:
 	return rel.has("house_deed") or rel.has("dowsing_rod")
 
 
+const MARK_COL := {"seance": Color("#b79cf2"), "mirror": Color("#9fd8f7"), "musicbox": Color("#f79fd0"),
+	"study": Color("#9ff0b0"), "font": Color("#8cf2e6"), "mini": Color("#da4e38")}
+
+
 ## hud._draw_minimap: the mark of a special room (a "?" until Tallow knows what is inside), and a
 ## mini-boss room's mark when the House Deed shows it.
 static func draw_map_mark(ci: CanvasItem, w: Node, d: Dictionary, pos: Vector2) -> void:
@@ -138,6 +142,9 @@ static func draw_map_mark(ci: CanvasItem, w: Node, d: Dictionary, pos: Vector2) 
 	elif d.has("mini") and not d.get("cleared", false) and w.player and w.player.relics.has("house_deed"):
 		path = "specials/map_mini"
 	if path == "":
+		return
+	if not Art.has(path):   # v2.10: no drawn glyph any more: a small square in the room's own colour
+		ci.draw_rect(Rect2(pos + Vector2(3, 1), Vector2(3, 3)), MARK_COL.get(path.get_slice("map_", 1), UI.CREAM))
 		return
 	var tex := Art.tex(path)
 	ci.draw_texture(tex, pos + Vector2(floorf((9 - tex.get_width()) / 2.0), floorf((6 - tex.get_height()) / 2.0)))

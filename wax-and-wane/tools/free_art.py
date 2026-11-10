@@ -394,11 +394,56 @@ def decor():
     return out
 
 
+def specials():
+    mirror = grid([kin(22, 14)], [kin(22, 15)])
+    font = grid([t72("wall_fountain_top_1")], [t72("wall_fountain_mid_blue_anim_f0")], [t72("wall_fountain_basin_blue_anim_f0")])
+    spent = grid([t72("wall_fountain_top_1")], [t72("wall_fountain_mid_red_anim_f0")], [t72("wall_fountain_basin_red_anim_f0")])
+    out = {
+        "specials/bell": {"": [NA_ITEM % "Treasure/GoldCup"] * 4}, "specials/bell_done": NA_ITEM % "Treasure/SilverCup",
+        "specials/lectern": {"": [kin(5, 5)] * 2},
+        "specials/mirror": {"": [mirror] * 4}, "specials/mirror_veiled": mirror,
+        "specials/mirror_broken": grid([kin(22, 16)], [kin(22, 17)]),
+        "specials/musicbox": {"": [NA_ITEM % "Treasure/LittleTreasureChest"] * 4},
+        "specials/musicbox_broken": NA_ITEM % "Treasure/BigTreasureChest",
+        "specials/offer_map": NA_ITEM % "Scroll/Scroll", "specials/offer_tonics": NA_ITEM % "Potion/LifePot",
+        "specials/offer_veil": "16x16-rpg-item-pack/2D/top-down-rpg/Item__55.png",
+        "specials/font_spent": spent,
+    }
+    for i in range(7):
+        out["specials/font_%d" % i] = font
+    return out
+
+
+def house():
+    """The Clock Tower's and the Long Night areas' own things, the lesson's dummy, Martha's face."""
+    old = "ninja-adventure/2D/top-down-rpg/Actor/Character/OldWoman/%s.png"
+    stand = (old % "SpriteSheet", (0, 0, 16, 16))
+    face = (old % "Faceset", (7, 7, 24, 24))
+    fire = fx("Particle/Fire", 8, 12, [4, 5, 6])
+    shelf2 = grid([tiny(3, 5), tiny(3, 5)], [tiny(3, 6), tiny(3, 6)])
+    return {
+        "tower/gear": {"": fx("Projectile/BigShuriken", 23, 23)},
+        "tower/ladder": {"": [grid([kin(21, 8)], [kin(21, 9)], [kin(21, 10)], [kin(21, 11)])] * 4},
+        "tower/room_keeper": room(99),
+        "areas/kitchen/pot": NA_ITEM % "Resource/Water", "areas/kitchen/pot_spilt": NA_ITEM % "Resource/Water",
+        "areas/kitchen/scald": {"": fx("Elemental/Water/SpriteSheet", 40, 33, [5, 6, 7])},
+        "areas/kitchen/stove": kin(14, 14), "areas/kitchen/stove_glow": {"": fire},
+        "areas/kitchen/flour": {"": fx("Smoke/Smoke/SpriteSheet", 32, 32, [1, 2, 3, 4])},
+        "areas/library/rail_l": tiny(4, 6), "areas/library/rail_m": tiny(5, 6), "areas/library/rail_r": tiny(6, 6),
+        "areas/library/shelfdoor": {"": [shelf2] * 4},
+        "areas/attic/lantern_on": kin(16, 6), "areas/attic/lantern_glow": kin(16, 6), "areas/attic/lantern_off": kin(19, 2),
+        "primer/dummy": {"": ["0x72/crate"] * 3}, "primer/dummy_hit": "0x72/crate",
+        "talk/martha": {"": [face] * 2}, "talk/martha_blink": face, "talk/martha_smile": face,
+        "talk/martha_stand": stand, "talk/martha_light": stand, "talk/martha_match": stand,
+    }
+
+
 # folders where every picture comes from a pack now: a file this tool does not write is deleted
-EXCLUSIVE = ["rooms", "decor"]
+EXCLUSIVE = ["rooms", "decor", "specials", "areas", "chalk", "primer", "talk", "story"]
 
 # single pictures a script drew that the game now does without (globs under assets/art)
-GONE = ["fx/*_lg_f*.png", "fx/gib_*.png", "fx/splat_*.png", "fx/scorch.png", "fx/light/soft_light.png"]
+GONE = ["fx/*_lg_f*.png", "fx/gib_*.png", "fx/splat_*.png", "fx/scorch.png", "fx/light/soft_light.png",
+        "tower/end_*.png", "tower/floor_*.png", "tower/window_*.png", "tower/light/*.png"]
 
 # pictures a script drew that are simply taken away: the game then shows 0x72's own frames for that creature
 # (Enemy.frames_for falls back to assets/0x72/frames; Enemy.DEFS "sprite" names the 0x72 sprite where it differs)
@@ -411,7 +456,7 @@ REMOVED = [
 ]
 
 SETS = [("creatures", lambda: CREATURES), ("guardians", guardians), ("icons", lambda: ICONS), ("effects", effects),
-        ("rooms", rooms), ("decor", decor)]
+        ("rooms", rooms), ("decor", decor), ("specials", specials), ("house", house)]
 
 
 def fetch(path):
