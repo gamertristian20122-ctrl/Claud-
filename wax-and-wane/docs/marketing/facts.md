@@ -3,7 +3,7 @@
 The one list every store text, the press kit and the trailer cards are checked against. The first part
 is written by `python3 tools/make_facts.py` from the game's own code (do not edit it by hand: re-run the
 script after any content change; `--check` tells you if it is out of date). Game version in the code:
-**2.7.0** (the store release is 2.0.0).
+**2.8.0** (the store release is 2.0.0).
 
 ## From the code
 
@@ -34,7 +34,7 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Difficulty levels | **4**: 1 Gentle (melt x0.75, foe damage x0.5, foe health x0.85, drip wax x1.25); 2 Midnight (the game as it was made); 3 Witching Hour (melt x1.1, foe damage x1.2, foe health x1.15, marked foes x1.5); 4 Two O'Clock (melt x1.15, foe damage x1.35, foe health x1.3, marked foes x2, drip wax x0.85). Tonight's Candle always plays level 2 | `world.LEVELS` |
 | Music | 13 tracks + 2 original jingles | `assets/licenses/CREDITS_music.txt` |
 | Sound effect files | 74 | `assets/audio/sfx/` |
-| Builds | Android, Windows Desktop, Linux, Android Play | `export_presets.cfg` |
+| Builds | Android, Windows Desktop, Linux, Android Play, Web | `export_presets.cfg` |
 | Android | package `com.tallow.waxandwane`, min SDK 24, target SDK 36, permissions: vibrate; Auto Backup on | `export_presets.cfg` |
 | PC save folder | `%APPDATA%\WaxAndWane` (Windows), `~/.local/share/WaxAndWane` (Linux) | `project.godot` |
 

@@ -34,6 +34,8 @@ base viewport, integer pixel scaling). Read `README.md` (content, layout, comman
 4. `./tools/build_aab.sh` -> `build/WaxAndWane_vX.Y.Z.aab` for Google Play; it must end with `PLAY-READY`.
 5. `./tools/build_desktop.sh` -> `build/WaxAndWane_<ver>_windows.zip` / `_linux.zip` for Steam
    (`tools/steam/` templates, one depot per OS) and itch.io. It boots the Linux build as a smoke test.
+   `./tools/build_web.sh` -> `build/WaxAndWane_<ver>_web.zip` (itch.io, played in the browser); it boots it in
+   headless Chromium and fails on a console error.
 6. If anything visible changed: `python3 tools/store_art.py` and check `docs/marketing/store_assets/overview.png`.
 7. Commit and push.
 
@@ -105,11 +107,31 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
 - Other: memory-management, find-skills. (`/.agents/skills` holds the same set minus game-audio,
   godot-export, pixel-art-sprites and roguelike.)
 
-## Where things stand (handoff, 2026-11-09)
+## Where things stand (handoff, 2026-11-10)
+- Latest build: **2.8.0** (versionCode 15): APK, Windows + Linux zips and a NEW browser build
+  (`./tools/build_web.sh`, preset "Web", single-threaded; itch.io: HTML, viewport 1152 x 648). It came from a
+  fresh look at a recorded run and six measured bot runs (`docs/streams/v28_pace.md`): on 2.7.0 the bot won 6 of 6,
+  fought 51% of the time and walked between rooms 28%; floor 1 was 4 fights of 1-3 lodgers. 2.8: Tallow hurries
+  x1.6 in quiet rooms (`Player.HURRY`), the full map hops to a cleared room (`world.warp_to`, `FullMap`), the
+  Cellar's small lodgers come as litters of one-ember runts (`world.RUNTS` / `FOLLOWERS`, `Enemy.runt`), and a
+  first launch goes straight from Light the wick into the first night (`Game.first_night`). Same seeds after:
+  4 of 6 wins, 66% fighting, 13% walking, a run 750 -> 531 s. Judges: `--pacecheck` (25 probes), `--tour --pace`.
+  The night baseline was regenerated on purpose (only floor-1 `lodgers:` lines moved).
+- **Publisher pitch kit** (the owner wants to pitch publishers): `docs/marketing/pitch/` (README first): a
+  checked publisher list with routes and AI positions, paste-ready form answers, emails, the honest "how it was
+  made" statement, a contract checklist, eight 2.8.0 screenshots, and a 12-slide deck (a Slides artifact,
+  https://claude.ai/artifact/5EfjaS3ebsXf4U64zk4nHR, private to the owner; its source is not in the repo). The
+  pitch always says the art and code were made with an AI assistant; never help hide that. Owner-only blanks:
+  name, email, country, price, dates, the ask, a guardian if under 18. The trailer still shows 2.0: re-record it
+  only if the owner asks (no-videos rule).
+- Paused / not done from the 2.8 plan: **`v28/screen`** (the room should fill the screen height: world drawn at
+  its own whole-number scale, UI at today's; a Classic switch; worktree `agent-ac8bf19a9b066a62b`, barely
+  started when a usage limit hit) and **Flag a bug** (a pause-menu button that copies a report code; designed in
+  the session notes, not built). The game still letterboxes on 720p / 1440p phones and the Steam Deck.
 - **Queue after v2.1 + Long Night batch 1:** `docs/design/ROADMAP_V2.md` (special moves -> Challenge Nights ->
   diary pages -> translations -> Boss Rush; Long Night batch 2 as a side track). Design of the long night:
   `docs/design/LONG_NIGHT.md`.
-- Latest build: **2.7.0** (versionCode 14), APK only, sent to the owner, built from the first REAL playtest (the
+- 2.7.0 (versionCode 14), APK only, was built from the first REAL playtest (the
   owner's friend: fun, but the tutorial was weak and repetitive, the story should be characters talking, "a few
   bugs", "lacking something"): v2.7 onboarding (an animated learn-by-doing controls lesson on a slot's first run,
   `scripts/ui/primer.gd`, every hint once per slot, How to play replay; `docs/streams/v27_onboarding.md`,

@@ -159,6 +159,7 @@ godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
     --nospecials          no special rooms or champions (balance baseline)
     --nocard              skip the boss versus card
     --nomoves             no special moves (v2.3 balance: the same candle with and without its move)
+    --nohop               the bot walks back through cleared rooms instead of hopping from the map (v2.8 baseline)
     --boss=<kind>         straight into one guardian's fight with its floor's fixed kit, a line per fight
                           (time to kill, hits; the v2.1 balance check against its floor-mates)
     --device=touch|keyboard|mouse|gamepad,  --touchmouse   input to show / emulate
@@ -178,6 +179,8 @@ godot --headless --path . -- --autotest --feelcheck                   # v2.6 fee
                                                                       #   inputs kept through a pan, the pickup magnet, Aim: Auto,
                                                                       #   the full map, Quick restart (each a number; PASS/FAIL)
                           # every --playtest run also prints [feel] lines: fight / pickup / walk / walk-back time, pans
+godot --headless --path . -- --autotest --pacecheck                   # v2.8 pace: the hurry, the hop from the map, the
+                                                                      #   Cellar's litters (25 probes; exit 1 on a FAIL)
 godot --headless --path . -- --autotest --diarycheck                  # v2.5 story: every diary page's sources proven,
                                                                       #   no repeats, no reading card in a fight (exit 1 on a FAIL)
 godot --headless --path . -- --autotest --ending=<id> [--speed=4] [--shots=/abs/dir]   # stage an ending: true,
@@ -213,6 +216,8 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
     ... --tour --talk         v2.7: the story's opening (8 shots), four guardian conversations, a fall with Martha's
                               memory, a later one-liner, the Story scenes row, Watch the beginning, an ending's beat
                               (--talk=all: every guardian's first two lines and every candle's portrait; --talk=candles: just those)
+    ... --tour --pace         v2.8: the hurry, the map's rooms to go to (touch, keys), a hop, a busy room's map,
+                              two Cellar rooms with litters (docs/streams/v28_pace.md)
     ... --tour --feel         v2.6: the pickup magnet mid-sweep, a hit's mark, Aim: Auto, the full map, the pause menu,
                               Restart, the Aim and Pickup magnet rows (docs/streams/v26_feel.md)
     ... --tour --primer       v2.7: the controls primer's five steps on touch, keys and pad, Swap sticks, Reduce motion,
@@ -231,6 +236,8 @@ python3 tools/store_art.py [--import] [--no-render] [--review /abs/dir]   # ever
 ./tools/build_aab.sh                  # Google Play bundle -> build/WaxAndWane_v<version>.aab (ends with PLAY-READY)
 ./tools/build_aab.sh --verify build/X.aab   # checks only
 ./tools/build_desktop.sh              # build/WaxAndWane_<version>_windows.zip and _linux.zip (+ a headless boot test)
+./tools/build_web.sh                  # build/WaxAndWane_<version>_web.zip for itch.io (HTML, viewport 1152 x 648) + a boot
+                                      #   test in headless Chromium (tools/web_smoke.js: no console errors, the title draws)
 ./tools/android_sdk_setup.sh          # Android platform 36 + build-tools 36.1.0 (build_aab.sh runs it)
 ```
 Art tools: `python3 tools/art_<name>.py [--review <dir>]` rebuilds that art and writes contact sheets.

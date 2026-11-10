@@ -393,6 +393,7 @@ func _physics_process(dt: float) -> void:
 			accel = TURN_ACCEL   # a dodge: turning back bites at once (design pass: 7 -> 4 frames)
 		elif turn < 0.7:
 			accel = lerpf(900.0, TURN_ACCEL, (0.7 - turn) / 0.9)   # v2.6: a sharp side-step bites too (90 deg: 7 -> 5 frames)
+	accel *= lerpf(1.0, HURRY, hurry)   # v2.8: the hurry turns as sharply as the fighting pace (a 90-degree swing stays 5 frames)
 	vel = vel.move_toward(target, accel * dt)
 	_move(vel * dt)
 	if vel.length() > 8:

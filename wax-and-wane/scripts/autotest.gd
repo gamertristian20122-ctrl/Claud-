@@ -423,6 +423,16 @@ func drive(w: Node) -> Array:
 		var mv := Vector2.ZERO
 		if _room_t_total > 12.0 and d > 30:
 			mv = to.normalized()
+			# v2.8: a lodger behind a wall of rocks (a zigzag room): walk round it, as a person would. The bot stood
+			# under the rocks for 18 minutes of one god run, its embers stopped by them, the beetle bouncing above.
+			var rm: Room = w.room
+			var mc := rm.cell_of(pos - rm.position)
+			var tc := rm.cell_of(tgt.global_position - rm.position)
+			var inside := func(c: Vector2i) -> bool: return c.x >= 0 and c.y >= 0 and c.x < Room.COLS and c.y < Room.ROWS
+			if mc != tc and inside.call(mc) and inside.call(tc) and not _adjacent(mc, tc):
+				var wp := _path_next(rm, mc, tc)
+				if wp != tc:   # there is a way round (no way: wp == tc, and the straight line stays)
+					mv = (rm.cell_center(wp) + Vector2(0, 2) - pos).normalized()
 		elif d > 85:
 			mv = to.normalized() * 0.7
 		else:
