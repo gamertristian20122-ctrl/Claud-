@@ -23,12 +23,9 @@ void vertex() {
 	vcol = COLOR;   // modulate (the spawn fade-in)
 }
 
-float alpha_at(sampler2D tex, ivec2 q, ivec2 sz) {
-	if (q.x < 0 || q.y < 0 || q.x >= sz.x || q.y >= sz.y) {
-		return 0.0;
-	}
-	return texelFetch(tex, q, 0).a;
-}
+// The frame's alpha at texel p, 0 outside it. A macro, not a function: TEXTURE cannot be handed to one
+// (the shader compiler logs an error for it on every build of this shader).
+#define ALPHA_AT(p) (texelFetch(TEXTURE, clamp(p, ivec2(0), sz - ivec2(1)), 0).a * float(all(greaterThanEqual(p, ivec2(0))) && all(lessThan(p, sz))))
 
 void fragment() {
 	ivec2 sz = textureSize(TEXTURE, 0);
@@ -37,7 +34,7 @@ void fragment() {
 		q.x = sz.x - 1 - q.x;
 	}
 	vec4 o = vec4(0.0);
-	if (alpha_at(TEXTURE, q, sz) > 0.5) {
+	if (ALPHA_AT(q) > 0.5) {
 		vec3 c = texelFetch(TEXTURE, q, 0).rgb;
 		for (int i = 0; i < 4; i++) {
 			if (i < glow_n && distance(c, glow_cols[i].rgb) < 0.01) {
@@ -46,10 +43,10 @@ void fragment() {
 		}
 	} else if (rim_col.a > 0.0) {
 		vec2 n = vec2(0.0);
-		n += vec2(1.0, 0.0) * alpha_at(TEXTURE, q + ivec2(1, 0), sz);
-		n += vec2(-1.0, 0.0) * alpha_at(TEXTURE, q + ivec2(-1, 0), sz);
-		n += vec2(0.0, 1.0) * alpha_at(TEXTURE, q + ivec2(0, 1), sz);
-		n += vec2(0.0, -1.0) * alpha_at(TEXTURE, q + ivec2(0, -1), sz);
+		n += vec2(1.0, 0.0) * ALPHA_AT(q + ivec2(1, 0));
+		n += vec2(-1.0, 0.0) * ALPHA_AT(q + ivec2(-1, 0));
+		n += vec2(0.0, 1.0) * ALPHA_AT(q + ivec2(0, 1));
+		n += vec2(0.0, -1.0) * ALPHA_AT(q + ivec2(0, -1));
 		if (dot(n, n) > 0.0) {
 			vec2 outward = -normalize(n);
 			if (flip) {

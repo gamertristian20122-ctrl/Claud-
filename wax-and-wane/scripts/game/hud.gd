@@ -759,6 +759,21 @@ func _draw_bar() -> void:
 		bar.draw_texture_rect(fill, Rect2(x0, y0, wpx, h), true)
 	else:
 		bar.draw_rect(Rect2(x0, y0 + 1, wpx, h - 2), Color("#fdf7ed"))
+	# above the night's half line (the wider notch) the candle burns tall (world.tall_k): the wax past the
+	# line glows and runs down toward it, and the flame at its end stands twice as high
+	var tall: bool = world.has_method("tall_k") and world.tall_k() > 1.0 and not p.dead
+	if tall:
+		var kx := x0 + roundf(inner * world.night_minutes() * float(world.tall_knee) / total)
+		var x1 := x0 + wpx
+		if x1 > kx:
+			bar.draw_rect(Rect2(kx, y0 + 2, x1 - kx, h - 4), Color(UI.EMBER, 0.22))
+			var ph := int(_flame_t * 14.0)
+			var xx := kx
+			while xx < x1:
+				if (int(xx) + ph) % 5 < 2:
+					bar.draw_rect(Rect2(xx, y0 + 3, 1, 1), UI.EMBER)
+					bar.draw_rect(Rect2(xx, y0 + h - 4, 1, 1), UI.EMBER)
+				xx += 1.0
 	if p.charred > 0.0:
 		var cpx := roundf(inner * p.charred / total)
 		var cx := x0 + inner - cpx
@@ -787,8 +802,11 @@ func _draw_bar() -> void:
 		bar.draw_texture(right, Vector2(x0 + inner, y0 + (h - right.get_height()) / 2.0))
 	# the flame burns at the end of the wax
 	if not _flame_frames.is_empty() and shown_wax > 0.2:
-		var fr: Texture2D = _flame_frames[int(_flame_t * 10.0) % _flame_frames.size()]
-		bar.draw_texture(fr, Vector2(x0 + wpx - 4, y0 - fr.get_height() + 5))
+		var fr: Texture2D = _flame_frames[int(_flame_t * (14.0 if tall else 10.0)) % _flame_frames.size()]
+		if tall:   # every row twice: a tall flame, still on whole pixels
+			bar.draw_texture_rect(fr, Rect2(x0 + wpx - 4, y0 - fr.get_height() * 2.0 + 6, fr.get_width(), fr.get_height() * 2.0), false)
+		else:
+			bar.draw_texture(fr, Vector2(x0 + wpx - 4, y0 - fr.get_height() + 5))
 
 
 ## Design pass (docs/design/MDA.md): a wax price within reach (Smoke Altar, Cracked Mirror, the Wax

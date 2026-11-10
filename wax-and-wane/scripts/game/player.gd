@@ -583,7 +583,11 @@ func use_move(dir := Vector2.ZERO) -> bool:
 
 
 func heal(amount: float) -> void:
+	var before := wax
 	wax = minf(wax + amount, wax_max)
+	if world != null and world.get("ledger") != null:
+		world.ledger["heal"] += wax - before
+		world.ledger["over"] += amount - (wax - before)
 	_happy_face = 0.8
 
 
