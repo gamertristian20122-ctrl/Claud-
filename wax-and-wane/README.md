@@ -160,6 +160,11 @@ godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
     --nocard              skip the boss versus card
     --nomoves             no special moves (v2.3 balance: the same candle with and without its move)
     --nohop               the bot walks back through cleared rooms instead of hopping from the map (v2.8 baseline)
+    --tallhot=a,b,c,d,e   how much faster a tall candle burns, per floor (world.TALL_HOT; one number = every floor;
+                          0 = the candle of 2.8, the v2.9 baseline)  --tallknee=0.5  where "tall" starts (TALL_KNEE)
+                          Every run also prints a [wax] ledger line: the wax at the end, what the melt took (and how
+                          much of that for standing tall), what hits took, what was won back, and the wax on reaching
+                          each floor (floor:seconds=wax). Headless debug runs only.
     --boss=<kind>         straight into one guardian's fight with its floor's fixed kit, a line per fight
                           (time to kill, hits; the v2.1 balance check against its floor-mates)
     --device=touch|keyboard|mouse|gamepad,  --touchmouse   input to show / emulate
