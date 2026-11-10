@@ -553,7 +553,7 @@ func on_hurt() -> void:
 ## its corners: each thins out while Tallow or a lodger is underneath, and nothing hides behind it. (Classic keeps
 ## its picture as it was.)
 var _under: Array = []       # groups of Controls that fade together
-const UNDER_ALPHA := 0.3
+const UNDER_ALPHA := 0.4
 
 
 func _fade_under(dt: float) -> void:
@@ -567,18 +567,17 @@ func _fade_under(dt: float) -> void:
 			spots.append(Stage.to_ui(e))
 	var k := float(Stage.kw) / float(Stage.ku)
 	for group in _under:
-		var box := Rect2()
+		var hit := false
 		for c in group:
 			var ctl: Control = c
-			if ctl.visible and ctl.size.x > 0.0:
-				var r := Rect2(ctl.position, ctl.size)
-				box = r if box.size == Vector2.ZERO else box.merge(r)
-		var hit := false
-		for s in spots:
-			# a body is about a tile wide and stands above its feet
-			if box.intersects(Rect2(s.x - 8.0 * k, s.y - 18.0 * k, 16.0 * k, 20.0 * k)):
-				hit = true
-				break
+			if hit or not ctl.visible or ctl.size.x <= 0.0:
+				continue
+			var box := Rect2(ctl.position, ctl.size).grow(1.0)
+			for s in spots:
+				# a body is about a tile wide and stands above its feet
+				if box.intersects(Rect2(s.x - 8.0 * k, s.y - 18.0 * k, 16.0 * k, 20.0 * k)):
+					hit = true
+					break
 		var a := move_toward(float((group[0] as Control).modulate.a), UNDER_ALPHA if hit else 1.0, dt * 5.0)
 		for c in group:
 			(c as Control).modulate.a = a

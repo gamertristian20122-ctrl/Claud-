@@ -18,6 +18,7 @@ import numpy as np
 from PIL import Image
 
 WALLS = (250, 180)   # the room, wall to wall and top of the top wall to the foot of the bottom wall (art pixels)
+CLEAR = (9, 7, 9)    # project.godot's default clear colour, Color(0.035, 0.027, 0.035), as 8-bit
 
 
 def up(a, k, w, h):
@@ -43,18 +44,23 @@ def main(d):
                 s, world.shape[1::-1], kw, ui.shape[1::-1], ku, w, h))
             bad += 1
             continue
-        big_world = up(world, kw, w, h)
         big_ui = up(ui, ku, w, h)
         alpha = big_ui[..., 3:4]
-        want = big_ui[..., :3] + (big_world * (255 - alpha) + 127) // 255
-        diff = np.abs(np.clip(want, 0, 255) - comp).max(axis=2)
         clear = alpha[..., 0] == 0
         solid = alpha[..., 0] == 255
         mixed = ~(clear | solid)
-        n_clear_bad = int((diff[clear] != 0).sum())
-        n_solid_bad = int((diff[solid] != 0).sum())
-        n_mixed_bad = int((diff[mixed] > 1).sum())
-        ok = n_clear_bad == 0 and n_solid_bad == 0 and n_mixed_bad == 0
+        # under the UI: the world buffer during a run, the game's clear colour on every other screen (the world
+        # buffer is switched off there and its file is a stale frame). One of the two must explain every pixel.
+        ok = False
+        for under in (up(world, kw, w, h), np.zeros_like(comp) + np.array(CLEAR)):
+            want = big_ui[..., :3] + (under * (255 - alpha) + 127) // 255
+            diff = np.abs(np.clip(want, 0, 255) - comp).max(axis=2)
+            n_clear_bad = int((diff[clear] != 0).sum())
+            n_solid_bad = int((diff[solid] != 0).sum())
+            n_mixed_bad = int((diff[mixed] > 1).sum())
+            ok = n_clear_bad == 0 and n_solid_bad == 0 and n_mixed_bad == 0
+            if ok:
+                break
         bad += 0 if ok else 1
         line = "screen %dx%d: world %dx%d x%d, ui %dx%d x%d" % (w, h, world.shape[1], world.shape[0], kw,
                                                               ui.shape[1], ui.shape[0], ku)
