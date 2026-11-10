@@ -122,8 +122,9 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
     fallback. The browser frame for itch.io is now 1280 x 720.
   - **The clock** (`docs/streams/v29_clock.md`): the bot's new wax ledger showed kills paying back twice what
     the melt took, so the candle stood near full all night. Now a tall candle burns fast (the Balance knobs
-    above). Same 16 houses at Midnight: **10 of 16 wins, 12:56 AM at the win** (the 2.8 burn: 5 of 6, 12:21 AM);
-    Gentle 7 of 7; Witching Hour 1 of 4, Two O'Clock 3 of 4. Missed: the aim was wins after 1:15 AM. No run
+    above). At Midnight: **14 of 20 wins, 12:57 AM at the win** (10 of 16 on the houses every version was judged
+    on, 4 of 4 on fresh ones; the 2.8 burn: 5 of 6, 12:21 AM); Gentle 7 of 7; Witching Hour 1 of 4, Two O'Clock
+    3 of 4; a 7-floor night 2 of 2. Missed: the aim was wins after 1:15 AM. No run
     that reached the Belfry lost (all 20 losses in 64 nights came in the Crypt or the Chapel): if the end of the
     night should bite, look at what the Belfry and its guardian pay and cost, not at the melt.
   - Also: the creature glow shader's engine error is gone (logs are clean apart from exit-time leak notices).
@@ -176,8 +177,8 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   difficulty 1-4, a 2.0 save moves into Slot 1; the Black Taper as a sidegrade; four new guardians; bigger self-lit
   enemy shots, Normal / Large), v2.2 (the night-length slider, 4 to 7 floors, with the Kitchen, Library and Attic;
   `docs/streams/v22_night.md`, `v22_areas.md`) and v2.3 (a special move per candle + the ability button + the Keys
-  page + the `L` strings autoload; `docs/streams/v23_moves.md`). The store files (AAB, desktop zips, press kit)
-  are still **2.0.0**: rebuild them all for the next store release.
+  page + the `L` strings autoload; `docs/streams/v23_moves.md`). The AAB, desktop zips, browser zip and store
+  screenshots were rebuilt at **2.9.0**; the press kit zip and the trailer still show 2.0.0.
 - The owner asked to keep bot balance judging light (credits): quick checks only (checkscripts, checkrooms, one
   god run, the relevant tour), small batches when a number really moved. Long nights after the merge: 7 floors
   2 of 5, 5 floors 2 of 3. Per-candle win rates with the moves were not measured (only Tallow: 3 of 8 with or

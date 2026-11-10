@@ -68,17 +68,19 @@ x(1 + `TALL_HOT[floor]`) at a full candle (`world.tall_k`, in the melt line of `
 - Gentle: 7 of 7 (12:15 to 1:30 AM). Witching Hour 1 of 4, Two O'Clock 3 of 4 with the same rule as
   Midnight. A stronger rule on the hard levels (x1.5 and x2) lost 0 of 3 each, all in the Crypt, and was
   dropped.
-- A 7-floor night: 2 of 2 with the first version; see the handoff in `CLAUDE.md` for the final build's runs.
+- Fresh houses with the shipped rule (seeds 37-40): 4 of 4, at 12:37, 12:52, 1:10 and 1:20 AM. With the 16
+  above: **14 of 20, 12:57 AM at the win**.
+- A 7-floor night with the shipped rule (seeds 38-39): 2 of 2, at 1:55 and 1:59 AM of a night that ends at 3:30.
 - Save & Continue on every floor: the same house each time. `--god` nights reach the end.
 
 ## What it did not reach
 
-The aim was wins after 1:15 AM and about 6 wins in 10. The win rate is there (10 of 16 shipped, 44 of 64
-across the four versions). The clock is not: 12:56 AM. Two things the ledger makes plain:
+The aim was wins after 1:15 AM and about 6 wins in 10. The win rate is close (14 of 20 shipped, 44 of 64
+across the four versions on the 16 houses). The clock is not: 12:57 AM. Two things the ledger makes plain:
 
 - The rule pulls a rich candle down toward the mark and no further. To end later than 1:00 AM the candle has
   to be pushed below it, and that takes less income or more damage, which also hits thin runs.
-- No run that reached the Belfry lost: all 20 losses in the 64 nights came in the Crypt or the Chapel. The last
+- No run that reached the Belfry lost: all 20 losses in those 64 nights came in the Crypt or the Chapel. The last
   floor pays the bot more wax than it costs, even with its melt at x1.75. If the end of the night should be
   the hardest part, that is the next thing to look at (what the Belfry's rooms and its guardian pay, and what
   the guardian's hits cost), not the melt.
