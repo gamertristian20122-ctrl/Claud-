@@ -41,7 +41,7 @@ const DRAIN_PER_SEC := 120.0 / (8.0 * 60.0)
 ## The night speeds up as you climb: the melt per floor (x DRAIN_PER_SEC; [4] = the Clock Tower), and the
 ## deeper floors pay fewer minutes back, so a winning run still feels the clock (C1: wins used to end at
 ## 12:15 AM with a full candle). The Cellar stays as gentle as it was. Tables are indexed by floor - 1.
-const FLOOR_DRAIN := [1.0, 1.1, 1.3, 1.45, 1.2]
+const FLOOR_DRAIN := [1.0, 1.1, 1.3, 1.75, 1.2]
 ## The most minutes Kindling can pour back in one room, per floor.
 const KINDLE_CAP := [4.0, 4.0, 3.0, 2.0, 2.0]
 ## The QUICK clear bonus in minutes, per floor (CLEAN stays +1).
@@ -805,7 +805,7 @@ func _clear_room() -> void:
 	Specials.on_clear(self)   # a finished Seance or a beaten mini-boss pays out
 	Diary.on_clear(self)      # the Kitchen's, Library's and Attic's page lies in one of their rooms
 	if floor_num >= 2 and tall_k() > 1.05 and Game.tip("tall_flame", 1):   # say it once, when it is true
-		hud.show_hint("Above the bar's middle mark, a tall candle melts faster", 5.0)
+		hud.show_hint("Tall candle, tall flame: the glowing wax melts faster", 5.0)
 
 
 func _room_reward(pos: Vector2) -> void:
