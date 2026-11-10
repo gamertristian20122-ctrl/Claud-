@@ -88,6 +88,8 @@ func _ready() -> void:
 		mode = "tour"   # v2.7 dialogue: the talking scenes' judges (scripts/game/talk_tour.gd)
 	if args.has("primercheck"):
 		mode = "tour"   # v2.7 onboarding: a new player's first three minutes (scripts/primer_check.gd)
+	if args.has("pacecheck"):
+		mode = "tour"   # v2.8 pace: the hurry, the hop from the map, the Cellar's litters (scripts/pace_check.gd)
 	runs_left = int(args.get("runs", "1"))
 	# save slots (v2.1): --slot=N plays in that slot, --difficulty=N (1-4) sets its level first
 	if args.has("slot"):
@@ -141,6 +143,10 @@ func _ready() -> void:
 		await PrimerCheck.check(self)
 		Audio.stop_all()
 		get_tree().quit(1 if PrimerCheck.fails > 0 else 0)
+	elif args.has("pacecheck"):   # v2.8 pace: the hurry, the hop, the litters (exit 1 on a FAIL)
+		await PaceCheck.check(self)
+		Audio.stop_all()
+		get_tree().quit(1 if PaceCheck.fails > 0 else 0)
 	elif args.has("ending"):   # v2.5 story: --ending=<id> stages that ending (cards, credits, results)
 		await DiaryTour.stage_ending(self, str(args["ending"]))
 		Audio.stop_all()
@@ -417,6 +423,16 @@ func drive(w: Node) -> Array:
 		var mv := Vector2.ZERO
 		if _room_t_total > 12.0 and d > 30:
 			mv = to.normalized()
+			# v2.8: a lodger behind a wall of rocks (a zigzag room): walk round it, as a person would. The bot stood
+			# under the rocks for 18 minutes of one god run, its embers stopped by them, the beetle bouncing above.
+			var rm: Room = w.room
+			var mc := rm.cell_of(pos - rm.position)
+			var tc := rm.cell_of(tgt.global_position - rm.position)
+			var inside := func(c: Vector2i) -> bool: return c.x >= 0 and c.y >= 0 and c.x < Room.COLS and c.y < Room.ROWS
+			if mc != tc and inside.call(mc) and inside.call(tc) and not _adjacent(mc, tc):
+				var wp := _path_next(rm, mc, tc)
+				if wp != tc:   # there is a way round (no way: wp == tc, and the straight line stays)
+					mv = (rm.cell_center(wp) + Vector2(0, 2) - pos).normalized()
 		elif d > 85:
 			mv = to.normalized() * 0.7
 		else:
@@ -468,6 +484,19 @@ func drive(w: Node) -> Array:
 		_intent = "special"
 		return [((sp as Vector2) - pos).normalized(), Vector2.ZERO]
 	# break urns/crates near the path occasionally is skipped; head to the next room
+	# v2.8: two or more cleared rooms to cross: open the map and hop, as a person would (MAP_SECS for the two taps)
+	if _hop_t > 0.0:
+		_hop_t -= dt
+		_intent = "map"
+		if _hop_t <= 0.0:
+			w.warp_to(_hop_cell)
+		return [Vector2.ZERO, Vector2.ZERO]
+	var hop := _hop_target(w)
+	if hop != Vector2i(-99, -99) and not args.has("nohop"):
+		_hop_cell = hop
+		_hop_t = MAP_SECS
+		_intent = "map"
+		return [Vector2.ZERO, Vector2.ZERO]
 	var dir := _next_dir(w)
 	if dir == Vector2i.ZERO:
 		return [Vector2.ZERO, Vector2.ZERO]
@@ -668,7 +697,33 @@ func _best_pickup(w: Node, p: Player) -> Node2D:
 	return best
 
 
+## v2.8: the bot's use of the full map. MAP_SECS = opening the map and tapping a room.
+const MAP_SECS := 1.2
+var _hop_t := 0.0
+var _hop_cell := Vector2i(-99, -99)
+
+
+## The cleared room next to where the bot wants to go, if the way there crosses two or more cleared rooms
+## (one door away it just walks); (-99, -99) = walk.
+func _hop_target(w: Node) -> Vector2i:
+	var path := _route(w)
+	# path = the cells after this one, up to and with the goal
+	var last_ok := -1
+	for i in path.size():
+		if w.can_warp(path[i]):
+			last_ok = i
+	if last_ok >= 1:
+		return path[last_ok]
+	return Vector2i(-99, -99)
+
+
 func _next_dir(w: Node) -> Vector2i:
+	var path := _route(w)
+	return Vector2i.ZERO if path.is_empty() else path[0] - Vector2i(w.cur_cell)
+
+
+## The rooms from here (not counted) to the bot's next goal (counted): the nearest unvisited room, the guardian last.
+func _route(w: Node) -> Array:
 	var cells: Dictionary = w.layout["cells"]
 	var start: Vector2i = w.cur_cell
 	# BFS to the nearest unvisited room; the boss room last
@@ -696,11 +751,13 @@ func _next_dir(w: Node) -> Vector2i:
 	if goal == Vector2i(-1, -1) and start != w.layout["boss"] and prev.has(w.layout["boss"]):
 		goal = w.layout["boss"]   # everything explored after an early boss: go back to its trapdoor
 	if goal == Vector2i(-1, -1):
-		return Vector2i.ZERO
+		return []
+	var path: Array = [goal]
 	var step := goal
 	while prev[step] != start:
 		step = prev[step]
-	return step - start
+		path.push_front(step)
+	return path
 
 
 # ---------------------------------------------------------------- tour
@@ -833,6 +890,11 @@ func _tour() -> void:
 	if args.has("moves"):   # v2.3: each candle's special move mid-action, the HUD button, the Keys page
 		await _wait(0.5)
 		await MovesTour.tour(self)
+		get_tree().quit()
+		return
+	if args.has("pace"):   # v2.8: the hurry, the map's rooms to go to (touch, keys), a hop, a busy room's map, litters
+		await _wait(0.5)
+		await PaceCheck.tour(self)
 		get_tree().quit()
 		return
 	if args.has("feel"):   # v2.6: the pickup magnet mid-sweep, a hit's mark, the full map, Aim / Pickup magnet rows, Restart

@@ -3,7 +3,7 @@
 The one list every store text, the press kit and the trailer cards are checked against. The first part
 is written by `python3 tools/make_facts.py` from the game's own code (do not edit it by hand: re-run the
 script after any content change; `--check` tells you if it is out of date). Game version in the code:
-**2.7.0** (the store release is 2.0.0).
+**2.8.0** (the store release is 2.0.0).
 
 ## From the code
 
@@ -34,7 +34,7 @@ script after any content change; `--check` tells you if it is out of date). Game
 | Difficulty levels | **4**: 1 Gentle (melt x0.75, foe damage x0.5, foe health x0.85, drip wax x1.25); 2 Midnight (the game as it was made); 3 Witching Hour (melt x1.1, foe damage x1.2, foe health x1.15, marked foes x1.5); 4 Two O'Clock (melt x1.15, foe damage x1.35, foe health x1.3, marked foes x2, drip wax x0.85). Tonight's Candle always plays level 2 | `world.LEVELS` |
 | Music | 13 tracks + 2 original jingles | `assets/licenses/CREDITS_music.txt` |
 | Sound effect files | 74 | `assets/audio/sfx/` |
-| Builds | Android, Windows Desktop, Linux, Android Play | `export_presets.cfg` |
+| Builds | Android, Windows Desktop, Linux, Android Play, Web | `export_presets.cfg` |
 | Android | package `com.tallow.waxandwane`, min SDK 24, target SDK 36, permissions: vibrate; Auto Backup on | `export_presets.cfg` |
 | PC save folder | `%APPDATA%\WaxAndWane` (Windows), `~/.local/share/WaxAndWane` (Linux) | `project.godot` |
 
@@ -72,11 +72,11 @@ title: 22 - Dream, floor_1: 40 - Crypt, floor_2: 21 - Dungeon, floor_3: 12 - Tem
 
 | Fact | Value | How it was checked |
 |---|---|---|
-| Run length | About 6 to 16 minutes: a lost run usually ends in 6 to 11 minutes, a true-ending win takes about 16 | `--playtest` bot, fresh saves (release review, seeds 9101-9104: losses at 5.7, 6.7 and 10.7 min, true-ending win at 16.4 min). People who dodge do better than the bot. Re-measure after balance changes |
+| Run length | About 4 to 12 minutes: a winning night takes the test bot 8 to 12 (ten on average; the longer ones climb to the Clock Tower), a lost one ends sooner | `--playtest --speed=4` bot, fresh saves, 2.8.0: eight wins on seeds 7-18 at 7.9 to 12.3 min, two losses at 3.9 and 10.0 min (`docs/streams/v28_pace.md`). 2.0.0 ran longer (a true-ending win 16.4 min): 2.8 cut the walking. People who dodge do better than the bot. Re-measure after balance changes |
 | Win rate (bot, fresh save) | About half of the bot's runs win (7 of 12 at the last balance pass) | `--playtest --speed=4`, 12 runs per setting (CLAUDE.md > Balance). Re-measure after balance changes |
 | Art made for this game | Tallow and the other 5 candles, the house's own lodgers and guardians (counts above), relics and keepsake icons, costumes, effects, rooms and decor, special rooms, the Clock Tower, chalk drawings, UI, logo, icons | Drawn by Python scripts written with Claude (an AI assistant), `tools/art_*.py`, on the 0x72 palette; every sheet was looked at and kept or redrawn by the developer |
 | Art from 0x72 (CC0) | The dungeon tiles, chests, coins, bombs, flasks and the 0x72 lodgers and guardians (counts above) | `assets/0x72/frames/`, `assets/licenses/0x72_DungeonTilesetII_CC0.txt` |
-| Music | 10 tracks from the Ninja Adventure Asset Pack by Pixel-boy and AAA (CC0). Not AI | `assets/licenses/CREDITS_music.txt` |
+| Music | 13 tracks, all from the Ninja Adventure Asset Pack by Pixel-boy and AAA (CC0). Not AI | `assets/licenses/CREDITS_music.txt` |
 | Jingles | 2 (victory, death): original, synthesized by `tools/make_audio.py` (a script written with Claude) | same file |
 | Sound effects | Layered and processed from Kenney packs (CC0), a few Ninja Adventure sounds (CC0), plus original synthesis | `assets/licenses/CREDITS_audio.txt` |
 | Fonts | Kenney Pixel and Kenney Mini (CC0) | `assets/licenses/Kenney_Fonts_CC0.txt` |
@@ -87,6 +87,6 @@ title: 22 - Dream, floor_1: 40 - Crypt, floor_2: 21 - Dungeon, floor_3: 12 - Tem
 | Blood | Cartoon only: creatures burst into small chunks that fade and leave flat coloured splats on the floor; some splats are red (`#9f294e`, `#62232f`, `#da4e38`) | `scripts/game/fx_gibs.gd`, `stains.gd`, `Enemy.DEFS` stain colours |
 | Random rewards | Chests, the Music Box (3 in-game coins a crank) and the Wax Font use in-game coins or wax only. No real money anywhere | `scripts/game/specials.gd` |
 | Steam features at launch | No Steam achievements or Steam overlay calls yet (GodotSteam is not in the build); the 67 achievements are in-game. Steam Cloud works without code (Auto-Cloud) | `scripts/autoload/achievements.gd` (Steam bridge waits for GodotSteam) |
-| Demo | None. There is no demo build; do not promise one | |
+| Demo | The browser build (`./tools/build_web.sh`) is the demo once it is uploaded to itch.io. It is not on any store page yet: do not call it live before it is | `docs/marketing/pitch/README.md` |
 | Languages | English only | |
 

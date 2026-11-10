@@ -42,6 +42,13 @@ static func _seasoned() -> void:
 static func _snap(at: Node, w: Node, name: String, keep_banner := false) -> void:
 	if w != null:
 		_settle_text(w, keep_banner)
+		# v2.8: every shot showed "23 coins, 3 bombs" and read as one staged session (the pitch's scout review):
+		# each shot's purse is its own (the same every time: from the shot's name)
+		var hsh := 0
+		for ch in name.to_utf8_buffer():
+			hsh = (hsh * 31 + int(ch)) % 9973
+		w.player.coins = 6 + hsh % 34
+		w.player.bombs = 1 + hsh % 4
 	await at.get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var img := at.get_viewport().get_texture().get_image()
@@ -56,7 +63,7 @@ static func _settle_text(w: Node, keep_banner: bool) -> void:
 		return
 	if h._banner_tw:
 		h._banner_tw.kill()
-	for l in [h.banner, h.banner_sub, h.banner_band]:
+	for l in [h.banner, h.banner_sub, h.banner_band, h.banner_strip]:   # v2.8: the ribbon too (it stayed, an empty box)
 		l.modulate.a = 1.0 if keep_banner and h.banner.text != "" else 0.0
 	if h._hint_tw:
 		h._hint_tw.kill()
@@ -229,6 +236,10 @@ static func _store(at: Node) -> void:
 	# 10. a relic held aloft (last: the relic changes how Tallow looks)
 	at.args.erase("drive")
 	await _relic_aloft(at, w)
+	# 11. the candle as the clock (--meltstrip): the same quiet room at four wax levels, for a strip that shows
+	# Tallow getting shorter and his light shrinking as the night runs out (tools: crop around him, side by side)
+	if at.args.has("meltstrip"):
+		await _melt_strip(at, w)
 	Audio.stop_all()
 
 
@@ -348,6 +359,28 @@ static func _seance(at: Node, w: Node) -> void:
 	at.args.erase("drive")
 
 
+static func _melt_strip(at: Node, w: Node) -> void:
+	await _floor(at, w, 1)
+	at.args.erase("god")
+	at.args.erase("drive")
+	_clear_foes(w)
+	var p: Player = w.player
+	p.frozen = true
+	p.position = w.room.center() + Vector2(0, 12)
+	var i := 0
+	for wax in [120.0, 82.0, 44.0, 9.0]:
+		i += 1
+		for k in 40:   # the light and the body follow the wax over a few frames
+			p.wax = wax
+			await at.get_tree().physics_frame
+		await at._wait(0.5)
+		p.wax = wax
+		print("[store] melt %d: wax %.0f -> %s, Tallow at %s" % [i, wax, Game.clock_text(w.clock_minutes()), p.get_global_transform_with_canvas().origin])
+		await _snap(at, w, "melt_%d" % i)
+	p.frozen = false
+	p.wax = 100.0
+
+
 static func _low_wax(at: Node, w: Node) -> void:
 	await _floor(at, w, 4)
 	at.args.erase("god")
@@ -369,7 +402,10 @@ static func _low_wax(at: Node, w: Node) -> void:
 static func _boss(at: Node, w: Node) -> void:
 	await _floor(at, w, 4)
 	at.args["god"] = true
-	w.boss_kind = "big_demon" if Enemy.DEFS.has("big_demon") else w.boss_kind
+	# --storeboss=<kind>: another Belfry guardian in the two guardian shots (the pitch features the house's own
+	# art: --storeboss=pendulum; the default Hour Fiend is a 0x72 sprite)
+	var kind := str(at.args.get("storeboss", "big_demon"))
+	w.boss_kind = kind if Enemy.DEFS.has(kind) else w.boss_kind
 	_clear_foes(w)
 	w.player.wax = 74.0
 	at._jump(w, w.layout["boss"])
@@ -378,7 +414,7 @@ static func _boss(at: Node, w: Node) -> void:
 	at.args["drive"] = true
 	await at._wait(3.6)
 	var b: Enemy = w.boss
-	if b and is_instance_valid(b):
+	if kind == "big_demon" and b and is_instance_valid(b):
 		b.hp = b.max_hp * 0.6   # phase 2: the clock hands
 		await at._wait(1.3)
 		if is_instance_valid(b) and b.alive:

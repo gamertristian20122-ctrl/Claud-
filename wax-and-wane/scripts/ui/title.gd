@@ -483,8 +483,25 @@ func _show_candle() -> void:
 
 
 ## Light the wick: the three save slots (scripts/ui/slots.gd), each with its own difficulty level.
+## v2.8: on a first launch (Game.first_night) it goes straight to the first night. A newcomer was asked to pick
+## a slot, a difficulty and a night's length before ever seeing a room, and a publisher's reviewer plays a build
+## once ("we'll only play the build the first time you send it", Raw Fury's pitch page). The slots, the levels and
+## the night's length are all there from the second night on, when the choice means something.
 func _play() -> void:
+	if Game.first_night():
+		_first_night()
+		return
 	Slots.open(root, main)
+
+
+## Slot 1 at Midnight (the game as it was made), four floors, Tallow. `extra`: a test's fixed seed.
+func _first_night(extra := {}) -> void:
+	Game.start_slot(1, Game.DEFAULT_LEVEL)
+	Records.set_night_floors(Areas.MIN_FLOORS)
+	Audio.play("ui_open")
+	var p := {"candle": "tallow", "floors": Areas.MIN_FLOORS}
+	p.merge(extra, true)
+	main.goto("game", p)
 
 
 func _daily() -> void:

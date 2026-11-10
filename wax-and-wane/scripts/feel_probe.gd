@@ -20,6 +20,7 @@ static var pans: Array = []
 static var drops: Array = []        # trapdoor -> control back
 static var clear_exit: Array = []   # room cleared -> through the next door
 static var swept := 0               # loose drops the clear magnet brought (pickup.gd counts them)
+static var hops := 0                # v2.8: hops from the full map to a cleared room (world.warps)
 static var _cell := Vector2i(-99, -99)
 static var _floor := 0
 static var _trans := false
@@ -39,6 +40,7 @@ static func reset() -> void:
 	drops = []
 	clear_exit = []
 	swept = 0
+	hops = 0
 	_cell = Vector2i(-99, -99)
 	_floor = 0
 	_trans = false
@@ -59,6 +61,7 @@ static func tick(w: Node, intent: String, dt: float) -> void:
 	_clock += dt
 	if w.get("swept") != null:
 		swept = int(w.swept)
+	hops = int(w.warps)
 	if w.cur_cell != _cell or w.floor_num != _floor:
 		if _clear_at >= 0.0 and w.floor_num == _floor:
 			clear_exit.append(_clock - _clear_at)
@@ -97,6 +100,7 @@ static func tick(w: Node, intent: String, dt: float) -> void:
 			"pickup": cat = "pickup"
 			"special": cat = "special"
 			"walk": cat = "walk_back" if _back else "walk"
+			"map": cat = "map"   # v2.8: the full map is open to hop to a cleared room (the bot waits a person's two taps)
 			_: cat = "idle"
 	_add(cat, dt)
 
@@ -123,7 +127,7 @@ static func report() -> String:
 	for k in t:
 		total += float(t[k])
 	total = maxf(total, 0.001)
-	var order := ["fight", "doors", "pickup", "walk", "walk_back", "special", "held", "trans", "idle"]
+	var order := ["fight", "doors", "pickup", "walk", "walk_back", "map", "special", "held", "trans", "idle"]
 	var parts: Array = []
 	for k in order:
 		if t.has(k):
@@ -133,7 +137,10 @@ static func report() -> String:
 	lines.append("[feel]    time %.0fs: %s" % [total, ", ".join(parts)])
 	lines.append("[feel]    rooms entered %d: new %d, walked back through %d (%.0f%%); clear -> next door median %.1fs mean %.1fs (%d rooms); swept drops %d" % [
 		rooms, rooms_new, rooms_back, 100.0 * rooms_back / maxf(1.0, rooms), _median(clear_exit), _mean(clear_exit), clear_exit.size(), swept])
-	lines.append("[feel]    room pans %d, mean %.2fs; trapdoors %d, mean %.2fs (no control)" % [pans.size(), _mean(pans), drops.size(), _mean(drops)])
+	lines.append("[feel]    room pans %d, mean %.2fs; trapdoors %d, mean %.2fs (no control); map hops %d" % [pans.size(), _mean(pans), drops.size(), _mean(drops), hops])
+	var walking := float(t.get("pickup", 0.0)) + float(t.get("walk", 0.0)) + float(t.get("walk_back", 0.0)) + float(t.get("map", 0.0))
+	lines.append("[feel]    v2.8 judge: not fighting on foot (pickup + walk + walk_back + map) %.0fs %.1f%% of the run; fighting %.1f%%" % [
+		walking, 100.0 * walking / total, 100.0 * float(t.get("fight", 0.0)) / total])
 	return "\n".join(lines)
 
 

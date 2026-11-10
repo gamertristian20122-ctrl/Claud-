@@ -18,6 +18,7 @@ const WINDOW := 180.0          # the first three minutes, from Light the wick
 const READ_WPS := 3.3          # reading speed for the estimate (about 200 words a minute)
 
 static var fails := 0
+static var fast_starts := 0   # v2.8: runs lit straight from Light the wick (a first launch skips the three choosers)
 static var _rows: Array = []   # one summary row per device
 
 
@@ -217,7 +218,20 @@ static func _light(at: Node, seed_n: int) -> Node:
 		waited += 0.1
 	await at._wait(0.4)
 	var title: Node = main.current
-	title._play()                                  # Light the wick: the Slots screen
+	if Game.first_night():
+		# v2.8: a first launch goes straight from Light the wick to the first night (Title._first_night): no slot,
+		# difficulty or length chooser. The check lights it the same way, plus the fixed seed so every device and
+		# build sees one house, and "opened" (the story's opening has just played, as before a real first run)
+		fast_starts += 1
+		main.autotest = null   # the world starts as it does for a real player (the story card, no test-only hints)
+		title._first_night({"seed": seed_n, "seeded": false, "opened": true})
+		waited = 0.0
+		while waited < 10.0 and not (main.current and main.current.name == "Game" and main.current.get("player") != null):
+			await at._wait(0.05)
+			waited += 0.05
+		main.autotest = at
+		return main.current
+	title._play()                                  # Light the wick: the Slots screen (a device with a slot already)
 	await gwait(at, 0.4)
 	var slots: Node = null
 	for c in (title.root as Control).get_children():
@@ -301,6 +315,7 @@ static func check(at: Node) -> void:
 	print("[primer] ---- summary (seed %d; game seconds; texts = teaching texts in the first 3:00)" % seed_n)
 	for r in _rows:
 		print("[primer] %-9s first kill %5.1f s   primer %5.1f s   reading ~%4.1f s (%d words)   texts %d   repeats %d   re-told lessons %d   lessons %s" % r)
+	print("[primer] first launches lit straight from Light the wick (no choosers): %d" % fast_starts)
 	print("[primer] DONE fails=%d" % fails)
 
 

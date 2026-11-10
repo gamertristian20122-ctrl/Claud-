@@ -14,7 +14,7 @@ signal settings_changed
 signal unlocked_now(key: String)
 signal slot_changed
 
-const VERSION := "2.7.0"
+const VERSION := "2.8.0"
 const SAVE_PATH := "user://save.cfg"
 const SLOTS := 3
 const MAX_LEVEL := 4          # world.LEVELS (difficulty 1-4)
@@ -170,6 +170,12 @@ func _any_slot() -> bool:
 		if FileAccess.file_exists(slot_path(n)):
 			return true
 	return false
+
+
+## v2.8: nobody has lit a candle on this device yet (no slot has a file, none is lit in memory). The title's
+## Light the wick then goes straight to the first night (Title._first_night) instead of the three choosers.
+func first_night() -> bool:
+	return not slot_live and not _any_slot()
 
 
 ## Make slot n the one in use: its records and level (an empty slot starts from the defaults).

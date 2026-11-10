@@ -104,7 +104,7 @@ f1 cell (5, 4) shop dist 1 seed 4278621937 grid 955799143
 f1 cell (5, 5) secret dist 99 seed 118052390 grid 3949107587
 f1 treasure (3, 4): relic:witching_hour, keepsake:censer
 f1 shop (5, 4): relic:cold_wax@12, tonic:flask_big_green@5, wax_big@4
-f1 room (4, 3) lodgers: tiny_zombie hp 4.0, tiny_slug hp 3.0
+f1 room (4, 3) lodgers: tiny_zombie hp 1.0, tiny_zombie hp 1.0, tiny_zombie hp 1.0, tiny_slug hp 1.0, tiny_slug hp 1.0, tiny_slug hp 1.0
 f1 guardian big_zombie hp 78.0
 f2 The Crypt (theme crypt, music floor_2) guardian sexton omen 'draught' cells 13 start (4, 4) boss (5, 2)
 f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
@@ -197,7 +197,7 @@ f1 cell (5, 6) shop dist 3 seed 2616459833 grid 955799143
 f1 cell (6, 4) musicbox dist 2 seed 2172416166 grid 3260657233
 f1 treasure (4, 3): relic:stove_door, keepsake:oil_jug
 f1 shop (5, 6): relic:beeswax@12, tonic:flask_green@5, wax_big@4
-f1 room (3, 4) lodgers: wax_blob hp 6.0, wax_blob hp 6.0, tiny_slug hp 3.0
+f1 room (3, 4) lodgers: wax_blob hp 6.0, wax_blob hp 6.0, tiny_slug hp 1.0, tiny_slug hp 1.0, tiny_slug hp 1.0
 f1 guardian wax_mother hp 92.0
 f2 The Crypt (theme crypt, music floor_2) guardian ossuary omen 'smoky_halls' cells 12 start (4, 4) boss (7, 4)
 f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
@@ -289,7 +289,7 @@ f1 cell (5, 4) normal dist 1 seed 1928613170 grid 3373473127 opening
 f1 cell (6, 4) shop dist 2 seed 3350324997 grid 955799143
 f1 treasure (3, 4): relic:lodestone, keepsake:flare_match
 f1 shop (6, 4): relic:powder_tin@12, tonic:flask_blue@5, wax_big@4
-f1 room (4, 2) lodgers: slug hp 8.0, wax_blob hp 6.0, tiny_zombie hp 4.0
+f1 room (4, 2) lodgers: slug hp 8.0, tiny_slug hp 1.0, tiny_slug hp 1.0, wax_blob hp 6.0, tiny_zombie hp 1.0, tiny_zombie hp 1.0, tiny_zombie hp 1.0
 f1 guardian furnace hp 106.0
 f2 The Crypt (theme crypt, music floor_2) guardian ogre omen '' cells 14 start (4, 4) boss (2, 1)
 f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
@@ -383,7 +383,7 @@ f1 cell (6, 4) normal dist 2 seed 64292604 grid 3918023731 opening
 f1 cell (6, 5) boss dist 3 seed 3129631143 grid 3586115087
 f1 treasure (4, 3): relic:thimble, keepsake:flare_match
 f1 shop (2, 4): relic:lamp_oil@12, tonic:flask_blue@5, wax_big@4
-f1 room (3, 4) lodgers: wax_blob hp 6.0, slug hp 8.0
+f1 room (3, 4) lodgers: wax_blob hp 6.0, slug hp 8.0, tiny_slug hp 1.0, tiny_slug hp 1.0
 f1 guardian furnace hp 106.0
 f2 The Crypt (theme crypt, music floor_2) guardian ogre omen 'draught' cells 12 start (4, 4) boss (3, 6)
 f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
@@ -477,7 +477,7 @@ f1 cell (6, 4) normal dist 2 seed 1850491949 grid 3918023731 opening
 f1 cell (6, 5) boss dist 3 seed 3093571512 grid 3586115087
 f1 treasure (4, 5): relic:pocket_watch, keepsake:oil_jug
 f1 shop (4, 3): relic:tin_sconce@12, tonic:flask_red@5, wax_big@4
-f1 room (3, 4) lodgers: wax_blob hp 6.0, tiny_slug hp 3.0, tiny_slug hp 3.0
+f1 room (3, 4) lodgers: wax_blob hp 6.0, tiny_slug hp 1.0, tiny_slug hp 1.0, tiny_slug hp 1.0, tiny_slug hp 1.0, tiny_slug hp 1.0, tiny_slug hp 1.0
 f1 guardian wax_mother hp 92.0
 f2 The Crypt (theme crypt, music floor_2) guardian ossuary omen '' cells 12 start (4, 4) boss (5, 6)
 f2 numbers: melt x1.1 kindle 4.0 quick 2.0 wax odds 1.0 marked 0.06 foe dmg x1.12 touch 6.0 clock@100wax 20.0
