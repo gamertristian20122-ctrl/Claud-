@@ -79,6 +79,11 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
 - `world.DRAIN_PER_SEC`: the base melt (a full 120-wax candle lasts 8 minutes unhurt on floor 1), times
   `world.FLOOR_DRAIN` per floor `[1.0, 1.1, 1.3, 1.45, 1.2]`. Wax income per floor: `KINDLE_CAP`, `QUICK_WAX`,
   `WAX_ODDS`; a low wick gets up to `STEADY_ADD` (15) minutes on reaching floors 3-4 (`STEADY_BELOW` 40).
+- The tall candle (v2.9, `world.tall_k`): wax above `TALL_KNEE` (0.5 of the night's candle: the wider notch on
+  the wax bar and the Clock Tower's line) melts faster, in a straight line up to x(1 + `TALL_HOT[floor]`) at a
+  full candle, `TALL_HOT` = `[0.5, 1.5, 2.0, 2.0, 2.0]`; `LEVELS[n]["tall"]` scales it (Gentle 0.5). It taxes a
+  rich run and leaves a thin candle alone. Read a run's `[wax]` ledger line before turning any melt or income
+  knob (`docs/streams/v29_clock.md`); `--tallhot=0` plays the 2.8 candle.
 - `Enemy.TOUCH` = `[5, 6, 7, 7, 7]`: contact damage per floor. The early floors are the strongest knob on
   the win rate. `Enemy.FLOOR_HP` = `[1.0, 1.35, 1.85, 2.4, 3.0]`: creature health per floor (floor 5 = tower).
   Guardian health: `hp` in `Enemy.DEFS`. Marked foes: `world.champ_chance()`. Drops: `world._plain_drop`.
@@ -108,17 +113,29 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   godot-export, pixel-art-sprites and roguelike.)
 
 ## Where things stand (handoff, 2026-11-10)
-- Latest build: **2.8.0** (versionCode 15): APK, Windows + Linux zips and a NEW browser build
-  (`./tools/build_web.sh`, preset "Web", single-threaded; itch.io: HTML, viewport 1152 x 648). It came from a
-  fresh look at a recorded run and six measured bot runs (`docs/streams/v28_pace.md`): on 2.7.0 the bot won 6 of 6,
-  fought 51% of the time and walked between rooms 28%; floor 1 was 4 fights of 1-3 lodgers. 2.8: Tallow hurries
-  x1.6 in quiet rooms (`Player.HURRY`), the full map hops to a cleared room (`world.warp_to`, `FullMap`), the
-  Cellar's small lodgers come as litters of one-ember runts (`world.RUNTS` / `FOLLOWERS`, `Enemy.runt`), and a
-  first launch goes straight from Light the wick into the first night (`Game.first_night`). The final build on
-  fresh seeds 13-18: 67% fighting, 12% walking between rooms, and **6 of 6 wins** (4 of them into the Clock
-  Tower): the bot has won 16 of 18 runs at Midnight on 2.7.0 + 2.8.0 against a target of about half, so **a
-  balance pass is due** (the melt, wax income after floor 2). Judges: `--pacecheck` (25 probes), `--tour --pace`.
-  The night baseline was regenerated on purpose (only floor-1 `lodgers:` lines moved).
+- Latest build: **2.9.0** (versionCode 16): APK, AAB, Windows + Linux zips and the browser build. Two things:
+  - **The bigger picture** (`docs/streams/v28_screen.md`, merged from `v28/screen`): Settings > Controls >
+    Screen, **Big** (the default) draws the room at its own whole-number scale, wall to wall in height, under a
+    HUD at the old scale (`scripts/stage.gd` owns Main; hooks `Stage.attach_world`, `Stage.to_ui`, `--screen=`,
+    `--stagekw=`, `--safe=`, `tools/stage_check.py`); **Classic** is the old picture. The room covers 62% of a
+    phone screen instead of 35-43%. Never run on a real phone or GPU yet: if it is slow there, Classic is the
+    fallback. The browser frame for itch.io is now 1280 x 720.
+  - **The clock** (`docs/streams/v29_clock.md`): the bot's new wax ledger showed kills paying back twice what
+    the melt took, so the candle stood near full all night. Now a tall candle burns fast (the Balance knobs
+    above). Same 16 houses at Midnight: **10 of 16 wins, 12:56 AM at the win** (the 2.8 burn: 5 of 6, 12:21 AM);
+    Gentle 7 of 7; Witching Hour 1 of 4, Two O'Clock 3 of 4. Missed: the aim was wins after 1:15 AM. No run
+    that reached the Belfry lost (all 20 losses in 64 nights came in the Crypt or the Chapel): if the end of the
+    night should bite, look at what the Belfry and its guardian pay and cost, not at the melt.
+  - Also: the creature glow shader's engine error is gone (logs are clean apart from exit-time leak notices).
+- 2.8.0 (versionCode 15) came from a fresh look at a recorded run and six measured bot runs
+  (`docs/streams/v28_pace.md`): Tallow hurries x1.6 in quiet rooms (`Player.HURRY`), the full map hops to a
+  cleared room (`world.warp_to`, `FullMap`), the Cellar's small lodgers come as litters of one-ember runts
+  (`world.RUNTS` / `FOLLOWERS`, `Enemy.runt`), and a first launch goes straight from Light the wick into the
+  first night (`Game.first_night`). 67% of a run is fighting, 12% walking between rooms (2.7.0: 51% / 28%).
+  Judges: `--pacecheck` (25 probes), `--tour --pace`. The night baseline was regenerated on purpose then.
+- The browser build (`./tools/build_web.sh`) is the **whole game**, not a demo: do not post it as a free page
+  unless the owner wants that. A real demo (say the first two floors, behind a `demo` export feature) is not
+  built.
 - **Publisher pitch kit** (the owner wants to pitch publishers): `docs/marketing/pitch/` (README first): a
   checked publisher list with routes and AI positions, paste-ready form answers, emails, the honest "how it was
   made" statement, a contract checklist, eight 2.8.0 screenshots, and a 12-slide deck (a Slides artifact,
@@ -126,10 +143,10 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   pitch always says the art and code were made with an AI assistant; never help hide that. Owner-only blanks:
   name, email, country, price, dates, the ask, a guardian if under 18. The trailer still shows 2.0: re-record it
   only if the owner asks (no-videos rule).
-- Paused / not done from the 2.8 plan: **`v28/screen`** (the room should fill the screen height: world drawn at
-  its own whole-number scale, UI at today's; a Classic switch; worktree `agent-ac8bf19a9b066a62b`, barely
-  started when a usage limit hit) and **Flag a bug** (a pause-menu button that copies a report code; designed in
-  the session notes, not built). The game still letterboxes on 720p / 1440p phones and the Steam Deck.
+- Not done from the 2.8 plan: **Flag a bug** (a pause-menu button that copies a report code; not built).
+- The owner asked for game work only, lean: no pitch, research or reviewer agents unless asked; one thing at a
+  time; small bot batches (they cost time, not usage: run them in the background and read only the
+  `[playtest] run` and `[wax]` lines).
 - **Queue after v2.1 + Long Night batch 1:** `docs/design/ROADMAP_V2.md` (special moves -> Challenge Nights ->
   diary pages -> translations -> Boss Rush; Long Night batch 2 as a side track). Design of the long night:
   `docs/design/LONG_NIGHT.md`.
