@@ -245,6 +245,53 @@ ICONS.update({
 })
 
 
+FX = "ninja-adventure/2D/top-down-rpg/FX/%s.png"
+NA_ITEM = "ninja-adventure/2D/top-down-rpg/Items/%s.png"
+
+
+def fx(name, w, h, pick=None):
+    return strip(FX % name, w, h, pick)
+
+
+# shots, bursts and special-move effects (the floor stains and the shockwave ring are plain shapes drawn by
+# the game itself now: Stains._shape, MoveFx)
+def effects():
+    P = "Projectile/"
+    return {
+        "fx/ember": {"": fx(P + "Fireball", 16, 16)},
+        "fx/ember_big": {"": fx(P + "SpriteSheetRock", 16, 16)},
+        "fx/ember_blue": {"": fx("Particle/Spark", 10, 8, [1, 2, 3, 4])},
+        "fx/bolt_bone": {"": fx("Particle/RockGray", 16, 16, [3, 4])},
+        "fx/bolt_cog": {"": fx(P + "Shuriken", 16, 16)},
+        "fx/bolt_page": {"": fx(P + "ShurikenMagic", 16, 16, [0, 0])},
+        "fx/bolt_pin": {"": fx(P + "Kunai", 14, 5, [0, 0])},
+        "fx/bolt_ring": {"": fx("Particle/RainOnFloor", 8, 8, [1, 2])},
+        "fx/bolt_wax": {"": fx("Particle/Snow", 8, 8, [3, 4])},
+        "fx/bullet_green": {"": fx("Particle/Leaf", 12, 7, [0, 1])},
+        "fx/bullet_purple": {"": fx(P + "ShurikenMagic", 16, 16, [1, 1])},
+        "fx/bullet_water": {"": fx(P + "EnergyBall", 16, 16, [0, 1])},
+        "fx/explosion": {"": fx("Elemental/Explosion/SpriteSheet", 40, 40)},
+        "fx/glint": {"": fx("Particle/Spark", 10, 8, [2, 3])},
+        "fx/poof": {"": fx("Smoke/Smoke/SpriteSheet", 32, 32)},
+        "fx/smoke": {"": fx("Smoke/Smoke/SpriteSheet", 32, 32, [2, 3, 4, 5])},
+        "moves/blackflame": {"": fx(P + "CanonBall", 16, 16, [0, 1, 2, 3])},
+        "moves/blink": {"": fx("Magic/Spirit/SpriteSheet", 32, 32)},
+        "moves/burst": {"": fx("Elemental/Flam/SpriteSheet", 25, 30, [1, 2, 3])},
+        "moves/relight": {"": fx("Particle/Fire", 8, 12, [3, 5, 7])},
+        "moves/spark": {"": fx("Particle/Spark", 10, 8, [0, 1, 2])},
+        "moves/ring": {"": fx("Magic/Circle/SpriteSheetWhite", 32, 32)},
+        "moves/icon_flare": (FX % (P + "Fireball"), (0, 0, 16, 16)),
+        "moves/icon_blink": (FX % (P + "EnergyBall"), (0, 0, 16, 16)),
+        "moves/icon_sparkler": (FX % (P + "ShurikenMagic"), (0, 0, 16, 16)),
+        "moves/icon_skip": NA_ITEM % "Scroll/ScrollThunder",
+        "moves/icon_slam": NA_ITEM % "Tool/Hammer",
+        "moves/icon_snuff": NA_ITEM % "Resource/Water",
+    }
+
+
+# single pictures a script drew that the game now does without (globs under assets/art)
+GONE = ["fx/*_lg_f*.png", "fx/gib_*.png", "fx/splat_*.png", "fx/scorch.png", "fx/light/soft_light.png"]
+
 # pictures a script drew that are simply taken away: the game then shows 0x72's own frames for that creature
 # (Enemy.frames_for falls back to assets/0x72/frames; Enemy.DEFS "sprite" names the 0x72 sprite where it differs)
 REMOVED = [
@@ -255,7 +302,7 @@ REMOVED = [
     "areas/attic/trunk",       # -> 0x72 chest_full_open
 ]
 
-SETS = [("creatures", lambda: CREATURES), ("guardians", guardians), ("icons", lambda: ICONS)]
+SETS = [("creatures", lambda: CREATURES), ("guardians", guardians), ("icons", lambda: ICONS), ("effects", effects)]
 
 
 def fetch(path):
@@ -309,6 +356,11 @@ def main():
     if not only_list:
         for target in REMOVED:
             clear(target)
+        for pat in GONE:
+            for f in glob.glob(os.path.join(ART, pat)):
+                os.remove(f)
+                if os.path.exists(f + ".import"):
+                    os.remove(f + ".import")
     lines = ["Wax & Wane - pictures taken from free packs (tools/free_art.py writes this file)",
              "Every file below is a crop of the pack file named beside it: x, y, width, height. No pixel was changed.",
              "The packs are in the public library https://github.com/series-ai/jam-ready-assets, each with its own",

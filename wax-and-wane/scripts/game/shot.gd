@@ -168,6 +168,8 @@ func _apply_size() -> void:
 	if not _has_large.has(_kind):
 		_has_large[_kind] = Art.has("fx/%s_lg_f0" % _kind)
 	var sf := Art.anim("fx/%s%s" % [_kind, "_lg" if large_shots() and _has_large[_kind] else ""], ENEMY_FPS)
+	# v2.10: the pack's shots have no bolder drawing, so Large shows the same one half as big again
+	spr.scale = Vector2(1.5, 1.5) if large_shots() and not _has_large[_kind] else Vector2.ONE
 	if spr.sprite_frames == sf:
 		return
 	spr.sprite_frames = sf

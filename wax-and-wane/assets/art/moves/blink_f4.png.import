@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d0w1mhk1kegas"
-path="res://.godot/imported/bullet_green_lg_f0.png-049211f475b8a901cb80b6427ffd521d.ctex"
+uid="uid://66jp4dbw0u8i"
+path="res://.godot/imported/blink_f4.png-bdc6dacdd108485ed76a0eb90a1a0c7c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/fx/bullet_green_lg_f0.png"
-dest_files=["res://.godot/imported/bullet_green_lg_f0.png-049211f475b8a901cb80b6427ffd521d.ctex"]
+source_file="res://assets/art/moves/blink_f4.png"
+dest_files=["res://.godot/imported/blink_f4.png-bdc6dacdd108485ed76a0eb90a1a0c7c.ctex"]
 
 [params]
 

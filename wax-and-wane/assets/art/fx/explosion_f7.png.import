@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bcn770lfily60"
-path="res://.godot/imported/bullet_water_lg_f0.png-bcbac478651f2c60cb37610a05080b4f.ctex"
+uid="uid://csdqkle4yeplb"
+path="res://.godot/imported/explosion_f7.png-8c3fbec66acc30d18bbcc58bc6989d47.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/fx/bullet_water_lg_f0.png"
-dest_files=["res://.godot/imported/bullet_water_lg_f0.png-bcbac478651f2c60cb37610a05080b4f.ctex"]
+source_file="res://assets/art/fx/explosion_f7.png"
+dest_files=["res://.godot/imported/explosion_f7.png-8c3fbec66acc30d18bbcc58bc6989d47.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drvf5kqgoass7"
-path="res://.godot/imported/bolt_wax_lg_f1.png-497b73220ba11dd56426ff10381caed5.ctex"
+uid="uid://b722wxcvlm0ay"
+path="res://.godot/imported/explosion_f8.png-840d6c56004472a0ec68041cd55a7e00.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/fx/bolt_wax_lg_f1.png"
-dest_files=["res://.godot/imported/bolt_wax_lg_f1.png-497b73220ba11dd56426ff10381caed5.ctex"]
+source_file="res://assets/art/fx/explosion_f8.png"
+dest_files=["res://.godot/imported/explosion_f8.png-840d6c56004472a0ec68041cd55a7e00.ctex"]
 
 [params]
 

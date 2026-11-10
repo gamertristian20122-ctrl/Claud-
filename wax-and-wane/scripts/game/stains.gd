@@ -109,11 +109,10 @@ static func image(art: String, mat: String) -> Image:
 	if _imgs.has(key):
 		return _imgs[key]
 	var src: Image
-	var t := Art.tex("fx/" + art)
+	var t := Art.tex("fx/" + art) if Art.has("fx/" + art) else null
 	src = t.get_image() if t else null
 	if src == null:
-		src = Image.create(2, 2, false, Image.FORMAT_RGBA8)
-		src.fill(KEY[1])
+		src = _shape(art)
 	src = src.duplicate() as Image
 	if src.is_compressed():
 		src.decompress()
@@ -131,6 +130,50 @@ static func image(art: String, mat: String) -> Image:
 				src.set_pixel(x, y, ramp[i])
 	_imgs[key] = src
 	return src
+
+
+## v2.10: the splat, gib and scorch pictures a script drew are gone. A stain is geometry now: a few discs laid
+## over each other in the author ramp (dark rim, one light fleck), the same shape for a name every time.
+const SPLAT_SIZE := [Vector2i(6, 5), Vector2i(8, 7), Vector2i(10, 8), Vector2i(12, 9), Vector2i(14, 8),
+	Vector2i(16, 12), Vector2i(11, 10), Vector2i(16, 11), Vector2i(30, 20), Vector2i(32, 20)]
+const GIB_SIZE := [Vector2i(4, 4), Vector2i(5, 4), Vector2i(5, 5), Vector2i(5, 5), Vector2i(5, 5), Vector2i(6, 5)]
+
+
+static func _shape(art: String) -> Image:
+	var i := int(art.get_slice("_", 1)) if "_" in art else 9
+	var sz: Vector2i = GIB_SIZE[i % GIB_SIZE.size()] if art.begins_with("gib") else SPLAT_SIZE[i % SPLAT_SIZE.size()]
+	var img := Image.create(sz.x, sz.y, false, Image.FORMAT_RGBA8)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(art)
+	var discs := []
+	for k in 2 + (sz.x * sz.y) / 28:
+		discs.append([Vector2(rng.randf_range(0.28, 0.72) * sz.x, rng.randf_range(0.32, 0.68) * sz.y),
+			rng.randf_range(0.2, 0.36) * minf(sz.x, sz.y) + 1.0])
+	for y in sz.y:
+		for x in sz.x:
+			for d in discs:
+				var o: Vector2 = Vector2(x + 0.5, y + 0.5) - (d[0] as Vector2)
+				o.y *= float(sz.x) / float(sz.y)   # a puddle lies flat: wider than it is tall
+				if o.length() <= float(d[1]) * float(sz.x) / float(sz.y) * 0.5 + 0.6:
+					img.set_pixel(x, y, KEY[1])
+					break
+	var rim := []
+	for y in sz.y:
+		for x in sz.x:
+			if img.get_pixel(x, y).a > 0.5:
+				for n in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1)]:
+					var q: Vector2i = Vector2i(x, y) + (n as Vector2i)
+					if q.x < 0 or q.x >= sz.x or q.y >= sz.y or img.get_pixel(q.x, q.y).a < 0.5:
+						rim.append(Vector2i(x, y))
+						break
+	for r in rim:
+		img.set_pixel((r as Vector2i).x, (r as Vector2i).y, KEY[2])
+	if sz.x >= 6:
+		var c: Vector2 = discs[0][0]
+		var f := Vector2i(clampi(int(c.x) - 1, 1, sz.x - 2), clampi(int(c.y) - 1, 1, sz.y - 2))
+		if img.get_pixel(f.x, f.y) == KEY[1]:
+			img.set_pixel(f.x, f.y, KEY[0])
+	return img
 
 
 static func tex_of(art: String, mat: String) -> Texture2D:
