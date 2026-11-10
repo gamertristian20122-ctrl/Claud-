@@ -150,23 +150,39 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   pitch always says the art and code were made with an AI assistant; never help hide that. Owner-only blanks:
   name, email, country, price, dates, the ask, a guardian if under 18. The trailer still shows 2.0: re-record it
   only if the owner asks (no-videos rule).
-- **Free-art swap (asked 2026-11-10, waiting on the owner's choice):** the owner wants every picture and sound
-  my programs made replaced by found, human-made free assets ("don't generate anything"), the diary pages
-  removed and the talk scenes kept. Size: about 1,160 PNGs under `assets/art/` (hero parts, 27 creatures, 13
-  guardians, 73 item icons, fx, decor, 24 baked room backgrounds, specials, tower, chalk, primer, talk, ui).
-  Source found: the public library `series-ai/jam-ready-assets` (where `tools/import_audio.py` already gets the
-  music; clone with `GIT_LFS_SKIP_SMUDGE=1`, fetch a PNG from
-  `https://media.githubusercontent.com/media/series-ai/jam-ready-assets/main/<path>`; each pack has its own
-  `License.txt`, licence table in its README). Usable CC0, human-made: `ninja-adventure` (64 monsters, 20
-  bosses, a flame character "Flam", 130 item + 121 skill icons, FX, UI theme, facesets, input prompts),
-  `0x72-dungeon-tileset-ii`, Kenney (tiny-dungeon, roguelike-interior, ui-pixel-pack, input-prompts-pixel, the
-  audio packs, music-jingles), `ansimuz-gothicvania-*`, `foozle-lucifer-*`, `takogame-halloween-icons`, Pixel
-  Frog. **Never use `angais-pixel-art-atlas` / `codepawl-pixel-art-atlas-models`: AI-generated.** Hard parts told
-  to the owner with a side-by-side picture (`build/free_art_preview.png`): Tallow is drawn by code as a candle
-  that shrinks and makes faces (`player.gd`), no pack has him; no pack has a pendulum, a stockpot, an organist
-  either, so guardians would be renamed and their talk lines re-fitted; the diary pages carry three endings
-  (`Diary.ENDINGS`); and with my talk lines kept Steam still needs one sentence about the text. Do nothing big
-  until the owner answers (go all / go but keep Tallow / stop).
+- **Free-art swap (in progress; the owner's choice, 2026-11-10: "keep the candles", replace everything else,
+  "don't generate anything", remove the diary pages, keep the talk scenes):** every picture a script drew, other
+  than Tallow and the candles (`assets/art/hero`, `items/costume`), is being replaced by found, human-made free
+  art. `tools/free_art.py` is the only door: it fetches a pack file from the public library
+  `series-ai/jam-ready-assets` (`https://media.githubusercontent.com/media/series-ai/jam-ready-assets/main/<path>`,
+  cache `~/.cache/waxandwane_free_art`; a file list comes from a `GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1`),
+  cuts frames unchanged (crop only), writes the game's files under the same names, and writes
+  `assets/licenses/CREDITS_free_art.txt`. **Never use that library's `angais-pixel-art-atlas` /
+  `codepawl-pixel-art-atlas-models`: AI-generated.** Usable (CC0, by people): `ninja-adventure` (monsters 64x64 =
+  4 directions x 4 steps of 16 px, bosses as strips, Items, `Ui/Skill Icon`, FX, facesets, input prompts),
+  `0x72`, `16x16-rpg-item-pack`, `foozle-lucifer-*`, `takogame-halloween-icons`, Kenney (tiny-dungeon,
+  roguelike-interior, ui packs, input-prompts-pixel, the audio packs, music-jingles), Pixel Frog,
+  `ansimuz-gothicvania-*`.
+  - Done: (1) 23 small lodgers (`Enemy.DEFS` "sprite" names a 0x72 sprite for the Iron Snuffer, Waxwork Maid,
+    Lantern-Shy Armour, Snapping Trunk; two renamed: Grave Skull, Restless Lantern); (2) the 13 guardians as
+    stand-ins with names and talk kept (furnace GiantFlam, wax_mother DemonCyclop, choir GiantSpirit, necro_boss
+    GiantRedSamurai, organist SquidRed, ossuary Foozle's Ancient Skeleton, pendulum DemonCyclop2, sexton
+    GiantRacoon, weathercock TenguRed, keeper GiantBlueSamurai, dress_form GiantBamboo2, stockpot GiantSlime2,
+    librarian TenguBlue), portraits = `TalkLines.SPEAKERS[..]["crop"]` on the new first idle frame; (3) relic,
+    keepsake, familiar and pickup icons. Checks after each: gallery / boss / relic tours looked at, god nights
+    (4 and 7 floors, `--tower --keeper`), `--talkcheck`.
+  - To do, in this order: enemy shots and effects (`assets/art/fx`: Ninja Adventure FX / Projectile; delete
+    `fx/light/soft_light.png`, `Art._make_light` draws it); special-move art (`moves`); rooms (re-assemble the 8
+    `room_*` backgrounds from 0x72 tiles with NO recolouring and tint per area in code; doors, pits, rocks, urns,
+    decals, candelabra, trapdoor were hand-placed by a script: use 0x72 pieces or draw nothing); `decor`,
+    `specials`, `areas/*` props, `tower` (0x72, Kenney roguelike-interior, takogame); `ui` (flat code-drawn
+    style boxes + pack icons, Kenney font digits); `primer` + `chalk` (Kenney input prompts); `talk` / `story`
+    (Martha = a pack faceset); sounds (pack files as they are, a pack jingle for the two synthesized ones);
+    the diary pages out (`Diary`, the Diary tab, page pickups, the three page endings, `--diarycheck`); logo, app
+    icon and store art; delete the `tools/art_*.py` that are no longer used; credits (README, in-game,
+    `assets/licenses`), the store AI wording (then: only the hero and the in-game text), version 2.10.0, all checks,
+    builds, APK to the owner.
+  - With my talk lines and names kept, Steam still needs one sentence about the text; the owner knows.
 - Not done from the 2.8 plan: **Flag a bug** (a pause-menu button that copies a report code; not built).
 - The owner asked for game work only, lean: no pitch, research or reviewer agents unless asked; one thing at a
   time; small bot batches (they cost time, not usage: run them in the background and read only the
