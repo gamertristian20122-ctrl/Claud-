@@ -71,9 +71,12 @@ def render(raw):
         shutil.rmtree(d, ignore_errors=True)
         os.makedirs(d)
         w, h = res.split("x")
+        # --screen=classic: this script composes its pictures from the game's 384x216 picture (one scale for all).
+        # Without it, v2.8's Screen: Big gives --shots-store the composed screen at its own size (1920x1080: the
+        # menus x5, the room x6), ready to use as it is (scripts/stage.gd, docs/streams/v28_screen.md)
         cmd = ["xvfb-run", "-a", "-s", "-screen 0 %sx%sx24" % (w, h), "godot", "--path", ROOT,
                "--rendering-driver", "opengl3", "--resolution", res, "--",
-               "--autotest"] + extra + ["--shots=" + d]
+               "--autotest", "--screen=classic"] + extra + ["--shots=" + d]
         print("[store_art] rendering %s at %s ..." % (name, res), flush=True)
         # a private, throw-away save profile: the staging plays seeded runs and marks every achievement as
         # earned (no toasts in the pictures), which must never land in a real player's save

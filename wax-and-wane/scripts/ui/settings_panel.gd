@@ -130,6 +130,10 @@ static func _controls_page(body: VBoxContainer) -> void:
 		grid.add_child(UI.toggle("Mouse aim", Game.settings.get("mouse_aim", true), func(b): Game.set_setting("mouse_aim", b)))
 	grid.add_child(UI.cycle("Enemy shots", ["normal", "large"], ["Normal", "Large"], Game.settings.get("shot_size", "normal"),
 		func(v): Game.set_setting("shot_size", v)))   # v2.1: bigger, bolder enemy shots (shot.gd)
+	# v2.8: Big draws the room as large as the screen allows; Classic is the picture as it always was. It takes
+	# hold at once on the title, and when the night ends in a run (scripts/stage.gd)
+	grid.add_child(UI.cycle(L.t("Screen"), ["big", "classic"], [L.t("Big"), L.t("Classic")],
+		str(Game.settings.get("screen", "big")), func(v): Game.set_setting("screen", v)))
 	body.add_child(grid)
 	var lines := [
 		["Keys", "WASD move   Arrows shoot   %s bomb   %s keepsake   %s special" % [

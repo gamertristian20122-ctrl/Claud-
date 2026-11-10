@@ -150,7 +150,7 @@ func _ready() -> void:
 	floor_pips.draw.connect(_draw_pips)
 	root.add_child(floor_pips)
 	# --- counters: a chip each (icon + number)
-	var cbox := HBoxContainer.new()
+	var cbox := BoxContainer.new()   # a row; v2.8 Screen: Big stacks it in a narrow gutter (_layout)
 	cbox.position = Vector2(4, 39)
 	cbox.add_theme_constant_override("separation", 2)
 	root.add_child(cbox)
@@ -238,6 +238,7 @@ func _ready() -> void:
 			[boss_box, "boss"], [bomb_btn, "buttons"], [keep_btn, "buttons"]]:
 		(pair[0] as Node).set_meta("fit_group", pair[1])
 	process_physics_priority = -10      # read input before the world moves Tallow
+	_under = [[clock_face, bar, spare_label, streak_box, cbox, floor_label, floor_pips], [minimap]]
 	get_viewport().size_changed.connect(_layout)
 	Controls.device_changed.connect(_on_device)
 	Game.settings_changed.connect(_refresh_touch)
@@ -250,7 +251,7 @@ func _exit_tree() -> void:
 
 
 ## A counter chip: [icon] 23, on a small dark plate. Returns its number label.
-func _chip(row: HBoxContainer, icon: String, col: Color) -> Label:
+func _chip(row: BoxContainer, icon: String, col: Color) -> Label:
 	var chip := PanelContainer.new()
 	chip.theme_type_variation = &"ChipPanel"
 	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -305,12 +306,8 @@ func view_size() -> Vector2:
 
 ## Left/right insets (in game pixels) for notches and rounded corners.
 func safe_insets() -> Vector2:
-	var win := Vector2(DisplayServer.window_get_size())
-	var safe := DisplayServer.get_display_safe_area()
-	if win.x <= 0 or safe.size.x <= 0:
-		return Vector2.ZERO
-	var k := view_size().x / win.x
-	return Vector2(maxf(0.0, safe.position.x * k), maxf(0.0, (win.x - safe.end.x) * k)).floor()
+	var s := Stage.safe_insets()   # v2.8: one place for it (and a test's fake notch, --safe=l,t,r,b)
+	return Vector2(s[0], s[2])
 
 
 ## True on 16:9 / 16:10 screens (monitors, Steam Deck: 384 px wide), where the room leaves only a
@@ -327,8 +324,14 @@ func _layout() -> void:
 	clock_face.position = Vector2(4 + ins.x, 3)
 	bar.position = Vector2(4 + ins.x, 3 + PLATE_H + 1)
 	_place_clock()
-	(coin_label.get_parent().get_parent().get_parent() as Control).position = Vector2(4 + ins.x, 39)
-	floor_label.position = Vector2(6 + ins.x, 58)
+	# v2.8 Screen: Big on a 16:9 screen: the walls reach the top edge and the gutters are narrow, so the counters
+	# stack inside the left gutter (side by side they stood on the floor's corner) and the floor's name moves down
+	var cbox := coin_label.get_parent().get_parent().get_parent() as BoxContainer
+	var stack := Stage.big and Stage.kw > Stage.ku and _narrow
+	cbox.vertical = stack
+	cbox.position = Vector2(4 + ins.x, 39)
+	cbox.reset_size()
+	floor_label.position = Vector2(6 + ins.x, 73 if stack else 58)
 	minimap.position = Vector2(vs.x - minimap.size.x - 30 - ins.y, 5)
 	pause_btn.position = Vector2(vs.x - 26 - ins.y, 3)
 	bomb_btn.position = Vector2(vs.x - 33 - ins.y, vs.y - 118)
@@ -546,10 +549,45 @@ func on_hurt() -> void:
 	_ghost_hold = 0.5
 
 
+## v2.8 Screen: Big (scripts/stage.gd). The room reaches the screen's edges, so the gauge and the minimap stand on
+## its corners: each thins out while Tallow or a lodger is underneath, and nothing hides behind it. (Classic keeps
+## its picture as it was.)
+var _under: Array = []       # groups of Controls that fade together
+const UNDER_ALPHA := 0.4
+
+
+func _fade_under(dt: float) -> void:
+	if not Stage.big or Stage.kw <= Stage.ku:
+		return
+	var spots: Array[Vector2] = []
+	if is_instance_valid(world.player):
+		spots.append(Stage.to_ui(world.player))
+	for e in world.enemies:
+		if is_instance_valid(e) and e.alive:
+			spots.append(Stage.to_ui(e))
+	var k := float(Stage.kw) / float(Stage.ku)
+	for group in _under:
+		var hit := false
+		for c in group:
+			var ctl: Control = c
+			if hit or not ctl.visible or ctl.size.x <= 0.0:
+				continue
+			var box := Rect2(ctl.position, ctl.size).grow(1.0)
+			for s in spots:
+				# a body is about a tile wide and stands above its feet
+				if box.intersects(Rect2(s.x - 8.0 * k, s.y - 18.0 * k, 16.0 * k, 20.0 * k)):
+					hit = true
+					break
+		var a := move_toward(float((group[0] as Control).modulate.a), UNDER_ALPHA if hit else 1.0, dt * 5.0)
+		for c in group:
+			(c as Control).modulate.a = a
+
+
 func _process(dt: float) -> void:
 	var p: Player = world.player
 	if p == null:
 		return
+	_fade_under(dt)
 	if not _wax_seen:
 		_wax_seen = true
 		shown_wax = p.wax
@@ -922,7 +960,8 @@ func _mouse_aim(p: Player) -> Vector2:
 		return Vector2.ZERO
 	if Input.emulate_touch_from_mouse or not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		return Vector2.ZERO
-	var from := p.get_global_transform_with_canvas().origin + Vector2(0, -6)
+	# v2.8: where Tallow is on the HUD's canvas (Screen: Big draws the world at its own scale, scripts/stage.gd)
+	var from := Stage.to_ui(p) + Vector2(0, -6) * float(Stage.kw) / float(Stage.ku)
 	var d := get_viewport().get_mouse_position() - from
 	return d.normalized() if d.length() > 3.0 else Vector2.ZERO
 

@@ -164,6 +164,11 @@ godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
                           (time to kill, hits; the v2.1 balance check against its floor-mates)
     --device=touch|keyboard|mouse|gamepad,  --touchmouse   input to show / emulate
     --settings=swap_sticks:true,reduce_motion:true,aim:auto,magnet:false   any settings for the run (v2.7 QA)
+    --screen=big|classic  v2.8: the picture's path for this run, whatever Settings > Controls > Screen says
+                          (scripts/stage.gd, docs/streams/v28_screen.md); a [stage] line prints both scales.
+                          --stagekw=N forces Big's world scale (N = the UI's scale must give Classic's picture);
+                          --safe=l,t,r,b fakes a display safe area in screen pixels (notches);
+                          --rngseed=N seeds the global generator (the same seeds and sparks every run)
     --monkey              a person's random presses on top of the bot (Back, pause, map, moves, menus, focus lost),
                           with a watchdog: [monkey] PROBLEM lines (docs/streams/v27_qa.md)
 godot --headless --path . -- --autotest --qacheck                     # v2.7 QA: a probe per bug the QA pass fixed + Back /
@@ -223,6 +228,10 @@ xvfb-run -a -s "-screen 0 1600x720x24" godot --path . --rendering-driver opengl3
     ... --tour --primer       v2.7: the controls primer's five steps on touch, keys and pad, Swap sticks, Reduce motion,
                               How to play (pause menu, every reel step, the Journal) (docs/streams/v27_onboarding.md)
     ... --tour --platform     Continue, settings, achievements, keyboard / gamepad (also try 1280x800, 1920x1080)
+    ... any tour + --layers   v2.8 Screen: Big: next to each shot (the composed screen at the screen's own size) its two
+                              buffers, NN_name.world.png and NN_name.ui.png; then `python3 tools/stage_check.py <dir>`
+                              rebuilds the screen from them and fails on any pixel that is not a whole-number enlargement
+                              (docs/streams/v28_screen.md). --screen=classic gives the 384x216-based shots as before
     ... --tour --slots        the save slots, the level picker, a level 3 run, Level / Delete / Continue (on a copied 2.0
                               profile it checks the move into Slot 1 record by record)
     ... --herosheet           Tallow in every state at x6 (hero_states.png, hero_candles.png; + --costumes / --ingame)

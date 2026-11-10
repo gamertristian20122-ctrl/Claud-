@@ -3,7 +3,9 @@
 const { chromium } = require('playwright');
 (async () => {
   const [url, shot] = process.argv.slice(2);
-  const W = 1152, H = 648;   // three screen pixels per game pixel
+  // itch.io's viewport (tools/build_web.sh): the room at four screen pixels per art pixel, the menus at three.
+  // WEB_W / WEB_H try another canvas (1152 x 648, 1920 x 1080...).
+  const W = +(process.env.WEB_W || 1280), H = +(process.env.WEB_H || 720);
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   const errors = [];
@@ -12,7 +14,9 @@ const { chromium } = require('playwright');
   const t0 = Date.now();
   await page.goto(url, { waitUntil: 'load', timeout: 120000 });
   await page.waitForTimeout(9000);
-  const k = W / 384;
+  // The menus are a 384x216 picture (or wider / taller) centred in the canvas at a whole number of screen pixels
+  // per pixel (scripts/stage.gd): Light the wick is at (290, 106) of the 384x216 one, on any canvas, Big or Classic.
+  const k = Math.max(1, Math.min(Math.floor(W / 384), Math.floor(H / 216)));
   const lit = async () => page.evaluate(() => {   // how much of the canvas is not near-black
     const c = document.querySelector('canvas'); if (!c) return 0;
     const t = document.createElement('canvas'); t.width = 96; t.height = 54;
@@ -22,7 +26,7 @@ const { chromium } = require('playwright');
     return n / (96 * 54);
   });
   const title = await lit();
-  await page.mouse.click(290 * k, 106 * k);   // Light the wick
+  await page.mouse.click(W / 2 + (290 - 192) * k, H / 2 + (106 - 108) * k);   // Light the wick
   await page.waitForTimeout(4000);
   for (let i = 0; i < 12; i++) { await page.keyboard.press('Enter'); await page.waitForTimeout(700); }
   await page.waitForTimeout(2500);

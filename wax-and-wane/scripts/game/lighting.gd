@@ -187,10 +187,10 @@ func _process(dt: float) -> void:
 	var m := room_material()
 	if vis:
 		m.set_shader_parameter("vig_amount", floorf(_wane * 16.0 + 0.5) / 16.0)
-		var sz := get_viewport().get_visible_rect().size
+		var sz := Stage.view_size()   # v2.8: the buffer the world is drawn in (Screen: Big gives it its own)
 		var fpx := sz / 2.0
 		if p:
-			fpx = fpx.lerp(p.get_global_transform_with_canvas().origin + Vector2(0, -12), 0.5)
+			fpx = fpx.lerp(Stage.to_view(p) + Vector2(0, -12), 0.5)
 		fpx = fpx.round()
 		if fpx != _vig_focus:
 			_vig_focus = fpx

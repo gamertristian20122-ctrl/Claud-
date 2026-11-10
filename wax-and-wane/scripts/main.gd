@@ -18,6 +18,9 @@ var autotest: Node
 
 
 func _ready() -> void:
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--rngseed="):   # tests: the same flicker, sparks and seeds every run (use with --fixed-fps 60)
+			seed(int(a.get_slice("=", 1)))
 	UI.install()   # v2.6: the UI kit's Theme under every Control (scripts/ui/ui.gd)
 	get_tree().set_auto_accept_quit(false)
 	# physics ticks at a steady 60 Hz on every screen (project.godot [physics]); following a 90/120 Hz
@@ -93,6 +96,7 @@ func goto(screen: String, params := {}) -> void:
 	if current:
 		current.queue_free()
 		await get_tree().process_frame
+	Stage.boundary()   # v2.8: a changed Settings > Screen takes hold here, between two screens (scripts/stage.gd)
 	var script: GDScript = load(SCREENS[screen])
 	current = script.new()
 	current.name = screen.capitalize()
