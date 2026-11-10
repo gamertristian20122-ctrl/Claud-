@@ -114,8 +114,10 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   fought 51% of the time and walked between rooms 28%; floor 1 was 4 fights of 1-3 lodgers. 2.8: Tallow hurries
   x1.6 in quiet rooms (`Player.HURRY`), the full map hops to a cleared room (`world.warp_to`, `FullMap`), the
   Cellar's small lodgers come as litters of one-ember runts (`world.RUNTS` / `FOLLOWERS`, `Enemy.runt`), and a
-  first launch goes straight from Light the wick into the first night (`Game.first_night`). Same seeds after:
-  4 of 6 wins, 66% fighting, 13% walking, a run 750 -> 531 s. Judges: `--pacecheck` (25 probes), `--tour --pace`.
+  first launch goes straight from Light the wick into the first night (`Game.first_night`). The final build on
+  fresh seeds 13-18: 67% fighting, 12% walking between rooms, and **6 of 6 wins** (4 of them into the Clock
+  Tower): the bot has won 16 of 18 runs at Midnight on 2.7.0 + 2.8.0 against a target of about half, so **a
+  balance pass is due** (the melt, wax income after floor 2). Judges: `--pacecheck` (25 probes), `--tour --pace`.
   The night baseline was regenerated on purpose (only floor-1 `lodgers:` lines moved).
 - **Publisher pitch kit** (the owner wants to pitch publishers): `docs/marketing/pitch/` (README first): a
   checked publisher list with routes and AI positions, paste-ready form answers, emails, the honest "how it was

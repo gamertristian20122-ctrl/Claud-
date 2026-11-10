@@ -22,7 +22,7 @@ fill in. Every number matches `../facts.md` (game version 2.8.0).
 | Target release | `[A DATE YOU CAN KEEP, for example "PC in spring 2027"]` |
 | Languages | English. Every line of text already goes through one string table, ready to translate |
 | Wishlists | None yet: there is no Steam page. A free browser demo is live at `[ITCH LINK]` |
-| Funding wanted | None for development: the game is finished |
+| Funding wanted | None for development: the game is content-complete |
 
 ## The pitch in two sentences
 
@@ -62,8 +62,9 @@ house in 24 pages, four endings, and a seeded run every night that is the same h
 
 ## What I am looking for from a publisher
 
-A publishing partner to take a finished game to players: store pages and marketing, testing on real devices,
-translation (the text is ready for it), and console and phone releases. I am not asking for development money.
+A revenue-share publishing deal for a content-complete game: the PC launch (store pages and marketing), testing
+on real devices, translation (the text is ready for it), and a Switch port, then the other consoles and iPhone.
+I am not asking for development money.
 `[CHANGE THIS IF YOU WANT SOMETHING ELSE. ONE CLEAR SENTENCE IS BEST.]`
 
 ## Who made it and how (always include this)

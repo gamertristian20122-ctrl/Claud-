@@ -1,0 +1,18 @@
+{
+  "v": 4,
+  "createdOnFiles": {"v": 1, "at": "2026-11-10T03:05:00Z"},
+  "lists": "css",
+  "title": "Wax & Wane pitch deck",
+  "order": ["cover", "hook", "night", "trade", "inside", "screens", "runs", "comps", "made", "ask", "next", "contact"],
+  "cover": "cover",
+  "sections": {
+    "game": {"description": "The game: what it is and what makes it different.", "start": "cover"},
+    "today": {"description": "What exists today: the content, the builds and the games it sits beside.", "start": "inside"},
+    "partner": {"description": "The partnership: who made it and how, what I am asking for, and what comes next.", "start": "made"}
+  },
+  "faces": {
+    "pixelify-sans": {"family": "Pixelify Sans", "href": "https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap"},
+    "inter": {"family": "Inter", "href": "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"}
+  },
+  "designSystems": []
+}

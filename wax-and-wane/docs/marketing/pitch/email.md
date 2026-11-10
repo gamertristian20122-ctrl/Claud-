@@ -8,7 +8,7 @@ Use the publisher's own form or address from `publishers.md`. Send from an addre
 ## Subject lines (pick one)
 
 - Wax & Wane: a roguelite where your health bar is a melting candle (playable in your browser)
-- Finished pixel roguelite looking for a publishing partner: Wax & Wane
+- Content-complete pixel roguelite looking for a publisher: Wax & Wane
 - Wax & Wane (Godot, PC + Android, content-complete): pitch and playable build
 
 ## The first email
@@ -21,14 +21,14 @@ Every hit melts minutes off the clock, every quick kill pours them back, and any
 You can play it right now, nothing to install: `[ITCH LINK]`
 (a winning night takes about ten minutes; the opening skips with one press)
 
-It is finished: 64 relics, 16 guardians, 6 candles, a story with four endings, on Windows, Linux, Steam Deck
-and Android. I am looking for a partner for marketing, testing, translation and console releases. I am not
-asking for development money. `[SAY HERE WHY THEM: one line, for example "You published Revita, the game this
+It is content-complete: 64 relics, 16 guardians, 6 candles, a story with four endings, on Windows, Linux,
+Android and in the browser. I am looking for a revenue-share publishing deal: the PC launch, device testing,
+translation and a Switch port. I am not asking for development money. `[SAY HERE WHY THEM: one line, for example "You published Revita, the game this
 one sits closest to."]`
 
 One thing you should know up front: I made it on my own with Claude, an AI assistant. It wrote the code and
 drew the game's own pixel art through small programs under my direction, on top of a free human-made tile set
-and human-made music. If you do not publish AI-assisted work, tell me and I will not write again.
+and human-made music.
 
 Deck: `[LINK OR ATTACHED]`   Windows build: `[LINK]`   Video: `[YOUTUBE LINK]`
 
@@ -42,7 +42,7 @@ Hi `[NAME]`,
 
 A short follow-up on Wax & Wane in case it slipped past. It still plays in the browser here: `[ITCH LINK]`.
 `[IF YOU HAVE NEWS, ONE LINE: "Since I wrote, N people have played the demo and the median session is M
-minutes."]` If it is not a fit, a one-word reply is welcome and I will not write again.
+minutes."]` If it is not a fit, no reply is needed.
 
 Thank you,
 `[YOUR NAME]`

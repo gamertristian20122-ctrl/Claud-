@@ -16,8 +16,8 @@
 
 You play Tallow, a small living candle in a haunted house. His wax is his health and his clock: it burns from
 12:00 to 2:00 AM. Hits melt minutes. Quick kills and clean rooms pour them back. Anything powerful is paid for in
-minutes of his own candle. As the wax goes he gets shorter and his light shrinks, so the whole screen tells you
-how the night is going.
+minutes of his own candle. As the wax goes he gets shorter and his light shrinks, so you can read the night from
+the hero himself.
 
 ## What is in it
 
@@ -27,8 +27,8 @@ how the night is going.
 
 ## What I am looking for
 
-A publishing partner for marketing and store pages, testing on real devices, translation (the text is ready for
-it) and console and phone releases. I am not asking for development money.
+A revenue-share publishing deal: the PC launch, testing on real devices, translation (the text is ready for it)
+and a Switch port, then the other consoles and iPhone. I am not asking for development money.
 
 ## How it was made
 

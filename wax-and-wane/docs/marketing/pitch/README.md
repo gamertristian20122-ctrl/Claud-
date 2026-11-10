@@ -14,7 +14,8 @@ Everything you need to start writing to publishers. Read this page first. It is 
 | `made_with.md` | Exactly what to say about how the game was made. Use it every time |
 | `before_you_sign.md` | Eight things to check in any contract |
 | `scout_review.md` | A cold review of this kit by a reviewer playing a publisher's scout, and what was fixed |
-| `img/` | Eight fresh screenshots (version 2.8.0), 1920 x 1080 |
+| `img/` | Fresh screenshots (version 2.8.0), 1920 x 1080, and the strip of the candle melting down |
+| `deck_source/` | A copy of the deck's slides, so it can be rebuilt if the online one is lost |
 
 The builds are in the game's `build/` folder: `WaxAndWane_2.8.0_web.zip` (browser), `WaxAndWane_2.8.0_windows.zip`,
 `WaxAndWane_2.8.0_linux.zip`, `WaxAndWane_v2.8.0.apk`.

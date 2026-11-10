@@ -71,8 +71,23 @@ first two and the first-launch flow (the third, the size of the picture on the s
 | A run | 750 s | 531 s |
 | Rooms walked back through, per run | 54 | 23 |
 
-Six runs is a small batch: 6/6 against 4/6 is not a proven difference. The melt was left alone: 4 of 6 is closer
-to the game's own target (about half) than 6 of 6 was.
+Six runs is a small batch: 6/6 against 4/6 is not a proven difference, and the final build says so.
+
+## The final build (2.8.0 with the followers, fresh seeds 13-18)
+
+| Measure | 2.8.0 |
+|---|---|
+| Wins | **6 of 6**, four of them climbing to the Clock Tower |
+| Time fighting | 67.2% |
+| Walking between rooms (incl. map time) | 12.0% |
+| Walking to pickups | 10.2% |
+| A run | 687 s on average (the tower runs are the long ones); wins from 7.9 to 13.4 min |
+
+So the pace targets held on fresh seeds (walking 28% -> 12%, fighting 51% -> 67%), and the win rate did not come
+down: the bot has now won 16 of 18 runs at Midnight across 2.7.0 and 2.8.0, against a target of about half. The
+melt was left alone here on purpose (the owner asked for light balance testing, and a pitch build that is a
+little easy shows a reviewer more of the game). **A balance pass is due**: the melt and the wax income after
+floor 2 are the knobs (CLAUDE.md > Balance).
 
 ## Not done here
 
