@@ -1,4 +1,4 @@
-# Post it: Wax & Wane 2.9.0, store by store
+# Post it: Wax & Wane 2.10.0, store by store
 
 A step-by-step list for putting the game on itch.io (today), Google Play (closed test, then everyone) and
 Steam (Coming Soon, then release). Short steps, one thing each. Do them in this order.
@@ -14,20 +14,21 @@ Steam (Coming Soon, then release). Short steps, one thing each. Do them in this 
 
 ---
 
-## 0. First, Claude (the studio) makes the 2.9.0 files
+## 0. First, Claude (the studio) makes the 2.10.0 files
 
-You only need to say "build and send the release" (2.9.0 is built and sent already). Claude then:
-1. Merges the fixes, sets the version (now **2.9.0**) in the three places (CLAUDE.md > Releasing a build), runs
+You only need to say "build and send the release" (2.10.0 is built and sent already; it is the first version
+where every picture but the candles and every sound comes from free packs made by people). Claude then:
+1. Merges the fixes, sets the version (now **2.10.0**) in the three places (CLAUDE.md > Releasing a build), runs
    the checks and plays the tours.
 2. Makes and sends you these files:
 
 | File | What it is | Size (about) | Goes to |
 |---|---|---|---|
-| `build/WaxAndWane_v2.9.0.apk` | Android game, signed with your key | 38 MB | itch.io, your phone |
-| `build/WaxAndWane_v2.9.0.aab` | Android bundle, must end with PLAY-READY | 40 MB | Google Play only |
-| `build/WaxAndWane_2.9.0_windows.zip` | Windows game | 48 MB | itch.io, Steam, the ROG Ally test |
-| `build/WaxAndWane_2.9.0_linux.zip` | Linux / Steam Deck game | 38 MB | itch.io, Steam |
-| `build/WaxAndWane_2.9.0_web.zip` | The whole game, played in a browser (itch.io kind "HTML", frame 1280 x 720) | 22 MB | Only a page you keep private or share by link (friends, press). It is the full game, not a demo: do not make it a free public page |
+| `build/WaxAndWane_v2.10.0.apk` | Android game, signed with your key | 38 MB | itch.io, your phone |
+| `build/WaxAndWane_v2.10.0.aab` | Android bundle, must end with PLAY-READY | 40 MB | Google Play only |
+| `build/WaxAndWane_2.10.0_windows.zip` | Windows game | 48 MB | itch.io, Steam, the ROG Ally test |
+| `build/WaxAndWane_2.10.0_linux.zip` | Linux / Steam Deck game | 38 MB | itch.io, Steam |
+| `build/WaxAndWane_2.10.0_web.zip` | The whole game, played in a browser (itch.io kind "HTML", frame 1280 x 720) | 22 MB | Only a page you keep private or share by link (friends, press). It is the full game, not a demo: do not make it a free public page |
 | `build/videos/trailer_60s.mp4` | trailer ending OUT NOW ON ITCH.IO | 47 MB | YouTube, itch.io, socials |
 | `build/videos/trailer_60s_play.mp4` | trailer ending GET IT ON GOOGLE PLAY | 47 MB | YouTube (link for Play) |
 | `build/videos/trailer_60s_steam.mp4` | trailer ending WISHLIST ON STEAM | 47 MB | Steam |
@@ -66,16 +67,16 @@ The Google Play price type (paid or free) **cannot be changed from free to paid 
    `wax-and-wane`, tagline, Downloadable, **Released**, Action, Godot, inputs, languages).
 4. **Pricing**: Paid, **$4.99**, tick "Let people pay more".
 5. **Uploads** > Upload files, one at a time (each up to 1 GB, a normal browser upload):
-   - `WaxAndWane_2.9.0_windows.zip` > tick **Windows**, name it "Windows (64-bit)"
-   - `WaxAndWane_2.9.0_linux.zip` > tick **Linux**, name it "Linux (64-bit)"
-   - `WaxAndWane_v2.9.0.apk` > tick **Android**, name it "Android phone (APK)"
+   - `WaxAndWane_2.10.0_windows.zip` > tick **Windows**, name it "Windows (64-bit)"
+   - `WaxAndWane_2.10.0_linux.zip` > tick **Linux**, name it "Linux (64-bit)"
+   - `WaxAndWane_v2.10.0.apk` > tick **Android**, name it "Android phone (APK)"
    - Optional: `WaxAndWane_presskit_2.0.0.zip` > no platform, mark it as free ("press kit").
    (Or Claude can push all three with `ITCH_USER=yourname ./tools/upload_itch.sh` once you have given it an
    itch.io API key through the secure key form; never paste a key into the chat.)
 6. **Description**: copy the whole block from `itch_page.md` section 3 (from "A twin-stick roguelite..."
    to "...Title > Credits.").
 7. **Genre / tags**: the 10 tags in `itch_page.md` section 1.
-8. **AI generation disclosure**: **Yes**, tick **Graphics, Sound, Text, Code** (why: `itch_page.md` section 1).
+8. **AI generation disclosure**: **Yes**, tick **Graphics, Text, Code**; leave **Sound** unticked (why: `itch_page.md` section 1).
 9. **Cover image**: `store_assets/itch/cover_630x500.png`.
    **Screenshots**, in this order: `screenshots/06_low_wax_1920x1080.png`, `01_cellar_fight`, `02_boss_fight`,
    `03_chapel_light`, `04_seance`, `07_treasure`, then `loop_fight.gif`.
@@ -133,10 +134,10 @@ description already tells them: More info > Run anyway. Code signing costs about
     Offline, or the nearest Play offers), your contact email.
 
 ### 3e. Closed test (14 days)
-16. Test and release > Testing > **Closed testing** > Create release > upload **`WaxAndWane_v2.9.0.aab`**
+16. Test and release > Testing > **Closed testing** > Create release > upload **`WaxAndWane_v2.10.0.aab`**
     (a browser upload, works on the phone or the ROG Ally). The first time, Play asks about **app signing**:
     follow `google_play.md` section 6 ("use your existing key"; Claude makes the zip Play asks for).
-    Release notes: "2.9.0: the full house: 64 relics, 16 guardians, 6 candles, nights of 4 to 7 floors, the Clock Tower."
+    Release notes: "2.10.0: the full house: 64 relics, 16 guardians, 6 candles, nights of 4 to 7 floors, the Clock Tower."
     Testers tab: add 15-20 Google account emails. Send them the opt-in link.
 17. Keep 12 or more testers opted in for **14 days in a row**. Ask them to play and tell you what they think.
     Read the **Pre-launch report** in Play Console; tell Claude about any crash it shows.
@@ -160,7 +161,7 @@ Valve takes 30%.
 
 ### 4b. The store page (Coming Soon)
 3. **Test the Windows build on the ROG Ally first** (it is a Windows 11 PC):
-   download `WaxAndWane_2.9.0_windows.zip`, unzip it, run `WaxAndWane.exe` (More info > Run anyway), and play
+   download `WaxAndWane_2.10.0_windows.zip`, unzip it, run `WaxAndWane.exe` (More info > Run anyway), and play
    one run with the Ally's own buttons, including the menus (title, Candle Box, Journal, Settings, pause,
    results). If everything works without touching the screen, you can tick **Full Controller Support**;
    otherwise **Partial**. If it runs smoothly, the system requirements in `steam_store.md` section 7 are fine.
@@ -206,7 +207,7 @@ Valve takes 30%.
 13. Discounting: a 20% launch discount for 7 days (`steam_store.md` section 9).
 14. Press **Release App**. Post the launch short and a devlog the same day.
 
-Steam achievements come later, in an update with the GodotSteam plugin, 67 achievements created in Steamworks and
+Steam achievements come later, in an update with the GodotSteam plugin, 62 achievements created in Steamworks and
 their icons (`steam_store.md` section 5). Until then the page only says the achievements are in the game.
 
 ---

@@ -20,7 +20,7 @@ Options:
 Every run ends with the brightness judge (REL-08 / C4): each capsule's mean luma must be >= 70/255 with fewer
 than 35% of its pixels darker than 30, so the art doesn't sink into Steam's dark page. The capsules use the
 "hero" key-art layouts (scripts/store_shots.gd): Tallow about three times bigger than before, in one warm pool
-of light, beside the Wax Mother (a guardian made for this game).
+of light, beside the Wax Mother (her picture is from the Ninja Adventure pack since 2.10).
 
 Output: docs/marketing/store_assets/ (README.md there lists each file and where it is uploaded).
 """
@@ -176,11 +176,32 @@ def plate(w, h, x0, y0, x1, y1, strength, soft):
 _logo_cache = {}
 
 
+def text_logo():
+    """The game's name set in its own font (Kenney Pixel, CC0), gold with a dark edge: what the title screen
+    shows since 2.10, when the drawn logo was taken out. Set at the font's own 16 px grid, every pixel hard, then
+    made three times as big, which is about the size the old logo was (210 x 41)."""
+    f = ImageFont.truetype(FONT, 16)
+    tmp = Image.new("L", (240, 40), 0)
+    ImageDraw.Draw(tmp).text((4, 4), "WAX & WANE", font=f, fill=255)
+    glyphs = tmp.crop(tmp.getbbox()).point(lambda v: 255 if v > 127 else 0)
+    w, h = glyphs.size
+    out = Image.new("RGBA", (w + 2, h + 2), (0, 0, 0, 0))
+    ink = Image.new("RGBA", (w, h), (33, 20, 27, 255))
+    ink.putalpha(glyphs)
+    for dx in (0, 1, 2):
+        for dy in (0, 1, 2):
+            out.alpha_composite(ink, (dx, dy))
+    gold = Image.new("RGBA", (w, h), (250, 203, 62, 255))
+    gold.putalpha(glyphs)
+    out.alpha_composite(gold, (1, 1))
+    return out.resize((out.width * 3, out.height * 3), Image.NEAREST)
+
+
 def logo(k, shadow=True):
     """The title logo scaled k times, with a hard one-pixel drop shadow (in logo pixels)."""
     key = (k, shadow)
     if key not in _logo_cache:
-        src = Image.open(LOGO).convert("RGBA")
+        src = Image.open(LOGO).convert("RGBA") if os.path.exists(LOGO) else text_logo()
         pad = 1 if shadow else 0
         base = Image.new("RGBA", (src.width + pad, src.height + pad), (0, 0, 0, 0))
         if shadow:

@@ -91,6 +91,27 @@ def is_0x72(sprite):
                ("%s_idle_anim_f0.png", "%s_anim_f1.png", "%s_open_anim_f0.png"))
 
 
+_PACKS = None
+
+
+def pack_of(kind, sprite):
+    """Whose art a creature is shown with (2.10: every creature comes from a free pack): the maker named in
+    assets/licenses/CREDITS_free_art.txt for its first frame, or 0x72 when the game shows 0x72's own frames."""
+    global _PACKS
+    if _PACKS is None:
+        _PACKS, cur = {}, None
+        for ln in read("assets/licenses/CREDITS_free_art.txt").splitlines():
+            if ln.startswith("== "):
+                cur = re.sub(r" \(CC0\).*", "", ln[3:]).split(" by ", 1)[-1].strip()
+            m = re.match(r"assets/art/(\S+?)_(?:idle|run)_f0\.png\s+<-", ln)
+            if m and cur:
+                _PACKS.setdefault(m.group(1).split("/")[-1], cur)
+    for key in (str(sprite).split("/")[-1], kind):
+        if key in _PACKS:
+            return _PACKS[key]
+    return "0x72" if is_0x72(sprite) else "?"
+
+
 def title(name):
     """THE WAX MOTHER -> The Wax Mother"""
     small = {"of", "the", "and"}
@@ -140,7 +161,8 @@ def facts():
     lodgers, guardians = [], []
     for k, t, sec in en:
         sprite = field(t, "sprite", k)
-        row = {"id": k, "name": field(t, "name"), "x72": is_0x72(sprite), "secret": bool(field(t, "secret", False)),
+        row = {"id": k, "name": field(t, "name"), "x72": is_0x72(sprite), "pack": pack_of(k, sprite),
+               "secret": bool(field(t, "secret", False)),
                "tower_only": k in pools.get(5, set()) and not any(k in v for n, v in pools.items() if n != 5),
                "area": str(sprite).startswith("areas/")}   # the Long Night's new areas (areas.gd, LONG_NIGHT.md)
         (guardians if field(t, "boss", False) else lodgers).append(row)
@@ -208,14 +230,15 @@ HAND = """
 | Win rate (bot, fresh save) | The target is about half. 2.9.0: the test bot won 14 of 20 at Midnight and a winning night ends near 12:57 AM (2.8: 21 of 24, near 12:21 AM); Gentle 7 of 7. Do not quote a win rate in store texts | `--playtest --speed=4`, level 2, seeds 21-40 (`docs/streams/v29_clock.md`; CLAUDE.md > Balance) |
 | A hit | Melts 5 to 7 minutes of wax at Midnight, by floor (Gentle halves it; a Cellar runt's nip is 2) | `Enemy.TOUCH`, `Enemy.RUNT_TOUCH`, `world.LEVELS` |
 | Trades of wax for power | Flare Up burns 2 minutes to blaze for 3 seconds (refused below 5 minutes); the Wax Font takes 4 minutes a try, the sixth always pays; the Cracked Mirror asks 15; the Smoke Altar gives a relic for minutes cut off the candle for the rest of the night | `Moves.FLARE_COST`, `Specials.FONT_COST` / `FONT_ODDS` / `MIRROR_COST`, `world.gd` (the pact) |
-| Story | 24 diary pages and 4 endings (true, housekeeper, windows, whole story); the opening and every talking scene skip with one press | `scripts/game/diary.gd`, `scripts/ui/ending.gd`, `--talkcheck` |
+| Story | An opening, a talk scene with every guardian, and 2 endings (the true one, and A Candle in Every Window for a seven-floor night); all of it skips with one press. The 24 diary pages and their two endings are switched off since 2.10 (`Diary.PAGES_ON`) | `scripts/game/diary.gd`, `scripts/ui/ending.gd`, `--talkcheck` |
 | Text | 720 strings in one table (`lang/en.json`), read through `L.t()`; English is the only language so far | `python3 tools/extract_strings.py --check` |
 | Testing | Every release runs scripted checks and bot runs that play whole nights (2.9.0: 13 checks). People who have played: the developer and a few friends. Never run on a Steam Deck; the Windows build has not been started on Windows yet | CLAUDE.md > Releasing a build; `docs/marketing/pitch/README.md` |
-| Art made for this game | Tallow and the other 5 candles, the house's own lodgers and guardians (counts above), relics and keepsake icons, costumes, effects, rooms and decor, special rooms, the Clock Tower, chalk drawings, UI, logo, icons | Drawn by Python scripts written with Claude (an AI assistant), `tools/art_*.py`, on the 0x72 palette; every sheet was looked at and kept or redrawn by the developer |
-| Art from 0x72 (CC0) | The dungeon tiles, chests, coins, bombs, flasks and the 0x72 lodgers and guardians (counts above) | `assets/0x72/frames/`, `assets/licenses/0x72_DungeonTilesetII_CC0.txt` |
+| Art drawn with AI | Tallow and the other 5 candles only: bodies, faces, costumes, flames, holder, match, app icon | Drawn by Python scripts written with Claude (an AI assistant): `tools/art_hero_fx_items.py`, `art_items2.py`, `art_talk.py`, `art_tower.py`, `art_icon.py`; every sheet was looked at and kept or redrawn by the developer |
+| Art from free packs (CC0) | Everything else you see: the house's stones, every lodger and guardian (counts above), relic and keepsake pictures, effects, furniture, the night town of the story scenes, the key and gamepad pictures. Each is a pack file, a crop of one, or whole pieces laid edge to edge; no pixel is changed | `tools/free_art.py`, `assets/licenses/CREDITS_free_art.txt` (every file and its source), one licence file a pack in `assets/licenses/` |
+| Drawn by the game itself | Plain shapes only: floor stains, the touch sticks, flat menu boxes, the wax bar, the light | `scripts/game/stains.gd`, `scripts/ui/ui_shapes.gd`, `scripts/ui/ui.gd` |
 | Music | 13 tracks, all from the Ninja Adventure Asset Pack by Pixel-boy and AAA (CC0). Not AI | `assets/licenses/CREDITS_music.txt` |
-| Jingles | 2 (victory, death): original, synthesized by `tools/make_audio.py` (a script written with Claude) | same file |
-| Sound effects | Layered and processed from Kenney packs (CC0), a few Ninja Adventure sounds (CC0), plus original synthesis | `assets/licenses/CREDITS_audio.txt` |
+| Jingles | 2 (victory, game over): the same pack's own jingles, as they are. Not AI | same file |
+| Sound effects | Each one is ONE sound file from a Kenney pack or the Ninja Adventure pack (CC0), copied byte for byte; the game only sets its level and speed. Not AI. Nobody has listened to the 2.10 set yet where it was put together: it wants a human ear before release | `tools/free_sounds.py`, `assets/licenses/CREDITS_audio.txt` |
 | Fonts | Kenney Pixel and Kenney Mini (CC0) | `assets/licenses/Kenney_Fonts_CC0.txt` |
 | Code | Written with Claude (AI coding assistant), directed, played and checked by the developer | git history |
 | Trailer narration | AI voice: Kokoro TTS (Kokoro-82M, Apache-2.0, voice am_michael). Only in the trailer and shorts, never in the game | `docs/marketing/voice/` |
@@ -233,8 +256,9 @@ def md(f):
     L = []
     a = L.append
     lod, gua = f["lodgers"], f["guardians"]
-    l72 = sum(1 for x in lod if x["x72"])
-    g72 = sum(1 for x in gua if x["x72"])
+    def by_pack(rows):
+        packs = sorted({x["pack"] for x in rows}, key=lambda q: -sum(1 for x in rows if x["pack"] == q))
+        return ", ".join("%d %s" % (sum(1 for x in rows if x["pack"] == q), q) for q in packs)
     a("# Wax & Wane: fact sheet")
     a("")
     a("The one list every store text, the press kit and the trailer cards are checked against. The first part")
@@ -258,15 +282,15 @@ def md(f):
     a("| Spilled Wax | %d%% of the wax a hit melts splashes out as warm drops that cool after %g s | `world.gd`, `pickup.gd` |" % (round(f["spill"] * 100), f["warm_life"]))
     a("| Rooms per floor | %s (with the start, shop, treasure and boss rooms), plus a hidden Hollow and any special rooms | `floor_gen.gd` |" % " / ".join(str(n) for n in f["rooms_per_floor"]))
     a("| Hand-made room layouts | **%d** | `RoomTemplates.NORMAL` |" % f["layouts"])
-    a("| Lodgers (creatures) | **%d**: %d from 0x72's DungeonTileset II, %d made for this game (%d of them only in the Clock Tower, %d only in the Long Night's new areas) | `Enemy.DEFS` |" % (
-        len(lod), l72, len(lod) - l72, sum(1 for x in lod if x["tower_only"]), sum(1 for x in lod if x["area"])))
+    a("| Lodgers (creatures) | **%d**, all shown with art from free packs: %s (%d of them only in the Clock Tower, %d only in the Long Night's new areas) | `Enemy.DEFS`, `assets/licenses/CREDITS_free_art.txt` |" % (
+        len(lod), by_pack(lod), sum(1 for x in lod if x["tower_only"]), sum(1 for x in lod if x["area"])))
     per = {len(bs) for fn, _nm, _b1, bs in f["floors"] if fn <= 4}
     per = ("%s per floor" % ["no", "one", "two", "three", "four", "five"][per.pop()]) if len(per) == 1 else "per floor"
     ga = [x for x in gua if x["area"]]
-    a("| Guardians (bosses) | **%d**: %d on the four floors (%s, picked by the run seed)%s + a secret one, %s. %d use 0x72 sprites, %d were made for this game | `Enemy.DEFS`, `world.FLOORS`, `Areas.LIST` |" % (
+    a("| Guardians (bosses) | **%d**: %d on the four floors (%s, picked by the run seed)%s + a secret one, %s. Their art: %s | `Enemy.DEFS`, `world.FLOORS`, `Areas.LIST` |" % (
         len(gua), sum(1 for x in gua if not x["secret"] and not x["area"]), per,
         (", %d in the Long Night's new areas (%s)" % (len(ga), ", ".join(title(x["name"]) for x in ga))) if ga else "",
-        ", ".join(title(x["name"]) for x in gua if x["secret"]), g72, len(gua) - g72))
+        ", ".join(title(x["name"]) for x in gua if x["secret"]), by_pack(gua)))
     a("| House champions (mini-bosses) | **%d**: %s | `Specials.MINIS` |" % (len(f["minis"]), ", ".join(f["minis"])))
     a("| Relics | **%d** in %d quality tiers; %d of them move into the house as you earn achievements | `Items.RELICS`, `Unlocks.TABLE` |" % (
         len(f["relics"]), len({q for _, q in f["relics"]}), f["unlock_relics"]))
@@ -315,13 +339,15 @@ def md(f):
     a("|---|---|")
     byid = {x["id"]: x for x in gua}
     for k, n, _, bosses in f["floors"]:
-        names = ["%s%s" % (title(byid[b]["name"]), " (0x72 sprite)" if byid[b]["x72"] else "") for b in bosses if b in byid]
+        names = [title(byid[b]["name"]) for b in bosses if b in byid]
         a("| %s | %s |" % (n, " or ".join(names) if len(names) < 3 else ", ".join(names[:-1]) + " or " + names[-1]))
     a("")
     a("### The lodgers")
     a("")
-    a("- Made for this game (%d): %s" % (len(lod) - l72, ", ".join(x["name"] for x in lod if not x["x72"])))
-    a("- From 0x72, renamed and given their own lore (%d): %s" % (l72, ", ".join(x["name"] for x in lod if x["x72"])))
+    a("Every lodger has its own name and lore, written for this game. Whose art each one is shown with:")
+    a("")
+    for pk in sorted({x["pack"] for x in lod}, key=lambda q: -sum(1 for x in lod if x["pack"] == q)):
+        a("- %s (%d): %s" % (pk, sum(1 for x in lod if x["pack"] == pk), ", ".join(x["name"] for x in lod if x["pack"] == pk)))
     a("")
     a("### Music slots")
     a("")

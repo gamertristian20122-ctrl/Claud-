@@ -41,7 +41,19 @@ numbers with nearest-neighbour only.
 
 ## Asset contract (exact paths; game code loads these names)
 All PNG, RGBA, pixel-exact. `assets/art/...`, loaded with `Art.tex("folder/name")`. Animations are
-`<name>_f0..fN.png`. Each folder is written by a re-runnable tool (`python3 tools/art_<x>.py [--review DIR]`).
+`<name>_f0..fN.png`.
+
+**Since 2.10 (the owner's rule: "don't generate anything", keep the candles):** only the candles are still drawn
+by scripts: `hero/`, `items/costume/`, the flames and sparks in `items/fx/`, `pickups/match`,
+`tower/holder_silver*` and the app icon. Every other picture is a found one from a human-made CC0 pack, put
+under the same file names by `python3 tools/free_art.py` (a pack file, a crop of one, or whole pieces laid edge
+to edge; no pixel changed; the table in that tool says what each file is, and
+`assets/licenses/CREDITS_free_art.txt` lists every file). A picture that is not there shows nothing
+(`Art._placeholder`), and a few things are plain shapes the game draws itself (`Stains._shape`, `UIShapes`, the
+flat menu boxes in `UI.FLAT`). So the sections below are the file names and sizes the code expects; where they
+describe how a picture was drawn, that is the 2.9 art and history now. The drawing scripts that are left
+(`art_hero_fx_items.py`, `art_items2.py`, `art_talk.py`, `art_tower.py`, `art_icon.py` and the helpers they
+import) still write the old pictures too: run `tools/free_art.py` after any of them.
 
 ### Hero (hero/) - `art_hero_fx_items.py --hero` ("Tallow, reborn", concept in `art_source/hero_reborn/`)
 - The approved concept's `draw.py` is the source of truth: the tool imports it for the dish, faces and flames.
@@ -197,11 +209,15 @@ opaque; the game draws them at one alpha (0.5), lit like the floor. Lines drop o
   `mouse.png` / `mouse_left.png` 11x16, the wax dummy `dummy_f0..f2.png` 18x26 (sway frames) + `dummy_hit.png`.
 
 ### Audio (audio/)
-- `sfx/<name>.ogg` mono, trimmed, loudness-matched; extra takes `<name>_2.ogg`, `<name>_3.ogg`... are picked
-  at random by `Audio.play("<name>")`. The full list of names and what each is for: `docs/streams/audio.md`.
-  Unknown names are silent, so new sounds can be called before they exist.
+- `sfx/<name>.ogg` or `.wav`: since 2.10 each is ONE pack file, copied byte for byte by `tools/free_sounds.py`
+  (nothing layered, synthesized, trimmed or re-encoded). `scripts/autoload/sfx_pack.gd`, written by that tool,
+  holds the dB that brings each file to the level the mix (`Audio.VOLUME`) was made for and the speed it plays
+  at. Extra takes `<name>_2`, `<name>_3`... are picked at random by `Audio.play("<name>")`. What each name is
+  for: `docs/streams/audio.md`. Unknown names are silent, so new sounds can be called before they exist.
+- The low-wax warning is the clock: `low_wax_tick`, struck faster and faster by `Audio._process`.
 - `music/<slot>.ogg` loops at -16 LUFS: `title`, `floor_1` .. `floor_5`, `shop`, `boss`, `final_boss`, `ending`,
-  plus the one-shot `victory_jingle` and `death_jingle`. Tracks per slot: `assets/licenses/CREDITS_music.txt`.
+  plus the one-shot `victory_jingle.wav` and `death_jingle.wav` (the pack's own jingles, as they are). Tracks
+  per slot: `assets/licenses/CREDITS_music.txt`.
 
 ## Fonts
 `assets/fonts/kenney_pixel.ttf`, `kenney_mini.ttf` (CC0). UI text sizes in game pixels: 8 / 16. Text over the

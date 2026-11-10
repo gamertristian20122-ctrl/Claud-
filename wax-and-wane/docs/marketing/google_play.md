@@ -50,11 +50,11 @@ Reasons to light another candle
 • 5 more candles to unlock: the Tea Light, the Party Candle, the Altar Pillar, the Black Taper with its short, dark light and the secret Moonwick
 • Tonight's Candle: one seeded house each night, the same for every player, scored on your first try
 • A secret Hollow on every floor, behind a cracked wall that seeps wax
-• The Journal of everything you've met, and 67 achievements
+• The Journal of everything you've met, and 62 achievements
 
 One price buys the whole game. There are no ads and nothing else to buy.
 
-Made by one developer with Claude (AI). Dungeon tiles and about 20 creatures by 0x72, music by Pixel-boy and AAA (Ninja Adventure), sound effects built from Kenney's packs. Tallow, the house's own creatures and guardians, the relics and rooms were made for this game.
+Made by one developer with Claude (AI): the code, the words, and Tallow and the other candles. The house's stones and many creatures are by 0x72, more creatures, guardians and relics and all the music by Pixel-boy and AAA (Ninja Adventure), furniture and sounds by Kenney, the night town by Luis Zuno.
 ```
 
 **Category:** Game > **Action**

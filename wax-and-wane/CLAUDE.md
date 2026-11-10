@@ -18,10 +18,22 @@ base viewport, integer pixel scaling). Read `README.md` (content, layout, comman
 
 ## Hard rules
 - Original game: never copy names, characters, art or music from existing games. Genre conventions are fine.
-- One consistent pixel-art style built on the 0x72 DungeonTileset II palette. No mismatched free art, no blurry
-  scaling, no gradients on sprites. Anything that "looks like AI" is a bug.
-- Only CC0 / MIT / OFL assets; record each in `README.md` Credits, `assets/licenses/` and the in-game Credits
-  (`scripts/ui/title.gd` `_credits` and the credits roll in `scripts/ui/ending.gd` `_credits`).
+- **Nothing generated (the owner, 2026-11-10: "just use free assets, you find. Don't generate anything"; "keep
+  the candles").** Every picture except the candles, and every sound, is a file from a free pack a person made,
+  used as it is: pictures only through `tools/free_art.py` (a pack file, a crop, or whole pieces laid edge to
+  edge; no pixel changed), sounds only through `tools/free_sounds.py` (one pack file a sound, byte for byte).
+  Do not draw new art with a script, do not synthesize or layer sounds, do not use an image or sound
+  generator. Plain shapes the game draws itself are fine (stains, touch sticks, flat menu boxes). The candles
+  (`assets/art/hero`, `items/costume`, their flames, holder, match, the app icon) stay script-drawn until the
+  owner says otherwise. Never use that library's AI-made packs (`angais-pixel-art-atlas`,
+  `codepawl-pixel-art-atlas-models`).
+- No blurry scaling, no gradients on sprites, one pixel size on screen.
+- Only CC0 / MIT / OFL assets; record each in `README.md` Credits, `assets/licenses/` (one licence file a pack,
+  plus the per-file lists the two tools write) and the in-game Credits (`scripts/ui/title.gd` `_credits`,
+  `scripts/ui/credits_pages.gd` `ASSETS`, and the credits roll in `scripts/ui/ending.gd` `_credits`).
+- Be honest about AI on the stores, and say only what a store asks: since 2.10 that is the candles (drawn by
+  scripts an AI wrote) and the in-game text. Never help hide it. Wording: `docs/marketing/steam_store.md`
+  section 6, `itch_page.md` section 1.
 - This repo is **public**: never commit a keystore or password. `tools/build_apk.sh` and `tools/build_aab.sh`
   sign with the private key from the `FailedIdolsOfTheAbyss` repo (`../../FailedIdolsOfTheAbyss/keystore/`).
 - Wax = health = clock (12:00 AM full, 2:00 AM empty). Keep that readable in every change.
@@ -119,7 +131,9 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   godot-export, pixel-art-sprites and roguelike.)
 
 ## Where things stand (handoff, 2026-11-10)
-- Latest build: **2.9.0** (versionCode 16): APK, AAB, Windows + Linux zips and the browser build. Two things:
+- Latest build: **2.10.0** (versionCode 19): APK, AAB, Windows + Linux zips and the browser build. It is 2.9
+  with every picture but the candles and every sound taken from free packs (the block "2.10.0" below). 2.9.0
+  (versionCode 16) brought two things:
   - **The bigger picture** (`docs/streams/v28_screen.md`, merged from `v28/screen`): Settings > Controls >
     Screen, **Big** (the default) draws the room at its own whole-number scale, wall to wall in height, under a
     HUD at the old scale (`scripts/stage.gd` owns Main; hooks `Stage.attach_world`, `Stage.to_ui`, `--screen=`,
@@ -150,57 +164,38 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   pitch always says the art and code were made with an AI assistant; never help hide that. Owner-only blanks:
   name, email, country, price, dates, the ask, a guardian if under 18. The trailer still shows 2.0: re-record it
   only if the owner asks (no-videos rule).
-- **Free-art swap (in progress; the owner's choice, 2026-11-10: "keep the candles", replace everything else,
-  "don't generate anything", remove the diary pages, keep the talk scenes):** every picture a script drew, other
-  than Tallow and the candles (`assets/art/hero`, `items/costume`), is being replaced by found, human-made free
-  art. `tools/free_art.py` is the only door: it fetches a pack file from the public library
-  `series-ai/jam-ready-assets` (`https://media.githubusercontent.com/media/series-ai/jam-ready-assets/main/<path>`,
-  cache `~/.cache/waxandwane_free_art`; a file list comes from a `GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1`),
-  cuts frames unchanged (crop only), writes the game's files under the same names, and writes
-  `assets/licenses/CREDITS_free_art.txt`. **Never use that library's `angais-pixel-art-atlas` /
-  `codepawl-pixel-art-atlas-models`: AI-generated.** Usable (CC0, by people): `ninja-adventure` (monsters 64x64 =
-  4 directions x 4 steps of 16 px, bosses as strips, Items, `Ui/Skill Icon`, FX, facesets, input prompts),
-  `0x72`, `16x16-rpg-item-pack`, `foozle-lucifer-*`, `takogame-halloween-icons`, Kenney (tiny-dungeon,
-  roguelike-interior, ui packs, input-prompts-pixel, the audio packs, music-jingles), Pixel Frog,
-  `ansimuz-gothicvania-*`.
-  - Done and pushed (a preview APK **2.10.0, versionCode 17** went to the owner; 861 pictures now come from
-    packs): (1) 23 small lodgers (`Enemy.DEFS` "sprite" names a 0x72 sprite for the Iron Snuffer, Waxwork Maid,
-    Lantern-Shy Armour, Snapping Trunk; two renamed: Grave Skull, Restless Lantern); (2) the 13 guardians as
-    stand-ins with names and talk kept (furnace GiantFlam, wax_mother DemonCyclop, choir GiantSpirit, necro_boss
-    GiantRedSamurai, organist SquidRed, ossuary Foozle's Ancient Skeleton, pendulum DemonCyclop2, sexton
-    GiantRacoon, weathercock TenguRed, keeper GiantBlueSamurai, dress_form GiantBamboo2, stockpot GiantSlime2,
-    librarian TenguBlue), portraits = `TalkLines.SPEAKERS[..]["crop"]`; (3) relic, keepsake, familiar, pickup
-    icons; (4) shots, bursts, move effects (`Stains._shape` draws stains as plain discs; Large shots = x1.5);
-    (5) rooms laid out of 0x72 tiles as drawn with `Room.AREA_TINT` / `DOOR_TINT` in code, furniture from Kenney's
-    Roguelike Indoors + Tiny Dungeon; (6) special rooms, tower and area things, the lesson's dummy, Martha's face
-    (Ninja Adventure's OldWoman). `Art._placeholder` is now a blank pixel: **a picture that is not there shows
-    nothing**, which is how the many deleted props simply vanish (`EXCLUSIVE` folders in the tool delete what it
-    does not write). Checks on this state: checkrooms, qacheck, pacecheck, feelcheck, movescheck, primercheck
-    pass, god nights win; `--talkcheck` fails ONE probe on purpose-left work: the opening's four scene paintings
-    are gone.
-  - (7) the menus and the HUD: the drawn kit is gone. `UI._tex_box` returns a flat box (`UI.FLAT`: fill +
-    1 px border) when a picture is not there; switches say ON / OFF; the HUD clock is the game's font on a flat
-    plate, the wax bar its plain-bar fallback, the touch sticks and the pause key plain shapes (`UIShapes`, asked
-    by `Art.tex` for a missing "ui/" picture), coin and bomb icons from packs, the title's name in the font.
-    A second preview APK (2.10.0, **versionCode 18**) went to the owner. On this state: god night wins, qacheck
-    and primercheck pass, no script errors.
-  - Still my drawings: Tallow and the candles (`hero`, `items/costume`, `tower/holder_silver*`, the three
-    `ui/app_icon_*` that show him: kept by the owner's choice) and `items/fx` (the candle's flames and sparks;
-    its ghost, jug and ring could move to packs).
-  - To do, in this order: (a) the opening and the endings draw their moving parts over scene paintings that are
-    gone (`opening.gd` `_draw_house/_dial/_kitchen/_cellar`, `ending.gd`): give them one found backdrop or plain
-    cards, then the one failing `--talkcheck` probe passes again; (b) the lesson's key / mouse / pad glyphs and
-    its little clock (`primer_glyphs.gd`, `primer_reel.gd`) are blank: Ninja Adventure `Ui/Input` has them by
-    name; (c) sounds: 74 files in `assets/audio/sfx` are layered / processed / synthesized by
-    `tools/make_audio.py`; use single pack files as they are (Ninja Adventure `Audio/Sounds`, Kenney packs; a
-    volume table in code, not baked) and pack jingles for the two synthesized ones. Nobody can listen here: pick
-    by file name and tell the owner to listen; (d) the diary pages out (`Diary`, the Diary tab, page pickups,
-    the three page endings, `--diarycheck`); (e) store art (`tools/store_art.py` stages Tallow with the Wax
-    Mother, who is now a pack sprite) and the store screenshots; delete the `tools/art_*.py` that are no longer
-    used (keep what draws the candles); credits in README, the in-game Credits and `assets/licenses` (the
-    tool's `PACKS` table has every maker and URL); the store AI wording (then: the hero and the in-game text);
-    all checks; final builds (APK, AAB, desktop, web).
-  - With my talk lines and names kept, Steam still needs one sentence about the text; the owner knows.
+- **2.10.0: the free-art and free-sound swap is done** (the owner's choice, 2026-11-10; the rule is under Hard
+  rules). What changed, and where to look:
+  - **Pictures**: 956 files come from packs (`tools/free_art.py`; its tables say what each one is): 0x72
+    (stones, 24 lodgers, 3 guardians), Ninja Adventure (18 lodgers, 12 guardians as stand-ins with names and
+    talk kept, relic icons, effects, key and gamepad pictures, Martha's face), Kenney Roguelike Indoors + Tiny
+    Dungeon (furniture), Alex's Assets (relic icons), Foozle's Ancient Skeleton (the Ossuary), Luis Zuno's night
+    town and Not Jam's grandfather clock (the story scenes), Kenney's cursor hand (the touch lesson). 105
+    pictures are still script-drawn, all of them the candles. `Art._placeholder` is a blank pixel: a picture
+    that is not there shows nothing. Menus and HUD are flat boxes and plain shapes (`UI.FLAT`, `UIShapes`).
+  - **Story scenes** (`scripts/ui/opening.gd`, `ending.gd`): the town in two layers (the game tints the clouds
+    for night and dawn and lets them drift), a hall, the kitchen and the cellar laid out of the game's own
+    tiles. `Ending.SCENES`, `Ending.WINDOWS` (candles lit in the picture's own colours), `Ending.paint_window`.
+  - **Diary pages off**: `Diary.PAGES_ON = false` (no pages placed; the Housekeeper and Whole Story endings and
+    five achievements retired; the code and `docs/design/STORY.md` stay). Endings left: the true one and A
+    Candle in Every Window. I told the owner three endings needed the pages; it is two.
+  - **Sounds** (`tools/free_sounds.py`, `scripts/autoload/sfx_pack.gd`): 74 sounds, each one pack file as it
+    is, plus the pack's own jingles; level and speed are set when a file plays (`Audio.take_gain`,
+    `take_pitch`). The low-wax layer is a found tick struck faster and faster (`low_wax_tick`), no longer a
+    synthesized heartbeat. **Nobody could listen where this was put together**: the picks follow the old
+    recipes' main samples, the packs' names and measured length and tone. Ask the owner what sounds wrong and
+    swap that line in the tool's `SOUNDS` table (`--list` prints the table with measurements).
+  - **Lesson glyphs** (`scripts/ui/primer_glyphs.gd`): Ninja Adventure key, mouse and gamepad pictures by name
+    (`primer/key_<name>`, `primer/pad_<name>`); a key with no picture is a plain cap with its word.
+  - **Credits and stores**: in-game credits, README, `assets/licenses/` (a licence file a pack),
+    `docs/marketing/facts.md` and the store pages say the same thing; Steam's box needs two sentences now
+    (the candles, the text), itch.io's Sound box is no longer ticked. Store pictures were rebuilt from the game
+    (`tools/store_art.py`; the logo is the name in the game's font, the drawn logo is gone).
+  - Retired: `tools/make_audio.py` and eight `tools/art_*.py` that only drew replaced pictures. The art
+    scripts that are left draw the candles but still know the old pictures: run `tools/free_art.py` after any.
+  - Known rough spots: rooms are plainer than the drawn ones; guardians are stand-ins from one pack (the
+    Furnace is a flame giant, the Organist a squid); the logo is plain text; the sounds are unheard.
+  - To drop the AI note on the stores entirely, a person would have to redraw the candles and rewrite the text.
 - Not done from the 2.8 plan: **Flag a bug** (a pause-menu button that copies a report code; not built).
 - The owner asked for game work only, lean: no pitch, research or reviewer agents unless asked; one thing at a
   time; small bot batches (they cost time, not usage: run them in the background and read only the
@@ -235,7 +230,7 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   enemy shots, Normal / Large), v2.2 (the night-length slider, 4 to 7 floors, with the Kitchen, Library and Attic;
   `docs/streams/v22_night.md`, `v22_areas.md`) and v2.3 (a special move per candle + the ability button + the Keys
   page + the `L` strings autoload; `docs/streams/v23_moves.md`). The AAB, desktop zips, browser zip and store
-  screenshots were rebuilt at **2.9.0**; the press kit zip and the trailer still show 2.0.0.
+  screenshots were rebuilt at **2.10.0**; the press kit zip and the trailer still show 2.0.0.
 - The owner asked to keep bot balance judging light (credits): quick checks only (checkscripts, checkrooms, one
   god run, the relevant tour), small batches when a number really moved. Long nights after the merge: 7 floors
   2 of 5, 5 floors 2 of 3. Per-candle win rates with the moves were not measured (only Tallow: 3 of 8 with or

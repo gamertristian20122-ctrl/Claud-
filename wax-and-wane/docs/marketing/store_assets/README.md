@@ -4,13 +4,13 @@ Every picture here comes from the game itself. The game stages each moment and r
 pixel size: `scripts/store_shots.gd`, run through `scripts/autotest.gd`. Then `tools/store_art.py`
 scales the renders up by whole numbers with nearest-neighbour only: no blur and no smoothing. The
 darkness around the key art is stepped and dithered on the game's pixel grid, never a smooth gradient.
-The only text on any capsule is the WAX & WANE logo. Steam does not allow review quotes, awards or
+The only text on any capsule is the WAX & WANE logo (since 2.10 the name set in the game's own font). Steam does not allow review quotes, awards or
 "sale" text on capsules.
 
 `overview.png` is a contact sheet of every file, shown at about the size each store displays it.
 
 **Since 2.0.0 the capsules use the "hero" key art:** Tallow about three times bigger than before, in one warm
-pool of light, beside the Wax Mother (a guardian made for this game) lit by her own candles. Every run of
+pool of light, beside the Wax Mother (her picture is from the Ninja Adventure pack since 2.10) lit by her own candles. Every run of
 `tools/store_art.py` ends with a brightness judge, so the art never sinks into Steam's dark page: each capsule
 needs a mean luma of at least 70/255 with fewer than 35% of its pixels below 30. At 2.0.0:
 

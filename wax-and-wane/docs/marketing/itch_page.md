@@ -30,15 +30,17 @@ itch.io can go live the same day you upload, so it's where the first sales come 
 | Languages | English |
 | Accessibility | Leave empty: the touch sticks can be swapped and aim assist turned on, but keys and buttons can't be remapped yet |
 | Community | Comments |
-| AI generation disclosure | **Yes.** Tick **Graphics**, **Sound**, **Text** and **Code** (see the note below) |
+| AI generation disclosure | **Yes.** Tick **Graphics**, **Text** and **Code**. Leave **Sound** unticked (see the note below) |
 | Privacy policy | Paste the link from `PRIVACY.md` into the description (section 3 has the line) |
 
-**Why each AI box is ticked** (same facts as the Steam disclosure in `steam_store.md` section 6):
-- Graphics: Tallow, the house's own creatures, relics, rooms and effects were drawn by scripts written with
-  Claude (an AI assistant) and checked one by one by the developer. The 0x72 tiles and creatures are hand-drawn.
-- Sound: the sound effects and two jingles were layered or synthesized by AI-written scripts. The music is
-  the human-made Ninja Adventure soundtrack. (If you post the trailer: its narration is an AI voice.)
-- Text: the in-game names, lore lines and menus were written with the AI assistant and edited by the developer.
+**Why each AI box is ticked or not** (same facts as the Steam disclosure in `steam_store.md` section 6; this is
+how things stand since 2.10):
+- Graphics, ticked: Tallow and the other playable candles were drawn by scripts written with Claude (an AI
+  assistant) and checked by the developer. Every other picture is from a pack a person drew.
+- Sound, not ticked: every sound effect is one sound file from a human-made pack, used as it is, and the music
+  is the human-made Ninja Adventure soundtrack. (If you post the trailer: its narration is an AI voice, so
+  tick Sound then.)
+- Text, ticked: the in-game names, lore lines and menus were written with the AI assistant and edited by the developer.
 - Code: the game's code was written with the AI assistant.
 
 **Tags** (itch allows 10):
@@ -100,7 +102,7 @@ on people's phones.
 > - 6 Candle Rites for collecting sets, 8 keepsakes you charge by clearing rooms, and the Smoke Altar, where power costs minutes off your candle for the rest of the night
 > - 35 kinds of lodger, 13 guardians with versus cards and 6 house champions
 > - 5 special rooms: the Seance, the Cracked Mirror, the Music Box, the Study and the Wax Font
-> - 5 more candles to unlock, a secret Hollow on every floor, Tonight's Candle (one seeded house a night, the same for everyone), the Journal and 67 achievements
+> - 5 more candles to unlock, a secret Hollow on every floor, Tonight's Candle (one seeded house a night, the same for everyone), the Journal and 62 achievements
 > - 3 save slots, each with its own difficulty level from 1 (Gentle, for learning) to 4 (Two O'Clock, brutal)
 >
 > **Which file do I want?**
@@ -112,7 +114,7 @@ on people's phones.
 >
 > **Privacy:** the game collects no data and never goes online. Policy: https://github.com/gamertristian20122-ctrl/Claud-/blob/ccr-37a74654-pp10xa/wax-and-wane/PRIVACY.md
 >
-> Made by one developer with Claude, an AI assistant (see the AI disclosure). Dungeon tiles and about 20 creatures by 0x72, music by Pixel-boy and AAA (Ninja Adventure), sound effects built from Kenney's packs. Full credits are in the game (Title > Credits).
+> Made by one developer with Claude, an AI assistant (see the AI disclosure). The house's stones and many lodgers by 0x72; more lodgers, guardians and relics, and the music, by Pixel-boy and AAA (Ninja Adventure); furniture and sounds by Kenney; the night town by Luis Zuno. Full credits are in the game (Title > Credits).
 
 **Add later, when the Steam page is live** (one line under "Controls"):
 
@@ -153,7 +155,7 @@ Post it the day the page goes live (Dashboard > Devlog > New post). Add `loop_fi
 > - 64 relics, 6 Candle Rites and 8 keepsakes
 > - 35 kinds of lodger, 13 guardians and 6 house champions
 > - 5 special rooms, and a secret fifth floor with its own ending
-> - 6 candles to play, Tonight's Candle, the Journal and 67 achievements
+> - 6 candles to play, Tonight's Candle, the Journal and 62 achievements
 > - 3 save slots and 4 difficulty levels, from Gentle to Two O'Clock
 > - Keyboard and mouse, gamepad and touch; save and continue; Windows, Linux and Android builds
 >

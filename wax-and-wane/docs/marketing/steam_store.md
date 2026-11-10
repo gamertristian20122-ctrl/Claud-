@@ -77,14 +77,14 @@ Five special rooms can turn up on a floor. Ring the Seance bell and the lodgers 
 [*][b]Tonight's Candle.[/b] One seeded house a night: the same house for every player, scored on your first try. Or type in a friend's seed.
 [*][b]Hollows.[/b] Every floor hides a secret room behind a cracked wall. Bring a bomb.
 [*][b]The Journal.[/b] Every relic, lodger, guardian and room you have met, your records and your last 20 runs. Unseen pages stay as silhouettes.
-[*][b]67 achievements[/b], tracked in the game. Eighteen relics and two keepsakes move into the house as you earn them.
+[*][b]62 achievements[/b], tracked in the game. Eighteen relics and two keepsakes move into the house as you earn them.
 [/list]
 
 [h2]Keyboard, mouse or gamepad[/h2]
 Play with keyboard and mouse or a gamepad; the button hints follow whatever you touched last. The picture is drawn at 384 x 216 and scaled up in whole steps, so it stays sharp on a 1080p monitor and on a Steam Deck. Quit in the middle of a run and the game saves; pick it up from the title screen. A run takes about 5 to 20 minutes.
 
 [h2]Who made this[/h2]
-Wax & Wane is made by one developer working with Claude, an AI assistant. The dungeon tiles and about 20 of the lodgers come from 0x72's free DungeonTileset II. The music is the Ninja Adventure pack by Pixel-boy and AAA, and the sound effects are layered from Kenney's free packs. Tallow, the house's own lodgers and guardians, the relics, the rooms and the effects were made for this game. The AI disclosure on this page says exactly how AI was used.
+Wax & Wane is made by one developer working with Claude, an AI assistant: the code and the words were written with it, and Tallow and the other candles were drawn by small programs it wrote. The house itself is the work of human pixel artists who share their art freely: its stones and many of its lodgers by 0x72, more lodgers, guardians and relics from the Ninja Adventure pack by Pixel-boy and AAA, furniture by Kenney, the night town by Luis Zuno. The music is Ninja Adventure's and the sounds are Kenney's. The AI disclosure on this page says exactly how AI was used.
 
 Add Wax & Wane to your wishlist and Steam will email you the day it comes out.
 ```
@@ -95,7 +95,7 @@ Notes on choices:
 - Real item names (Twin Wick, Hand Bell, Old Rot) do the selling. Generic lines like "tons of items" could sit on any roguelite page.
 - The mechanic gets the longest section because it's the one thing other roguelites don't have.
 - No review quotes, awards or player counts until they exist.
-- Steam achievements are not promised: the 67 achievements live in the game (see section 5).
+- Steam achievements are not promised: the 62 achievements live in the game (see section 5).
 
 ---
 
@@ -153,7 +153,7 @@ tags from Steam's own list in the tag picker; if one is missing there, skip it.
 
 **Do not tick at launch:**
 - **Steam Achievements.** The build has no Steamworks connection yet (the GodotSteam plugin is not in it), so
-  the 67 achievements are shown in the game only. Tick it after an update adds GodotSteam, the 67 achievements
+  the 62 achievements are shown in the game only. Tick it after an update adds GodotSteam, the 62 achievements
   are created in Steamworks with the same API names, and each has its 64x64 earned and unearned icons.
   In the page text, achievements are described as in-game.
 - Steam Leaderboards, Trading Cards, Remote Play: later, if you add them.
@@ -174,19 +174,22 @@ not need "Frequent Violence or Gore".
 > Cartoon fantasy violence. You play a small candle that shoots sparks at pixel-art monsters (skeletons, zombies, imps, ghosts, living furniture) in a haunted house. Defeated monsters burst into a few tiny pixel chunks and leave flat coloured splats on the floor, some of them red. Nothing is realistic or detailed. There is no sexual content, no strong language and no real-money gambling; a music box in the house trades in-game coins for a random small reward.
 
 **AI generated content disclosure (Pre-Generated section).** Steam's January 2026 update says behind-the-scenes
-coding tools don't need disclosing, but anything players see or hear does. Most of this game's original art
-was drawn by scripts an AI assistant wrote, and it wrote the in-game text, so disclose it. Players who find
-undisclosed AI use after launch tend to say so in reviews; a page that said it up front gives them nothing
-to catch. Paste this:
+coding tools don't need disclosing, but anything players see or hear does. Since 2.10 that is two things: the
+hero and the other candles (drawn by scripts an AI assistant wrote) and the in-game text (written with it).
+Every other picture, the music and the sounds now come from packs made by people, so they are not part of
+this box any more. Players who find undisclosed AI use after launch tend to say so in reviews; a page that
+said it up front gives them nothing to catch. Paste this:
 
-> The pixel art made for this game (the hero, its own creatures and bosses, the items, rooms and menus), the in-game text and the sound effects were made with an AI assistant: it wrote the text, and it wrote the small programs that draw the art and mix the sounds.
+> The hero, a small candle called Tallow, and the other playable candles are pixel art drawn by small programs an AI assistant wrote. The in-game text was written with an AI assistant.
+
+Optional, and it works in your favour: `Every other picture, the music and the sound effects were made by human artists.`
 
 Only if you post the trailer or the shorts (their narrator is an AI voice; on 2026-11-10 you chose to skip the
 trailer), add this at the end: `The narration in the trailer is an AI-generated voice.`
 
-Optional, and it works in your favour: `The music and the dungeon tiles are made by human artists.`
 This is the least the form needs: what players see or hear that was made with AI. Code tools do not have to be
-listed on Steam, and licence words (CC0) and credits do not belong in this box.
+listed on Steam, and licence words and credits do not belong in this box. To drop the box's first sentence too,
+the candles would have to be redrawn by a person; to drop the second, the text rewritten by one.
 
 **Live-Generated section:** No.
 
@@ -294,7 +297,7 @@ The plan:
 ## 11. Required art (sizes checked on Steamworks docs, Nov 2026)
 
 Every file is ready in `store_assets/` (see `store_assets/README.md` for which slot each one goes in).
-The capsules use the "hero" layout: Tallow big and warm-lit, a guardian made for this game beside it.
+The capsules use the "hero" layout: Tallow big and warm-lit, a guardian beside it.
 
 **Store assets**
 
