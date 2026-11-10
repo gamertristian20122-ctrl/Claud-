@@ -340,7 +340,9 @@ static func _scenario(at: Node, dev: String, seed_n: int) -> void:
 		var taught: Array = Game.records.get("primer_taught", [])
 		_ok(str(Game.records.get("primer", "")) == "done" and taught.size() == Primer.STEPS.size(),
 			"%s: the primer completes with simulated input in %.1f s (taught: %s)" % [dev, primer_secs, ", ".join(taught)])
-		_ok(w.room.is_open and absf(w.player.wax - w.player.wax_max) < 0.01 and w.clock_minutes() <= 0.01,
+		# (a few frames of the night may have burned by the time this reads it: 0.05 wax is 8 frames of a full
+		# candle's melt in the Cellar, v2.9 TALL_HOT; the lesson itself must cost nothing)
+		_ok(w.room.is_open and absf(w.player.wax - w.player.wax_max) < 0.05 and w.clock_minutes() <= 0.05,
 			"%s: at its end the doors are open and the clock still reads %s" % [dev, Game.clock_text(w.clock_minutes())])
 	else:
 		print("[primer] %s: (no primer in this build)" % dev)
