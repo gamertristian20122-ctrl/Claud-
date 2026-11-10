@@ -9,6 +9,9 @@ base viewport, integer pixel scaling). Read `README.md` (content, layout, comman
 - Plays on an Android phone. **Send the APK as soon as a build is done.** Keep zips under 30 MB.
 - Keep the work moving; give a short plan, then do it.
 - **No more videos** (trailer, shorts, loops) unless the owner asks again: the 2.0.0 cuts in `build/videos/` are final.
+  2026-11-10, the owner: "forget about the trailer". Do not list a new trailer as something the game needs. On a
+  store where no trailer is posted, take the trailer-voice sentence out of the AI disclosure
+  (`docs/marketing/steam_store.md` 6, `itch_page.md` 1); everything else in it stays.
 
 ## Hard rules
 - Original game: never copy names, characters, art or music from existing games. Genre conventions are fine.
