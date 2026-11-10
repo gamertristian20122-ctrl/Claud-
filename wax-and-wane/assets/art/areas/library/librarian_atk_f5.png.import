@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dqdpm82t7bs63"
-path="res://.godot/imported/ossuary_mound_f1.png-f8604e28f5c8bd91e1d30590e1afb56a.ctex"
+uid="uid://sbo5aoshvxmi"
+path="res://.godot/imported/librarian_atk_f5.png-5f8a5632d8db40a2fa48485c8bb79d8e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/monsters/ossuary_mound_f1.png"
-dest_files=["res://.godot/imported/ossuary_mound_f1.png-f8604e28f5c8bd91e1d30590e1afb56a.ctex"]
+source_file="res://assets/art/areas/library/librarian_atk_f5.png"
+dest_files=["res://.godot/imported/librarian_atk_f5.png-5f8a5632d8db40a2fa48485c8bb79d8e.ctex"]
 
 [params]
 
