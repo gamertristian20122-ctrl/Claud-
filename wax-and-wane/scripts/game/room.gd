@@ -65,6 +65,7 @@ func build(w: Node, c: Vector2i, d: Dictionary, th: String, neighbours: Dictiona
 		bg.texture = Art.tex("rooms/room_cellar")
 	else:
 		bg.texture = _fallback_bg()
+	bg.modulate = AREA_TINT.get(theme, Color.WHITE)   # v2.10: one set of 0x72 tiles, a tint per area
 	bg.z_index = -20
 	add_child(bg)
 	floor_layer = Node2D.new()
@@ -402,6 +403,13 @@ func light_candles(instant := false) -> void:
 		i += 1
 
 
+## v2.10: the rooms are 0x72's tiles as drawn; an area is told by its tint, a special door by its colour.
+const AREA_TINT := {"cellar": Color(1.0, 0.93, 0.84), "crypt": Color(0.78, 0.88, 1.0), "chapel": Color(0.92, 0.8, 1.0),
+	"belfry": Color(1.0, 0.84, 0.7), "kitchen": Color(1.0, 0.95, 0.78), "library": Color(0.9, 0.82, 0.7),
+	"attic": Color(0.84, 0.86, 0.96), "tower": Color(0.9, 0.92, 0.78)}
+const DOOR_TINT := {"boss": Color(1.0, 0.5, 0.45), "gold": Color(1.0, 0.86, 0.4)}
+
+
 func set_open(open: bool, instant := false) -> void:
 	if open == is_open and not instant:
 		return
@@ -416,6 +424,7 @@ func set_open(open: bool, instant := false) -> void:
 		elif kind != "normal" and Art.has("specials/door_%s_%s_%s" % [nm, kind, state]):
 			path = "specials/door_%s_%s_%s" % [nm, kind, state]
 		doors[dir].texture = Art.tex(path)
+		doors[dir].modulate = DOOR_TINT.get(kind, Color.WHITE)   # v2.10: one door drawing, a tint per kind
 	if not instant:
 		Audio.play("door_open" if open else "door_close", -2.0)
 

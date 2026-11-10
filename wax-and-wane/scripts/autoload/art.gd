@@ -53,17 +53,17 @@ func tex(path: String) -> Texture2D:
 	return t
 
 
-func _placeholder(path: String) -> Texture2D:
-	var img := Image.create(12, 12, false, Image.FORMAT_RGBA8)
-	var h := hash(path)
-	var c := Color.from_hsv(float(h % 360) / 360.0, 0.6, 0.9)
-	img.fill(c)
-	for i in 12:
-		img.set_pixel(i, 0, Color.BLACK)
-		img.set_pixel(i, 11, Color.BLACK)
-		img.set_pixel(0, i, Color.BLACK)
-		img.set_pixel(11, i, Color.BLACK)
-	return ImageTexture.create_from_image(img)
+func _placeholder(_path: String) -> Texture2D:
+	# v2.10: a picture that is not there shows nothing (many of the house's drawn props were taken out when
+	# the art moved to free packs; a coloured square in their place would be worse than an empty spot)
+	if _blank == null:
+		var img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+		img.fill(Color(0, 0, 0, 0))
+		_blank = ImageTexture.create_from_image(img)
+	return _blank
+
+
+var _blank: Texture2D
 
 
 ## Array of textures prefix_f0.. until a frame is missing (at least one).

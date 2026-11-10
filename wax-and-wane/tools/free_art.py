@@ -33,6 +33,8 @@ PACKS = {
     "ninja-adventure": ("Ninja Adventure Asset Pack", "Pixel-boy and AAA", "CC0",
                         "https://pixel-boy.itch.io/ninja-adventure-asset-pack"),
     "0x72": ("16x16 DungeonTileset II", "0x72", "CC0", "https://0x72.itch.io/dungeontileset-ii"),
+    "kenney-roguelike-interior-pack": ("Roguelike Indoors", "Kenney", "CC0", "https://kenney.nl/assets/roguelike-indoors"),
+    "kenney-tiny-dungeon": ("Tiny Dungeon", "Kenney", "CC0", "https://kenney.nl/assets/tiny-dungeon"),
     "16x16-rpg-item-pack": ("16x16 RPG Item Pack", "Alex's Assets", "CC0",
                             "https://alexs-assets.itch.io/16x16-rpg-item-pack"),
     "foozle-lucifer-skeleton-ancient": ("Lucifer: Ancient Skeleton", "Foozle (drawn by Baldur)", "CC0",
@@ -289,6 +291,112 @@ def effects():
     }
 
 
+INDOOR = "kenney-roguelike-interior-pack/2D/top-down-rpg/Tilesheets/roguelikeIndoor_transparent.png"
+TINY = "kenney-tiny-dungeon/2D/dungeon/Tilemap/tilemap_packed.png"
+
+
+def kin(c, r):
+    """A 16 px tile of Kenney's Roguelike Indoor sheet (17 px pitch)."""
+    return (INDOOR, (c * 17, r * 17, 16, 16))
+
+
+def tiny(c, r):
+    return (TINY, (c * 16, r * 16, 16, 16))
+
+
+def t72(name):
+    return ("0x72/" + name, None)
+
+
+def grid(*rows):
+    return ("grid", [list(r) for r in rows])
+
+
+def room(seed):
+    """A room, 17 x 12 tiles, laid out of 0x72's own wall and floor tiles as they are (no recolouring: the game
+    tints a room per area). The floor's cracked tiles fall where a seeded draw puts them."""
+    import random
+    rng = random.Random(seed)
+    def floor():
+        return t72("floor_%d" % (1 if rng.random() < 0.62 else rng.randint(2, 8)))
+    rows = [[t72("wall_top_left")] + [t72("wall_top_mid")] * 15 + [t72("wall_top_right")],
+            [t72("wall_left")] + [t72("wall_mid")] * 15 + [t72("wall_right")]]
+    for r in range(2, 11):
+        mid = [floor() for _ in range(15)]
+        if r == 10:
+            mid = [[f, t72("wall_top_mid")] for f in mid]
+        rows.append([t72("wall_outer_mid_left")] + mid + [t72("wall_outer_mid_right")])
+    rows.append([t72("wall_mid")] * 17)
+    return ("grid", rows)
+
+
+def rooms():
+    out = {}
+    for ti, theme in enumerate(["cellar", "crypt", "chapel", "belfry", "kitchen", "library", "attic", "tower"]):
+        for v in range(3):
+            out["rooms/room_%s%s" % (theme, "" if v == 0 else "_%d" % v)] = room(ti * 10 + v)
+    f1 = t72("floor_1")
+    out.update({
+        "rooms/door_top_closed": "0x72/doors_leaf_closed", "rooms/door_top_open": "0x72/doors_leaf_open",
+        "rooms/door_bottom_closed": grid([t72("wall_hole_1"), t72("wall_hole_1")]), "rooms/door_bottom_open": grid([f1, f1]),
+        "rooms/door_left_closed": grid([t72("wall_edge_right")], [t72("wall_edge_right")]), "rooms/door_left_open": grid([f1], [f1]),
+        "rooms/door_right_closed": grid([t72("wall_edge_left")], [t72("wall_edge_left")]), "rooms/door_right_open": grid([f1], [f1]),
+        "rooms/pit": "0x72/hole", "rooms/rock": "0x72/wall_mid", "rooms/rock_b": "0x72/wall_hole_1",
+        "rooms/urn": NA_ITEM % "Object/Gourd", "rooms/urn_broken": (FX % "Particle/Vase", (28, 0, 14, 14)),
+        "rooms/candelabra_unlit": grid([kin(20, 0)], [kin(20, 5)]),
+        "rooms/candelabra_lit": {"": [grid([kin(20, 1)], [kin(20, 5)])] * 4},
+        "rooms/trapdoor_closed": "0x72/floor_stairs",
+    })
+    return out
+
+
+def decor():
+    fire = fx("Particle/Fire", 8, 12, [4, 5, 6, 7])
+    shelf = grid([tiny(3, 5)], [tiny(3, 6)])
+    torch = kin(20, 6)
+    out = {
+        "decor/fire": {"": fire}, "decor/flame_torch": {"": fx("Particle/Fire", 8, 12, [2, 3, 4, 5])},
+        "decor/floor_bone_bits": "0x72/skull", "decor/floor_book": NA_ITEM % "Object/Book",
+        "decor/floor_candle_stubs": kin(16, 6), "decor/floor_feathers_0": NA_ITEM % "Resource/feather",
+        "decor/floor_feathers_1": NA_ITEM % "Resource/feather", "decor/floor_goo": "0x72/wall_goo_base",
+        "decor/prop_attic_chair": kin(0, 2), "decor/prop_attic_mirror": grid([kin(22, 14)], [kin(22, 15)]),
+        "decor/prop_attic_trunk": "0x72/chest_full_open_anim_f0", "decor/prop_attic_wardrobe": shelf,
+        "decor/prop_barrel": "0x72/crate", "decor/prop_barrel_b": "0x72/crate", "decor/prop_tower_crate": "0x72/crate",
+        "decor/prop_coffin": tiny(4, 5), "decor/prop_coffin_b": tiny(5, 5),
+        "decor/prop_hearth": kin(14, 14), "decor/prop_hearth_cold": kin(14, 14),
+        "decor/prop_kitchen_block": kin(4, 2), "decor/prop_kitchen_range": kin(14, 14),
+        "decor/prop_kitchen_table_l": kin(0, 0), "decor/prop_kitchen_table_m": kin(1, 0), "decor/prop_kitchen_table_r": kin(2, 0),
+        "decor/prop_kneeler": kin(10, 3), "decor/prop_lectern": kin(5, 5), "decor/prop_library_desk": kin(4, 5),
+        "decor/prop_library_shelf_l": shelf, "decor/prop_library_shelf_m": shelf, "decor/prop_library_shelf_r": shelf,
+        "decor/prop_library_slide": grid([kin(21, 8)], [kin(21, 9)]), "decor/prop_library_stack": NA_ITEM % "Object/Book",
+        "decor/prop_oil_jar": NA_ITEM % "Potion/WaterPot",
+        "decor/prop_pew_1": kin(11, 3), "decor/prop_pew_l": kin(4, 6), "decor/prop_pew_m": kin(5, 6), "decor/prop_pew_r": kin(7, 6),
+        "decor/prop_skull_pile": "0x72/skull", "decor/prop_tower_case": kin(0, 12),
+        "decor/wall_banner_blue": "0x72/wall_banner_blue", "decor/wall_banner_red": "0x72/wall_banner_red",
+        "decor/wall_banner_torn": "0x72/wall_banner_green", "decor/wall_goo": "0x72/wall_goo",
+        "decor/wall_clock": kin(22, 8), "decor/wall_tower_clock": kin(22, 8), "decor/wall_attic_frame": kin(19, 12),
+        "decor/wall_library_portrait": grid([kin(16, 12), kin(17, 12)]), "decor/wall_library_map": kin(18, 0),
+        "decor/wall_library_books": grid([kin(5, 15), kin(6, 15)]), "decor/wall_library_books_b": grid([kin(6, 15), kin(5, 15)]),
+        "decor/wall_shelf": grid([kin(5, 12), kin(6, 12)]), "decor/wall_tower_shelf": grid([kin(5, 12), kin(6, 12)]),
+        "decor/wall_attic_shelf": grid([kin(6, 12), kin(5, 12)]), "decor/wall_winerack": grid([kin(5, 13), kin(6, 13)]),
+        "decor/wall_kitchen_pans": grid([kin(4, 12), kin(7, 12)]), "decor/wall_kitchen_plates": grid([kin(7, 12), kin(4, 12)]),
+        "decor/wall_kitchen_spices": grid([kin(5, 14), kin(6, 14)]),
+        "decor/wall_niche_candle": kin(16, 6), "decor/wall_niche_skull": "0x72/skull",
+        "decor/wall_votives": grid([kin(16, 6), kin(17, 6)]),
+        "decor/wall_votives_glow": {"": [grid([kin(16, 6), kin(17, 6)])] * 2},
+    }
+    for th in ["cellar", "crypt", "chapel", "belfry", "kitchen", "library", "attic", "tower"]:
+        out["decor/sconce_%s_top" % th] = torch
+        out["decor/sconce_%s_side" % th] = (INDOOR, (21 * 17 + 4, 6 * 17, 8, 16))
+    for th in ["cellar", "crypt", "belfry"]:
+        out["decor/wall_hole_1_" + th] = "0x72/wall_hole_1"
+        out["decor/wall_hole_2_" + th] = "0x72/wall_hole_2"
+    return out
+
+
+# folders where every picture comes from a pack now: a file this tool does not write is deleted
+EXCLUSIVE = ["rooms", "decor"]
+
 # single pictures a script drew that the game now does without (globs under assets/art)
 GONE = ["fx/*_lg_f*.png", "fx/gib_*.png", "fx/splat_*.png", "fx/scorch.png", "fx/light/soft_light.png"]
 
@@ -302,7 +410,8 @@ REMOVED = [
     "areas/attic/trunk",       # -> 0x72 chest_full_open
 ]
 
-SETS = [("creatures", lambda: CREATURES), ("guardians", guardians), ("icons", lambda: ICONS), ("effects", effects)]
+SETS = [("creatures", lambda: CREATURES), ("guardians", guardians), ("icons", lambda: ICONS), ("effects", effects),
+        ("rooms", rooms), ("decor", decor)]
 
 
 def fetch(path):
@@ -321,48 +430,73 @@ def clear(target):
         os.remove(f)
 
 
+def render(spec, credit, out):
+    """A picture from a spec: "pack/file" (whole), (file, box) (a crop), or ("grid", rows): whole pieces laid
+    edge to edge, a cell being one piece or a list of pieces laid over each other. `credit` collects sources."""
+    if isinstance(spec, str):
+        spec = (spec, None)
+    if spec[0] == "grid":
+        cells = []
+        for row in spec[1]:
+            cells.append([[render(q, credit, out) for q in (c if isinstance(c, list) else [c])] for c in row])
+        hs = [max(c[0].height for c in row) for row in cells]
+        ws = [sum(c[0].width for c in row) for row in cells]
+        im = Image.new("RGBA", (max(ws), sum(hs)), (0, 0, 0, 0))
+        y = 0
+        for row, h in zip(cells, hs):
+            x = 0
+            for c in row:
+                for piece in c:
+                    im.alpha_composite(piece, (x, y + h - piece.height))
+                x += c[0].width
+            y += h
+        return im
+    src, box = spec
+    credit.setdefault(src.split("/")[0], []).append((out, src, box))
+    im = Image.open(fetch(src)).convert("RGBA")
+    if box:
+        im = im.crop((box[0], box[1], box[0] + box[2], box[1] + box[3]))
+    return im
+
+
 def main():
     only_list = "--list" in sys.argv
     credits = {}
-    n = 0
+    made = set()
     for _set, table in SETS:
         for target, anims in sorted(table().items()):
-            if not isinstance(anims, dict):   # one picture: a whole pack file, or one crop of it
-                src, box = (anims, None) if isinstance(anims, str) else anims
-                out = target + ".png"
-                credits.setdefault(src.split("/")[0], []).append((out, src, box))
+            outs = []
+            if not isinstance(anims, dict):   # one picture
+                outs.append((target + ".png", anims))
+            else:
                 if not only_list:
-                    im = Image.open(fetch(src)).convert("RGBA")
-                    if box:
-                        im = im.crop((box[0], box[1], box[0] + box[2], box[1] + box[3]))
-                    im.save(os.path.join(ART, out))
-                    n += 1
-                continue
-            if not only_list:
-                clear(target)
-            for anim, frames in anims.items():
-                for i, (src, box) in enumerate(frames):
-                    out = ("%s_%s_f%d.png" % (target, anim, i)) if anim else ("%s_f%d.png" % (target, i))
-                    credits.setdefault(src.split("/")[0], []).append((out, src, box))
-                    if only_list:
-                        continue
-                    im = Image.open(fetch(src)).convert("RGBA")
-                    if box:
-                        x, y, w, h = box
-                        im = im.crop((x, y, x + w, y + h))
+                    clear(target)
+                for anim, frames in anims.items():
+                    for i, fr in enumerate(frames):
+                        outs.append((("%s_%s_f%d.png" % (target, anim, i)) if anim else ("%s_f%d.png" % (target, i)), fr))
+            for out, spec in outs:
+                im = render(spec, credits, out)
+                made.add(out)
+                if not only_list:
                     os.makedirs(os.path.dirname(os.path.join(ART, out)), exist_ok=True)
                     im.save(os.path.join(ART, out))
-                    n += 1
+    n = len(made)
     if not only_list:
         for target in REMOVED:
             clear(target)
-        for pat in GONE:
-            for f in glob.glob(os.path.join(ART, pat)):
+        gone = [f for pat in GONE for f in glob.glob(os.path.join(ART, pat))]
+        for d in EXCLUSIVE:   # a folder where every picture is from a pack now: whatever this run did not write goes
+            for f in glob.glob(os.path.join(ART, d, "**", "*.png"), recursive=True):
+                if os.path.relpath(f, ART) not in made:
+                    gone.append(f)
+        for f in gone:
+            if os.path.exists(f):
                 os.remove(f)
-                if os.path.exists(f + ".import"):
-                    os.remove(f + ".import")
+            if os.path.exists(f + ".import"):
+                os.remove(f + ".import")
     lines = ["Wax & Wane - pictures taken from free packs (tools/free_art.py writes this file)",
-             "Every file below is a crop of the pack file named beside it: x, y, width, height. No pixel was changed.",
+             "Every file below is a pack file, a crop of one (x, y, width, height), or whole pieces laid edge to edge",
+             "or over each other (a room out of its tiles, a candle stand out of its two parts). No pixel was changed.",
              "The packs are in the public library https://github.com/series-ai/jam-ready-assets, each with its own",
              "License.txt; the makers' own pages are named here.", ""]
     for pack in sorted(credits):
