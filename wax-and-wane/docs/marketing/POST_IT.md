@@ -36,6 +36,9 @@ You only need to say "build and send the release" (2.9.0 is built and sent alrea
 | `build/videos/trailer_60s.srt` (and `_play`, `_steam`) | subtitles for YouTube | tiny | YouTube |
 | `build/WaxAndWane_presskit_2.0.0.zip` | press kit (`./tools/press_kit.sh`) | a few MB | itch.io, press emails |
 
+The videos are optional. On 2026-11-10 you chose to skip the trailer: leave every video row and video step
+out. If you ever post one, add the trailer-voice sentence to the AI disclosure (`steam_store.md` section 6).
+
 3. Makes the cuts with the other endings: `CTA=play ./tools/make_trailer.sh edit --only trailer` and
    `CTA=steam ./tools/make_trailer.sh edit --only trailer` (no re-recording; `videos.md`).
 

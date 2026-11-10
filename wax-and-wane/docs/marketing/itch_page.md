@@ -36,8 +36,8 @@ itch.io can go live the same day you upload, so it's where the first sales come 
 **Why each AI box is ticked** (same facts as the Steam disclosure in `steam_store.md` section 6):
 - Graphics: Tallow, the house's own creatures, relics, rooms and effects were drawn by scripts written with
   Claude (an AI assistant) and checked one by one by the developer. The 0x72 tiles and creatures are hand-drawn.
-- Sound: the trailer's narration is an AI voice (Kokoro TTS), and the sound effects and two jingles were
-  layered or synthesized by AI-written scripts. The music is the human-made Ninja Adventure soundtrack (CC0).
+- Sound: the sound effects and two jingles were layered or synthesized by AI-written scripts. The music is
+  the human-made Ninja Adventure soundtrack (CC0). (If you post the trailer: its narration is an AI voice.)
 - Text: the in-game names, lore lines and menus were written with the AI assistant and edited by the developer.
 - Code: the game's code was written with the AI assistant.
 
