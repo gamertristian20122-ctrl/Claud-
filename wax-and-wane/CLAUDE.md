@@ -163,25 +163,36 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   `0x72`, `16x16-rpg-item-pack`, `foozle-lucifer-*`, `takogame-halloween-icons`, Kenney (tiny-dungeon,
   roguelike-interior, ui packs, input-prompts-pixel, the audio packs, music-jingles), Pixel Frog,
   `ansimuz-gothicvania-*`.
-  - Done: (1) 23 small lodgers (`Enemy.DEFS` "sprite" names a 0x72 sprite for the Iron Snuffer, Waxwork Maid,
+  - Done and pushed (a preview APK **2.10.0, versionCode 17** went to the owner; 861 pictures now come from
+    packs): (1) 23 small lodgers (`Enemy.DEFS` "sprite" names a 0x72 sprite for the Iron Snuffer, Waxwork Maid,
     Lantern-Shy Armour, Snapping Trunk; two renamed: Grave Skull, Restless Lantern); (2) the 13 guardians as
     stand-ins with names and talk kept (furnace GiantFlam, wax_mother DemonCyclop, choir GiantSpirit, necro_boss
     GiantRedSamurai, organist SquidRed, ossuary Foozle's Ancient Skeleton, pendulum DemonCyclop2, sexton
     GiantRacoon, weathercock TenguRed, keeper GiantBlueSamurai, dress_form GiantBamboo2, stockpot GiantSlime2,
-    librarian TenguBlue), portraits = `TalkLines.SPEAKERS[..]["crop"]` on the new first idle frame; (3) relic,
-    keepsake, familiar and pickup icons. Checks after each: gallery / boss / relic tours looked at, god nights
-    (4 and 7 floors, `--tower --keeper`), `--talkcheck`.
-  - To do, in this order: enemy shots and effects (`assets/art/fx`: Ninja Adventure FX / Projectile; delete
-    `fx/light/soft_light.png`, `Art._make_light` draws it); special-move art (`moves`); rooms (re-assemble the 8
-    `room_*` backgrounds from 0x72 tiles with NO recolouring and tint per area in code; doors, pits, rocks, urns,
-    decals, candelabra, trapdoor were hand-placed by a script: use 0x72 pieces or draw nothing); `decor`,
-    `specials`, `areas/*` props, `tower` (0x72, Kenney roguelike-interior, takogame); `ui` (flat code-drawn
-    style boxes + pack icons, Kenney font digits); `primer` + `chalk` (Kenney input prompts); `talk` / `story`
-    (Martha = a pack faceset); sounds (pack files as they are, a pack jingle for the two synthesized ones);
-    the diary pages out (`Diary`, the Diary tab, page pickups, the three page endings, `--diarycheck`); logo, app
-    icon and store art; delete the `tools/art_*.py` that are no longer used; credits (README, in-game,
-    `assets/licenses`), the store AI wording (then: only the hero and the in-game text), version 2.10.0, all checks,
-    builds, APK to the owner.
+    librarian TenguBlue), portraits = `TalkLines.SPEAKERS[..]["crop"]`; (3) relic, keepsake, familiar, pickup
+    icons; (4) shots, bursts, move effects (`Stains._shape` draws stains as plain discs; Large shots = x1.5);
+    (5) rooms laid out of 0x72 tiles as drawn with `Room.AREA_TINT` / `DOOR_TINT` in code, furniture from Kenney's
+    Roguelike Indoors + Tiny Dungeon; (6) special rooms, tower and area things, the lesson's dummy, Martha's face
+    (Ninja Adventure's OldWoman). `Art._placeholder` is now a blank pixel: **a picture that is not there shows
+    nothing**, which is how the many deleted props simply vanish (`EXCLUSIVE` folders in the tool delete what it
+    does not write). Checks on this state: checkrooms, qacheck, pacecheck, feelcheck, movescheck, primercheck
+    pass, god nights win; `--talkcheck` fails ONE probe on purpose-left work: the opening's four scene paintings
+    are gone.
+  - Still my drawings: Tallow and the candles (`hero`, `items/costume`, `tower/holder_silver*`: kept by the
+    owner's choice), `items/fx` (flames and sparks of the candle; its ghost, jug and ring could move to packs),
+    and all of **`assets/art/ui`** (80 files).
+  - To do, in this order: (a) `ui`: `UI._tex_box` is the one place the kit's boxes are made: return a
+    StyleBoxFlat (fill + 1 px border in the palette) when the texture is gone, then replace or drop the rest
+    (focus ring, switch icons -> text, slider knob/track, HUD clock plate and `hud_digits` -> Kenney font, wax bar
+    frames -> rects, touch sticks, `ico_*` -> pack icons, `title_logo` -> the title in the Kenney font, app icon
+    from Tallow only); (b) the opening and the endings draw their moving parts over scene paintings that are gone
+    (`opening.gd` `_draw_house/_dial/_kitchen/_cellar`, `ending.gd`): give them one found backdrop or plain
+    cards, then fix the talkcheck probe; (c) primer key/mouse/pad glyphs from Ninja Adventure `Ui/Input` (now
+    blank); (d) sounds: pack files as they are, pack jingles for the two synthesized ones (`tools/make_audio.py`,
+    `import_audio.py`); (e) the diary pages out (`Diary`, the Diary tab, page pickups, the three page endings,
+    `--diarycheck`); (f) store art and the app icon; delete the `tools/art_*.py` no longer used; credits in
+    README, the in-game Credits and `assets/licenses` (the tool's `PACKS` table has every maker and URL); the
+    store AI wording (then: the hero and the in-game text); all checks; final builds.
   - With my talk lines and names kept, Steam still needs one sentence about the text; the owner knows.
 - Not done from the 2.8 plan: **Flag a bug** (a pause-menu button that copies a report code; not built).
 - The owner asked for game work only, lean: no pitch, research or reviewer agents unless asked; one thing at a
