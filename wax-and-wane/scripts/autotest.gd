@@ -769,6 +769,9 @@ func _shot(name: String) -> void:
 	var img := Stage.grab(self)   # v2.8: the picture the player sees (Screen: Big composes it at the screen's own size)
 	_shot_i += 1
 	img.save_png("%s/%02d_%s.png" % [_shots_dir, _shot_i, name])
+	if args.has("layers") and Stage.big:   # v2.8: the two buffers behind the picture (tools/stage_check.py proves it exact)
+		Stage.world_vp.get_texture().get_image().save_png("%s/%02d_%s.world.png" % [_shots_dir, _shot_i, name])
+		Stage.ui_vp.get_texture().get_image().save_png("%s/%02d_%s.ui.png" % [_shots_dir, _shot_i, name])
 	print("[tour] shot ", name)
 	if args.has("fit"):   # layout judge: text off the screen or on other text (scripts/ui/fit_check.gd)
 		for line in FitCheck.scan(get_tree().root, get_viewport().get_visible_rect().size):

@@ -5,7 +5,8 @@
 # Then, if node and Playwright are here, boots it in headless Chromium and fails on any browser console error.
 #   SKIP_SMOKE=1 ./tools/build_web.sh    skip the boot test
 # On itch.io: Kind of project "HTML", upload the zip, tick "This file will be played in the browser",
-# viewport 1152 x 648 (three game pixels per screen pixel, no border), and turn on the fullscreen button.
+# viewport 1280 x 720 (v2.8 Screen: Big draws the room at four screen pixels per art pixel there, wall to wall
+# in height, and the menus at three, no border; at 1152 x 648 everything is three), and turn on the fullscreen button.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

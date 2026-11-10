@@ -51,7 +51,9 @@ static func _snap(at: Node, w: Node, name: String, keep_banner := false) -> void
 		w.player.bombs = 1 + hsh % 4
 	await at.get_tree().process_frame
 	await RenderingServer.frame_post_draw
-	var img := at.get_viewport().get_texture().get_image()
+	# v2.8: the picture the player sees. Screen: Big composes it at the screen's own size (1920x1080: menus x5, the
+	# room x6: use it as it is); --screen=classic gives the 384x216 picture as before (scripts/stage.gd)
+	var img := Stage.grab(at)
 	img.save_png("%s/%s.png" % [at._shots_dir, name])
 	var foes: int = w.count_enemies() if w != null else 0
 	print("[store] shot %s %dx%d foes=%d" % [name, img.get_width(), img.get_height(), foes])

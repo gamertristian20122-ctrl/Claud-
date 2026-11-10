@@ -164,6 +164,11 @@ godot --headless --path . -- --autotest --playtest --speed=4 --runs=3
                           (time to kill, hits; the v2.1 balance check against its floor-mates)
     --device=touch|keyboard|mouse|gamepad,  --touchmouse   input to show / emulate
     --settings=swap_sticks:true,reduce_motion:true,aim:auto,magnet:false   any settings for the run (v2.7 QA)
+    --screen=big|classic  v2.8: the picture's path for this run, whatever Settings > Controls > Screen says
+                          (scripts/stage.gd, docs/streams/v28_screen.md); a [stage] line prints both scales.
+                          --stagekw=N forces Big's world scale (N = the UI's scale must give Classic's picture);
+                          --safe=l,t,r,b fakes a display safe area in screen pixels (notches);
+                          --rngseed=N seeds the global generator (the same seeds and sparks every run)
     --monkey              a person's random presses on top of the bot (Back, pause, map, moves, menus, focus lost),
                           with a watchdog: [monkey] PROBLEM lines (docs/streams/v27_qa.md)
 godot --headless --path . -- --autotest --qacheck                     # v2.7 QA: a probe per bug the QA pass fixed + Back /

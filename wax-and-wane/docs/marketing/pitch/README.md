@@ -40,7 +40,7 @@ on the cover and slides 8, 9, 10, 11 and 12).
    1. Make an account at itch.io (a parent's, if you are under 18).
    2. "Upload new project". Kind of project: **HTML**.
    3. Upload `WaxAndWane_2.8.0_web.zip`. Tick **"This file will be played in the browser"**.
-   4. Viewport size: **1152 x 648**. Tick **Fullscreen button**.
+   4. Viewport size: **1280 x 720** (the room fills the frame's height there). Tick **Fullscreen button**.
    5. Also upload `WaxAndWane_2.8.0_windows.zip` as a download (tick Windows).
    6. itch asks whether the project uses generative AI: answer **yes** (see `made_with.md`).
    7. Visibility: **Restricted** while you test it, then **Public**. Copy the page link: that is your `[ITCH LINK]`.

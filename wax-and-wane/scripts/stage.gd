@@ -65,7 +65,11 @@ func _ready() -> void:
 		elif a.begins_with("--safe="):
 			_safe = Array(a.get_slice("=", 1).split(",")).map(func(s): return int(s))
 	main = (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	# Main pauses with the tree, as it always did under the root; said outright because in Big its parents must
+	# not (a paused container would stop handing input to the pause menu)
+	main.process_mode = Node.PROCESS_MODE_PAUSABLE
 	_apply(wanted())
+	_fit_window()
 	get_tree().root.size_changed.connect(_fit)
 	RenderingServer.frame_pre_draw.connect(_sync)
 	Game.settings_changed.connect(_on_settings)
@@ -101,8 +105,12 @@ func _on_settings() -> void:
 		return
 	# on the title the change shows at once (the title lights itself again); in a run, when the night ends
 	var cur: Variant = main.get("current")
-	if cur != null and is_instance_valid(cur) and (cur as Node).name == "Title" and not bool(main.get("_busy")):
+	if cur == null or not is_instance_valid(cur):
+		return
+	if (cur as Node).name == "Title" and not bool(main.get("_busy")):
 		main.call_deferred("goto", "title")
+	elif (cur as Node).name == "Game" and (cur as Node).get("hud") != null:
+		(cur as Node).get("hud").show_hint(L.t("The screen changes when this night ends"), 4.0)
 
 
 ## main.goto calls this between two screens (the old one is gone, the new one not made yet).
@@ -164,6 +172,7 @@ func _make_boxes() -> void:
 	add_child(_world_box)
 	_ui_box = SubViewportContainer.new()
 	_ui_box.name = "UiBox"
+	_ui_box.process_mode = Node.PROCESS_MODE_ALWAYS   # it hands input on while the game is paused too
 	_ui_box.stretch = true
 	_ui_box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var mat := CanvasItemMaterial.new()
@@ -207,6 +216,26 @@ func _drop_boxes() -> void:
 	_world = null
 
 
+## A desktop window. The project's 1536x864 window is 384x216 x4, where Big can do no better than Classic (the
+## room needs 180 rows per step of scale: 864 holds four). On a screen with room for it Big opens 1600x900
+## instead: the room at x5, wall to wall in height, the menus at x4. A window the player sized, a fullscreen
+## window, a --resolution on the command line and the browser's canvas are left alone.
+func _fit_window() -> void:
+	if not big or DisplayServer.get_name() == "headless" or not OS.has_feature("pc") or OS.has_feature("web"):
+		return
+	if "--resolution" in OS.get_cmdline_args() or DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_WINDOWED:
+		return
+	if DisplayServer.window_get_size() != Vector2i(1536, 864):
+		return
+	var want := Vector2i(1600, 900)
+	var scr := DisplayServer.window_get_current_screen()
+	var usable := DisplayServer.screen_get_usable_rect(scr)
+	if usable.size.x < want.x or usable.size.y - 40 < want.y:
+		return
+	DisplayServer.window_set_size(want)
+	DisplayServer.window_set_position(usable.position + (usable.size - want) / 2)
+
+
 ## Big: the two scales and buffer sizes for the screen as it is now.
 func _fit() -> void:
 	var root := get_tree().root
@@ -221,8 +250,11 @@ func _fit() -> void:
 	kw = maxi(ku, mini(win.x / VIS.x, win.y / VIS.y))
 	if _force_kw > 0:
 		kw = _force_kw
-	var ui := Vector2i(ceili(win.x / float(ku)), ceili(win.y / float(ku)))
-	var view := Vector2i(ceili(win.x / float(kw)), ceili(win.y / float(kw)))
+	# a window smaller than the game (a headless test's dummy display) still gets the whole 384x216 picture, as Classic
+	var ui := Vector2i(maxi(BASE.x, ceili(win.x / float(ku))), maxi(BASE.y, ceili(win.y / float(ku))))
+	var view := ui
+	if kw != ku:
+		view = Vector2i(maxi(VIS.x, ceili(win.x / float(kw))), maxi(VIS.y, ceili(win.y / float(kw))))
 	_ui_box.stretch_shrink = ku
 	_ui_box.position = Vector2.ZERO
 	_ui_box.size = Vector2(ui * ku)        # the container sizes ui_vp to size / shrink: exactly `ui`

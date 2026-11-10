@@ -51,6 +51,7 @@ var settings := {
 	"aim": "assist",            # v2.6: assist / auto (touch: the right thumb just fires, world.auto_aim) / off
 	"reduce_motion": false,     # v2.6: no panel pops, screen wipes or menu slides (UI.calm)
 	"talk": "first",            # v2.7: Story scenes: first (a guardian's whole scene once per slot) / always / off (Talk)
+	"screen": "big",            # v2.8: big (the room as large as the screen allows) / classic (one scale for all), Stage
 }
 ## A fresh slot's records (each slot has its own copy in Game.records).
 const RECORDS := {
