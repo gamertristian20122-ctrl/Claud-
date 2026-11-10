@@ -73,6 +73,31 @@ func _ready() -> void:
 	get_tree().root.size_changed.connect(_fit)
 	RenderingServer.frame_pre_draw.connect(_sync)
 	Game.settings_changed.connect(_on_settings)
+	if "--stageswitch" in OS.get_cmdline_user_args():
+		_switch_test()
+
+
+## Test (`-- --stageswitch [--shots=/abs/dir]`): on the title, flip Settings > Screen twice, as a player would in
+## the Settings panel, and say what the picture's path is after each flip (a grab of each goes to --shots).
+func _switch_test() -> void:
+	var dir := ""
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--shots="):
+			dir = a.get_slice("=", 1)
+	await get_tree().create_timer(5.0).timeout
+	for i in 2:
+		var to := "classic" if big else "big"
+		Game.set_setting("screen", to)
+		await get_tree().create_timer(3.0).timeout
+		var cur: Variant = main.get("current")
+		var on_title: bool = cur != null and is_instance_valid(cur) and (cur as Node).name == "Title"
+		print("[stageswitch] asked for %s: now %s, Main under %s, title up: %s" % [to, "big" if big else "classic",
+			main.get_parent().name, on_title])
+		_report()
+		if dir != "":
+			await RenderingServer.frame_post_draw
+			grab(self).save_png("%s/switch_%d_%s.png" % [dir, i + 1, to])
+	get_tree().quit()
 
 
 func _exit_tree() -> void:
@@ -135,8 +160,8 @@ func _apply(want_big: bool) -> void:
 		kw = ku
 		add_child(main)
 	else:
+		_make_boxes()   # first: switching the root's scaling off fires size_changed, and _fit sizes the boxes
 		root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
-		_make_boxes()
 		_fit()
 		ui_vp.add_child(main)
 		Achievements.stage_changed()
@@ -145,11 +170,18 @@ func _apply(want_big: bool) -> void:
 	_report()
 
 
+var _said := ""
+
+
+## One line per picture: the mode, the screen, both buffers and their scales (again whenever one of them changes).
 func _report() -> void:
 	var root := get_tree().root
 	var view := Vector2(world_vp.size) if big and world_vp != null else ui_size()
-	print("[stage] %s: screen %dx%d, ui %dx%d x%d, world %dx%d x%d" % ["big" if big else "classic", root.size.x, root.size.y,
-		int(ui_size().x), int(ui_size().y), ku, int(view.x), int(view.y), kw])
+	var line := "[stage] %s: screen %dx%d, ui %dx%d x%d, world %dx%d x%d" % ["big" if big else "classic", root.size.x, root.size.y,
+		int(ui_size().x), int(ui_size().y), ku, int(view.x), int(view.y), kw]
+	if line != _said:
+		_said = line
+		print(line)
 
 
 func _make_boxes() -> void:
@@ -230,6 +262,8 @@ func _fit_window() -> void:
 	var want := Vector2i(1600, 900)
 	var scr := DisplayServer.window_get_current_screen()
 	var usable := DisplayServer.screen_get_usable_rect(scr)
+	if usable.size.x <= 0 or usable.size.y <= 0:   # no window manager to say (a bare X server): the whole screen
+		usable = Rect2i(DisplayServer.screen_get_position(scr), DisplayServer.screen_get_size(scr))
 	if usable.size.x < want.x or usable.size.y - 40 < want.y:
 		return
 	DisplayServer.window_set_size(want)
@@ -244,7 +278,7 @@ func _fit() -> void:
 		ku = maxi(1, mini(win.x / BASE.x, win.y / BASE.y))
 		kw = ku
 		return
-	if win.x <= 0 or win.y <= 0:
+	if win.x <= 0 or win.y <= 0 or _ui_box == null:
 		return
 	ku = maxi(1, mini(win.x / BASE.x, win.y / BASE.y))
 	kw = maxi(ku, mini(win.x / VIS.x, win.y / VIS.y))
@@ -263,6 +297,8 @@ func _fit() -> void:
 	_world_box.position = Vector2.ZERO
 	_world_box.size = Vector2(view * kw)
 	changed.emit()
+	if main != null and main.is_inside_tree():
+		_report()
 
 
 # ---------------------------------------------------------------- the world
