@@ -54,16 +54,19 @@ const WAX_ODDS := [1.0, 1.0, 0.75, 0.65, 0.65]
 const STEADY_FLOORS := [3, 4]
 const STEADY_BELOW := 40.0
 const STEADY_ADD := 15.0
-## A tall candle burns with a tall flame (v2.9): wax above TALL_KNEE of the night's candle melts faster, rising
-## to x(1 + TALL_HOT) at a full candle (a candle that holds more than the night goes on to TALL_OVER). A rich
-## run pays for its hoard, so a winning night still feels the clock; a thin candle burns as it always did
-## (C1 again: the bot won 16 nights in 18 with an hour of wax to spare). Spare wax is for spending.
+## A tall candle burns with a tall flame (v2.9): wax above TALL_KNEE of the night's candle (the wider notch on
+## the wax bar, which is also the Clock Tower's line) melts faster, rising in a straight line to x(1 + TALL_HOT)
+## at a full candle; a candle that holds more than the night goes on to TALL_OVER. A rich run pays for its
+## hoard, so a winning night still feels the clock, and a thin candle burns as it always did. Why: the bot's
+## wax ledger (_end_run) showed kills paying back about twice what the melt took, so the candle stood near
+## full all night (12:21 AM at the win, 5 nights in 6); with this, 1:09 AM and 4 in 6 on the same houses
+## (docs/streams/v29_clock.md). A level scales it (LEVELS "tall").
 const TALL_KNEE := 0.5
 const TALL_HOT := 1.0
-const TALL_POW := 1.0
 const TALL_OVER := 1.25
 ## Difficulty levels: every save slot has one (the Slots screen); Tonight's Candle always plays 2.
-## difficulty() is the one place a level reaches the run: the melt (_physics_process), enemy contact /
+## difficulty() is the one place a level reaches the run: the melt (_physics_process) and how much faster a tall
+## candle burns ("tall" x TALL_HOT, tall_k; 1 when the key is missing), enemy contact /
 ## shot damage (enemy_dmg_mult), creature and guardian health (Enemy.setup), the marked-foe chance
 ## (champ_chance) and the wax a drip gives (wax_bonus). Level 2 is the game as it was made (all x1).
 ## Names and lines are shown with the number (Records.level_text); Game.MAX_LEVEL must match.
@@ -73,9 +76,9 @@ const LEVELS := {
 	2: {"name": "Midnight", "line": "The night as it was made: a fair fight.",
 		"melt": 1.0, "dmg": 1.0, "hp": 1.0, "champ": 1.0, "wax": 1.0},
 	3: {"name": "Witching Hour", "line": "Harder: a faster melt, harder hits, more marked foes.",
-		"melt": 1.1, "dmg": 1.2, "hp": 1.15, "champ": 1.5, "wax": 1.0},
+		"melt": 1.1, "dmg": 1.2, "hp": 1.15, "champ": 1.5, "wax": 1.0, "tall": 1.5},
 	4: {"name": "Two O'Clock", "line": "Brutal: tough foes, cruel hits and thin wax.",
-		"melt": 1.15, "dmg": 1.35, "hp": 1.3, "champ": 2.0, "wax": 0.85},
+		"melt": 1.15, "dmg": 1.35, "hp": 1.3, "champ": 2.0, "wax": 0.85, "tall": 2.0},
 }
 const DEFAULT_LEVEL := 2
 
@@ -134,7 +137,6 @@ var hits_total := 0
 var ledger := {"melt": 0.0, "tall": 0.0, "hit": 0.0, "heal": 0.0, "over": 0.0, "floors": []}
 var tall_knee := TALL_KNEE
 var tall_hot := TALL_HOT
-var tall_pow := TALL_POW
 var freeze_t := 0.0
 var _intro_root: Control
 
@@ -213,11 +215,10 @@ func _ready() -> void:
 	# a longer night: every candle holds the extra half hours (it is lit at the same time on any night)
 	player.wax += night_minutes() - Game.END_MINUTES
 	player.wax_max += night_minutes() - Game.END_MINUTES
-	if OS.is_debug_build():   # balance runs only: --tallknee= --tallhot= --tallpow=
+	if OS.is_debug_build():   # balance runs only: --tallknee= --tallhot= (0 = the candle as it burned in 2.8)
 		for a in OS.get_cmdline_user_args():
 			if a.begins_with("--tallknee="): tall_knee = float(a.get_slice("=", 1))
 			elif a.begins_with("--tallhot="): tall_hot = float(a.get_slice("=", 1))
-			elif a.begins_with("--tallpow="): tall_pow = float(a.get_slice("=", 1))
 	actors.add_child(player)
 	var cd: Dictionary = Candles.def_of(candle_id)
 	if cd.has("start_relic"):
@@ -798,6 +799,8 @@ func _clear_room() -> void:
 			fx_text(player.global_position + Vector2(0, -44), "QUICK  +%d min" % int(quick), UI.EMBER)
 	Specials.on_clear(self)   # a finished Seance or a beaten mini-boss pays out
 	Diary.on_clear(self)      # the Kitchen's, Library's and Attic's page lies in one of their rooms
+	if floor_num >= 2 and tall_k() > 1.05 and Game.tip("tall_flame", 1):   # say it once, when it is true
+		hud.show_hint("Above the bar's middle mark, a tall candle melts faster", 5.0)
 
 
 func _room_reward(pos: Vector2) -> void:
@@ -1532,9 +1535,10 @@ func _end_run(won: bool, again := {}) -> void:
 	if OS.is_debug_build() and DisplayServer.get_name() == "headless":
 		var fl := ""
 		for f in ledger["floors"]:
-			fl += " %d:%.0f@%.0fs" % f
-		print("[wax] end=%.0f melt=%.0f (tall %.0f) hit=%.0f heal=%.0f over=%.0f | knee %.2f hot %.2f pow %.1f | floors%s" % [
-			player.wax, ledger["melt"], ledger["tall"], ledger["hit"], ledger["heal"], ledger["over"], tall_knee, tall_hot, tall_pow, fl])
+			fl += " %d:%.0fs=%.0f" % f   # floor: reached at, with this much wax
+		print("[wax] end=%.0f melt=%.0f (tall %.0f) hit=%.0f heal=%.0f over=%.0f | knee %.2f hot %.2f x%.1f | floors%s" % [
+			player.wax, ledger["melt"], ledger["tall"], ledger["hit"], ledger["heal"], ledger["over"], tall_knee, tall_hot,
+			float(difficulty().get("tall", 1.0)), fl])
 	Game.records["kills"] += kills
 	Game.records["best_floor"] = maxi(int(Game.records["best_floor"]), floor_num)
 	if won:
@@ -1611,7 +1615,7 @@ func tall_k() -> float:
 	var t := (player.wax / night_minutes() - tall_knee) / (1.0 - tall_knee)
 	if t <= 0.0:
 		return 1.0
-	return 1.0 + tall_hot * float(difficulty().get("tall", 1.0)) * pow(minf(t, TALL_OVER), tall_pow)
+	return 1.0 + tall_hot * float(difficulty().get("tall", 1.0)) * minf(t, TALL_OVER)
 
 
 # ---------------------------------------------------------------- loop
