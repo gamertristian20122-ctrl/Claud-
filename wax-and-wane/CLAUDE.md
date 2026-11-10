@@ -178,21 +178,28 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
     does not write). Checks on this state: checkrooms, qacheck, pacecheck, feelcheck, movescheck, primercheck
     pass, god nights win; `--talkcheck` fails ONE probe on purpose-left work: the opening's four scene paintings
     are gone.
-  - Still my drawings: Tallow and the candles (`hero`, `items/costume`, `tower/holder_silver*`: kept by the
-    owner's choice), `items/fx` (flames and sparks of the candle; its ghost, jug and ring could move to packs),
-    and all of **`assets/art/ui`** (80 files).
-  - To do, in this order: (a) `ui`: `UI._tex_box` is the one place the kit's boxes are made: return a
-    StyleBoxFlat (fill + 1 px border in the palette) when the texture is gone, then replace or drop the rest
-    (focus ring, switch icons -> text, slider knob/track, HUD clock plate and `hud_digits` -> Kenney font, wax bar
-    frames -> rects, touch sticks, `ico_*` -> pack icons, `title_logo` -> the title in the Kenney font, app icon
-    from Tallow only); (b) the opening and the endings draw their moving parts over scene paintings that are gone
-    (`opening.gd` `_draw_house/_dial/_kitchen/_cellar`, `ending.gd`): give them one found backdrop or plain
-    cards, then fix the talkcheck probe; (c) primer key/mouse/pad glyphs from Ninja Adventure `Ui/Input` (now
-    blank); (d) sounds: pack files as they are, pack jingles for the two synthesized ones (`tools/make_audio.py`,
-    `import_audio.py`); (e) the diary pages out (`Diary`, the Diary tab, page pickups, the three page endings,
-    `--diarycheck`); (f) store art and the app icon; delete the `tools/art_*.py` no longer used; credits in
-    README, the in-game Credits and `assets/licenses` (the tool's `PACKS` table has every maker and URL); the
-    store AI wording (then: the hero and the in-game text); all checks; final builds.
+  - (7) the menus and the HUD: the drawn kit is gone. `UI._tex_box` returns a flat box (`UI.FLAT`: fill +
+    1 px border) when a picture is not there; switches say ON / OFF; the HUD clock is the game's font on a flat
+    plate, the wax bar its plain-bar fallback, the touch sticks and the pause key plain shapes (`UIShapes`, asked
+    by `Art.tex` for a missing "ui/" picture), coin and bomb icons from packs, the title's name in the font.
+    A second preview APK (2.10.0, **versionCode 18**) went to the owner. On this state: god night wins, qacheck
+    and primercheck pass, no script errors.
+  - Still my drawings: Tallow and the candles (`hero`, `items/costume`, `tower/holder_silver*`, the three
+    `ui/app_icon_*` that show him: kept by the owner's choice) and `items/fx` (the candle's flames and sparks;
+    its ghost, jug and ring could move to packs).
+  - To do, in this order: (a) the opening and the endings draw their moving parts over scene paintings that are
+    gone (`opening.gd` `_draw_house/_dial/_kitchen/_cellar`, `ending.gd`): give them one found backdrop or plain
+    cards, then the one failing `--talkcheck` probe passes again; (b) the lesson's key / mouse / pad glyphs and
+    its little clock (`primer_glyphs.gd`, `primer_reel.gd`) are blank: Ninja Adventure `Ui/Input` has them by
+    name; (c) sounds: 74 files in `assets/audio/sfx` are layered / processed / synthesized by
+    `tools/make_audio.py`; use single pack files as they are (Ninja Adventure `Audio/Sounds`, Kenney packs; a
+    volume table in code, not baked) and pack jingles for the two synthesized ones. Nobody can listen here: pick
+    by file name and tell the owner to listen; (d) the diary pages out (`Diary`, the Diary tab, page pickups,
+    the three page endings, `--diarycheck`); (e) store art (`tools/store_art.py` stages Tallow with the Wax
+    Mother, who is now a pack sprite) and the store screenshots; delete the `tools/art_*.py` that are no longer
+    used (keep what draws the candles); credits in README, the in-game Credits and `assets/licenses` (the
+    tool's `PACKS` table has every maker and URL); the store AI wording (then: the hero and the in-game text);
+    all checks; final builds (APK, AAB, desktop, web).
   - With my talk lines and names kept, Steam still needs one sentence about the text; the owner knows.
 - Not done from the 2.8 plan: **Flag a bug** (a pause-menu button that copies a report code; not built).
 - The owner asked for game work only, lean: no pitch, research or reviewer agents unless asked; one thing at a
