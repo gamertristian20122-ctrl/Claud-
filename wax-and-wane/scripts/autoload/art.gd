@@ -48,7 +48,9 @@ func tex(path: String) -> Texture2D:
 	if ResourceLoader.exists(full):
 		t = load(full)
 	else:
-		t = _placeholder(path)
+		t = UIShapes.make(path) if path.begins_with("ui/") else null   # a few HUD glyphs are plain shapes now
+		if t == null:
+			t = _placeholder(path)
 	_tex[path] = t
 	return t
 

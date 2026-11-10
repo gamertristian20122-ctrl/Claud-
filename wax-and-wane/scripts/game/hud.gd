@@ -679,8 +679,12 @@ static func _digits_w(t: String) -> float:
 
 
 func _draw_clock() -> void:
-	var sb: StyleBoxTexture = _plate_box()
+	var sb: StyleBox = _plate_box()
 	clock_face.draw_style_box(sb, Rect2(Vector2.ZERO, clock_face.size))
+	if not Art.has("ui/hud_digits"):   # v2.10: no drawn digits: the clock is set in the game's font
+		clock_face.draw_string(Art.font, Vector2(4, 13), _clock_digits, HORIZONTAL_ALIGNMENT_LEFT, -1, 16,
+			UI.RED if _clock_hot else UI.CREAM)
+		return
 	var strip := Art.tex("ui/hud_digits_hot" if _clock_hot else "ui/hud_digits")
 	var x := 4.0
 	for ch in _clock_digits:
@@ -692,15 +696,18 @@ func _draw_clock() -> void:
 		x += COLON_ADV if ch == ":" else DIGIT_ADV
 
 
-static var _plate_sb: StyleBoxTexture
+static var _plate_sb: StyleBox
 
 
-static func _plate_box() -> StyleBoxTexture:
+static func _plate_box() -> StyleBox:
+	if _plate_sb == null and not Art.has("ui/hud_clockplate"):
+		_plate_sb = UI._flat_box("kit_plate", [0, 0, 0, 0], true)   # v2.10: a flat plate
 	if _plate_sb == null:
-		_plate_sb = StyleBoxTexture.new()
-		_plate_sb.texture = Art.tex("ui/hud_clockplate")
+		var tb := StyleBoxTexture.new()
+		tb.texture = Art.tex("ui/hud_clockplate")
 		for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-			_plate_sb.set_texture_margin(side, 4)
+			tb.set_texture_margin(side, 4)
+		_plate_sb = tb
 	return _plate_sb
 
 
@@ -884,18 +891,21 @@ func _draw_streak() -> void:
 	streak_box.draw_rect(Rect2(10, 14, w, 1), UI.EMBER)
 
 
-static var _boss_sb: StyleBoxTexture
+static var _boss_sb: StyleBox
 
 
 func _draw_boss_bar() -> void:
 	var w := boss_bar.size.x
+	if _boss_sb == null and not Art.has("ui/boss_frame"):
+		_boss_sb = UI._flat_box("kit_inset", [0, 0, 0, 0], true)   # v2.10: a flat frame
 	if _boss_sb == null:
-		_boss_sb = StyleBoxTexture.new()
-		_boss_sb.texture = Art.tex("ui/boss_frame")
-		_boss_sb.texture_margin_left = 5
-		_boss_sb.texture_margin_right = 5
-		_boss_sb.texture_margin_top = 4
-		_boss_sb.texture_margin_bottom = 4
+		var tb := StyleBoxTexture.new()
+		tb.texture = Art.tex("ui/boss_frame")
+		tb.texture_margin_left = 5
+		tb.texture_margin_right = 5
+		tb.texture_margin_top = 4
+		tb.texture_margin_bottom = 4
+		_boss_sb = tb
 	boss_bar.draw_style_box(_boss_sb, Rect2(0, 0, w, 10))
 	var inner := w - 10.0
 	var fw := roundf(inner * boss_frac)

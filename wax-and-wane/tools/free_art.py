@@ -42,6 +42,7 @@ PACKS = {
 }
 
 NA_MON = "ninja-adventure/2D/top-down-rpg/Actor/Monster/%s/%s.png"
+NA_ITEM = "ninja-adventure/2D/top-down-rpg/Items/%s.png"
 
 
 def na(name, fname="SpriteSheet"):
@@ -244,11 +245,13 @@ ICONS.update({
     "items/fam_matchling": pair(NA_MON % ("Spirit2", "SpriteSheet")),
     "items/fam_bunny": pair(NA_ANIMAL % "Hamster"),
     "pickups/pedestal": "0x72/crate",
+    "ui/hud_coin": "0x72/coin_anim_f0", "ui/icon_coin": "0x72/coin_anim_f0",
+    "ui/hud_bomb": NA_ITEM % "Projectile/Bomb", "ui/icon_bomb": NA_ITEM % "Projectile/Bomb",
+    "ui/btn_bomb": NA_ITEM % "Projectile/Bomb",
 })
 
 
 FX = "ninja-adventure/2D/top-down-rpg/FX/%s.png"
-NA_ITEM = "ninja-adventure/2D/top-down-rpg/Items/%s.png"
 
 
 def fx(name, w, h, pick=None):
@@ -445,7 +448,10 @@ EXCLUSIVE = ["rooms", "decor", "specials", "areas", "chalk", "primer", "talk", "
 GONE = ["fx/*_lg_f*.png", "fx/gib_*.png", "fx/splat_*.png", "fx/scorch.png", "fx/light/soft_light.png",
         "tower/end_*.png", "tower/floor_*.png", "tower/window_*.png", "tower/light/*.png",
         # the drawn menu kit: UI._tex_box makes flat boxes in its place
-        "ui/kit_*.png", "ui/button_9*.png", "ui/panel_9.png", "ui/focus_*.png", "ui/hud_chip.png", "ui/ui_preview.png"]
+        "ui/kit_*.png", "ui/button_9*.png", "ui/panel_9.png", "ui/focus_*.png", "ui/hud_chip.png", "ui/ui_preview.png",
+        # the drawn HUD bits: plain shapes, the game's font and flat plates stand in (UIShapes, hud.gd)
+        "ui/bar_*.png", "ui/boss_frame.png", "ui/btn_pause.png", "ui/cursor_*.png", "ui/hud_clockplate.png",
+        "ui/hud_digits*.png", "ui/ico_*.png", "ui/icon_medal*.png", "ui/stick_*.png", "ui/title_*.png"]
 
 # pictures a script drew that are simply taken away: the game then shows 0x72's own frames for that creature
 # (Enemy.frames_for falls back to assets/0x72/frames; Enemy.DEFS "sprite" names the 0x72 sprite where it differs)

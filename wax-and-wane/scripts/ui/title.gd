@@ -113,9 +113,10 @@ func _ready() -> void:
 	logo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(logo)
 	if logo.texture == null:
-		var t := UI.label("WAX & WANE", 16, UI.CREAM, HORIZONTAL_ALIGNMENT_CENTER)
-		t.size = Vector2(210, 20)
-		t.position = Vector2(0, 14)
+		# v2.10: the drawn logo is gone: the name is set in the game's font, twice the size, in candle gold
+		var t := UI.outlined(UI.label("WAX & WANE", 32, UI.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
+		t.size = Vector2(210, 36)
+		t.position = Vector2(0, 4)
 		logo.add_child(t)
 	tagline = UI.label(L.t("Burn through the house before the clock strikes two."), 8, UI.DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	root.add_child(tagline)

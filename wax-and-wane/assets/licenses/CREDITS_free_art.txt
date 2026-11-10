@@ -5553,6 +5553,8 @@ assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
 assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
 assets/art/tower/room_keeper.png  <-  wall_top_mid  (whole)
 assets/art/tower/room_keeper.png  <-  wall_top_right  (whole)
+assets/art/ui/hud_coin.png  <-  coin_anim_f0  (whole)
+assets/art/ui/icon_coin.png  <-  coin_anim_f0  (whole)
 
 == 16x16 RPG Item Pack by Alex's Assets (CC0) - https://alexs-assets.itch.io/16x16-rpg-item-pack
 assets/art/items/blowlamp.png  <-  2D/top-down-rpg/Item__23.png  (whole)
@@ -6402,5 +6404,8 @@ assets/art/talk/martha_smile.png  <-  2D/top-down-rpg/Actor/Character/OldWoman/F
 assets/art/talk/martha_stand.png  <-  2D/top-down-rpg/Actor/Character/OldWoman/SpriteSheet.png  [0, 0, 16, 16]
 assets/art/tower/gear_f0.png  <-  2D/top-down-rpg/FX/Projectile/BigShuriken.png  [0, 0, 23, 23]
 assets/art/tower/gear_f1.png  <-  2D/top-down-rpg/FX/Projectile/BigShuriken.png  [23, 0, 23, 23]
+assets/art/ui/btn_bomb.png  <-  2D/top-down-rpg/Items/Projectile/Bomb.png  (whole)
+assets/art/ui/hud_bomb.png  <-  2D/top-down-rpg/Items/Projectile/Bomb.png  (whole)
+assets/art/ui/icon_bomb.png  <-  2D/top-down-rpg/Items/Projectile/Bomb.png  (whole)
 
 == Shown as 0x72's own frames again (the redrawn copies were taken out): monsters/tiny_slug, monsters/tiny_zombie, monsters/goblin, monsters/muddy, monsters/snuffer, monsters/waxwork, areas/attic/mannequin, areas/attic/trunk
