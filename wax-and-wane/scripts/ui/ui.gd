@@ -39,7 +39,42 @@ static func install() -> void:
 	ThemeDB.get_default_theme().merge_with(theme())
 
 
-static func _tex_box(name: String, m: Array, c: Array, center := true) -> StyleBoxTexture:
+## v2.10: the drawn wood-and-brass kit is gone (the art moved to found, human-made packs, and no pack has this
+## kit). A box whose picture is not there is flat colour with a 1 px border, in the same palette.
+const FLAT := {
+	"kit_btn": [Color("#3a2a2e"), Color("#8f4029")], "kit_btn_hover": [Color("#4a3438"), Color("#facb3e")],
+	"kit_btn_pressed": [Color("#2a1c20"), Color("#ee8e2e")], "kit_btn_disabled": [Color("#2a2024"), Color("#775c55")],
+	"kit_btn_primary": [Color("#ee8e2e"), Color("#facb3e")], "kit_btn_primary_hover": [Color("#f6a84a"), Color("#fdf7ed")],
+	"kit_btn_primary_pressed": [Color("#c56025"), Color("#facb3e")],
+	"kit_btn_danger": [Color("#9f294e"), Color("#da4e38")], "kit_btn_danger_hover": [Color("#b8325c"), Color("#ffcc68")],
+	"kit_btn_danger_pressed": [Color("#7a1f3c"), Color("#da4e38")],
+	"kit_tab": [Color("#2a1c20"), Color("#775c55")], "kit_tab_on": [Color("#3a2a2e"), Color("#facb3e")],
+	"kit_slot": [Color("#21141b"), Color("#775c55")], "kit_panel": [Color("#2a1c20"), Color("#8f4029")],
+	"kit_card": [Color("#33242a"), Color("#775c55")], "kit_inset": [Color("#1a1014"), Color("#483b3a")],
+	"kit_plate": [Color("#3a2a2e"), Color("#ee8e2e")], "kit_strip": [Color("#2a1c20"), Color("#8f4029")],
+	"hud_chip": [Color(0.13, 0.08, 0.1, 0.85), Color("#483b3a")], "kit_focus": [Color(0, 0, 0, 0), Color("#facb3e")],
+	"kit_track": [Color("#21141b"), Color("#775c55")], "kit_track_fill": [Color("#ee8e2e"), Color("#facb3e")],
+}
+
+
+static func _flat_box(name: String, c: Array, center: bool) -> StyleBoxFlat:
+	var spec: Array = FLAT.get(name, [Color("#2a1c20"), Color("#8f4029")])
+	var f := StyleBoxFlat.new()
+	f.bg_color = spec[0]
+	f.draw_center = center
+	f.border_color = spec[1]
+	f.set_border_width_all(2 if name == "kit_panel" else 1)
+	f.anti_aliasing = false
+	f.content_margin_left = c[0]
+	f.content_margin_top = c[1]
+	f.content_margin_right = c[2]
+	f.content_margin_bottom = c[3]
+	return f
+
+
+static func _tex_box(name: String, m: Array, c: Array, center := true) -> StyleBox:
+	if not Art.has("ui/" + name):
+		return _flat_box(name, c, center)
 	var sb := StyleBoxTexture.new()
 	sb.texture = Art.tex("ui/" + name)
 	sb.texture_margin_left = m[0]
@@ -235,8 +270,11 @@ static func _drips(p: Control) -> void:
 static func focus_box() -> StyleBox:
 	if _focus_box:
 		return _focus_box
-	var sb := _tex_box("kit_focus", [4, 4, 4, 4], [0, 0, 0, 0], false)
-	sb.set_expand_margin_all(2)
+	var sb: StyleBox = _tex_box("kit_focus", [4, 4, 4, 4], [0, 0, 0, 0], false)
+	if sb is StyleBoxTexture:
+		(sb as StyleBoxTexture).set_expand_margin_all(2)
+	elif sb is StyleBoxFlat:
+		(sb as StyleBoxFlat).set_expand_margin_all(2)
 	_focus_box = sb
 	return sb
 
@@ -316,7 +354,10 @@ static func toggle(text: String, value: bool, cb: Callable, min_w := 150) -> But
 	b.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var state := [value]
 	var refresh := func():
-		b.icon = Art.tex("ui/kit_switch_on" if state[0] else "ui/kit_switch_off")
+		if Art.has("ui/kit_switch_on"):
+			b.icon = Art.tex("ui/kit_switch_on" if state[0] else "ui/kit_switch_off")
+		else:   # v2.10: no drawn switch: the state is a word
+			b.text = "%s: %s" % [text, L.t("ON") if state[0] else L.t("OFF")]
 		b.set_meta("on", state[0])
 	refresh.call()
 	b.pressed.connect(func():
@@ -442,12 +483,16 @@ class KitSlider extends Button:
 		for i in range(1, steps):
 			var nx := roundf(x0 + (x1 - x0) * float(i) / steps)
 			draw_rect(Rect2(nx, ty + 8, 1, 2), UI.GOLD if nx <= kx else UI.MUTED)
-		var knob := Art.tex("ui/kit_knob")
-		draw_texture(knob, Vector2(kx - floorf(knob.get_width() / 2.0), ty - 3))
+		if Art.has("ui/kit_knob"):
+			var knob := Art.tex("ui/kit_knob")
+			draw_texture(knob, Vector2(kx - floorf(knob.get_width() / 2.0), ty - 3))
+		else:   # v2.10: a plain gold handle
+			draw_rect(Rect2(kx - 2, ty - 2, 5, 11), UI.INK)
+			draw_rect(Rect2(kx - 1, ty - 1, 3, 9), UI.GOLD)
 		if has_focus(true):
 			draw_style_box(UI.focus_box(), Rect2(Vector2.ZERO, size))
 
-	static func _box(name: String) -> StyleBoxTexture:
+	static func _box(name: String) -> StyleBox:
 		return UI._tex_box(name, [4, 3, 4, 3], [0, 0, 0, 0])
 
 

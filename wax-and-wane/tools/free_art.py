@@ -443,7 +443,9 @@ EXCLUSIVE = ["rooms", "decor", "specials", "areas", "chalk", "primer", "talk", "
 
 # single pictures a script drew that the game now does without (globs under assets/art)
 GONE = ["fx/*_lg_f*.png", "fx/gib_*.png", "fx/splat_*.png", "fx/scorch.png", "fx/light/soft_light.png",
-        "tower/end_*.png", "tower/floor_*.png", "tower/window_*.png", "tower/light/*.png"]
+        "tower/end_*.png", "tower/floor_*.png", "tower/window_*.png", "tower/light/*.png",
+        # the drawn menu kit: UI._tex_box makes flat boxes in its place
+        "ui/kit_*.png", "ui/button_9*.png", "ui/panel_9.png", "ui/focus_*.png", "ui/hud_chip.png", "ui/ui_preview.png"]
 
 # pictures a script drew that are simply taken away: the game then shows 0x72's own frames for that creature
 # (Enemy.frames_for falls back to assets/0x72/frames; Enemy.DEFS "sprite" names the 0x72 sprite where it differs)
