@@ -143,6 +143,14 @@ var move_cd := 0.0         # v2.3: seconds until the special move is back (Moves
 ## moment the flame is ready; turning back from a run uses TURN_ACCEL so a dodge reads at once.
 const FIRE_BUFFER := 0.2
 const TURN_ACCEL := 2600.0
+## v2.8 (pace): walking through rooms with nothing in them was 44% of a run (two bot runs on 2.7.0). In a room
+## that is clear and quiet Tallow walks HURRY times as fast; it builds over HURRY_RAMP seconds and is gone
+## HURRY_DROP seconds after a room wakes. His fighting pace (and every dodge) is unchanged.
+const HURRY := 1.6
+const HURRY_RAMP := 0.45
+const HURRY_DROP := 0.12
+const HURRY_STRIDE := 1.3   # the hops speed up a little less than the feet
+var hurry := 0.0            # 0..1: how much of the hurry is on
 var _fire_buf := 0.0
 var _buf_dir := Vector2.RIGHT
 var invuln := 0.0
@@ -374,7 +382,10 @@ func _physics_process(dt: float) -> void:
 				_buf_dir = aim_input.normalized()
 		return
 	move_cd = maxf(0.0, move_cd - dt)   # the move recharges only in play (not held aloft, carded, melting or paused)
-	var target := move_input.limit_length(1.0) * speed * Moves.speed_k(self)
+	# v2.8 (pace): in a room that is clear and quiet Tallow hurries; the moment a room wakes he is back to his fighting pace
+	var quiet: bool = world != null and world.room != null and bool(world.hurry_ok())
+	hurry = move_toward(hurry, 1.0 if quiet else 0.0, dt / (HURRY_RAMP if quiet else HURRY_DROP))
+	var target := move_input.limit_length(1.0) * speed * Moves.speed_k(self) * lerpf(1.0, HURRY, hurry)
 	var accel := 900.0 if target.length() > 1 else 1100.0
 	if target.length() > 1 and vel.length() > 1:
 		var turn := vel.dot(target) / (vel.length() * target.length())   # cosine of the swing
@@ -385,7 +396,7 @@ func _physics_process(dt: float) -> void:
 	vel = vel.move_toward(target, accel * dt)
 	_move(vel * dt)
 	if vel.length() > 8:
-		_bob += dt * 14.0
+		_bob += dt * 14.0 * lerpf(1.0, HURRY_STRIDE, hurry)
 		if aim_input.length() < 0.2:
 			facing = vel.normalized()
 		if fmod(_bob, PI) < 14.0 * dt:

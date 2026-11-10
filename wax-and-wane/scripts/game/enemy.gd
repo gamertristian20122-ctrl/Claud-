@@ -209,6 +209,11 @@ var max_hp := 1.0
 var speed := 20.0
 var _depth := 1.0         # the floor's depth on the 4-floor scale when this one was set up (world.depth)
 var _touch_floor := 5.0   # contact damage there (TOUCH by depth), for creatures without their own "touch"
+## v2.8 (floor 1): a runt, one of a litter (world.LITTER): one ember puts it out and its touch is a nip, whatever the
+## slot's level. Floor 1 was 4 fights of 1-3 lodgers (about 10 a floor); litters make it about 25 with no more danger.
+const RUNT_HP := 1.0
+const RUNT_TOUCH := 2.0
+var runt := false
 var radius := 5.0
 var half_h := 6.0
 ## Marked foes: tougher, glowing, and they pay out (set by the world before _ready).
@@ -328,6 +333,8 @@ func setup(w: Node, k: String, pos: Vector2, floor_num: int) -> void:
 		max_hp = float(def["hp"]) * (Areas.at_depth(FLOOR_HP, _depth) / Areas.at_depth(FLOOR_HP, Areas.home_depth(k)))
 	_touch_floor = Areas.at_depth(TOUCH, minf(_depth, 4.0))
 	max_hp *= float(w.difficulty()["hp"]) if w and w.has_method("difficulty") else 1.0   # the slot's level (world.LEVELS)
+	if runt:
+		max_hp = RUNT_HP
 	hp = max_hp
 	speed = float(def["speed"]) * (1.0 + 0.05 * f)
 	radius = float(def["r"])
@@ -519,7 +526,7 @@ func _physics_process(dt: float) -> void:
 	elif absf(seen.x) > 2 and state != "charge" and state != "still":
 		spr.flip_h = seen.x < 0
 	# contact damage
-	var touch: float = def.get("touch", 8.0 if boss else _touch_floor)
+	var touch: float = RUNT_TOUCH if runt else float(def.get("touch", 8.0 if boss else _touch_floor))
 	if touch > 0.0 and not buried and not p.dead and world.freeze_t <= 0.0 and (flying or _jump_h < 4.0) and dist < radius + 5.0:
 		if champ == "chilled" and not p.dead:
 			if p.chill_t <= 0.0:

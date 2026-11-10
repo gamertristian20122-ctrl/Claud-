@@ -478,6 +478,9 @@ func _build_room(c: Vector2i) -> Room:
 func _on_enter_room() -> void:
 	var d: Dictionary = room.data
 	Audio.enter_room(d["type"], d["cleared"])
+	# v2.8: walking back into a room already cleared: say once that the map goes there in a tap
+	if bool(d.get("visited", false)) and bool(d.get("cleared", false)) and warps == 0 and main.autotest == null and Game.tip("hop"):
+		hud.show_hint(hop_hint(), 4.0)
 	d["visited"] = true
 	d["seen"] = true
 	for dd in FloorGen.DIRS:
@@ -534,6 +537,17 @@ func _on_enter_room() -> void:
 		tw.tween_callback(_spawn_room_enemies)
 
 
+## v2.8 (floor 1): every run opened with 4 fights of 1-3 slow lodgers, about 10 creatures in the first two
+## minutes (six bot runs on 2.7.0). In the Cellar a small lodger now arrives as a litter of LITTER runts
+## (Enemy.runt: one ember each, a nip for a touch, half the drops) and a bigger one brings two along: more to
+## shoot and a Kindling streak from room one, with no more danger. The same rule for every slot and seed, so
+## seeded houses stay the same for everyone.
+const RUNTS := ["tiny_zombie", "goblin", "tiny_slug"]
+const LITTER := 3
+const LITTER_AT := [Vector2(0, -7), Vector2(-9, 6), Vector2(9, 6)]
+## A bigger Cellar lodger keeps two runts of its own kind at its heels (a Rose Melt splits instead; a rat runs alone).
+const FOLLOWERS := {"slug": "tiny_slug", "zombie": "tiny_zombie", "muddy": "tiny_slug", "skelet": "goblin"}
+
 ## Marked foes per floor (by depth; [4] = the Clock Tower), times the level's.
 const CHAMP_ODDS := [0.03, 0.06, 0.09, 0.12, 0.14]
 
@@ -565,7 +579,15 @@ func _spawn_room_enemies() -> void:
 			champ = ["ember", "gilded", "sooty", "chilled"][rng.randi() % 4]
 			if Game.tip("marked"):
 				hud.show_hint("A marked foe glows: tougher, but it pays out", 2.5)
-		spawn_enemy(list[rng.randi() % list.size()], pos, champ)
+		var kind: String = list[rng.randi() % list.size()]
+		if champ == "" and floor_num == 1 and kind in RUNTS:   # v2.8: the Cellar's small lodgers come as a litter
+			for i in LITTER:
+				spawn_enemy(kind, pos + LITTER_AT[i], "", true)
+		else:
+			spawn_enemy(kind, pos, champ)
+			if champ == "" and floor_num == 1 and FOLLOWERS.has(kind):   # ... and its bigger ones bring two along
+				for i in [1, 2]:
+					spawn_enemy(FOLLOWERS[kind], pos + LITTER_AT[i] * 1.6, "", true)
 	# deeper rooms get one extra guest
 	if depth >= 4 and rng.randf() < 0.5:
 		var list2: Array = pool["e"]
@@ -622,6 +644,85 @@ func go_through(dir: Vector2i) -> void:
 		transitioning = false
 		player.frozen = false
 		_on_enter_room())
+
+
+## v2.8 (pace): walking back through rooms already cleared was a fifth of a run (FeelProbe, two bot runs on
+## 2.7.0), so the full map sends Tallow straight to any room he has cleared: he blows himself out and is relit
+## by that room's candles. Only from a room whose doors stand open with nothing awake in it, only to a room
+## that is walked and cleared. The seeded RNG is not touched (the same house whether or not you hop).
+const WARP_OUT := 0.14
+const WARP_IN := 0.22
+var warps := 0   # this run
+
+
+## The one-time line that teaches the hop, in the words of the device in hand.
+func hop_hint() -> String:
+	match Controls.device:
+		Controls.TOUCH: return L.t("Tap the little map: any room you have cleared is one tap away")
+		Controls.PAD: return L.t("BACK opens the map: it takes you to any room you have cleared")
+		_: return L.t("M opens the map: it takes you to any room you have cleared")
+
+
+## This room is clear and quiet: Tallow hurries here (Player.HURRY) and the map's rooms are lit.
+func hurry_ok() -> bool:
+	return room.is_open and room.data.get("cleared", false) and not transitioning and count_enemies() == 0
+
+
+func can_warp(cell: Vector2i) -> bool:
+	if finished or player.dead or Juice.holding(self) or is_instance_valid(_intro_root):
+		return false
+	if not layout["cells"].has(cell) or cell == cur_cell or not hurry_ok():
+		return false
+	var d: Dictionary = layout["cells"][cell]
+	if d["type"] == "secret" and not d.get("revealed", false):
+		return false
+	return bool(d.get("visited", false)) and bool(d.get("cleared", false))
+
+
+func warp_to(cell: Vector2i) -> bool:
+	if not can_warp(cell):
+		return false
+	transitioning = true
+	player.frozen = true
+	warps += 1
+	_clear_shots()
+	Audio.play("snuff_out", -9.0, 0.0, 1.5)
+	var tw := create_tween()
+	tw.tween_property(player, "scale", Vector2(0.6, 0.2), WARP_OUT - 0.02)
+	tw.parallel().tween_property(_fade, "color:a", 1.0, WARP_OUT)
+	tw.tween_callback(func():
+		cur_cell = cell
+		room.dispose()
+		room = _build_room(cell)
+		player.scale = Vector2.ONE
+		player.position = _warp_spot(room)
+		player.vel = Vector2.ZERO
+		cam.position = _cam_target(room)
+		transitioning = false
+		player.frozen = false
+		_on_enter_room()
+		Audio.play("match_strike", -6.0)
+		Juice.of(self).sparks(player.global_position + Vector2(0, -14), Vector2.UP, 6))
+	tw.tween_property(_fade, "color:a", 0.0, WARP_IN)
+	return true
+
+
+## The free floor cell nearest the middle of `r` (a hop never lands Tallow in the furniture).
+func _warp_spot(r: Room) -> Vector2:
+	var mid := Vector2i(Room.COLS / 2, Room.ROWS / 2)
+	var best := r.center()
+	var best_d := 1e9
+	for y in range(1, Room.ROWS - 1):
+		for x in range(1, Room.COLS - 1):
+			var c := Vector2i(x, y)
+			if not r.char_at(c) in [".", "e", "h", "f", "T"]:
+				continue
+			var p := r.cell_center(c) + Vector2(0, 4)
+			var dd := float((c - mid).length_squared())
+			if dd < best_d and not r.blocked(p, 7.0):
+				best_d = dd
+				best = p
+	return best
 
 
 func descend() -> void:
@@ -851,13 +952,14 @@ func roll_obstacle_drop(pos: Vector2) -> void:
 
 # ---------------------------------------------------------------- enemies
 
-func spawn_enemy(kind: String, pos: Vector2, champ := "") -> Enemy:
+func spawn_enemy(kind: String, pos: Vector2, champ := "", runt := false) -> Enemy:
 	if room == null:
 		return null
 	var r: float = Enemy.DEFS[kind]["r"]
 	if not Enemy.DEFS[kind].get("fly", false) and room.blocked(pos, r):
 		pos = free_spot_near(pos, r)
 	var e := Enemy.new()
+	e.runt = runt   # v2.8: one of a litter (before setup: it reads its health)
 	e.setup(self, kind, pos - room.position, floor_num)
 	e.champ = champ
 	room.objects.add_child(e)
@@ -909,6 +1011,8 @@ func _champ_drop(e: Enemy) -> void:
 
 func _plain_drop(e: Enemy) -> void:
 	var r := rng.randf()
+	if e.runt and rng.randf() < 0.5:   # a litter of three pays about what one lodger and a half did
+		return
 	var luck := player.luck
 	var need := 0.08 if player.wax < 25.0 else 0.0   # a nearly spent candle still finds drips
 	if r < (0.04 + luck * 0.04) * floor_k(WAX_ODDS) + need:
