@@ -166,7 +166,7 @@ Open it in a private browser tab first: it must load without logging in. The sam
 
 1. Make a **personal** Play Console account: $25 one-time fee, government ID and a phone number for identity checks.
 2. Create the app: name, English (US), **Game**, **Paid** (section 2).
-3. Get the Play-ready build: `build/WaxAndWane_v2.0.0.aab` (made by `./tools/build_aab.sh`, see section 6):
+3. Get the Play-ready build: `build/WaxAndWane_v2.9.0.aab` (made by `./tools/build_aab.sh`, see section 6):
    - an **.aab** file (Google doesn't accept new apps as .apk), made with Godot's Gradle build;
    - **target API 36 (Android 16)**, required for new apps since Aug 31, 2026 (the script installs platform 36 and checks the bundle);
    - under Play App Signing, choose to **use your existing key** (the same one the itch APK uses), so a phone can update from either store.
@@ -183,7 +183,7 @@ even on the closed track: see the three ways to keep that cheap in section 2.
 
 ## 6. Uploading the build
 
-**Which file:** `build/WaxAndWane_v2.0.0.aab`.
+**Which file:** `build/WaxAndWane_v2.9.0.aab`.
 Only the **.aab** goes to Google Play. The .apk is for itch.io and your own phone; Play won't take it.
 The upload is a normal browser upload (about 40 MB): Play Console works in Chrome on a phone or on the ROG Ally.
 

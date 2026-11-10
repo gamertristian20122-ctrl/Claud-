@@ -71,9 +71,9 @@ itch.io can go live the same day you upload, so it's where the first sales come 
 
 | File | Size (about) | Tick |
 |---|---|---|
-| `build/WaxAndWane_2.0.0_windows.zip` | 48 MB | Windows |
-| `build/WaxAndWane_2.0.0_linux.zip` | 38 MB | Linux |
-| `build/WaxAndWane_v2.0.0.apk` | 38 MB | Android |
+| `build/WaxAndWane_2.9.0_windows.zip` | 48 MB | Windows |
+| `build/WaxAndWane_2.9.0_linux.zip` | 38 MB | Linux |
+| `build/WaxAndWane_v2.9.0.apk` | 38 MB | Android |
 | `build/WaxAndWane_presskit_2.0.0.zip` (optional) | a few MB | none; set it as "free" (press kit, not the game) |
 
 Give the uploads these display names: "Windows (64-bit)", "Linux (64-bit)", "Android phone (APK)". If you later
