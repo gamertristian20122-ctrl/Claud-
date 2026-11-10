@@ -125,11 +125,12 @@ scripts/autotest.gd               play-test bot, screenshot tours, bench
 scripts/audio_check.gd            --audiotest
 scripts/store_shots.gd            --shots-store and --keyart staging for the store images
 assets/0x72/frames/               0x72 DungeonTileset II frames (CC0)
-assets/art/                       our own pixel art (see DESIGN.md for every folder)
+assets/art/                       pictures from free packs (tools/free_art.py), and the candles (hero/, items/costume)
 assets/audio/                     music/ (12 slots) and sfx/ (74 files)
 assets/fonts/, assets/licenses/   Kenney fonts; every licence and per-file credit list
-tools/art_*.py                    art generators (rooms, decor, fx, items, monsters, specials, chalk, tower, areas, ui, icon)
-tools/import_audio.py, make_audio.py   music import + loudness, SFX and jingles
+tools/free_art.py, free_sounds.py pictures and sounds from free packs, as they are (the only way they enter the game)
+tools/art_*.py                    the scripts that draw the candles (run free_art.py after any of them)
+tools/import_audio.py             music import + loudness
 tools/build_apk.sh, build_aab.sh, build_desktop.sh, android_sdk_setup.sh, store_art.py, steam/
 docs/                             REVAMP.md, streams/ (notes per 2.0 work stream), marketing/ (store pages, store_assets/)
 ```
@@ -254,9 +255,9 @@ python3 tools/store_art.py [--import] [--no-render] [--review /abs/dir]   # ever
                                       #   test in headless Chromium (tools/web_smoke.js: no console errors, the title draws)
 ./tools/android_sdk_setup.sh          # Android platform 36 + build-tools 36.1.0 (build_aab.sh runs it)
 ```
-Art tools: `python3 tools/art_<name>.py [--review <dir>]` rebuilds that art and writes contact sheets.
-Audio: `python3 tools/import_audio.py music` and `python3 tools/make_audio.py sfx` (see
-`docs/streams/audio.md`). Steam upload templates are in `tools/steam/`.
+Pictures: `python3 tools/free_art.py` (pack pictures; `--list` shows what comes from where), then
+`godot --headless --path . --import`. Sounds: `python3 tools/free_sounds.py` (`--list` for the table).
+Music: `python3 tools/import_audio.py music` (see `docs/streams/audio.md`). Steam upload templates are in `tools/steam/`.
 
 ## Signing
 This repository is **public**, so the release key is **not** in it. `tools/build_apk.sh` and
@@ -273,20 +274,39 @@ other. Desktop builds are not code-signed. Bump `version/code` in the "Android" 
 The game itself: `LICENSE` (all rights reserved; source shown for reference). Privacy policy: `PRIVACY.md`
 (no data collected; also in the game under Title > Credits > Privacy).
 
-Every licence text the game needs is in `assets/licenses/` (shipped inside every build and in the PC zips'
-`licenses/` folder, and shown in the game under Title > Credits > Licences). Every third-party asset in the
-game is CC0 1.0 (public domain); the engine is MIT. The only other licence is Apache-2.0 for the trailer's
-AI narrator, which is not in the game.
-- **Dungeon tiles, the 0x72 creatures and guardians, chests, coins, bombs, flasks**: *16x16 DungeonTileset
-  II* by **0x72** (CC0), https://0x72.itch.io/dungeontileset-ii -
-  `0x72_DungeonTilesetII_CC0.txt`; how the room art uses it: `CREDITS_rooms.txt`.
-- **Fonts**: *Kenney Pixel* and *Kenney Mini* by **Kenney** (CC0), www.kenney.nl - `Kenney_Fonts_CC0.txt`.
-- **Sound effects**: layered and processed from **Kenney** Foley Sounds, Impact Sounds, Interface Sounds,
-  Retro Sounds 1, Retro Sounds 2 and RPG Audio (CC0) - `Kenney_*_CC0.txt`; plus a few **Ninja
-  Adventure** sounds (fire, fireball, wings, spirit, explosion; CC0) and original synthesis. Source of
-  every file: `CREDITS_audio.txt`.
-- **Music**: *Ninja Adventure Asset Pack* by **Pixel-boy** and **AAA** (CC0),
-  https://pixel-boy.itch.io/ninja-adventure-asset-pack - `Ninja_Adventure_CC0.txt`, slots in `CREDITS_music.txt`:
+Since 2.10 every picture in the game except the candles, every sound and all the music come from free packs
+made by people. Every pack is CC0 1.0 (public domain); the engine is MIT. Each licence text is in
+`assets/licenses/` (shipped inside every build and in the PC zips' `licenses/` folder, and shown in the game
+under Title > Credits > Licences). Two lists name every single file and the pack file it is:
+`CREDITS_free_art.txt` (pictures) and `CREDITS_audio.txt` (sounds); the music slots are in `CREDITS_music.txt`.
+
+Pictures (put in place by `tools/free_art.py`: a pack file, a crop of one, or whole pieces laid edge to edge;
+no pixel is changed):
+- **The house's walls and floors, many lodgers and guardians, chests, coins, bombs, flasks**: *16x16
+  DungeonTileset II* by **0x72**, https://0x72.itch.io/dungeontileset-ii - `0x72_DungeonTilesetII_CC0.txt`.
+- **Lodgers and guardians, relic and move pictures, effects, key and gamepad pictures**: *Ninja Adventure Asset
+  Pack* by **Pixel-boy** and **AAA**, https://pixel-boy.itch.io/ninja-adventure-asset-pack -
+  `Ninja_Adventure_CC0.txt`.
+- **Furniture and props, the pointing hand of the touch lesson**: *Roguelike Indoors*, *Tiny Dungeon* and
+  *Cursor Pixel Pack* by **Kenney**, https://kenney.nl - `Kenney_Roguelike_Indoors_CC0.txt`,
+  `Kenney_Tiny_Dungeon_CC0.txt`, `Kenney_Cursor_Pixel_Pack_CC0.txt`.
+- **Relic and keepsake pictures**: *16x16 RPG Item Pack* by **Alex's Assets**,
+  https://alexs-assets.itch.io/16x16-rpg-item-pack - `Alexs_Assets_16x16_RPG_Item_Pack_CC0.txt`.
+- **The Ossuary**: *Lucifer: Ancient Skeleton* by **Foozle**, drawn by **Baldur**,
+  https://foozlecc.itch.io/lucifer-skeleton-ancient-boss - `Foozle_Lucifer_Ancient_Skeleton_CC0.txt`.
+- **The night town of the opening and the endings**: *Gothicvania Patreon's Collection* by **Luis Zuno
+  (ansimuz)**, https://opengameart.org/content/gothicvania-patreons-collection -
+  `Ansimuz_Gothicvania_Collection_CC0.txt`.
+- **The grandfather clock in the hall**: *Haunted Hotel Asset Pack* by **Not Jam**,
+  https://not-jam.itch.io/haunted-hotel-asset-pack - `NotJam_Haunted_Hotel_CC0.txt`.
+- **Fonts**: *Kenney Pixel* and *Kenney Mini* by **Kenney** - `Kenney_Fonts_CC0.txt`.
+
+Sound (put in place by `tools/free_sounds.py`: each sound effect is ONE pack file, copied byte for byte; the
+game sets its level and speed when it plays it):
+- **Kenney** Foley Sounds, Impact Sounds, Interface Sounds, RPG Audio, Sci-Fi Sounds, Digital Audio and Retro
+  Sounds 1 - `Kenney_*_CC0.txt`; and **Ninja Adventure** sounds and jingles.
+- **Music**: 13 tracks of the *Ninja Adventure Asset Pack* by **Pixel-boy** and **AAA**. `tools/import_audio.py`
+  re-encodes them, evens out their loudness and smooths the loop point; the music itself is as composed.
 
   | Slot | Track |
   |---|---|
@@ -304,24 +324,25 @@ AI narrator, which is not in the game.
   | Belfry guardian and the Keeper | 28 - Tension |
   | True ending and credits | 15 - Credit Theme |
 
-  The victory and death jingles are original, synthesized for this game (`tools/make_audio.py`).
+  The victory and game-over jingles are the pack's own ("Success4", "GameOver3").
 - **Engine**: Godot Engine (MIT), https://godotengine.org - `Godot_MIT.txt`; Godot's own third-party notices
   (written by the engine: `Engine.get_copyright_info()` / `get_license_info()`) - `Godot_third_party_notices.txt`.
-- **Trailer narration (AI-generated)**: the narrator of the trailer and the shorts is an AI voice made with
-  **Kokoro TTS** (*Kokoro-82M* by hexgrad, open weights, Apache-2.0; voice `am_michael`; misaki G2P,
-  Apache-2.0), https://huggingface.co/hexgrad/Kokoro-82M - `docs/marketing/voice/Kokoro_TTS_Apache-2.0.txt`
-  (kept out of the game builds). Only the videos use it, not the game. The lines and how to swap in a real voice: `docs/marketing/voice/`.
-- **Original work**: design, code, the in-game text, Tallow and the other candles, the house's own 22
-  lodgers and 13 guardians (the Wax Mother, the Sexton, the Hollow Warden, the Melted Choir, the Great Pendulum,
-  the Coal Furnace, the Ossuary, the Organist, the Weathercock, the Stockpot, the Head Librarian, the Dressmaker's
-  Form and the Keeper), the special moves' art,
-  relic and keepsake icons, costumes, effects, rooms, decor, special rooms, the Clock Tower, chalk
-  drawings, UI, logo, app and store icons, and the jingles were made for this game by one developer with
-  **Claude** (an AI assistant): the pixel art is drawn by scripts Claude wrote (`tools/art_*.py`,
-  `tools/make_audio.py`), built from and matched to the 0x72 palette, and checked by the developer.
-  The other 20 lodgers and 3 guardians (Old Rot, the Gaoler, the Hour Fiend) use 0x72's
-  sprites. The numbers are counted from the code in `docs/marketing/facts.md`.
-- The free packs were obtained through the curated `series-ai/jam-ready-assets` library, which records
-  each pack's licence.
 
-The in-game credits (title > Credits, and the true ending's credits roll) list the same.
+Made with an AI assistant (**Claude**), by one developer:
+- the design, the code and every word in the game (names, lore, the talk scenes);
+- **Tallow and the other candles**: their bodies, faces, costumes, flames, holder, match and the app icon are
+  pixel art drawn by scripts Claude wrote (`tools/art_hero_fx_items.py`, `art_items2.py`, `art_talk.py`,
+  `art_tower.py`, `art_icon.py`), checked by the developer. Those scripts also still know how to draw the old
+  pictures of other things: after running one, run `python3 tools/free_art.py`, which puts the pack pictures
+  back and removes the rest;
+- a few plain shapes the game draws itself while it runs (stains on the floor, the touch sticks, flat menu
+  boxes, the light).
+Until 2.9 the creatures, rooms, icons, menus and sounds were script-made too; `docs/streams/` keeps those notes.
+
+The trailer and the shorts (not in the game, not posted) use an AI narrator, **Kokoro TTS** (*Kokoro-82M* by
+hexgrad, Apache-2.0): `docs/marketing/voice/`.
+
+The free packs were obtained through the curated `series-ai/jam-ready-assets` library, which records each
+pack's licence. Two of its packs are AI-generated and are never used here (`tools/free_art.py` names them).
+
+The in-game credits (title > Credits, and the ending's credits roll) list the same.

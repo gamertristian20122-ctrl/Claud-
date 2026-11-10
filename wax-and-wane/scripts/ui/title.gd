@@ -548,9 +548,9 @@ func _credits() -> void:
 	var pages := preload("res://scripts/ui/credits_pages.gd")
 	for line in [
 		["Made by", "one developer, with Claude (AI)"],
-		["Made for this game", "Tallow, %s, the relics," % pages.cast_line(true).replace(" and ", ", ")],
-		["", "the rooms, effects, jingles and logo"],
-		["Dungeon art (CC0)", "0x72: tiles, %s" % pages.cast_line(false).replace(" and ", ", ")],
+		["The candles", "Tallow and the others: drawn by scripts"],
+		["Art (CC0 packs)", "0x72, Ninja Adventure, Kenney,"],
+		["", "Alex's Assets, Foozle, ansimuz, Not Jam"],
 		["Music (CC0)", "Ninja Adventure by Pixel-boy and AAA"],
 		["Sound effects (CC0)", "Kenney packs, Ninja Adventure"],
 		["Fonts (CC0)", "Kenney Pixel and Kenney Mini"],

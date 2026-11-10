@@ -535,19 +535,22 @@ func _credits() -> Array:
 	var champ_lines: Array = []
 	for i in range(0, champs.size(), 2):
 		champ_lines.append("   ".join(champs.slice(i, i + 2)))
-	var pages := preload("res://scripts/ui/credits_pages.gd")
 	var household: Array = []
 	if Diary.count() > 0:   # once the diary has introduced them
 		household = [[L.t("THE HOUSEHOLD"), [L.t("Martha Fenn, housekeeper, who kept the diary"), L.t("Cook, Mr. Pennock, Miss Tibbet, Big Walter and Wilf")]]]
 	return [
-		["MADE BY", ["One developer, with Claude (AI)"]],
-		["MADE FOR THIS GAME", ["Tallow, %s," % pages.cast_line(true), "the relics, the rooms, the Clock Tower and every effect",
+		["MADE BY", ["One developer, with Claude (AI): the design, the code and the words"]],
+		["THE CANDLES", ["Tallow and the other candles, their costumes and flames",
 			"(pixel art drawn by scripts written with Claude, checked by the developer)"]],
-		["DUNGEON ART", ["0x72 - 16x16 DungeonTileset II (CC0)", "the dungeon tiles, %s" % pages.cast_line(false)]],
+		["ART FROM FREE PACKS (CC0)", ["0x72 - 16x16 DungeonTileset II: the house's stones and many lodgers",
+			"Pixel-boy and AAA - Ninja Adventure: lodgers, guardians, relics, effects",
+			"Kenney - Roguelike Indoors, Tiny Dungeon, Cursor Pixel Pack",
+			"Alex's Assets - 16x16 RPG Item Pack", "Foozle (drawn by Baldur) - Lucifer: Ancient Skeleton",
+			"Luis Zuno (ansimuz) - Gothicvania Patreon's Collection", "Not Jam - Haunted Hotel Asset Pack"]],
 		["MUSIC", ["Ninja Adventure Asset Pack by Pixel-boy and AAA (CC0)",
 			"Dream - Crypt - Dungeon - Temple - Final Area", "Boat - Fight - Tension - Ascension - Credit Theme",
-			"Curse - Ruins - Melancholia", "Jingles: original, made for this game"]],
-		["SOUND", ["Kenney audio packs (CC0)", "Ninja Adventure sounds (CC0)", "Original synthesis"]],
+			"Curse - Ruins - Melancholia", "and the pack's own jingles"]],
+		["SOUND", ["Kenney audio packs (CC0)", "Ninja Adventure sounds (CC0)", "each sound a pack file, as it is"]],
 		["FONTS", ["Kenney Pixel and Kenney Mini by Kenney (CC0)"]],
 		["ENGINE", ["Godot Engine (MIT) - godotengine.org/license"]],
 		["LICENCES AND PRIVACY", ["Title screen > Credits", "The game collects no data"]],

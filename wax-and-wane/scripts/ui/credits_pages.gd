@@ -1,6 +1,5 @@
 extends RefCounted
-## The Credits modal's extra pages (title > Credits > Licences / Privacy), and who drew which creature
-## (for both credits screens: title.gd _credits and the true ending's roll in ending.gd _credits).
+## The Credits modal's extra pages (title > Credits > Licences / Privacy).
 ##   Licences: this game's copyright, the free asset packs with their licences, Godot's MIT licence and
 ##   Godot's own third-party notices, read from the running engine (Engine.get_license_text(),
 ##   get_copyright_info(), get_license_info()), so they always match the engine that runs the game.
@@ -19,41 +18,19 @@ const PRIVACY := [
 	"- Share copies a short line about your run to your clipboard. Nothing is sent unless you paste it.",
 ]
 
-## [pack, what the game uses from it, licence, where it comes from]
+## [pack, what the game uses from it, licence, where it comes from] (2.10: every picture but the candles, and every
+## sound, comes from one of these; the per-file lists are assets/licenses/CREDITS_free_art.txt and CREDITS_audio.txt)
 const ASSETS := [
-	["16x16 DungeonTileset II by 0x72", "dungeon tiles, %s, chests, coins, bombs, flasks", "CC0 1.0", "0x72.itch.io/dungeontileset-ii"],
-	["Ninja Adventure Asset Pack by Pixel-boy and AAA", "all 13 music tracks and a few sounds", "CC0 1.0", "pixel-boy.itch.io/ninja-adventure-asset-pack"],
+	["16x16 DungeonTileset II by 0x72", "the house's walls and floors, many lodgers and guardians, chests, coins, bombs, flasks", "CC0 1.0", "0x72.itch.io/dungeontileset-ii"],
+	["Ninja Adventure Asset Pack by Pixel-boy and AAA", "lodgers and guardians, relic and move pictures, effects, key and gamepad pictures, all the music, the jingles and some sounds", "CC0 1.0", "pixel-boy.itch.io/ninja-adventure-asset-pack"],
+	["Roguelike Indoors, Tiny Dungeon and Cursor Pixel Pack by Kenney", "furniture and props, the pointing hand of the touch lesson", "CC0 1.0", "kenney.nl"],
+	["16x16 RPG Item Pack by Alex's Assets", "relic and keepsake pictures", "CC0 1.0", "alexs-assets.itch.io/16x16-rpg-item-pack"],
+	["Lucifer: Ancient Skeleton by Foozle (drawn by Baldur)", "the Ossuary", "CC0 1.0", "foozlecc.itch.io/lucifer-skeleton-ancient-boss"],
+	["Gothicvania Patreon's Collection by Luis Zuno (ansimuz)", "the night town of the opening and the endings", "CC0 1.0", "opengameart.org/content/gothicvania-patreons-collection"],
+	["Haunted Hotel Asset Pack by Not Jam", "the grandfather clock in the hall", "CC0 1.0", "not-jam.itch.io/haunted-hotel-asset-pack"],
 	["Kenney Pixel and Kenney Mini by Kenney", "the fonts", "CC0 1.0", "kenney.nl"],
-	["Kenney Foley, Impact, Interface, RPG Audio, Retro Sounds 1 and 2", "most sound effects, layered and processed", "CC0 1.0", "kenney.nl"],
+	["Kenney Foley, Impact, Interface, RPG Audio, Sci-Fi Sounds, Digital Audio and Retro Sounds 1", "most sound effects: each one a pack file, as it is", "CC0 1.0", "kenney.nl"],
 ]
-
-
-## How many lodgers and guardians come from 0x72's DungeonTileset II and how many were made for this game.
-## A creature counts as 0x72 when 0x72 frames of its sprite exist (some 0x72 frames are copied into
-## assets/art/monsters under the same name, so "has our own folder" alone is not enough).
-static func art_counts() -> Dictionary:
-	var n := {"lodgers_0x72": 0, "lodgers_own": 0, "guardians_0x72": 0, "guardians_own": 0}
-	for k in Enemy.DEFS.keys():
-		var d: Dictionary = Enemy.DEFS[k]
-		var s := str(d.get("sprite", k))
-		var x72 := false
-		for p in ["0x72/%s_idle_anim_f0", "0x72/%s_anim_f1", "0x72/%s_open_anim_f0"]:
-			if Art.has(p % s):
-				x72 = true
-		var key := ("guardians_" if d.get("boss", false) else "lodgers_") + ("0x72" if x72 else "own")
-		n[key] += 1
-	return n
-
-
-static func _plural(k: int, one: String) -> String:
-	return "%d %s%s" % [k, one, "" if k == 1 else "s"]
-
-
-## "20 lodgers and 4 guardians" (from 0x72) / "15 lodgers and 5 guardians" (made for this game)
-static func cast_line(own: bool) -> String:
-	var n := art_counts()
-	var sfx := "own" if own else "0x72"
-	return "%s and %s" % [_plural(n["lodgers_" + sfx], "lodger"), _plural(n["guardians_" + sfx], "guardian")]
 
 
 # ---------------------------------------------------------------- pages
@@ -110,14 +87,11 @@ static func licences(parent: Node) -> void:
 	var b := ""
 	b += _h("WAX & WANE")
 	b += "Copyright (c) 2026 the Wax & Wane developer. All rights reserved.\n"
-	b += "Code and pixel art made for this game with Claude (AI). Music, fonts, most sounds and the dungeon tiles come from the free packs below.\n\n"
+	b += "The code and the words were made for this game with Claude (AI), and so were Tallow and the other candles (drawn by scripts). Every other picture, the music, the sounds and the fonts come from the free packs below, made by people.\n\n"
 	b += _h("FREE ASSETS IN THIS GAME")
 	for a in ASSETS:
-		var what := str(a[1])
-		if "%s" in what:
-			what = what % cast_line(false)
 		b += "%s\n" % a[0]
-		b += _dim("  %s. Licence: %s (public domain). %s" % [what, a[2], a[3]])
+		b += _dim("  %s. Licence: %s (public domain). %s" % [a[1], a[2], a[3]])
 	b += "The licence texts and a per-file list are in the game's licenses folder.\n\n"
 	b += _h("GODOT ENGINE")
 	b += "This game uses Godot Engine (godotengine.org/license), available under the following license:\n\n"

@@ -566,7 +566,9 @@ def fetch(path):
 
 
 def clear(target):
-    for f in glob.glob(os.path.join(ART, target + "_*.png")) + glob.glob(os.path.join(ART, target + "_*.png.import")):
+    """The frames of a set go before it is written again (it may have fewer now). Their .import files stay: Godot
+    keeps each picture's id there, and a rewritten frame should keep its id (main() removes the orphans)."""
+    for f in glob.glob(os.path.join(ART, target + "_*.png")):
         os.remove(f)
 
 
@@ -592,7 +594,9 @@ def render(spec, credit, out):
             y += h
         return im
     src, box = spec
-    credit.setdefault(src.split("/")[0], []).append((out, src, box))
+    seen = credit.setdefault(src.split("/")[0], [])
+    if (out, src, box) not in seen[-40:]:   # a room names each of its tiles once, not once per square
+        seen.append((out, src, box))
     im = Image.open(fetch(src)).convert("RGBA")
     if box:
         im = im.crop((box[0], box[1], box[0] + box[2], box[1] + box[3]))
@@ -632,8 +636,9 @@ def main():
         for f in gone:
             if os.path.exists(f):
                 os.remove(f)
-            if os.path.exists(f + ".import"):
-                os.remove(f + ".import")
+        for f in glob.glob(os.path.join(ART, "**", "*.png.import"), recursive=True):   # a picture that is gone
+            if not os.path.exists(f[:-7]):
+                os.remove(f)
     lines = ["Wax & Wane - pictures taken from free packs (tools/free_art.py writes this file)",
              "Every file below is a pack file, a crop of one (x, y, width, height), or whole pieces laid edge to edge",
              "or over each other (a room out of its tiles, a candle stand out of its two parts). No pixel was changed.",
