@@ -441,7 +441,8 @@ static func _ending_cards(bot: Node, w: Node) -> void:
 		await bot._wait(0.2)
 		var arts := true
 		for cd in e._cards:
-			arts = arts and Art.has(str(cd["art"]))
+			for layer in Ending.SCENES.get(str(cd["scene"]), [[""]]):   # (a room is two frames: its torches)
+				arts = arts and (Art.has(str(layer[0])) or Art.has(str(layer[0]) + "_f0"))
 		_ok(e._cards.size() >= 3 and e._cards.size() <= 4 and arts, "the %s ending: %d cards, every scene drawn" % [id, e._cards.size()])
 		e.queue_free()
 		await bot._wait(0.1)

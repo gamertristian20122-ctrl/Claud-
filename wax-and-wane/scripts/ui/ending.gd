@@ -1,48 +1,59 @@
 class_name Ending
 extends CanvasLayer
-## The endings: three or four short pixel-art scenes with a line each, a credits roll, then the results screen
+## The endings: three or four short scenes with a line each, a credits roll, then the results screen
 ## (world._end_run via the callback). Which ending plays is `ending` (v2.5, Diary.ENDINGS; chosen by
 ## Diary.win_ending / Diary.keeper_ending):
-##   true          the Keeper of Hours stilled: the house is quiet, the clock stops at the time you finished,
-##                 Tallow's flame settles on the sill, dawn comes and the little flame goes out.
-##   housekeeper   a won night with 12+ diary pages: the house with the kitchen light on, Martha's empty
-##                 chair, the last candle she made, the clock still ticking above the bells.
+##   true          the Keeper of Hours stilled: the hall is quiet, the clock stops at the time you finished and the
+##                 light in the tower goes out, Tallow's flame settles on the sill, dawn comes and it goes out.
 ##   windows       a won night of seven floors or more: the clock stops, a candle lights in every window, one
 ##                 for everyone who lived here, Tallow kept the small hours.
-##   whole_story   the Keeper stilled with all 24 pages: the clock stops for good, the windows go dark, the
-##                 pages fly home to the diary by her chair, dawn.
-## Scenes are 192x96 art (tools/art_tower.py tower/end_*, tools/art_story.py story/end_kitchen) shown at x2;
-## the moving parts are drawn here in the same palette. Any key, click, tap or pad button skips everything
-## after the first scene.
+##   housekeeper   a won night with 12+ diary pages, and
+##   whole_story   the Keeper stilled with all 24 pages: both wait on the diary pages (Diary.PAGES_ON, off in 2.10).
+## Scenes are 192x96, shown at x2. Since 2.10 they are found pictures (tools/free_art.py story()): Luis Zuno's
+## night town in two layers (houses, clouds) and rooms laid out of the game's own tiles. What moves is drawn here,
+## in the pictures' own colours: a window lit or put out, the clouds' tint from night to dawn, smoke.
+## Any key, click, tap or pad button skips everything after the first scene.
 
 const CARD := 5.0
 const FADE := 0.6
 const ROLL_SPEED := 26.0
-const SKY_NIGHT := ["#1f1833", "#2a2a3a", "#2a2a3a", "#323e4f", "#414859"]
-const SKY_STEPS := [
-	["#1f1833", "#2a2a3a", "#2a2a3a", "#323e4f", "#414859"],
-	["#2a2a3a", "#323e4f", "#38607c", "#5f2d56", "#9f294e"],
-	["#323e4f", "#38607c", "#417089", "#9f294e", "#dc4a7b"],
-	["#38607c", "#417089", "#5698cc", "#dc4a7b", "#ee8e2e"],
-	["#417089", "#5698cc", "#72d6ce", "#f78697", "#ffad3b"],
-]
-const STARS := [Vector2(12, 8), Vector2(28, 40), Vector2(52, 14), Vector2(64, 30), Vector2(80, 6), Vector2(118, 18),
-	Vector2(132, 6), Vector2(150, 26), Vector2(166, 10), Vector2(182, 34), Vector2(176, 52), Vector2(8, 54),
-	Vector2(46, 4), Vector2(158, 44)]
-## Where Tallow stands: on the sill (tower/end_window), on the kitchen table (story/end_kitchen).
-const SILL := Vector2(96, 71)
-const TABLE := Vector2(96, 60)
-## The house's windows (tower/end_house, 4x5 each), in the order a candle lights them; the first is the
-## kitchen's, lit in every ending. ROUND: the attic's round window.
-const WINDOWS := [Vector2(70, 70), Vector2(58, 70), Vector2(58, 60), Vector2(70, 60), Vector2(82, 60), Vector2(98, 66),
-	Vector2(118, 72), Vector2(118, 63), Vector2(130, 72), Vector2(130, 63), Vector2(142, 72), Vector2(142, 63)]
-const ROUND := Vector2(72.5, 51.5)
+const SKY := "story/clouds"
+const SKY_DRIFT := 1.5        # px a second the clouds drift (whole pixels; not with Reduce motion)
+const SKY_X := 64.0           # the clouds are 256 wide, the scene 192: the part behind the town, before any drift
+## The clouds' tint: night, then the steps of the dawn, up to the gold the picture was painted in.
+const SKY_TINTS := [Color(0.45, 0.55, 0.75), Color(0.58, 0.64, 0.78), Color(0.72, 0.74, 0.8), Color(0.86, 0.86, 0.88),
+	Color(1, 1, 1)]
+## The scenes, back to front: [picture, where]. An outdoor scene's first layer is its clouds; a room has two
+## frames (its torches flicker).
+const SCENES := {
+	"town": [["story/clouds", Vector2(0, -16)], ["story/town", Vector2(0, -16)]],
+	"window": [["story/clouds_low", Vector2.ZERO], ["story/town_low", Vector2.ZERO], ["story/sill", Vector2(0, 64)]],
+	"hall": [["story/hall", Vector2.ZERO]],
+	"kitchen": [["story/kitchen", Vector2.ZERO]],
+}
+const TOWN_AT := Vector2(0, -16)     # the town in the endings: its lower 80 rows show above the words
+const LOW := Vector2(0, -30)         # the same town seen from the sill (story/town_low is cut 30 rows lower)
+## The town's own window colours, so a candle lit here looks like one the picture already has.
+const LIT := {"y": "#bbac5c", "Y": "#eccd85"}
+const DARK := "#153635"
+const HOUSE_WIN := ["yyy", "YYy", "yYy", "yYy", "yyy"]      # the house's lit window, pixel for pixel
+const TOWER_WIN := [".yy.", ".yy.", "Yyyy", "Yyyy", "Yyyy", "YYyy", "YYyy", "YYyy"]   # ... and the tower's
+const SMALL_WIN := ["yy", "Yy", "yy"]
+const HOUSE_LIT := Vector2(34, 63)   # a window the picture has lit (its candle gutters in the opening)
+const TOWER_LIT := Vector2(145, 47)  # the tower's lit window: it goes dark when the clock stops
+## The town's dark windows, in the order a candle lights them: the house's two, lights across the town, the
+## belfry last. [where in story/town, shape]
+const WINDOWS := [[Vector2(29, 63), HOUSE_WIN], [Vector2(39, 63), HOUSE_WIN], [Vector2(63, 66), SMALL_WIN],
+	[Vector2(83, 74), SMALL_WIN], [Vector2(73, 89), SMALL_WIN], [Vector2(97, 80), SMALL_WIN], [Vector2(136, 69), SMALL_WIN],
+	[Vector2(160, 66), SMALL_WIN], [Vector2(172, 88), SMALL_WIN], [Vector2(186, 88), SMALL_WIN], [Vector2(145, 34), TOWER_WIN]]
 const LIGHT_GAP := 0.3
-## The kitchen's window panes (story/end_kitchen; the sky is drawn behind the art) and its fire and kettle.
-const K_PANE := Rect2(101, 11, 23, 29)
-const K_FIRE := [15, 17, 18, 20, 21, 23, 24, 26, 27]
-const K_SPOUT := Vector2(9, 22)
-const DIARY_AT := Vector2(111, 56)
+## Where Tallow stands: on the sill (the "window" scene), on the kitchen table.
+const SILL := Vector2(96, 71)
+const TABLE := Vector2(96, 57)
+## The kitchen (story/kitchen): the range's fire and the pot's steam, the diary on the table.
+const STOVE := Vector2(36, 24)
+const K_SPOUT := Vector2(40, 30)
+const DIARY_AT := Vector2(112, 53)
 
 var _clock := 0.0
 var _candle := "tallow"
@@ -56,13 +67,15 @@ var _fx := ""
 var _skippable := false
 var _over := false
 var _stage: Node2D
-var _art: Node2D          # drawn behind the scene art (the sky in the window panes)
-var _front: Node2D        # drawn over it (stars, hands, smoke, the candle's glow)
+var _front: Node2D        # drawn over the scene (windows, smoke, sparks)
 var _cv: CanvasItem
 var _texts: Array = []
 var _t := 0.0
 var _hero: Player
 var _sky := 0
+var _sky_spr: Sprite2D    # the clouds of an outdoor scene (tinted, drifting)
+var _room_spr: Sprite2D   # a room with torches
+var _room_fr: Array = []
 var _roll: VBoxContainer
 var _rolling := false
 var _skip_lbl: Label
@@ -132,8 +145,8 @@ func _finish() -> void:
 
 # ---------------------------------------------------------------- cards
 
-## The cards of this ending: art, fx (what moves, see _process / _draw_front), where Tallow stands (or none),
-## and the two lines under the scene.
+## The cards of this ending: the scene (SCENES), fx (what moves, see _process / _draw_front), where Tallow stands
+## (or none), and the two lines under the scene.
 func _card_list() -> Array:
 	var name := str(Candles.def_of(_candle)["name"])
 	var nm: float = get_parent().night_minutes() if get_parent() and get_parent().has_method("night_minutes") else Game.END_MINUTES
@@ -142,37 +155,37 @@ func _card_list() -> Array:
 	match ending:
 		"housekeeper":
 			return [
-				_c("tower/end_house", "house", null, L.t("THE HOUSE IS QUIET"), L.t("One window is still lit. It's the kitchen. It always was.")),
-				_c("story/end_kitchen", "kitchen", null, L.t("MARTHA FENN, HOUSEKEEPER"), L.t("Sixty-one years of keys, lists, mended curtains and seed cake.")),
-				_c("story/end_kitchen", "kitchen", TABLE, L.t("SHE MADE ONE LAST CANDLE"), L.t("She lit him every night for a year, until he could light himself.")),
-				_c("tower/end_dial", "tick", null, L.t("SOMETHING STILL TICKS ABOVE THE BELLS"), L.t("At twelve the Keeper will wind the clock again. Unless someone is early.")),
+				_c("town", "house", null, L.t("THE HOUSE IS QUIET"), L.t("One window is still lit. It's the kitchen. It always was.")),
+				_c("kitchen", "kitchen", null, L.t("MARTHA FENN, HOUSEKEEPER"), L.t("Sixty-one years of keys, lists, mended curtains and seed cake.")),
+				_c("kitchen", "kitchen", TABLE, L.t("SHE MADE ONE LAST CANDLE"), L.t("She lit him every night for a year, until he could light himself.")),
+				_c("hall", "tick", null, L.t("SOMETHING STILL TICKS ABOVE THE BELLS"), L.t("At twelve the Keeper will wind the clock again. Unless someone is early.")),
 			]
 		"windows":
 			return [
-				_c("tower/end_dial", "dial", null, stops, L.t("It will not strike {hour} tonight.", {"hour": Records.hour_words(nm)})),
-				_c("tower/end_house", "lights_on", null, L.t("A CANDLE IN EVERY WINDOW"), L.t("The Kitchen, the Library, the Attic: lit again after all these years.")),
-				_c("tower/end_house", "lights_lit", null, L.t("ONE FOR EVERYONE WHO LIVED HERE"), L.t("One for Cook. One for Miss Tibbet. One for Wilf, who hated the dark.")),
-				_c("tower/end_window", "sill", SILL, L.t("{name} KEPT THE SMALL HOURS", {"name": name.to_upper()}),
+				_c("town", "dial", null, stops, L.t("It will not strike {hour} tonight.", {"hour": Records.hour_words(nm)})),
+				_c("town", "lights_on", null, L.t("A CANDLE IN EVERY WINDOW"), L.t("The Kitchen, the Library, the Attic: lit again after all these years.")),
+				_c("town", "lights_lit", null, L.t("ONE FOR EVERYONE WHO LIVED HERE"), L.t("One for Cook. One for Miss Tibbet. One for Wilf, who hated the dark.")),
+				_c("window", "sill", SILL, L.t("{name} KEPT THE SMALL HOURS", {"name": name.to_upper()}),
 					L.t("{floors} floors, every room, and not one of them forgotten.", {"floors": Records.number_word(floors).capitalize()})),
 			]
 		"whole_story":
 			return [
-				_c("tower/end_dial", "dial", null, stops, L.t("Nobody will wind it tomorrow. The Keeper has earned its rest.")),
-				_c("tower/end_house", "lights_off", null, L.t("THE ROUNDS ARE DONE"), L.t("The pot cools. The organ breathes out. The Gaoler hangs up its keys.")),
-				_c("story/end_kitchen", "pages", null, L.t("THE DIARY IS WHOLE"), L.t("Twenty-four pages, home by her chair.")),
-				_c("tower/end_window", "dawn", SILL, L.t("DAWN COMES FOR THE LITTLE CANDLE"),
+				_c("town", "dial", null, stops, L.t("Nobody will wind it tomorrow. The Keeper has earned its rest.")),
+				_c("town", "lights_off", null, L.t("THE ROUNDS ARE DONE"), L.t("The pot cools. The organ breathes out. The Gaoler hangs up its keys.")),
+				_c("kitchen", "pages", null, L.t("THE DIARY IS WHOLE"), L.t("Twenty-four pages, home by her chair.")),
+				_c("window", "dawn", SILL, L.t("DAWN COMES FOR THE LITTLE CANDLE"),
 					L.t("Sleep well, Tallow. Martha kept your seat by the fire.") if _candle == "tallow" else L.t("Sleep well, {name}. The house is all done.", {"name": name})),
 			]
 	return [
-		_c("tower/end_house", "house", null, L.t("THE HOUSE IS QUIET"), L.t("Every lodger is asleep. Even the stairs.")),
-		_c("tower/end_dial", "dial", null, stops, L.t("It will not strike {hour} tonight.", {"hour": Records.hour_words(nm)})),
-		_c("tower/end_window", "sill", SILL, L.t("{name}'S FLAME SETTLES", {"name": name.to_upper()}), L.t("No draught, no hands, no hurry. Just a small, warm light.")),
-		_c("tower/end_window", "dawn", SILL, L.t("DAWN COMES FOR THE LITTLE CANDLE"), L.t("Sleep well, {name}.", {"name": name})),
+		_c("hall", "quiet", null, L.t("THE HOUSE IS QUIET"), L.t("Every lodger is asleep. Even the stairs.")),
+		_c("town", "dial", null, stops, L.t("It will not strike {hour} tonight.", {"hour": Records.hour_words(nm)})),
+		_c("window", "sill", SILL, L.t("{name}'S FLAME SETTLES", {"name": name.to_upper()}), L.t("No draught, no hands, no hurry. Just a small, warm light.")),
+		_c("window", "dawn", SILL, L.t("DAWN COMES FOR THE LITTLE CANDLE"), L.t("Sleep well, {name}.", {"name": name})),
 	]
 
 
-func _c(art: String, fx: String, hero: Variant, l1: String, l2: String) -> Dictionary:
-	return {"art": art, "fx": fx, "hero": hero, "lines": [l1, l2]}
+func _c(scene: String, fx: String, hero: Variant, l1: String, l2: String) -> Dictionary:
+	return {"scene": scene, "fx": fx, "hero": hero, "lines": [l1, l2]}
 
 
 func _next_card() -> void:
@@ -187,6 +200,8 @@ func _next_card() -> void:
 	_texts.clear()
 	_smoke.clear()
 	_hero = null
+	_sky_spr = null
+	_room_spr = null
 	_t = 0.0
 	_lit = 0
 	_ticked = 0
@@ -195,20 +210,17 @@ func _next_card() -> void:
 		return
 	var cd: Dictionary = _cards[_card]
 	_fx = str(cd["fx"])
-	_art = Node2D.new()
-	_art.draw.connect(func(): _cv = _art; _draw_card())
 	_front = Node2D.new()
 	_front.draw.connect(func(): _cv = _front; _draw_front())
 	var lines: Array = cd["lines"]
-	_stage.add_child(_art)
-	_add_tex(str(cd["art"]))
+	_add_scene(str(cd["scene"]))
 	_stage.add_child(_front)
 	_sky = 0
 	if _fx == "dial":
 		_dial_a = -TAU * 3.0
 		_dial_stopped = false
 	if _fx == "lights_lit" or _fx == "lights_off":
-		_lit = WINDOWS.size() + 1
+		_lit = WINDOWS.size()
 	if cd["hero"] != null:
 		_add_hero(cd["hero"], _fx == "sill")
 	# a dark band for the words, over the bottom of the scene
@@ -257,11 +269,25 @@ func _card_out(t1: Label, t2: Label, tw: Tween) -> void:
 	tw.tween_callback(_next_card)
 
 
-func _add_tex(path: String) -> void:
-	var s := Sprite2D.new()
-	s.texture = Art.tex(path)
-	s.centered = false
-	_stage.add_child(s)
+## The scene's layers as sprites (SCENES), back to front.
+func _add_scene(key: String) -> void:
+	var layers: Array = SCENES.get(key, [])
+	for i in layers.size():
+		var path := str(layers[i][0])
+		var s := Sprite2D.new()
+		s.centered = false
+		s.position = layers[i][1]
+		var fr := Art.seq(path)
+		s.texture = fr[0]
+		if i == 0 and layers.size() > 1:   # the clouds: a 192-wide window on the 256-wide picture
+			_sky_spr = s
+			s.region_enabled = true
+			s.region_rect = Rect2(SKY_X, 0, 192, 96)
+			s.modulate = SKY_TINTS[0]
+		elif fr.size() > 1:
+			_room_spr = s
+			_room_fr = fr
+		_stage.add_child(s)
 
 
 func _add_hero(at: Vector2, settle: bool) -> void:
@@ -309,20 +335,19 @@ func _process(dt: float) -> void:
 				_ticked = int(_t)
 				Audio.play("tick", -8.0, 0.0, 0.9)
 		"dawn":
-			_sky = clampi(int((_t - 0.4) / 0.75), 0, SKY_STEPS.size() - 1)
+			_sky = clampi(int((_t - 0.4) / 0.75), 0, SKY_TINTS.size() - 1)
 			if _hero and _t > 3.3 and _hero.flame.visible:
 				_hero.flame.visible = false
 				Audio.play("snuff_out", -8.0, 0.0, 1.2)
 				for i in 6:
 					_smoke.append([Vector2(96, 54), -i * 0.22])   # a thread of smoke, puff after puff
 		"lights_on":   # a candle in every window, one after another
-			var n := clampi(int((_t - 0.5) / LIGHT_GAP) + 1, 1, WINDOWS.size() + 1)
+			var n := clampi(int((_t - 0.5) / LIGHT_GAP) + 1, 0, WINDOWS.size()) if _t > 0.5 else 0
 			if n > _lit:
 				_lit = n
-				if n > 1:
-					Audio.play("tick", -10.0, 0.02, 1.4 + 0.04 * n)
-		"lights_off":  # the rounds are done: the windows go dark, the chimney stops
-			var n2 := clampi(WINDOWS.size() + 1 - int((_t - 0.6) / LIGHT_GAP), 0, WINDOWS.size() + 1) if _t > 0.6 else WINDOWS.size() + 1
+				Audio.play("tick", -10.0, 0.02, 1.4 + 0.04 * n)
+		"lights_off":  # the rounds are done: the windows go dark again
+			var n2 := clampi(WINDOWS.size() - int((_t - 0.6) / LIGHT_GAP), 0, WINDOWS.size()) if _t > 0.6 else WINDOWS.size()
 			if n2 < _lit:
 				_lit = n2
 				Audio.play("tick", -12.0, 0.02, 1.2 - 0.03 * (WINDOWS.size() - n2))
@@ -331,16 +356,17 @@ func _process(dt: float) -> void:
 			if landed > _lit:
 				_lit = landed
 				Audio.play("page_flip", -12.0, 0.08, 1.3)
-	var chimney := _fx in ["house", "lights_on", "lights_lit"] or (_fx == "lights_off" and _lit > 0)
-	if chimney and fmod(_t, 0.9) < dt:
-		_smoke.append([Vector2(136, 37), 0.0])
 	if (_fx == "kitchen" or _fx == "pages") and fmod(_t, 0.8) < dt:
-		_smoke.append([K_SPOUT, 0.0])   # the kettle
+		_smoke.append([K_SPOUT, 0.0])   # the pot on the range
 	for s in _smoke:
 		s[1] += dt
 	_smoke = _smoke.filter(func(s): return s[1] < 2.6)
-	if _art and is_instance_valid(_art):
-		_art.queue_redraw()
+	if _sky_spr and is_instance_valid(_sky_spr):   # the clouds: the hour's tint, a slow drift
+		_sky_spr.modulate = SKY_TINTS[_sky]
+		if not UI.calm():
+			_sky_spr.region_rect.position.x = SKY_X - floorf(minf(_t * SKY_DRIFT, 40.0))
+	if _room_spr and is_instance_valid(_room_spr) and not UI.calm():   # the torches
+		_room_spr.texture = _room_fr[int(_t * 5.0) % _room_fr.size()]
 	if _front and is_instance_valid(_front):
 		_front.queue_redraw()
 
@@ -349,102 +375,69 @@ func _px(p: Vector2, c: String, sz := Vector2.ONE) -> void:
 	_cv.draw_rect(Rect2(p.round(), sz), Color(c))
 
 
-## Behind the art: the sky in the window panes.
-func _draw_card() -> void:
-	if _fx == "kitchen" or _fx == "pages":
-		_sky_bands(K_PANE, SKY_NIGHT, 3)
-		for s in [Vector2(104, 14), Vector2(110, 20), Vector2(116, 13), Vector2(121, 22), Vector2(106, 30), Vector2(119, 33)]:
-			if fmod(_t * 1.1 + s.x * 0.13, 2.0) < 1.6:
-				_px(s, "#cae6f5")
-		return
-	if _fx != "sill" and _fx != "dawn":
-		return
-	var cols: Array = SKY_STEPS[_sky] if _fx == "dawn" else SKY_NIGHT
-	_sky_bands(Rect2(58, 8, 76, 60), cols, 5)
-	if _fx == "sill" or _sky <= 1:
-		for i in STARS.size():
-			var s2: Vector2 = STARS[i]
-			var p := Vector2(58 + fmod(s2.x * 0.42, 76.0), 8 + fmod(s2.y, 56.0))
-			if fmod(_t * 1.1 + i * 0.5, 2.0) < 1.6:
-				_px(p, "#cae6f5")
-	if _fx == "dawn" and _sky >= 2:
-		var rise := clampf((_t - 1.9) * 7.0, 0.0, 22.0)
-		_disc(Vector2(112, 72 - rise), 7.0, "#facb3e", "#ffcc68")
+## A scene picture by name, for a drawing call: a room has two frames (its torches flicker), the rest have one.
+static func scene_tex(path: String, t: float) -> Texture2D:
+	var fr := Art.seq(path)
+	return fr[0 if UI.calm() else int(t * 5.0) % fr.size()]
 
 
-## Flat bands of sky in `r`, each seam a two-row checker dither (stepped, never a gradient).
-func _sky_bands(r: Rect2, cols: Array, n: int) -> void:
-	var h := int(r.size.y) / n
-	for b in n:
-		_px(Vector2(r.position.x, r.position.y + h * b), cols[b], Vector2(r.size.x, h if b < n - 1 else r.size.y - h * b))
-	for b in range(1, n):
-		var y := int(r.position.y) + h * b
-		for x in range(int(r.position.x), int(r.end.x)):
-			if x % 2 == 0:
-				_px(Vector2(x, y - 1), cols[b])
-			else:
-				_px(Vector2(x, y), cols[b - 1])
+## A window of the town, painted over the picture: "lit" as the picture lights its own, "dim" (a candle
+## guttering) or "dark".
+static func paint_window(ci: CanvasItem, at: Vector2, rows: Array, how: String) -> void:
+	for y in rows.size():
+		var row: String = rows[y]
+		for x in row.length():
+			var ch := row[x]
+			if ch == ".":
+				continue
+			var col: String = DARK
+			if how == "lit":
+				col = LIT[ch]
+			elif how == "dim":
+				col = LIT["y"]
+			ci.draw_rect(Rect2(at + Vector2(x, y), Vector2.ONE), Color(col))
 
 
-## Over the art: stars, the tower clock, windows, smoke, the dial's hands, the fire, flying pages.
+## The kitchen range's fire: the game's own stove flame (areas/kitchen/stove_glow), frame by frame.
+static func paint_fire(ci: CanvasItem, t: float) -> void:
+	var fr := Art.seq("areas/kitchen/stove_glow")
+	ci.draw_texture(fr[int(t * 8.0) % fr.size()], STOVE)
+
+
+## Over the scene: the town's windows, smoke, the fire, flying pages.
 func _draw_front() -> void:
 	match _fx:
-		"house", "lights_on", "lights_lit", "lights_off":
-			for i in STARS.size():
-				var s: Vector2 = STARS[i]
-				if s.y > 50 or (s.x > 22 and s.x < 46 and s.y < 36):
-					continue    # not over the moon
-				var on := fmod(_t * 1.3 + i * 0.37, 2.0) < 1.55
-				_px(s, "#cae6f5" if on else "#414859")
-			_clock_hands(Vector2(102, 40), 5.0, 3.5, "#222222")
-			if _fx == "house":
-				if fmod(_t, 2.3) < 0.12:
-					_px(Vector2(70, 70), "#ee8e2e", Vector2(4, 5))   # the candle in the kitchen window gutters
-			else:
-				for i in mini(_lit, WINDOWS.size()):
-					_lit_window(WINDOWS[i], i)
-				if _lit <= 0:
-					_px(Vector2(70, 70), "#111111", Vector2(4, 5))   # even the kitchen
-					_px(Vector2(70, 70), "#140c11", Vector2(4, 1))
-				if _lit > WINDOWS.size():
-					_round_window()
-			_draw_smoke("#7b8994", "#545454")
-		"dial":
-			_clock_hands(Vector2(96, 48), 29.0, 19.0, "#222222", _dial_a, true)
-		"tick":
-			_clock_hands(Vector2(96, 48), 29.0, 19.0, "#222222", float(int(_t)) * TAU / 60.0, true)
+		"house":   # the kitchen's candle gutters now and then
+			if fmod(_t, 2.3) < 0.12:
+				paint_window(_front, HOUSE_LIT + TOWN_AT, HOUSE_WIN, "dim")
+		"dial":    # the clock stops: the light in the tower goes out
+			if _dial_stopped:
+				paint_window(_front, TOWER_LIT + TOWN_AT, TOWER_WIN, "dark")
+		"lights_on", "lights_lit", "lights_off":
+			_candles(TOWN_AT, _lit)
 		"sill", "dawn":
+			# the same town from the sill: the tower as the night left it
+			if ending == "windows":
+				_candles(LOW, WINDOWS.size())
+			else:
+				paint_window(_front, TOWER_LIT + LOW, TOWER_WIN, "dark")
 			_draw_smoke("#b6cbcf", "#7b8994")
 		"kitchen", "pages":
-			_fire()
+			paint_fire(_front, _t)
 			_draw_smoke("#b6cbcf", "#7b8994")
 			if _fx == "pages":
 				_flying_pages()
 
 
-func _lit_window(p: Vector2, i: int) -> void:
-	_px(p, "#facb3e", Vector2(4, 5))
-	_px(p, "#ee8e2e", Vector2(4, 1))
-	if fmod(_t * 0.9 + i * 0.61, 3.1) > 0.15:   # each candle flickers on its own
-		_px(p + Vector2(2, 2), "#fdf7ed")
-
-
-func _round_window() -> void:
-	for y in range(int(ROUND.y - 2), int(ROUND.y + 3)):
-		for x in range(int(ROUND.x - 2), int(ROUND.x + 3)):
-			if Vector2(x + 0.5, y + 0.5).distance_to(ROUND) <= 2.2:
-				_px(Vector2(x, y), "#facb3e")
-	_px(ROUND.floor(), "#fdf7ed")
-
-
-## The kitchen range's fire: each gap between the bars flickers to its own height.
-func _fire() -> void:
-	for x in K_FIRE:
-		var h := 3 + int(2.4 * (sin(_t * 9.0 + x * 1.7) + 1.0) + 1.2 * (sin(_t * 5.3 + x * 0.9) + 1.0))
-		for k in h:
-			var y := 57 - k
-			var c := "#da4e38" if k < 2 else ("#ee8e2e" if k < h - 1 else "#facb3e")
-			_px(Vector2(x, y), c)
+## The first `n` of the town's dark windows with a candle in them (each flickers on its own), the town drawn
+## at `at`. Until the tower's turn comes its own window stays dark: the clock has stopped.
+func _candles(at: Vector2, n: int) -> void:
+	for i in mini(n, WINDOWS.size()):
+		var w: Array = WINDOWS[i]
+		var gutter := fmod(_t * 0.9 + i * 0.61, 3.1) < 0.15
+		paint_window(_front, w[0] + at, w[1], "dim" if gutter else "lit")
+	if n < WINDOWS.size():
+		paint_window(_front, TOWER_LIT + at, TOWER_WIN, "dark")
 
 
 ## The whole story: 24 pages flutter down from above and land in the diary on the table, one by one.
@@ -465,16 +458,6 @@ func _flying_pages() -> void:
 			_px(DIARY_AT + o, "#facb3e")
 
 
-func _disc(c: Vector2, r: float, col: String, core: String) -> void:
-	for y in range(int(c.y - r), int(c.y + r) + 1):
-		if y >= 68:
-			continue    # below the panes: hidden by the window frame
-		for x in range(int(c.x - r), int(c.x + r) + 1):
-			var d := Vector2(x + 0.5, y + 0.5).distance_to(c)
-			if d <= r:
-				_px(Vector2(x, y), core if d < r - 2.5 else col)
-
-
 func _draw_smoke(c1: String, c2: String) -> void:
 	for s in _smoke:
 		var a: float = s[1]
@@ -482,21 +465,6 @@ func _draw_smoke(c1: String, c2: String) -> void:
 			continue
 		var p: Vector2 = s[0] + Vector2(sin(a * 2.2) * 3.0 + a * 4.0, -a * 9.0)
 		_px(p, c1 if a < 1.2 else c2, Vector2(2, 2) if a < 1.6 else Vector2.ONE)
-
-
-## Clock hands drawn pixel by pixel. `spin` adds to both (the dial running down).
-func _clock_hands(c: Vector2, lm: float, lh: float, col: String, spin := 0.0, thick := false) -> void:
-	var am := fmod(_clock, 60.0) / 60.0 * TAU + spin
-	var ah := fmod(_clock / 60.0, 12.0) / 12.0 * TAU + spin / 12.0
-	for pair in [[am, lm, 1.0], [ah, lh, 2.0 if thick else 1.0]]:
-		var d := Vector2(sin(pair[0]), -cos(pair[0]))
-		var n := int(pair[1])
-		for i in n:
-			var p: Vector2 = c + d * i
-			_px(p, col, Vector2(pair[2], pair[2]) if i < n - 2 else Vector2.ONE)
-	if thick:
-		_px(c - Vector2(2, 2), "#c56025", Vector2(4, 4))
-		_px(c - Vector2(1, 1), "#facb3e", Vector2(2, 2))
 
 
 # ---------------------------------------------------------------- credits

@@ -414,9 +414,9 @@ static func _opening_checks(bot: Node) -> Node:
 			bad.append("speaker " + who)
 		if font.get_multiline_string_size(str(ln["text"]), HORIZONTAL_ALIGNMENT_CENTER, 340.0, 8).y > font.get_height(8) * 2.0 + 0.5:
 			bad.append("over two lines: " + str(ln["text"]).substr(0, 24))
-	for p in Opening.ART:
-		if not Art.has(str(Opening.ART[p])):
-			bad.append("art " + str(Opening.ART[p]))
+	for p in Opening.ART.values() + [Ending.SKY]:   # a room is two frames (its torches), the rest one picture
+		if not (Art.has(str(p)) or Art.has(str(p) + "_f0")):
+			bad.append("art " + str(p))
 	for k in ["stand", "match", "light"]:
 		if not Art.has("talk/martha_" + k):
 			bad.append("talk/martha_" + k)

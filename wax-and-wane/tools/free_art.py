@@ -39,6 +39,10 @@ PACKS = {
                             "https://alexs-assets.itch.io/16x16-rpg-item-pack"),
     "foozle-lucifer-skeleton-ancient": ("Lucifer: Ancient Skeleton", "Foozle (drawn by Baldur)", "CC0",
                                         "https://foozlecc.itch.io/lucifer-skeleton-ancient-boss"),
+    "ansimuz-gothicvania-collection": ("Gothicvania Patreon's Collection", "Luis Zuno (ansimuz)", "CC0",
+                                       "https://opengameart.org/content/gothicvania-patreons-collection"),
+    "notjam-haunted-hotel": ("Haunted Hotel Asset Pack", "Not Jam", "CC0",
+                             "https://not-jam.itch.io/haunted-hotel-asset-pack"),
 }
 
 NA_MON = "ninja-adventure/2D/top-down-rpg/Actor/Monster/%s/%s.png"
@@ -441,6 +445,59 @@ def house():
     }
 
 
+TOWN = "ansimuz-gothicvania-collection/2D/fantasy/Gothic-Horror-Files/PNG/layers/%s.png"
+HOTEL = "notjam-haunted-hotel/2D/seasonal-holiday/Environmental/%s.png"
+
+
+def story():
+    """The opening's and the endings' scenes, 192 x 96 (shown x2 by scripts/ui/opening.gd and ending.gd).
+    Outside: Luis Zuno's night town, its houses and its clouds as two layers (the game tints the clouds for night
+    and dawn, the files stay as he drew them). Inside: rooms laid out of the same tiles the game's rooms use."""
+    W, T = t72("wall_mid"), t72("wall_top_mid")
+    f = lambda i=1: t72("floor_%d" % i)
+    on = lambda *pieces: list(pieces)            # pieces laid over each other in one cell
+    top = [T] * 12
+    table = [on(f(), kin(0, 1)), on(f(), kin(1, 1)), on(f(), kin(1, 1)), on(f(), kin(2, 1))]   # a table is one row
+    def kitchen(torch):
+        return grid(
+            top,
+            [W, on(W, kin(19, 17)), on(W, kin(20, 17)), W, W, on(W, torch), W, W, on(W, torch), W, on(W, kin(21, 17)), W],
+            [on(f(), kin(0, 12)), on(f(), kin(8, 12)), on(f(), kin(14, 14)), on(f(), kin(4, 12)), f(), f(3), f(), f(), f(),
+             on(f(), kin(5, 12)), on(f(), kin(2, 12)), on(f(), kin(1, 12))],
+            [f(), f(), f(2), f()] + table + [on(f(), kin(3, 2)), f(), f(4), f()],
+            [f(5), f(), f(), f(), f(), f(), f(), f(), f(), f(), f(), f(2)],
+            [f(), f(), f(6), f(), f(), f(), f(3), f(), f(), f(), f(), f()])
+
+    piano = grid([kin(23, 8), kin(24, 8)], [kin(23, 9), kin(24, 9)])
+
+    def hall(torch):
+        return grid(
+            top,
+            [W, on(W, t72("wall_banner_red")), W, W, on(W, torch), W, W, on(W, torch), W, W, on(W, t72("wall_banner_red")), W],
+            [f(), f(), on(grid([f(), f()]), piano), f(), f(), on(f(), HOTEL % "GrandfatherClock"), f(), f(),
+             on(f(), kin(14, 14)), on(f(), kin(4, 12)), f()],
+            [f(), f(2), f(), f(), f(3), f(), f(), f(), f(), f(), f(5), f()],
+            [f(), f(), f(), on(f(), kin(16, 8)), on(f(), kin(17, 8)), on(f(), kin(17, 8)), on(f(), kin(18, 8)), f(), f(), f(), f(), f()],
+            [f(4), f(), f(), f(), f(), f(), f(), f(), f(2), f(), f(), f()])
+
+    torches = [kin(20, 6), kin(21, 6)]   # the wall torch's two flames: the rooms flicker (two frames each)
+    door = on(grid([W, W]), "0x72/doors_leaf_closed")
+    cellar = grid(
+        top,
+        [W, W, on(W, t72("wall_hole_1")), W, W, W, on(W, t72("wall_goo")), W, W, W, door],
+        [on(f(), "0x72/crate"), f(), f(), f(2), f(), f(), on(f(), t72("wall_goo_base")), f(), f(), f(), f(), f()],
+        [on(f(), "0x72/crate"), on(f(), "0x72/crate"), f(), f(), f(3), f(), f(), f(), f(), f(5), f(), f()],
+        [f(), f(), f(), f(), f(), f(), f(), f(2), f(), f(), on(f(), "0x72/crate"), f()],
+        [f(6), f(), f(), f(), f(), f(), f(), f(), f(), f(), f(), on(f(), "0x72/skull")])
+    return {
+        "story/town": (TOWN % "town", (64, 18, 192, 96)), "story/clouds": (TOWN % "clouds", (0, 18, 256, 96)),
+        "story/town_low": (TOWN % "town", (64, 48, 192, 96)), "story/clouds_low": (TOWN % "clouds", (0, 48, 256, 96)),
+        "story/sill": grid([kin(0, 1)] + [kin(1, 1)] * 10 + [kin(2, 1)]),
+        "story/hall": {"": [hall(t) for t in torches]}, "story/kitchen": {"": [kitchen(t) for t in torches]},
+        "story/cellar": cellar,
+    }
+
+
 # folders where every picture comes from a pack now: a file this tool does not write is deleted
 EXCLUSIVE = ["rooms", "decor", "specials", "areas", "chalk", "primer", "talk", "story"]
 
@@ -464,7 +521,7 @@ REMOVED = [
 ]
 
 SETS = [("creatures", lambda: CREATURES), ("guardians", guardians), ("icons", lambda: ICONS), ("effects", effects),
-        ("rooms", rooms), ("decor", decor), ("specials", specials), ("house", house)]
+        ("rooms", rooms), ("decor", decor), ("specials", specials), ("house", house), ("story", story)]
 
 
 def fetch(path):

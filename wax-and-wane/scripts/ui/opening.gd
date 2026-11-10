@@ -2,14 +2,14 @@ class_name Opening
 extends Control
 ## The story's opening (v2.7 dialogue stream, docs/streams/v27_dialogue.md): four gently animated panels with a line or
 ## two of narration each (about 30 s; the lines are TalkLines.OPENING):
-##   house    the house at midnight: stars, the chimney smoking, one window lit, the tower clock nearly at twelve
-##   dial     the great clock: the hands reach twelve, the bell strikes
+##   house    the house and its tower at midnight: clouds drifting, a window's candle guttering
+##   dial     the hall: the great clock ticks up to twelve and strikes (the organ and the range wait by the wall)
 ##   kitchen  Martha's kitchen at midnight: she strikes a match and lights Tallow on her table ("Good evening, Tallow.");
 ##            he cries a drop of wax at the match, then beams
 ##   cellar   the cellar in the dark: the match strikes itself, Tallow wakes alone, looks for her, and goes up anyway
-## The art is the v2.5 / tower ending scenes (tower/end_house, tower/end_dial, story/end_kitchen) and two new pieces from
-## tools/art_talk.py (talk/martha_stand|match|light, talk/open_cellar); the moving parts are drawn here in the same
-## palette, Tallow from his own body code (TalkPortrait.paint_candle). Shown x2 like the endings.
+## The backdrops are found pictures (2.10, tools/free_art.py story(): Luis Zuno's night town, rooms laid out of the
+## game's own tiles; the endings use the same ones, scripts/ui/ending.gd). What moves is drawn here: light, sparks,
+## smoke, and Tallow from his own body code (TalkPortrait.paint_candle). Shown x2 like the endings.
 ## Lines type out (Martha and Tallow with their talking voices) and move on by themselves; a tap / key / button moves
 ## on sooner, Skip / Esc / B / Back end it. Reduce motion: lines appear whole, no drift, plain cuts.
 ## Where it plays:
@@ -25,15 +25,11 @@ const PER_CHAR := 0.012
 const FADE := 0.4             # s each way between panels
 const TAP_HOLD := 0.35        # s: a press this early was meant for the screen before
 const BAND := 46.0            # the narration band along the bottom
-const ART := {"house": "tower/end_house", "dial": "tower/end_dial", "kitchen": "story/end_kitchen", "cellar": "talk/open_cellar"}
-const TABLE := Vector2(98, 60)      # Tallow's feet on the kitchen table
-const CELLAR := Vector2(96, 82)     # ... in Martha's chalk circle
-const MATCH_TIP := Vector2(32, 2)   # the match flame in Martha's "light" pose (tools/art_talk.py MATCH_TIP)
-const DOOR_LIGHT := [Rect2(176, 15, 14, 1), Rect2(179, 3, 1, 1), Rect2(186, 6, 1, 1), Rect2(178, 10, 1, 1)]
-const TOWER_CLOCK := Vector2(102, 40)
-const CHIMNEY := Vector2(136, 37)
-const KITCHEN_WINDOW := Vector2(70, 70)
-const DIAL := Vector2(96, 48)
+const ART := {"house": "story/town", "dial": "story/hall", "kitchen": "story/kitchen", "cellar": "story/cellar"}
+const CELLAR := Vector2(96, 82)     # Tallow's feet on the cellar floor (on the kitchen table: Ending.TABLE)
+const MATCH_TIP := Vector2(19, 6)   # Martha's match hand, from the corner of her picture (talk/martha_stand)
+const DOOR_LIGHT := [Rect2(166, 32, 20, 1), Rect2(176, 17, 1, 2)]   # under the cellar door, and its keyhole
+const DIAL := Vector2(88, 24)       # the face of the hall's clock
 
 var params := {}          # the run to light afterwards (as a screen)
 var overlay := false      # over the Journal
@@ -406,7 +402,7 @@ func _cues() -> void:
 				Audio.play("match_strike", -4.0)
 			if pl == 2 and _lt >= 1.2 and _once("lit"):
 				Audio.play("fire_crackle", -10.0, 0.0, 1.3)
-			if _once("steam%d" % int(_pt / 0.8)):   # the kettle, a puff every 0.8 s
+			if _once("steam%d" % int(_pt / 0.8)):   # the pot on the range, a puff every 0.8 s
 				_smoke.append([Ending.K_SPOUT, 0.0])
 		"cellar":
 			if pl == 0 and _lt >= 1.1 and _once("spark"):
@@ -415,9 +411,6 @@ func _cues() -> void:
 				Audio.play("fire_crackle", -10.0, 0.0, 1.4)
 			if pl == 2 and _lt >= 1.0 and _once("hop"):
 				Audio.play("step", -8.0, 0.0, 1.3)
-		"house":
-			if _once("smoke%d" % int(_pt / 0.9)):   # the chimney, a puff every 0.9 s
-				_smoke.append([CHIMNEY, 0.0])
 
 
 func _smoke_step(dt: float) -> void:
@@ -443,9 +436,11 @@ func _draw_stage() -> void:
 	if _panel == "house" and not UI.calm():   # the camera eases up the house as the first lines are read
 		off.y += float(maxi(0, 3 - int(_pt / 1.4)))
 	_stage.draw_set_transform(off, 0.0, Vector2.ONE)
-	if _panel == "kitchen":
-		_sky(Ending.K_PANE)
-	var tex := Art.tex(ART.get(_panel, "tower/end_house"))
+	if _panel == "house":   # the clouds behind the town: the night's tint, drifting
+		var drift := 0.0 if UI.calm() else floorf(minf(_pt * Ending.SKY_DRIFT, 40.0))
+		_stage.draw_texture_rect_region(Art.tex(Ending.SKY), Rect2(0, 0, 192, 96), Rect2(Ending.SKY_X - drift, 0, 192, 96),
+			Ending.SKY_TINTS[0])
+	var tex := Ending.scene_tex(str(ART.get(_panel, "story/town")), _t)
 	if tex:
 		_stage.draw_texture(tex, Vector2.ZERO)
 	match _panel:
@@ -456,32 +451,10 @@ func _draw_stage() -> void:
 	_stage.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-func _sky(r: Rect2) -> void:
-	var cols: Array = Ending.SKY_NIGHT
-	var n := 3
-	var h := int(r.size.y) / n
-	for b in n:
-		_px(Vector2(r.position.x, r.position.y + h * b), cols[b], Vector2(r.size.x, h if b < n - 1 else r.size.y - h * b))
-	for s in [Vector2(104, 14), Vector2(110, 20), Vector2(116, 13), Vector2(121, 22), Vector2(106, 30), Vector2(119, 33)]:
-		if fmod(_t * 1.1 + s.x * 0.13, 2.0) < 1.6:
-			_px(s, "#cae6f5")
-
-
 func _draw_house() -> void:
-	for i in Ending.STARS.size():
-		var s: Vector2 = Ending.STARS[i]
-		if s.y > 50 or (s.x > 22 and s.x < 46 and s.y < 36):
-			continue    # not over the moon
-		_px(s, "#cae6f5" if fmod(_t * 1.3 + i * 0.37, 2.0) < 1.55 else "#414859")
-	# the kitchen's window is lit (Martha is up), its candle flickering
-	_px(KITCHEN_WINDOW, "#facb3e", Vector2(4, 5))
-	_px(KITCHEN_WINDOW, "#ee8e2e", Vector2(4, 1))
-	if fmod(_t * 0.9, 3.1) > 0.15:
-		_px(KITCHEN_WINDOW + Vector2(2, 2), "#fdf7ed")
-	# the tower clock creeps to twelve as the lines are read
-	var m := 58.0 + clampf(_pt / 5.0, 0.0, 2.0)
-	_hands(TOWER_CLOCK, m, 5.0, 3.5, false)
-	_draw_smoke("#7b8994", "#545454")
+	# one of the house's lit windows: its candle gutters now and then (Martha is up)
+	if not UI.calm() and fmod(_t * 0.9, 3.1) < 0.15:
+		Ending.paint_window(_stage, Ending.HOUSE_LIT, Ending.HOUSE_WIN, "dim")
 
 
 func _dial_minutes() -> float:
@@ -489,35 +462,17 @@ func _dial_minutes() -> float:
 
 
 func _draw_dial() -> void:
-	var m := _dial_minutes()
-	_hands(DIAL, m, 29.0, 19.0, true)
-	if m >= 60.0 and _cue.has("strike"):
-		var k := clampf(1.0 - (_pt - 2.7) / 0.6, 0.0, 1.0)   # the strike's flash on the rim
+	if _dial_minutes() >= 60.0 and _cue.has("strike"):
+		var k := clampf(1.0 - (_pt - 2.7) / 0.6, 0.0, 1.0)   # the strike: a ring of sparks flying off the clock's face
 		if k > 0.0:
-			for a in 24:
-				var d := Vector2.from_angle(a / 24.0 * TAU)
-				_px(DIAL + d * 33.0, "#ffcc68" if a % 2 else "#facb3e")
-
-
-## Clock hands, pixel by pixel: `m` minutes past eleven (60 = twelve o'clock).
-func _hands(c: Vector2, m: float, lm: float, lh: float, thick: bool) -> void:
-	var am := m / 60.0 * TAU
-	var ah := (11.0 + m / 60.0) / 12.0 * TAU
-	for pair in [[am, lm, 1.0], [ah, lh, 2.0 if thick else 1.0]]:
-		var d := Vector2(sin(pair[0]), -cos(pair[0]))
-		for i in int(pair[1]):
-			var p := (c + d * float(i)).floor()
-			_px(p, "#222222", Vector2(pair[2], pair[2]))
-	_px(c - Vector2(1, 1), "#8f4029", Vector2(2, 2) if thick else Vector2.ONE)
+			for a in 12:
+				var d := Vector2.from_angle(a / 12.0 * TAU)
+				_px(DIAL + d * (6.0 + (1.0 - k) * 6.0), "#ffcc68" if a % 2 else "#facb3e")
 
 
 func _draw_kitchen() -> void:
 	var pl := _pl()
-	# the range's fire flickers, the kettle steams
-	for x in Ending.K_FIRE:
-		var h := 3 + int(2.4 * (sin(_t * 9.0 + x * 1.7) + 1.0) + 1.2 * (sin(_t * 5.3 + x * 0.9) + 1.0))
-		for k in h:
-			_px(Vector2(x, 57 - k), "#da4e38" if k < 2 else ("#ee8e2e" if k < h - 1 else "#facb3e"))
+	Ending.paint_fire(_stage, _t)   # the range's fire; the pot steams
 	_draw_smoke("#b6cbcf", "#7b8994")
 	# Martha strikes the match, holds it up, lights him; then the match is out
 	var pose := "stand"
@@ -530,11 +485,17 @@ func _draw_kitchen() -> void:
 			pose = "match"
 	var lit := pl >= 3 or (pl == 2 and _lt >= 1.2)
 	var mtex := Art.tex("talk/martha_" + pose)
-	var at := _wick(TABLE, 0) - MATCH_TIP + Vector2(0, 0)
+	var tip := _wick(Ending.TABLE, 0) - Vector2(3, 0)   # where her match meets his wick
+	var at := tip - MATCH_TIP + (Vector2(1, -1) if pose == "light" else Vector2.ZERO)   # she leans in to light him
 	if mtex:
 		_stage.draw_texture(mtex, at.floor())
+	if pose != "stand":   # the match in her hand: a stick, and its flame once it has caught
+		_px(tip + Vector2(-2, 2), "#d3bfa9", Vector2(2, 1))
+		if _lt >= 0.3 and _lt < 2.4:
+			_px(tip, "#facb3e", Vector2(1, 2))
+			_px(tip + Vector2(0, -1), "#fdf7ed")
 	if pl == 2 and _lt >= 2.4 and _lt < 3.2:   # she shakes the match out: a thread of smoke
-		_px(at + Vector2(24, 6 - int((_lt - 2.4) * 8.0)), "#b6cbcf")
+		_px(tip + Vector2(0, -int((_lt - 2.4) * 8.0)), "#b6cbcf")
 	# Tallow on her table: asleep and unlit, then lit (a drop of wax at the match), then beaming
 	var face := "blink"
 	var flame := ""
@@ -547,10 +508,10 @@ func _draw_kitchen() -> void:
 			tear = clampf(since, 0.0, 1.0)
 		else:
 			face = "happy" if pl == 2 or fmod(_pt, 3.0) < 2.85 else "blink"
-	TalkPortrait.paint_candle(_stage, TABLE, "tallow", {"face": face, "flame": flame, "t": _t, "tear": tear,
+	TalkPortrait.paint_candle(_stage, Ending.TABLE, "tallow", {"face": face, "flame": flame, "t": _t, "tear": tear,
 		"arms": ["cheer", "cheer"] if face == "happy" else ["rest", "rest"]})
 	if pl == 2 and _lt >= 0.15 and _lt < 0.5:   # the match flares
-		_glow(at + Vector2(24, 8), 6.0 - (_lt - 0.15) * 8.0, "#ffcc68")
+		_glow(tip, 6.0 - (_lt - 0.15) * 8.0, "#ffcc68")
 
 
 func _draw_cellar() -> void:
