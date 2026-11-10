@@ -18,7 +18,7 @@ var candle := "tallow"
 var _name: Label
 var _line: Label
 var _pips: Control
-var _sb: StyleBoxTexture
+var _sb: StyleBox
 
 
 ## Opens the reel over `parent` (the HUD's root over the pause menu, or the Journal's parent: Back closes it first).
@@ -49,10 +49,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	custom_minimum_size = STAGE + Vector2(0, 26)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_sb = StyleBoxTexture.new()
-	_sb.texture = Art.tex("ui/kit_inset")
-	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-		_sb.set_texture_margin(side, 3)
+	_sb = UI._tex_box("kit_inset", [3, 3, 3, 3], [0, 0, 0, 0])   # (a flat inset since 2.10)
 	_pips = Control.new()
 	_pips.custom_minimum_size = Vector2(Primer.STEPS.size() * 6 - 1, 7)
 	_pips.position = Vector2(floorf((STAGE.x - _pips.custom_minimum_size.x) / 2.0), STAGE.y + 3.0)
@@ -213,19 +210,22 @@ func _wax(feet: Vector2, calm: bool) -> void:
 	var am := Art.font_small.get_string_size("AM", HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
 	var plate := Hud._plate_box()   # sized like the HUD's: the digits, "AM", a margin each side
 	draw_style_box(plate, Rect2(g.position, Vector2(4.0 + Hud._digits_w(digits) + 2.0 + am + 4.0, 18)))
-	var strip := Art.tex("ui/hud_digits")
-	var x := g.position.x + 4.0
-	for ch in digits:
-		var i := "0123456789:".find(ch)
-		draw_texture_rect_region(strip, Rect2(Vector2(x - (2.0 if ch == ":" else 0.0), g.position.y + 3.0), Vector2(8, 12)), Rect2(i * 8, 0, 8, 12))
-		x += 4.0 if ch == ":" else 7.0
+	if Art.has("ui/hud_digits"):
+		var strip := Art.tex("ui/hud_digits")
+		var x := g.position.x + 4.0
+		for ch in digits:
+			var i := "0123456789:".find(ch)
+			draw_texture_rect_region(strip, Rect2(Vector2(x - (2.0 if ch == ":" else 0.0), g.position.y + 3.0), Vector2(8, 12)), Rect2(i * 8, 0, 8, 12))
+			x += 4.0 if ch == ":" else 7.0
+	else:   # v2.10: the clock is set in the game's font, as the HUD's is (Hud._draw_clock)
+		draw_string(Art.font, g.position + Vector2(4, 13), digits, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, UI.CREAM)
 	draw_string(Art.font_small, Vector2(g.position.x + 4.0 + Hud._digits_w(digits) + 2.0, g.position.y + 14.0), "AM", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, UI.CREAM)
 	var by := g.position.y + 20.0
 	var bw := 64.0
 	var fill := roundf(bw * (120.0 - cut) / 120.0)
 	draw_rect(Rect2(g.position.x, by, bw + 2.0, 7), UI.INK)
-	draw_texture_rect(Art.tex("ui/bar_wax_empty"), Rect2(g.position.x + 1.0, by + 1.0, bw, 5), true)
-	draw_texture_rect(Art.tex("ui/bar_wax_fill"), Rect2(g.position.x + 1.0, by + 1.0, fill, 5), true)
+	draw_rect(Rect2(g.position.x + 1.0, by + 1.0, bw, 5), Color("#21141b"))   # the HUD's own bar: plain since 2.10
+	draw_rect(Rect2(g.position.x + 1.0, by + 2.0, fill, 3), Color("#fdf7ed"))
 	PrimerGlyphs.frame(self, Rect2(g.position, Vector2(bw + 2.0, 27)), t, calm)
 
 

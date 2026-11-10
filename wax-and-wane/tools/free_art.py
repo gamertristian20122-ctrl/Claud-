@@ -43,6 +43,7 @@ PACKS = {
                                        "https://opengameart.org/content/gothicvania-patreons-collection"),
     "notjam-haunted-hotel": ("Haunted Hotel Asset Pack", "Not Jam", "CC0",
                              "https://not-jam.itch.io/haunted-hotel-asset-pack"),
+    "kenney-cursor-pixel-pack": ("Cursor Pixel Pack", "Kenney", "CC0", "https://kenney.nl/assets/cursor-pixel-pack"),
 }
 
 NA_MON = "ninja-adventure/2D/top-down-rpg/Actor/Monster/%s/%s.png"
@@ -498,6 +499,32 @@ def story():
     }
 
 
+INPUT = "ninja-adventure/2D/top-down-rpg/Ui/Input/%s.png"
+CURSOR = "kenney-cursor-pixel-pack/ui/Tilemap/tilemap_packed.png"
+
+
+def lesson():
+    """The controls lesson's glyphs (scripts/ui/primer_glyphs.gd): Ninja Adventure's own keys, mouse and gamepad
+    parts, whole and by name, and a pointing hand from Kenney's cursors for the thumb on a touch screen."""
+    out = {}
+    for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789":
+        out["primer/key_" + ch.lower()] = INPUT % ("Keyboard/Key" + ch)
+    for name in ["Shift", "Space", "Escape", "Enter", "Ctrl", "Tab", "Alt", "Delete", "Up", "Down", "Left", "Right"] + \
+            ["F%d" % i for i in range(1, 13)]:
+        out["primer/key_" + name.lower()] = INPUT % ("Keyboard/Key" + name)
+    pad = {"stick_l": "JoystickLeft", "stick_r": "JoystickRight", "lb": "ButtonLB", "rb": "ButtonRB", "lt": "ButtonLT",
+           "rt": "ButtonRT", "a": "ButtonA/Idle", "b": "ButtonB/Idle", "x": "ButtonX/Idle", "y": "ButtonY/ButtonY",
+           "start": "Start", "select": "Select", "up": "DPadUp", "down": "DPadDown", "left": "DPadLeft",
+           "right": "DPadRight"}
+    for k, v in pad.items():
+        out["primer/pad_" + k] = INPUT % ("Gamepad/" + v)
+    out.update({
+        "primer/mouse": INPUT % "Mouse/Mouse", "primer/mouse_left": INPUT % "Mouse/MouseButtonLeft",
+        "primer/thumb": (CURSOR, (14 * 16, 6 * 16, 16, 16)),
+    })
+    return out
+
+
 # folders where every picture comes from a pack now: a file this tool does not write is deleted
 EXCLUSIVE = ["rooms", "decor", "specials", "areas", "chalk", "primer", "talk", "story"]
 
@@ -521,7 +548,7 @@ REMOVED = [
 ]
 
 SETS = [("creatures", lambda: CREATURES), ("guardians", guardians), ("icons", lambda: ICONS), ("effects", effects),
-        ("rooms", rooms), ("decor", decor), ("specials", specials), ("house", house), ("story", story)]
+        ("rooms", rooms), ("decor", decor), ("specials", specials), ("house", house), ("story", story), ("lesson", lesson)]
 
 
 def fetch(path):

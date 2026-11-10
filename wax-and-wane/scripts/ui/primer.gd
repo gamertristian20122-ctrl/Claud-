@@ -627,11 +627,11 @@ func _gauge() -> Rect2:
 ## How far the step's picture reaches above its spot (the plate sits on top of it).
 func _top(dev: String, id: String) -> float:
 	if id in ["bomb", "special"]:   # keys, mouse and pad (touch points at the HUD's own buttons)
-		return PrimerGlyphs.PAD_SIZE.y / 2.0 if dev == Controls.PAD and PrimerGlyphs.PAD_PARTS.has(_key_text(id)) else PrimerGlyphs.KEY_H / 2.0
+		return PrimerGlyphs.key_h(_key_text(id), dev == Controls.PAD) / 2.0 + 1.0
 	match dev:
 		Controls.TOUCH: return 22.0
-		Controls.PAD: return PrimerGlyphs.PAD_SIZE.y / 2.0
-		Controls.MOUSE: return 9.0
+		Controls.PAD: return PrimerGlyphs.PAD_SIZE.y / 2.0 + PrimerGlyphs.PAD_REACH + 1.0
+		Controls.MOUSE: return 11.0
 	return 15.0
 
 
