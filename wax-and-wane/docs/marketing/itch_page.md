@@ -37,7 +37,7 @@ itch.io can go live the same day you upload, so it's where the first sales come 
 - Graphics: Tallow, the house's own creatures, relics, rooms and effects were drawn by scripts written with
   Claude (an AI assistant) and checked one by one by the developer. The 0x72 tiles and creatures are hand-drawn.
 - Sound: the sound effects and two jingles were layered or synthesized by AI-written scripts. The music is
-  the human-made Ninja Adventure soundtrack (CC0). (If you post the trailer: its narration is an AI voice.)
+  the human-made Ninja Adventure soundtrack. (If you post the trailer: its narration is an AI voice.)
 - Text: the in-game names, lore lines and menus were written with the AI assistant and edited by the developer.
 - Code: the game's code was written with the AI assistant.
 
@@ -112,7 +112,7 @@ on people's phones.
 >
 > **Privacy:** the game collects no data and never goes online. Policy: https://github.com/gamertristian20122-ctrl/Claud-/blob/ccr-37a74654-pp10xa/wax-and-wane/PRIVACY.md
 >
-> Made by one developer with Claude, an AI assistant (see the AI disclosure). Dungeon tiles and about 20 creatures by 0x72, music by Pixel-boy and AAA (Ninja Adventure), sound effects built from Kenney's packs, all CC0. Full credits and licences are in the game (Title > Credits).
+> Made by one developer with Claude, an AI assistant (see the AI disclosure). Dungeon tiles and about 20 creatures by 0x72, music by Pixel-boy and AAA (Ninja Adventure), sound effects built from Kenney's packs. Full credits are in the game (Title > Credits).
 
 **Add later, when the Steam page is live** (one line under "Controls"):
 

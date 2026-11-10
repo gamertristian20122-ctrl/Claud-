@@ -8,6 +8,9 @@ base viewport, integer pixel scaling). Read `README.md` (content, layout, comman
 - Limited coding experience: explain in plain, phone-friendly language with short numbered steps.
 - Plays on an Android phone. **Send the APK as soon as a build is done.** Keep zips under 30 MB.
 - Keep the work moving; give a short plan, then do it.
+- Store wording (2026-11-10): say only what a store requires. No licence words ("CC0") in paste-ready store
+  text, and the AI disclosure names only what players see or hear that was made with AI (still all of it, and
+  still true). Licences stay recorded in `README.md`, `assets/licenses/` and the in-game Credits.
 - **No more videos** (trailer, shorts, loops) unless the owner asks again: the 2.0.0 cuts in `build/videos/` are final.
   2026-11-10, the owner: "forget about the trailer". Do not list a new trailer as something the game needs. On a
   store where no trailer is posted, take the trailer-voice sentence out of the AI disclosure

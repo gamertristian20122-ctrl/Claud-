@@ -54,7 +54,7 @@ Reasons to light another candle
 
 One price buys the whole game. There are no ads and nothing else to buy.
 
-Made by one developer with Claude (AI). Dungeon tiles and about 20 creatures by 0x72, music by Pixel-boy and AAA (Ninja Adventure), sound effects built from Kenney's packs, all CC0. Tallow, the house's own creatures and guardians, the relics and rooms were made for this game.
+Made by one developer with Claude (AI). Dungeon tiles and about 20 creatures by 0x72, music by Pixel-boy and AAA (Ninja Adventure), sound effects built from Kenney's packs. Tallow, the house's own creatures and guardians, the relics and rooms were made for this game.
 ```
 
 **Category:** Game > **Action**
