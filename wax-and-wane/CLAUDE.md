@@ -150,6 +150,23 @@ rooms carry a lot of the bot's wins, so tune with them in (compare with `--nospe
   pitch always says the art and code were made with an AI assistant; never help hide that. Owner-only blanks:
   name, email, country, price, dates, the ask, a guardian if under 18. The trailer still shows 2.0: re-record it
   only if the owner asks (no-videos rule).
+- **Free-art swap (asked 2026-11-10, waiting on the owner's choice):** the owner wants every picture and sound
+  my programs made replaced by found, human-made free assets ("don't generate anything"), the diary pages
+  removed and the talk scenes kept. Size: about 1,160 PNGs under `assets/art/` (hero parts, 27 creatures, 13
+  guardians, 73 item icons, fx, decor, 24 baked room backgrounds, specials, tower, chalk, primer, talk, ui).
+  Source found: the public library `series-ai/jam-ready-assets` (where `tools/import_audio.py` already gets the
+  music; clone with `GIT_LFS_SKIP_SMUDGE=1`, fetch a PNG from
+  `https://media.githubusercontent.com/media/series-ai/jam-ready-assets/main/<path>`; each pack has its own
+  `License.txt`, licence table in its README). Usable CC0, human-made: `ninja-adventure` (64 monsters, 20
+  bosses, a flame character "Flam", 130 item + 121 skill icons, FX, UI theme, facesets, input prompts),
+  `0x72-dungeon-tileset-ii`, Kenney (tiny-dungeon, roguelike-interior, ui-pixel-pack, input-prompts-pixel, the
+  audio packs, music-jingles), `ansimuz-gothicvania-*`, `foozle-lucifer-*`, `takogame-halloween-icons`, Pixel
+  Frog. **Never use `angais-pixel-art-atlas` / `codepawl-pixel-art-atlas-models`: AI-generated.** Hard parts told
+  to the owner with a side-by-side picture (`build/free_art_preview.png`): Tallow is drawn by code as a candle
+  that shrinks and makes faces (`player.gd`), no pack has him; no pack has a pendulum, a stockpot, an organist
+  either, so guardians would be renamed and their talk lines re-fitted; the diary pages carry three endings
+  (`Diary.ENDINGS`); and with my talk lines kept Steam still needs one sentence about the text. Do nothing big
+  until the owner answers (go all / go but keep Tallow / stop).
 - Not done from the 2.8 plan: **Flag a bug** (a pause-menu button that copies a report code; not built).
 - The owner asked for game work only, lean: no pitch, research or reviewer agents unless asked; one thing at a
   time; small bot batches (they cost time, not usage: run them in the background and read only the
