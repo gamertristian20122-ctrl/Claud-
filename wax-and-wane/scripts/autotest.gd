@@ -766,7 +766,7 @@ func _shot(name: String) -> void:
 	if _shots_dir == "":
 		return
 	await RenderingServer.frame_post_draw
-	var img := get_viewport().get_texture().get_image()
+	var img := Stage.grab(self)   # v2.8: the picture the player sees (Screen: Big composes it at the screen's own size)
 	_shot_i += 1
 	img.save_png("%s/%02d_%s.png" % [_shots_dir, _shot_i, name])
 	print("[tour] shot ", name)

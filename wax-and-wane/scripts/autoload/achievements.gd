@@ -122,6 +122,11 @@ func _ready() -> void:
 	_steam_init()
 
 
+## v2.8 Screen (scripts/stage.gd): the toasts are drawn with the UI, whichever buffer that is.
+func stage_changed() -> void:
+	Stage.adopt_layer(_layer, self)
+
+
 func _records() -> Dictionary:
 	var d: Variant = Game.records.get("achievements", {})
 	if not (d is Dictionary):
@@ -337,7 +342,7 @@ func _pump(dt: float) -> void:
 func _hold_reason(scr: Node) -> String:
 	if scr == null or scr.is_queued_for_deletion():
 		return "switch"
-	var main := get_tree().current_scene
+	var main := Stage.main_node()
 	if main and bool(main.get("_busy")):
 		return "switch"
 	if scr.name == "Results":
@@ -391,7 +396,7 @@ func take_pending() -> Array[String]:
 
 
 func _screen() -> Node:
-	var main := get_tree().current_scene
+	var main := Stage.main_node()
 	if main == null or not ("current" in main):
 		return null
 	var c: Variant = main.get("current")
@@ -426,7 +431,7 @@ func _line(text: String, col: Color) -> Label:
 
 
 func _pop(title: String, desc: String, reward: String) -> void:
-	var vs := get_viewport().get_visible_rect().size
+	var vs := Stage.ui_size()
 	var box := PanelContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.theme_type_variation = &"CardPanel"   # v2.6: the UI kit's slim card (scripts/ui/ui.gd)

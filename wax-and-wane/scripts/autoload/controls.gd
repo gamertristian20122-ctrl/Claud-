@@ -166,6 +166,32 @@ func _detect_device(event: InputEvent) -> void:
 		set_device(dev, false)
 
 
+## v2.8 Screen (scripts/stage.gd): in Big the menus live in their own buffer. Its first child hands that buffer's
+## events to the two handlers below at the moment the root used to: after the screen's nodes, before its Controls.
+var _tapped := false
+
+
+func stage_changed() -> void:
+	_tapped = Stage.big
+	set_process_input(not _tapped)
+	set_process_unhandled_input(not _tapped)
+
+
+func stage_input(event: InputEvent) -> void:
+	if _tapped:
+		_input(event)
+
+
+func stage_unhandled_input(event: InputEvent) -> void:
+	if _tapped:
+		_unhandled_input(event)
+
+
+## The viewport the menus live in (keyboard / gamepad focus is kept per viewport).
+func _vp() -> Viewport:
+	return Stage.ui_viewport(self)
+
+
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 		_hotkeys(event)
@@ -219,7 +245,7 @@ func set_device(dev: String, show_focus := true) -> void:
 			_ensure_focus()
 	else:
 		# pointer players never see the keyboard frame (the button stays focused, quietly)
-		var f := get_viewport().gui_get_focus_owner()
+		var f := _vp().gui_get_focus_owner()
 		if f:
 			f.grab_focus(true)
 
@@ -510,7 +536,7 @@ func _fit_window() -> void:
 ## The screen main.gd shows, or null while main.goto() is swapping it (the old one is queued for
 ## deletion or already freed: Save & quit / Give up close their modals right then).
 func _screen() -> Node:
-	var main := get_tree().current_scene
+	var main := Stage.main_node()
 	if main == null or not ("current" in main):
 		return null
 	var cur: Variant = main.get("current")
@@ -523,7 +549,7 @@ func _screen() -> Node:
 ## The deferred calls capture instance ids, not the nodes: a modal can be freed (with its screen)
 ## before they run.
 func on_modal_opened(root: Control) -> void:
-	var prev := get_viewport().gui_get_focus_owner()
+	var prev := _vp().gui_get_focus_owner()
 	_modals.append({"root": root, "prev": prev})
 	root.tree_exiting.connect(_on_modal_closed.bind(root))
 	var rid := root.get_instance_id()
@@ -618,7 +644,7 @@ func _ensure_focus() -> bool:
 	var root := menu_root()
 	if root == null:
 		return false
-	var f := get_viewport().gui_get_focus_owner()
+	var f := _vp().gui_get_focus_owner()
 	if f and f.is_visible_in_tree() and (root == f or root.is_ancestor_of(f)):
 		if not f.has_focus(true):
 			# focused by a click/tap (hidden): show it now without moving
@@ -683,7 +709,7 @@ func _process(dt: float) -> void:
 		_focus_t = 0.25
 		if uses_buttons():
 			var root := menu_root()
-			var f := get_viewport().gui_get_focus_owner()
+			var f := _vp().gui_get_focus_owner()
 			if root and (f == null or not f.is_visible_in_tree() or not (root == f or root.is_ancestor_of(f))):
 				focus_first(root)
 

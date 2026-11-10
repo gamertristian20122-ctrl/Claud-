@@ -180,6 +180,7 @@ func _ready() -> void:
 	cam = Camera2D.new()
 	add_child(cam)
 	cam.make_current()
+	Stage.attach_world(self)   # v2.8 Screen: Big draws the world in its own buffer at its own scale (scripts/stage.gd)
 	hud = Hud.new(self)
 	hud.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(hud)
@@ -231,6 +232,7 @@ func _on_unlock(key: String) -> void:
 
 
 func _exit_tree() -> void:
+	Stage.detach_world(self)
 	if Game.unlocked_now.is_connected(_on_unlock):
 		Game.unlocked_now.disconnect(_on_unlock)
 

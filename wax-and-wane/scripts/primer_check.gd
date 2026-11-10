@@ -142,7 +142,7 @@ static func touch(at: Node, idx: int, pos: Vector2, down: bool) -> void:
 	e.index = idx
 	e.position = pos
 	e.pressed = down
-	at.get_tree().root.push_input(e, true)
+	Stage.push_ui_input(at, e)   # v2.8: `pos` is in the UI's pixels; the glass may be finer (Screen: Big)
 
 
 static func drag(at: Node, idx: int, pos: Vector2, rel: Vector2) -> void:
@@ -150,7 +150,7 @@ static func drag(at: Node, idx: int, pos: Vector2, rel: Vector2) -> void:
 	e.index = idx
 	e.position = pos
 	e.relative = rel
-	at.get_tree().root.push_input(e, true)
+	Stage.push_ui_input(at, e)
 
 
 static func key(code: Key, down: bool) -> void:

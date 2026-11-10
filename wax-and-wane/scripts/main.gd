@@ -96,6 +96,7 @@ func goto(screen: String, params := {}) -> void:
 	if current:
 		current.queue_free()
 		await get_tree().process_frame
+	Stage.boundary()   # v2.8: a changed Settings > Screen takes hold here, between two screens (scripts/stage.gd)
 	var script: GDScript = load(SCREENS[screen])
 	current = script.new()
 	current.name = screen.capitalize()
