@@ -1,0 +1,14 @@
+[
+  {
+    "id": "blacksmith_marko",
+    "name": "Marko",
+    "title": "Kovač · Blacksmith",
+    "portraitAssetPath": "characters/blacksmith_marko.png",
+    "backgroundAssetPath": "backgrounds/forge.png",
+    "voiceProfile": {
+      "locale": "hr-HR",
+      "pitch": 0.85,
+      "rate": 0.8
+    }
+  }
+]

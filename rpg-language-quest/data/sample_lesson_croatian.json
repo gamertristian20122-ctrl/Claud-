@@ -1,0 +1,85 @@
+{
+  "lessonId": "hr-a1-blacksmiths-order",
+  "title": "The Blacksmith's Order",
+  "targetLanguage": "hr",
+  "cefrLevel": "A1",
+  "characterId": "blacksmith_marko",
+  "exercises": [
+    {
+      "id": "hr-a1-blacksmith-01",
+      "prompt": "Dobar dan! Ja sam Marko. Ja sam kovač.",
+      "translation": "Good day! I am Marko. I am a blacksmith.",
+      "instruction": "Greet him and say you are a traveller.",
+      "audioFileName": "hr/blacksmith_01.mp3",
+      "options": [
+        "Dobar dan! Ja sam putnik.",
+        "Dobar dan! Ja sam putnika.",
+        "Dobar dan! Ja sam putniku."
+      ],
+      "correctOptionIndex": 0,
+      "grammarTip": "After “biti” (to be) the noun stays in the nominative, its dictionary form: Ja sam kovač. Ja sam putnik.",
+      "xpReward": 10
+    },
+    {
+      "id": "hr-a1-blacksmith-02",
+      "prompt": "Što trebate?",
+      "translation": "What do you need?",
+      "instruction": "Tell him you need a sword.",
+      "audioFileName": "hr/blacksmith_02.mp3",
+      "options": [
+        "Trebam mača.",
+        "Trebam maču.",
+        "Trebam mač."
+      ],
+      "correctOptionIndex": 2,
+      "grammarTip": "The thing you need is the direct object, so it takes the accusative. For masculine nouns that name objects, the accusative looks the same as the nominative: mač → mač.",
+      "xpReward": 10
+    },
+    {
+      "id": "hr-a1-blacksmith-03",
+      "prompt": "Imam mač i sjekiru. Što želite?",
+      "translation": "I have a sword and an axe. What do you want?",
+      "instruction": "Say you want the axe.",
+      "audioFileName": "hr/blacksmith_03.mp3",
+      "options": [
+        "Želim sjekira.",
+        "Želim sjekiru.",
+        "Želim sjekirom."
+      ],
+      "correctOptionIndex": 1,
+      "grammarTip": "Feminine nouns that end in -a change -a to -u in the accusative: sjekira → sjekiru. Marko used the same form: Imam … sjekiru.",
+      "xpReward": 10
+    },
+    {
+      "id": "hr-a1-blacksmith-04",
+      "prompt": "Vidite li mog pomoćnika? On ima vašu sjekiru.",
+      "translation": "Do you see my assistant? He has your axe.",
+      "instruction": "Say: “Yes, I see the assistant.”",
+      "audioFileName": "hr/blacksmith_04.mp3",
+      "options": [
+        "Da, vidim pomoćnik.",
+        "Da, vidim pomoćnika.",
+        "Da, vidim pomoćniku.",
+        "Da, vidim pomoćnikom."
+      ],
+      "correctOptionIndex": 1,
+      "grammarTip": "Masculine nouns that name people or animals add -a in the accusative: pomoćnik → pomoćnika. Objects do not change: mač → mač.",
+      "xpReward": 15
+    },
+    {
+      "id": "hr-a1-blacksmith-05",
+      "prompt": "Izvolite! Ovo je vaša nova sjekira.",
+      "translation": "Here you go! This is your new axe.",
+      "instruction": "Thank him and say you have a new axe.",
+      "audioFileName": "hr/blacksmith_05.mp3",
+      "options": [
+        "Hvala! Imam novu sjekiru.",
+        "Hvala! Imam nova sjekira.",
+        "Hvala! Imam novu sjekira."
+      ],
+      "correctOptionIndex": 0,
+      "grammarTip": "An adjective takes the same case as its noun. After “Ovo je” both are nominative: nova sjekira. After “imam” both are accusative: novu sjekiru.",
+      "xpReward": 15
+    }
+  ]
+}
