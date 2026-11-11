@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "rpg-language-quest",
+    "name": "RPG Language Quest",
     "slug": "rpg-language-quest",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,7 +16,9 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.rpglanguagequest.app",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
